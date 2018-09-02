@@ -18,7 +18,7 @@
 #include <cmath>
 using namespace std;
 
-#include "Grid2.h"
+#include "base/Grid2.h"
 
 
 //------------------------------------------------------------------------------

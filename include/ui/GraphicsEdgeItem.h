@@ -15,7 +15,7 @@
 using namespace std;
 
 //#ifndef Q_MOC_RUN
-#include "Common.h"
+#include "base/Common.h"
 //#endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>

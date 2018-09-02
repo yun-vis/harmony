@@ -13,12 +13,12 @@
 
 #include <iostream>
 #include <iomanip>
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 using namespace std;
 
-#include "Metro.h"
+#include "base/Boundary.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -34,7 +34,7 @@ class Smooth
 {
 private:
 
-    Metro         * _metro;
+    Boundary         * _boundary;
     Eigen::VectorXd _var;           // x
     Eigen::VectorXd _output;        // b
     Eigen::MatrixXd _coef;          // A
@@ -59,7 +59,7 @@ protected:
     void            _initOutputs    ( void );
     void            _updateCoefs    ( void );
     void            _updateOutputs  ( void );
-    virtual void    _init           ( Metro * __metro, double __width, double __height );
+    virtual void    _init           ( Boundary * __metro, double __width, double __height );
 
 public:
 
@@ -74,11 +74,13 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
+    double LeastSquare( unsigned int iter );
+    double ConjugateGradient( unsigned int iter );
 
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-    void prepare( Metro * __metro, double __width, double __height ) {
+    void prepare( Boundary * __metro, double __width, double __height ) {
         _init( __metro, __width, __height );
     }
 
@@ -88,8 +90,6 @@ public:
     void prepare( void );
     void clear( void );
     void retrieve( void );
-    double LeastSquare( unsigned int iter );
-    double ConjugateGradient( unsigned int iter );
 
 //------------------------------------------------------------------------------
 //      I/O

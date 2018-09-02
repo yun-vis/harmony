@@ -19,8 +19,8 @@
 #include <algorithm>
 using namespace std;
 
-#include "Common.h"
-#include "Coord2.h"
+#include "base/Common.h"
+#include "base/Coord2.h"
 
 
 //------------------------------------------------------------------------------

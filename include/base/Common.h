@@ -77,16 +77,6 @@
 #define ENDPOINT_REGION_WEIGHT	(0.6)
 #define SHRINKAGE_RATIO		(0.01)
 
-//#define DEFAULT_HEIGHT        (64)
-//#define DEFAULT_WIDTH (64)
-//#define DEFAULT_HEIGHT        (200)
-//#define DEFAULT_WIDTH (200)
-//#define DEFAULT_HEIGHT  (576)
-//#define DEFAULT_WIDTH   (768)
-//#define DEFAULT_HEIGHT        (768)
-//#define DEFAULT_WIDTH   (768)
-//#define DEFAULT_HEIGHT        (600)
-//#define DEFAULT_WIDTH (800)
 #define DEFAULT_HEIGHT        (768)
 #define DEFAULT_WIDTH (1024)
 //#define DEFAULT_HEIGHT        (1024)
@@ -160,26 +150,8 @@
 
 #define TIMER_STEP      (100)
 
-enum METROTYPE{ GEOGRAPHY, SMOOTH, OCTILINEAR };
+enum LAYOUTTYPE{ TYPE_GEOGRAPHY, TYPE_SMOOTH, TYPE_OCTILINEAR };
 enum OPTTYPE{ LEAST_SQUARE, CONJUGATE_GRADIENT };
 
-//------------------------------------------------------------------------------
-//      Indexes
-//------------------------------------------------------------------------------
-//extern enum segmentClass       segment_index;
-
-//------------------------------------------------------------------------------
-//      Variables
-//------------------------------------------------------------------------------
-extern double           routing_margin;
-extern double           label_margin;
-extern int              window_height;
-extern int              window_width;
-extern int		grid_size;
-extern int      	min_grid_size;
-extern int              magnified_radius;
-extern int              rng_samples;
-extern int              doi_max;
-extern int              doi_min;
 
 #endif // _Common_H

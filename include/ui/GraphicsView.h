@@ -16,9 +16,9 @@
 using namespace std;
 
 #ifndef Q_MOC_RUN
-#include "GraphicsBallItem.h"
-#include "GraphicsEdgeItem.h"
-#include "Metro.h"
+#include "ui/GraphicsBallItem.h"
+#include "ui/GraphicsEdgeItem.h"
+#include "base/Boundary.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -46,8 +46,9 @@ class GraphicsView : public QGraphicsView
 
 private:
 
+    bool                _is_simplifiedFlag;
     QGraphicsScene      *_scene;
-    Metro               *_metro, *_simmetro;
+    Boundary            *_boundary, *_simplifiedBoundary;
 
 protected:
 
@@ -61,13 +62,15 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
+    bool &          setIssimplifiedFlag( bool __is_simplifiedFlag )     { return _is_simplifiedFlag = __is_simplifiedFlag; }
+    const bool &    getIssimplifiedFlag( void ) const                   { return _is_simplifiedFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
-    void    init                ( Metro * __metro, Metro * __simmetro ){
-        _metro = __metro;
-        _simmetro = __simmetro;
+    void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary ){
+        _boundary = __boundary;
+        _simplifiedBoundary = __simplifiedBoundary;
     }
     void    initSceneItems      ( void );
 

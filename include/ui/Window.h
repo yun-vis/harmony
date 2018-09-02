@@ -20,9 +20,9 @@ using namespace std;
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QApplication>
 
-#include "Smooth.h"
-#include "Octilinear.h"
-#include "GraphicsView.h"
+#include "optimization/Smooth.h"
+#include "optimization/Octilinear.h"
+#include "ui/GraphicsView.h"
 
 #define REMOVEBACKNUM   (15)
 
@@ -33,8 +33,8 @@ private:
 
     GraphicsView    *_gv;
 
-    Metro           *_metro;
-    Metro           *_simmetro;
+    Boundary        *_boundary;
+    Boundary        *_simplifiedBoundary;
     Smooth          *_smooth;
     Octilinear      *_octilinear;
 
@@ -91,10 +91,10 @@ public slots:
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
 
 public:
-    explicit Window( QOpenGLWidget *parent = 0 );
+    explicit Window( QWidget *parent = 0 );
     ~Window();
 
-    void init( Metro * __metro, Metro * __simmetro,
+    void init( Boundary * __metro, Boundary * __simmetro,
                Smooth * __smooth, Octilinear * __octilinear );
 
 protected:

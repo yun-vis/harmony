@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#include "Smooth.h"
+#include "optimization/Smooth.h"
 
 //------------------------------------------------------------------------------
 //	Protected functions
@@ -29,25 +29,19 @@ using namespace std;
 //  Smooth::_init --        initialize the constrained optimization problem
 //
 //  Inputs
-//      __metro : pointer to metro
+//      __boundary : pointer to metro
 //
 //  Outputs
 //      none
 //
-void Smooth::_init( Metro * __metro, double __half_width, double __half_height )
+void Smooth::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
-    _metro                      = __metro;
-    Graph        & g            = _metro->g();
-    unsigned int nVertices      = _metro->nStations();
-    unsigned int nEdges         = _metro->nEdges();
-    _d_Alpha                    = _metro->dAlpha();
-    _d_Beta                     = _metro->dBeta();
-
-    VertexIDMap         vertexID        = get( vertex_myid, g );
-    VertexGeoMap        vertexGeo       = get( vertex_mygeo, g );
-    EdgeIDMap           edgeID          = get( edge_myid, g );
-    EdgeWeightMap       edgeWeight      = get( edge_weight, g );
-    EdgeIsLineMap       edgeIsLine      = get( edge_myisline, g );
+    _boundary                   = __boundary;
+    UndirectedBaseGraph & g     = _boundary->g();
+    unsigned int nVertices      = _boundary->nStations();
+    unsigned int nEdges         = _boundary->nEdges();
+    _d_Alpha                    = _boundary->dAlpha();
+    _d_Beta                     = _boundary->dBeta();
 
     // initialization
     _nVars = _nConstrs = 0;
@@ -80,9 +74,9 @@ void Smooth::_init( Metro * __metro, double __half_width, double __half_height )
     _nConstrs += 2 * nEdges;
 
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vertex, g, Graph )
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph )
     {
-        DegreeSizeType degrees = out_degree( vertex, g );
+        UndirectedBaseGraph::degree_size_type degrees = out_degree( vertex, g );
         if( degrees > 1 ) _nConstrs += 2 * degrees;
     }
     //cerr << "degreeConstrs = " << _nConstrs << endl;
@@ -121,19 +115,8 @@ void Smooth::_init( Metro * __metro, double __half_width, double __half_height )
 //
 void Smooth::_initCoefs( void )
 {
-    Graph        & g            = _metro->g();
-    unsigned int nVertices      = _metro->nStations();
-
-    VertexIDMap         vertexID        = get( vertex_myid, g );
-    VertexNameMap       vertexName      = get( vertex_myname, g );
-    VertexGeoMap        vertexGeo       = get( vertex_mygeo, g );
-    VertexCoordMap      vertexCoord     = get( vertex_mycoord, g );
-    VertexIsStationMap  vertexIsStation = get( vertex_myisstation, g );
-    VertexSelectMagMap  vertexSelectMag = get( vertex_myselectmag, g );
-    EdgeIDMap           edgeID          = get( edge_myid, g );
-    EdgeGeoAngleMap     edgeGeoAngle    = get( edge_mygeoangle, g );
-    EdgeSmoAngleMap     edgeSmoAngle    = get( edge_mysmoangle, g );
-    EdgeIsLeaderMap     edgeIsLeader    = get( edge_myisleader, g );
+    UndirectedBaseGraph  & g            = _boundary->g();
+    unsigned int nVertices              = _boundary->nStations();
 
     //cerr<< "nVertices = " << nVertices << endl;
 
@@ -143,16 +126,14 @@ void Smooth::_initCoefs( void )
     _coef << Eigen::MatrixXd::Zero( _nConstrs, _nVars );
 
     // Regular edge length
-    BGL_FORALL_EDGES( edge, g, Graph )
+    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph )
     {
-        VertexDescriptor vdS = source( edge, g );
-        VertexDescriptor vdT = target( edge, g );
-        unsigned int idS = vertexID[ vdS ];
-        unsigned int idT = vertexID[ vdT ];
+        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
+        unsigned int idS = g[ vdS ].id;
+        unsigned int idT = g[ vdT ].id;
 
         double wL = _w_contextlength;
-        //if( edgeIsLeader[ edge ] == true ) wL = _w_leaderlength;
-        if( vertexSelectMag[ vdS ] == true && vertexSelectMag[ vdT ] == true ) wL = _w_focuslength;
 
         // x
         _coef( nRows, idS ) = wL; 
@@ -166,9 +147,9 @@ void Smooth::_initCoefs( void )
     }
 
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
-        DegreeSizeType degrees = out_degree( vertex, g );
+        UndirectedBaseGraph::degree_size_type degrees = out_degree( vertex, g );
 #ifdef  DEBUG
         cerr << "V(" << vertexID[ vertex ] << ") degrees = " << degrees << endl;
 #endif  // DEBUG
@@ -176,17 +157,17 @@ void Smooth::_initCoefs( void )
         if( degrees > 1 ){
 
             // sort the embedding
-            map< double, EdgeDescriptor > circM;
-            OutEdgeIterator e, e_end;
+            map< double, UndirectedBaseGraph::edge_descriptor > circM;
+            UndirectedBaseGraph::out_edge_iterator e, e_end;
             for ( tie( e, e_end ) = out_edges( vertex, g ); e != e_end; ++e ) {
-                EdgeDescriptor ed = *e;
-                VertexDescriptor vS = source( ed, g );
-                VertexDescriptor vT = target( ed, g );
-                double angle = edgeGeoAngle[ ed ];
+                UndirectedBaseGraph::edge_descriptor ed = *e;
+                UndirectedBaseGraph::vertex_descriptor vS = source( ed, g );
+                UndirectedBaseGraph::vertex_descriptor vT = target( ed, g );
+                double angle = g[ ed ].geoAngle;
 
-                if ( vertexID[ vS ] > vertexID[ vT ] ) {
-                    if ( angle > 0 ) angle = -M_PI + edgeGeoAngle[ ed ];
-                    else angle = M_PI + edgeGeoAngle[ ed ];
+                if ( g[ vS ].id > g[ vT ].id ) {
+                    if ( angle > 0 ) angle = -M_PI + g[ ed ].geoAngle;
+                    else angle = M_PI + g[ ed ].geoAngle;
                 }
 #ifdef  DEBUG
                 cerr << vertexID[ vS ] << endl;
@@ -195,15 +176,15 @@ void Smooth::_initCoefs( void )
                      << vertexGeo[ vT ] << endl;
                 cerr << "EIA = " << edgeID[ ed ] << setw(10) << " angle = " << angle << endl;
 #endif  // DEBUG
-                circM.insert( pair< double, EdgeDescriptor >( angle, ed ) );
+                circM.insert( pair< double, UndirectedBaseGraph::edge_descriptor >( angle, ed ) );
             }
 #ifdef  DEBUG
             cerr << "seq: ";
-            for ( map< double, EdgeDescriptor >::iterator it = circM.begin();
+            for ( map< double, UndirectedBaseGraph::edge_descriptor >::iterator it = circM.begin();
                   it != circM.end(); it++ ) {
-                EdgeDescriptor ed = it->second;
-                VertexDescriptor vS = source( ed, g );
-                VertexDescriptor vT = target( ed, g );
+                UndirectedBaseGraph::edge_descriptor ed = it->second;
+                UndirectedBaseGraph::vertex_descriptor vS = source( ed, g );
+                UndirectedBaseGraph::vertex_descriptor vT = target( ed, g );
                 cerr << " " << vertexID[ vT ];
             }
             cerr << endl;
@@ -217,19 +198,19 @@ void Smooth::_initCoefs( void )
                 cerr << "id = " << vertexID[ vertex ] << " degrees = " << degrees << " tanTheta = " << tanTheta << endl;
 #endif  // DEBUG
         
-            map< double, EdgeDescriptor >::iterator itN = circM.begin();
+            map< double, UndirectedBaseGraph::edge_descriptor >::iterator itN = circM.begin();
             itN++;
-            for ( map< double, EdgeDescriptor >::iterator it = circM.begin();
+            for ( map< double, UndirectedBaseGraph::edge_descriptor >::iterator it = circM.begin();
                   it != circM.end(); it++ ) {
 
-                EdgeDescriptor edC = it->second;
-                EdgeDescriptor edN = itN->second;
-                VertexDescriptor vS = source( edC, g );
-                VertexDescriptor vTC = target( edC, g );
-                VertexDescriptor vTN = target( edN, g );
-                unsigned int idS = vertexID[ vS ];
-                unsigned int idTC = vertexID[ vTC ];
-                unsigned int idTN = vertexID[ vTN ];
+                UndirectedBaseGraph::edge_descriptor edC = it->second;
+                UndirectedBaseGraph::edge_descriptor edN = itN->second;
+                UndirectedBaseGraph::vertex_descriptor vS = source( edC, g );
+                UndirectedBaseGraph::vertex_descriptor vTC = target( edC, g );
+                UndirectedBaseGraph::vertex_descriptor vTN = target( edN, g );
+                unsigned int idS = g[ vS ].id;
+                unsigned int idTC = g[ vTC ].id;
+                unsigned int idTN = g[ vTN ].id;
 
                 // x
                 _coef( nRows, idS ) = _w_angle;   
@@ -262,9 +243,9 @@ void Smooth::_initCoefs( void )
 #endif  // SKIP
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
-        unsigned int id = vertexID[ vertex ];
+        unsigned int id = g[ vertex ].id;
 
         // x
         _coef( nRows, id ) = _w_position;
@@ -293,21 +274,17 @@ void Smooth::_initCoefs( void )
 //
 void Smooth::_initVars( void )
 {
-    Graph        & g            = _metro->g();
-    unsigned int nVertices      = _metro->nStations();
-
-    //VertexIDMap         vertexID        = get( vertex_myid, g );
-    //VertexGeoMap            vertexGeo       = get( vertex_mygeo, g );
-    VertexSmoothMap      vertexSmooth     = get( vertex_mysmooth, g );
+    UndirectedBaseGraph        & g            = _boundary->g();
+    unsigned int nVertices      = _boundary->nStations();
 
     // initialization
     _var.resize( _nVars );
 
     unsigned int nRows = 0;
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
-        _var( nRows, 0 ) = vertexSmooth[ vertex ].x();
-        _var( nRows + nVertices, 0 ) = vertexSmooth[ vertex ].y();
+        _var( nRows, 0 ) = g[ vertex ].smoothPtr->x();
+        _var( nRows + nVertices, 0 ) = g[ vertex ].smoothPtr->y();
         nRows++;
     }
 
@@ -329,16 +306,7 @@ void Smooth::_initVars( void )
 //
 void Smooth::_initOutputs( void )
 {
-    Graph        & g            = _metro->g();
-
-    //VertexIDMap         vertexID        = get( vertex_myid, g );
-    //VertexSmoothMap      vertexSmooth     = get( vertex_mysmooth, g );
-    VertexGeoMap            vertexGeo       = get( vertex_mygeo, g );
-    VertexSelectMagMap      vertexSelectMag     = get( vertex_myselectmag, g );
-    EdgeIDMap               edgeID              = get( edge_myid, g );
-    EdgeWeightMap           edgeWeight          = get( edge_weight, g );
-    EdgeSelectCtrlMap       edgeSelectCtrl      = get( edge_myselectctrl, g );
-    EdgeIsLeaderMap         edgeIsLeader        = get( edge_myisleader, g );
+    UndirectedBaseGraph        & g            = _boundary->g();
 
     // initialization
     unsigned int nRows = 0;
@@ -346,14 +314,14 @@ void Smooth::_initOutputs( void )
     _output << Eigen::VectorXd::Zero( _nConstrs );
 
     // Regular edge length
-    BGL_FORALL_EDGES( edge, g, Graph )
+    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph )
     {
-        VertexDescriptor vdS = source( edge, g );
-        VertexDescriptor vdT = target( edge, g );
-        Coord2 vi = vertexGeo[ vdS ];
-        Coord2 vj = vertexGeo[ vdT ];
+        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
+        Coord2 vi = *g[ vdS ].geoPtr;
+        Coord2 vj = *g[ vdT ].geoPtr;
         Coord2 vji = vi - vj;
-        double s = _d_Beta * edgeWeight[ edge ] / vji.norm();
+        double s = _d_Beta * g[ edge ].weight / vji.norm();
         double cosTheta = 1.0, sinTheta = 0.0;
         //double magnification = 1.0;
         //if( vertexSelectShift[ vdS ] == true || vertexSelectShift[ vdT ] == true ) magnification *= 2.0;
@@ -364,9 +332,6 @@ void Smooth::_initOutputs( void )
 #endif  // DEBUG
 
         double wL = _w_contextlength;
-        if( vertexSelectMag[ vdS ] == true && vertexSelectMag[ vdT ] == true ) wL = _w_focuslength;
-        //double wL = _w_length;
-        //if( edgeIsLeader[ edge ] == true ) wL = _w_leaderlength;
 
         // x
         _output( nRows, 0 ) = wL * s * ( cosTheta * vji.x() - sinTheta * vji.y() );
@@ -378,14 +343,14 @@ void Smooth::_initOutputs( void )
     }
 
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
-        DegreeSizeType degrees = out_degree( vertex, g );
+        UndirectedBaseGraph::degree_size_type degrees = out_degree( vertex, g );
 
         if( degrees > 1 ){
 
             //double tanTheta = tan( (double)( degrees - 2 ) * M_PI / 2.0 / (double) degrees );
-            OutEdgeIterator eo_cur, eo_nxt, eo_end;
+            UndirectedBaseGraph::out_edge_iterator eo_cur, eo_nxt, eo_end;
             for( tie( eo_cur, eo_end ) = out_edges( vertex, g ); eo_cur != eo_end; ++eo_cur ){
 
                 // x
@@ -400,11 +365,11 @@ void Smooth::_initOutputs( void )
     }
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
-        _output( nRows, 0 ) = _w_position * vertexGeo[ vertex ].x();
+        _output( nRows, 0 ) = _w_position * g[ vertex ].geoPtr->x();
         nRows++;
-        _output( nRows, 0 ) = _w_position * vertexGeo[ vertex ].y();
+        _output( nRows, 0 ) = _w_position * g[ vertex ].geoPtr->y();
         nRows++;
     }
 
@@ -426,33 +391,27 @@ void Smooth::_initOutputs( void )
 //
 void Smooth::_updateCoefs( void )
 {
-    Graph               & g             = _metro->g();
-    unsigned int        nVertices       = _metro->nStations();
+    UndirectedBaseGraph               & g             = _boundary->g();
+    unsigned int        nVertices       = _boundary->nStations();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-    vector< double >    ratioR          = _metro->ratioR();
-
-    VertexIDMap         vertexID        = get( vertex_myid, g );
-    VertexSmoothMap     vertexSmooth    = get( vertex_mysmooth, g );
-    VertexIsStationMap  vertexIsStation = get( vertex_myisstation, g );
-    //VertexExternalMap   vertexExternal  = get( vertex_myexternal, g );
-    EdgeIDMap           edgeID          = get( edge_myid, g );
+    vector< double >    ratioR          = _boundary->ratioR();
 
     Eigen::MatrixXd     oldCoef;
     oldCoef = _coef.block( 0, 0, _nConstrs, _nVars );
 #ifdef  SMOOTH_CONFLICT
-    nVE = _metro->VEconflict().size();
+    nVE = _boundary->VEconflict().size();
 #endif  // SMOOTH_CONFLICT
 #ifdef  SMOOTH_BOUNDARY
-    BGL_FORALL_VERTICES( vd, g, Graph ) 
+    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph ) 
     {
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
             //minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
-        if ( vertexSmooth[ vd ].x() <= -( _half_width - minD ) ) nB++;
-        if ( vertexSmooth[ vd ].x() >= ( _half_width - minD ) ) nB++;
-        if ( vertexSmooth[ vd ].y() <= -( _half_height - minD ) ) nB++;
-        if ( vertexSmooth[ vd ].y() >= ( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) nB++;
     }
 #endif  // SMOOTH_BOUNDARY
     _coef.resize( _nConstrs + nB + 2*nVE, _nVars );
@@ -468,26 +427,26 @@ void Smooth::_updateCoefs( void )
 
 #ifdef  SMOOTH_BOUNDARY
     // add boundary coefficient
-    BGL_FORALL_VERTICES( vd, g, Graph ){
+    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph ){
 
-        unsigned int id = vertexID[ vd ];
+        unsigned int id = g[ vd ].id;
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
         //    minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
 
-        if ( vertexSmooth[ vd ].x() <= -( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) {
             _coef( nRows, id ) = _w_boundary;
             nRows++;
         }
-        if ( vertexSmooth[ vd ].x() >= ( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) {
             _coef( nRows, id ) = _w_boundary;
             nRows++;
         }
-        if ( vertexSmooth[ vd ].y() <= -( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) {
             _coef( nRows, id + nVertices ) = _w_boundary;
             nRows++;
         }
-        if ( vertexSmooth[ vd ].y() >= ( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) {
             _coef( nRows, id + nVertices ) = _w_boundary;
             nRows++;
         }
@@ -500,15 +459,15 @@ void Smooth::_updateCoefs( void )
 #ifdef  SMOOTH_CONFLICT
     // add conflict coefficient
     unsigned int countVE = 0;
-    for ( VEMap::iterator it = _metro->VEconflict().begin();
-          it != _metro->VEconflict().end(); ++it ) {
-        VertexDescriptor vdV = it->second.first;
-        EdgeDescriptor ed = it->second.second;
-        VertexDescriptor vdS = source( ed, g );
-        VertexDescriptor vdT = target( ed, g );
-        unsigned int idV = vertexID[ vdV ];
-        unsigned int idS = vertexID[ vdS ];
-        unsigned int idT = vertexID[ vdT ];
+    for ( VEMap::iterator it = _boundary->VEconflict().begin();
+          it != _boundary->VEconflict().end(); ++it ) {
+        UndirectedBaseGraph::vertex_descriptor vdV = it->second.first;
+        UndirectedBaseGraph::edge_descriptor ed = it->second.second;
+        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, g );
+        unsigned int idV = g[ vdV ].id;
+        unsigned int idS = g[ vdS ].id;
+        unsigned int idT = g[ vdT ].id;
         double r = ratioR[ countVE ];
 
         // x
@@ -546,39 +505,28 @@ void Smooth::_updateCoefs( void )
 //
 void Smooth::_updateOutputs( void )
 {
-    Graph               & g             = _metro->g();
-    unsigned int        nVertices       = _metro->nStations();
+    UndirectedBaseGraph               & g             = _boundary->g();
+    unsigned int        nVertices       = _boundary->nStations();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-    vector< double >    ratioR          = _metro->ratioR();
-
-    VertexIDMap             vertexID            = get( vertex_myid, g );
-    VertexSmoothMap         vertexSmooth        = get( vertex_mysmooth, g );
-    VertexGeoMap            vertexGeo           = get( vertex_mygeo, g );
-    VertexSelectMagMap      vertexSelectMag     = get( vertex_myselectmag, g );
-    VertexIsStationMap      vertexIsStation     = get( vertex_myisstation, g );
-    //VertexExternalMap       vertexExternal      = get( vertex_myexternal, g );
-    EdgeIDMap               edgeID              = get( edge_myid, g );
-    EdgeWeightMap           edgeWeight          = get( edge_weight, g );
-    EdgeSelectCtrlMap       edgeSelectCtrl      = get( edge_myselectctrl, g );
-    EdgeIsLeaderMap         edgeIsLeader        = get( edge_myisleader, g );
+    vector< double >    ratioR          = _boundary->ratioR();
 
     unsigned int nRows = 0;
     Eigen::VectorXd     oldOutput;
     oldOutput = _output;
 #ifdef  SMOOTH_CONFLICT
-    nVE = _metro->VEconflict().size();
+    nVE = _boundary->VEconflict().size();
 #endif  // SMOOTH_CONFLICT
 #ifdef  SMOOTH_BOUNDARY
-    BGL_FORALL_VERTICES( vd, g, Graph ) 
+    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph ) 
     {
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
         //    minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
-        if ( vertexSmooth[ vd ].x() <= -( _half_width - minD ) ) nB++;
-        if ( vertexSmooth[ vd ].x() >= ( _half_width - minD ) ) nB++;
-        if ( vertexSmooth[ vd ].y() <= -( _half_height - minD ) ) nB++;
-        if ( vertexSmooth[ vd ].y() >= ( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) nB++;
     }
 #endif  // SMOOTH_BOUNDARY
     _output.resize( _nConstrs + nB + 2*nVE );
@@ -586,17 +534,17 @@ void Smooth::_updateOutputs( void )
     //cerr << "_output.rows = " << _output.rows() << endl;
 
     // Regular edge length
-    BGL_FORALL_EDGES( edge, g, Graph )
+    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph )
     {
-        VertexDescriptor vdS = source( edge, g );
-        VertexDescriptor vdT = target( edge, g );
-        Coord2 vi = vertexGeo[ vdS ];
-        Coord2 vj = vertexGeo[ vdT ];
+        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
+        Coord2 vi = *g[ vdS ].geoPtr;
+        Coord2 vj = *g[ vdT ].geoPtr;
         Coord2 vji = vi - vj;
-        Coord2 pi = vertexSmooth[ vdS ];
-        Coord2 pj = vertexSmooth[ vdT ];
+        Coord2 pi = *g[ vdS ].smoothPtr;
+        Coord2 pj = *g[ vdT ].smoothPtr;
         Coord2 pji = pi - pj;
-        double s = _d_Beta * edgeWeight[ edge ] / vji.norm();
+        double s = _d_Beta * g[ edge ].weight / vji.norm();
         double angleV = atan2( vji.y(), vji.x() );
         double angleP = atan2( pji.y(), pji.x() );
         double diffTheta = angleP - angleV;
@@ -616,9 +564,6 @@ void Smooth::_updateOutputs( void )
         //if( edgeSelectCtrl[ edge ] == true ) magnification = 2.0;
 
         double wL = _w_contextlength;
-        if( vertexSelectMag[ vdS ] == true && vertexSelectMag[ vdT ] == true ) wL = _w_focuslength;
-        //double wL = _w_length;
-        //if( edgeIsLeader[ edge ] == true ) wL = _w_leaderlength;
 
         // x
         _output( nRows, 0 ) = wL * s * ( cosTheta * vji.x() - sinTheta * vji.y() );
@@ -631,14 +576,14 @@ void Smooth::_updateOutputs( void )
 
 
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
-        DegreeSizeType degrees = out_degree( vertex, g );
+        UndirectedBaseGraph::degree_size_type degrees = out_degree( vertex, g );
 
         if( degrees > 1 ){
 
             double tanTheta = tan( (double)( degrees - 2 ) * M_PI / 2.0 / (double) degrees );
-            OutEdgeIterator eo_cur, eo_nxt, eo_end;
+            UndirectedBaseGraph::out_edge_iterator eo_cur, eo_nxt, eo_end;
             for( tie( eo_cur, eo_end ) = out_edges( vertex, g ); eo_cur != eo_end; ++eo_cur ){
 
                 // x
@@ -653,7 +598,7 @@ void Smooth::_updateOutputs( void )
     }
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
         // x
         _output( nRows, 0 ) = oldOutput( nRows, 0 );
@@ -666,25 +611,25 @@ void Smooth::_updateOutputs( void )
 
 #ifdef  SMOOTH_BOUNDARY
     // boundary constraints
-    BGL_FORALL_VERTICES( vd, g, Graph ){
+    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph ){
 
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
         //    minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
 
-        if ( vertexSmooth[ vd ].x() <= -( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * -( _half_width - minD );
             nRows++;
         }
-        if ( vertexSmooth[ vd ].x() >= ( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * ( _half_width - minD );
             nRows++;
         }
-        if ( vertexSmooth[ vd ].y() <= -( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * -( _half_height - minD );
             nRows++;
         }
-        if ( vertexSmooth[ vd ].y() >= ( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * ( _half_height - minD );
             nRows++;
         }
@@ -696,19 +641,19 @@ void Smooth::_updateOutputs( void )
 #ifdef  SMOOTH_CONFLICT
     // conflict constraints
     unsigned int countVE = 0;
-    for ( VEMap::iterator it = _metro->VEconflict().begin();
-          it != _metro->VEconflict().end(); ++it ) {
-        VertexDescriptor vdV = it->second.first;
-        EdgeDescriptor ed = it->second.second;
-        VertexDescriptor vdS = source( ed, g );
-        VertexDescriptor vdT = target( ed, g );
-        unsigned int idV = vertexID[ vdV ];
-        unsigned int idS = vertexID[ vdS ];
-        unsigned int idT = vertexID[ vdT ];
+    for ( VEMap::iterator it = _boundary->VEconflict().begin();
+          it != _boundary->VEconflict().end(); ++it ) {
+        UndirectedBaseGraph::vertex_descriptor vdV = it->second.first;
+        UndirectedBaseGraph::edge_descriptor ed = it->second.second;
+        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, g );
+        unsigned int idV = g[ vdV ].id;
+        unsigned int idS = g[ vdS ].id;
+        unsigned int idT = g[ vdT ].id;
         double r = ratioR[ countVE ];
 
-        Coord2 v = vertexGeo[ vdV ];
-        Coord2 p = r * vertexGeo[ vdS ] + ( 1.0-r ) * vertexGeo[ vdT ];
+        Coord2 v = *g[ vdV ].geoPtr;
+        Coord2 p = r * *g[ vdS ].geoPtr + ( 1.0-r ) * *g[ vdT ].geoPtr;
         double minD = _d_Beta;
         //if( vertexIsStation[ vdV ] == false )
         //    minD = vertexExternal[ vdV ].leaderWeight() * _d_Beta;
@@ -869,30 +814,19 @@ double Smooth::ConjugateGradient( unsigned int iter )
 //
 void Smooth::retrieve( void )
 {
-    Graph        & g            = _metro->g();
-    unsigned int nVertices      = _metro->nStations();
+    UndirectedBaseGraph        & g            = _boundary->g();
+    unsigned int nVertices      = _boundary->nStations();
 
-    VertexIDMap         vertexID        = get( vertex_myid, g );
-    VertexCoordMap      vertexCoord     = get( vertex_mycoord, g );
-    VertexSmoothMap     vertexSmooth    = get( vertex_mysmooth, g );
-    VertexTempMap       vertexTemp      = get( vertex_mytemp, g );
-    //VertexExternalMap   vertexExternal  = get( vertex_myexternal, g );
-    VertexExtstateMap   vertexExtistate = get( vertex_myextstate, g );
-    EdgeIDMap           edgeID          = get( edge_myid, g );
-    EdgeGeoAngleMap     edgeGeoAngle    = get( edge_mygeoangle, g );
-    EdgeSmoAngleMap     edgeSmoAngle    = get( edge_mysmoangle, g );
-    EdgeCurAngleMap     edgeCurAngle    = get( edge_mycurangle, g );
-
-    vector< vector< VertexDescriptor > > vdMatrix;
+    vector< vector< UndirectedBaseGraph::vertex_descriptor > > vdMatrix;
     // find the vertex that is too close to an edge
-    for ( VEMap::iterator it = _metro->VEconflict().begin();
-          it != _metro->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _boundary->VEconflict().begin();
+          it != _boundary->VEconflict().end(); ++it ) {
 
-        vector< VertexDescriptor > vdVec;
-        VertexDescriptor vdV = it->second.first;
-        EdgeDescriptor ed = it->second.second;
-        VertexDescriptor vdS = source( ed, g );
-        VertexDescriptor vdT = target( ed, g );
+        vector< UndirectedBaseGraph::vertex_descriptor > vdVec;
+        UndirectedBaseGraph::vertex_descriptor vdV = it->second.first;
+        UndirectedBaseGraph::edge_descriptor ed = it->second.second;
+        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, g );
         vdVec.push_back( vdV );
         vdVec.push_back( vdS );
         vdVec.push_back( vdT );
@@ -906,7 +840,7 @@ void Smooth::retrieve( void )
     double scale = 1.0;
     // update coordinates
     // but freeze the vertex that is too close to an edge
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
 
         vector< int > rowVec;
         for( unsigned int i = 0; i < vdMatrix.size(); i++ ){
@@ -914,16 +848,16 @@ void Smooth::retrieve( void )
         }
         if( rowVec.size() > 0 ){
 
-            Coord2 curCoord = vertexSmooth[ vertex ];
+            Coord2 curCoord = *g[ vertex ].smoothPtr;
             Coord2 newCoord( _var( nRows, 0 ), _var( nRows + nVertices, 0 ) );
             for( unsigned int i = 0; i < rowVec.size(); i++ ){
 
-                VertexDescriptor vdS = vdMatrix[ rowVec[i] ][ 1 ];
-                VertexDescriptor vdT = vdMatrix[ rowVec[i] ][ 2 ];
+                UndirectedBaseGraph::vertex_descriptor vdS = vdMatrix[ rowVec[i] ][ 1 ];
+                UndirectedBaseGraph::vertex_descriptor vdT = vdMatrix[ rowVec[i] ][ 2 ];
                 //cerr << "V = " << vertexID[ vertex ] << " S = " << vertexID[ vdS ] << " T = " << vertexID[ vdT ]
                 //     << " dist = " << (newCoord - curCoord).norm() << endl;
-                Coord2 coordS = vertexSmooth[ vdS ];
-                Coord2 coordT = vertexSmooth[ vdT ];
+                Coord2 coordS = *g[ vdS ].smoothPtr;
+                Coord2 coordT = *g[ vdT ].smoothPtr;
                 double m = ( coordS.y() - coordT.y() ) / ( coordS.x() - coordT.x() );
                 double k = coordS.y() - m * coordS.x();
                 double tmpS = 1.0;
@@ -940,96 +874,48 @@ void Smooth::retrieve( void )
         }
     }
     //cerr << "scale = " << scale << endl;
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
-        Coord2 curCoord = vertexSmooth[ vertex ];
-        //vertexCoord[ vertex ].x() = vertexSmooth[ vertex ].x() = scale * ( _var( nRows, 0 ) - curCoord.x() ) + curCoord.x();
-        //vertexCoord[ vertex ].y() = vertexSmooth[ vertex ].y() = scale * ( _var( nRows + nVertices, 0 ) - curCoord.y() ) + curCoord.y();
-        vertexTemp[ vertex ].x() = vertexCoord[ vertex ].x();
-        vertexTemp[ vertex ].y() = vertexCoord[ vertex ].y();
-        vertexCoord[ vertex ].x() = vertexSmooth[ vertex ].x() = _var( nRows, 0 );
-        vertexCoord[ vertex ].y() = vertexSmooth[ vertex ].y() = _var( nRows + nVertices, 0 );
-        assert( vertexID[ vertex ] == nRows );
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+        Coord2 curCoord = *g[ vertex ].smoothPtr;
+        g[ vertex ].coordPtr->x() = g[ vertex ].smoothPtr->x() = _var( nRows, 0 );
+        g[ vertex ].coordPtr->y() = g[ vertex ].smoothPtr->y() = _var( nRows + nVertices, 0 );
+        assert( g[ vertex ].id == nRows );
         nRows++;
     }
 
-#ifdef  SKIP
-    unsigned int nRows = 0;
-    // update coordinates
-    // but freeze the vertex that is too close to an edge
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
-
-        vector< int > rowVec;
-        for( unsigned int i = 0; i < vdMatrix.size(); i++ ){
-            if( vertex == vdMatrix[i][0] ) rowVec.push_back( i );
-        }
-
-        if( rowVec.size() > 0 ){
-
-            Coord2 curCoord = vertexSmooth[ vertex ];
-            Coord2 newCoord( _var( nRows, 0 ), _var( nRows + nVertices, 0 ) );
-            for( unsigned int i = 0; i < rowVec.size(); i++ ){
-
-                VertexDescriptor vdS = vdMatrix[ rowVec[i] ][ 1 ];
-                VertexDescriptor vdT = vdMatrix[ rowVec[i] ][ 2 ];
-                //cerr << "V = " << vertexID[ vertex ] << " S = " << vertexID[ vdS ] << " T = " << vertexID[ vdT ] 
-                //     << " dist = " << (newCoord - curCoord).norm() << endl;
-                Coord2 coordS = vertexSmooth[ vdS ];
-                Coord2 coordT = vertexSmooth[ vdT ];
-                double m = ( coordS.y() - coordT.y() ) / ( coordS.x() - coordT.x() );
-                double k = coordS.y() - m * coordS.x();
-                while( ( curCoord.y() - m * curCoord.x() - k ) * ( newCoord.y() - m * newCoord.x() - k ) < 0 ) {
-                    Coord2 diff = newCoord - curCoord;
-                    newCoord = diff/2.0 + curCoord;
-                    //cerr << "diff = " << diff << endl;
-                    //cerr << vertexID[ vertex ] << " == " << vertexID[ vdMatrix[mRow][0] ] << endl;
-                }
-            }
-
-            vertexCoord[ vertex ].x() = vertexSmooth[ vertex ].x() = newCoord.x();
-            vertexCoord[ vertex ].y() = vertexSmooth[ vertex ].y() = newCoord.y();
-        }
-        else{
-            vertexCoord[ vertex ].x() = vertexSmooth[ vertex ].x() = _var( nRows, 0 );
-            vertexCoord[ vertex ].y() = vertexSmooth[ vertex ].y() = _var( nRows + nVertices, 0 );
-        }
-        assert( vertexID[ vertex ] == nRows );
-        nRows++;
-    }
-#endif  // SKIP
     // update smooth angle
-    BGL_FORALL_EDGES( edge, g, Graph ){
+    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
 
-        VertexDescriptor vdS = source( edge, g );
-        VertexDescriptor vdT = target( edge, g );
+        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
 
         Coord2 coordO;
         Coord2 coordD;
-        if( vertexID[ vdS ] < vertexID[ vdT ] ){
-            coordO = vertexSmooth[ vdS ];
-            coordD = vertexSmooth[ vdT ];
+        if( g[ vdS ].id < g[ vdT ].id ){
+            coordO = *g[ vdS ].smoothPtr;
+            coordD = *g[ vdT ].smoothPtr;
         }
         else{
-            coordO = vertexSmooth[ vdT ];
-            coordD = vertexSmooth[ vdS ];
+            coordO = *g[ vdT ].smoothPtr;
+            coordD = *g[ vdS ].smoothPtr;
         }
         double diffX = coordD.x() - coordO.x();
         double diffY = coordD.y() - coordO.y();
         double angle = atan2( diffY, diffX );
 
-        edgeSmoAngle[ edge ] = angle;
-        edgeCurAngle[ edge ] = angle;
+        g[ edge ].smoothAngle = angle;
+        g[ edge ].angle = angle;
 
     }
 
     // check possible conflict
-    _metro->checkVEConflicts();
+    _boundary->checkVEConflicts();
 
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;
-    BGL_FORALL_VERTICES( vertex, g, Graph ){
+    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
         cerr << "V(" << vertexID[ vertex ] << ") = " << vertexSmooth[ vertex ];
     }
-    BGL_FORALL_EDGES( edge, g, Graph ){
+    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
         cerr << "E(" << edgeID[ edge ] << ") : smoAngle= " << edgeSmoAngle[ edge ] << endl;
     }
 #endif  // DEBUG

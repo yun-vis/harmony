@@ -1,4 +1,4 @@
-#include "GraphicsBallItem.h"
+#include "ui/GraphicsBallItem.h"
 
 //------------------------------------------------------------------------------
 //	Macro definition

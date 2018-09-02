@@ -15,7 +15,7 @@
 using namespace std;
 
 #ifndef Q_MOC_RUN
-#include "Coord2.h"
+#include "base/Coord2.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>

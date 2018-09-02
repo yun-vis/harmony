@@ -1,11 +1,11 @@
 //==============================================================================
-// Metro.h
-//  : header file for the metro network
+// Boundary.h
+//  : header file for the Boundary network
 //
 //==============================================================================
 
-#ifndef _Metro_H        // begining of header file
-#define _Metro_H        // notifying that this file is included
+#ifndef _Boundary_H        // begining of header file
+#define _Boundary_H        // notifying that this file is included
 
 //----------------------------------------------------------------------
 //  Including header files
@@ -13,15 +13,16 @@
 
 #include <iostream>
 #include <iomanip>
+
 using namespace std;
 
-#include "Graph.h"
+#include "UndirectedBaseGraph.h"
 #include "Grid2.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
 //------------------------------------------------------------------------------
-typedef pair< VertexDescriptor, EdgeDescriptor >	VEPair;
+typedef pair< UndirectedBaseGraph::vertex_descriptor, UndirectedBaseGraph::edge_descriptor >	VEPair;
 typedef pair< unsigned int, unsigned int >	        VVIDPair;
 typedef map< Grid2, VEPair >                        VEMap;
 
@@ -31,23 +32,21 @@ typedef map< Grid2, VEPair >                        VEMap;
 
 #define MAX_LINES		(32)
 #define MAX_STATIONS		(1024)
-
 #define NEIGHBORHOOD_RADIUS	(1.0)
-
 #define LABELING_MARGIN		(1)
 
-class Metro
+class Boundary
 {
 private:
-    Graph graph;
-    vector< vector< VertexDescriptor > >        _shortestPathM;
+    UndirectedBaseGraph graph;
+    vector< vector< UndirectedBaseGraph::vertex_descriptor > >        _shortestPathM;
     
 protected:
     
-    vector< vector< EdgeDescriptor > >		_line;
-    vector< vector< VertexDescriptor > >	_lineSta;
-    double					_lineColor  [ MAX_LINES ][ 3 ];
-    char					_lineName   [ MAX_LINES ][ MAX_STR ];
+    vector< vector< UndirectedBaseGraph::edge_descriptor > >	_line;
+    vector< vector< UndirectedBaseGraph::vertex_descriptor > >	_lineSta;
+    double					    _lineColor  [ MAX_LINES ][ 3 ];
+    char					    _lineName   [ MAX_LINES ][ MAX_STR ];
     unsigned int				_nLines;
     unsigned int				_nStations;
     unsigned int				_nSbeforeSim;   // station no. before simplification
@@ -69,9 +68,9 @@ protected:
 
 public:
     
-    Metro();                        // default constructor
-    Metro( const Metro & obj );     // Copy constructor
-    virtual ~Metro();               // Destructor
+    Boundary();                        // default constructor
+    Boundary( const Boundary & obj );     // Copy constructor
+    virtual ~Boundary();               // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
@@ -92,13 +91,13 @@ public:
     const double &			        dAlpha( void ) const { return _distAlpha; }
     const double &			        dBeta( void ) const { return _distBeta; }
     
-    const Graph &				g( void ) const { return graph; }
-    Graph &					g( void )	{ return graph; }
+    const UndirectedBaseGraph &		g( void ) const { return graph; }
+    UndirectedBaseGraph &			g( void )	    { return graph; }
 
-    const vector< vector< VertexDescriptor > > &    spM( void ) const { return _shortestPathM; }
+    const vector< vector< UndirectedBaseGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
 
-    const vector< vector< EdgeDescriptor > > &      line( void ) const { return _line; }
-    const vector< vector< VertexDescriptor > > &    lineSta( void ) const { return _lineSta; }
+    const vector< vector< UndirectedBaseGraph::edge_descriptor > > &      line( void ) const { return _line; }
+    const vector< vector< UndirectedBaseGraph::vertex_descriptor > > &    lineSta( void ) const { return _lineSta; }
 
     const vector< unsigned int > &              removedVertices( void ) const { return _removedVertices; }
     const vector< VVIDPair > &                  removedEdges( void ) const { return _removedEdges; }
@@ -121,19 +120,18 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void adjustsize( const int & width, const int & height );   // normalize the metro size
+    void adjustsize( const int & width, const int & height );   // normalize the Boundary size
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
-    bool movebackSmooth( const Metro & obj );                   // move smooth station coordination back to original metro network
-    bool movebackOctilinear( const Metro & obj );               // move octilinear station coordination back to original metro network
+    bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
 
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void cloneLayout( const Metro & obj );
-    void cloneSmooth( const Metro & obj );
-    void cloneOctilinear( const Metro & obj );
+    void cloneLayout( const Boundary & obj );
+    void cloneSmooth( const Boundary & obj );
+    void cloneOctilinear( const Boundary & obj );
     void updateTempCoord( void );
-    void reorderID( void );                                     // reorder metro vertex and edge id
+    void reorderID( void );                                     // reorder Boundary vertex and edge id
     void load( const char * filename );
     void loadLabel( const char * filename );
     void clear( void );
@@ -141,16 +139,16 @@ public:
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const Metro & obj );
+    friend ostream & operator << ( ostream & stream, const Boundary & obj );
                                 // Output
-    friend istream & operator >> ( istream & stream, Metro & obj );
+    friend istream & operator >> ( istream & stream, Boundary & obj );
                                 // Input
 
-    virtual const char * className( void ) const { return "Metro"; }
+    virtual const char * className( void ) const { return "Boundary"; }
                                 // Class name
 };
 
-#endif // _Metro_H
+#endif // _Boundary_H
 
 // end of header file
 // Do not add any stuff under this line.

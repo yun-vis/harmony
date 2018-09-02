@@ -1,4 +1,4 @@
-#include "GraphicsEdgeItem.h"
+#include "ui/GraphicsEdgeItem.h"
 
 //------------------------------------------------------------------------------
 //	Macro definition

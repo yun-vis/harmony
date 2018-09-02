@@ -1,5 +1,5 @@
 
-#include "GraphicsView.h"
+#include "ui/GraphicsView.h"
 
 //------------------------------------------------------------------------------
 //	Macro definition
@@ -11,17 +11,18 @@
 //------------------------------------------------------------------------------
 void GraphicsView::_item_nodes( void )
 {
-    //Graph * g = & _simmetro->g();
-    Graph * g = & _metro->g();
+    UndirectedBaseGraph * g =  NULL;
+    if( _is_simplifiedFlag == true )
+        g = & _simplifiedBoundary->g();
+    else
+        g = & _boundary->g();
 
-    VertexCoordMap          vertexCoord         = get( vertex_mycoord, *g );
-
-    BGL_FORALL_VERTICES( vd, *g, Graph ) {
+    BGL_FORALL_VERTICES( vd, *g, UndirectedBaseGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setRect( QRectF( vertexCoord[vd].x(), -vertexCoord[vd].y(), 10, 10 ) );
+        itemptr->setRect( QRectF( (*g)[vd].coordPtr->x(), -(*g)[vd].coordPtr->y(), 10, 10 ) );
 
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
@@ -31,18 +32,19 @@ void GraphicsView::_item_nodes( void )
 
 void GraphicsView::_item_edges( void )
 {
-    //Graph * g = & _simmetro->g();
-    Graph * g = & _metro->g();
+    UndirectedBaseGraph * g =  NULL;
+    if( _is_simplifiedFlag == true )
+        g = & _simplifiedBoundary->g();
+    else
+        g = & _boundary->g();
 
-    VertexCoordMap          vertexCoord         = get( vertex_mycoord, *g );
+    BGL_FORALL_EDGES( ed, *g, UndirectedBaseGraph ) {
 
-    BGL_FORALL_EDGES( ed, *g, Graph ) {
-
-        VertexDescriptor vdS = source( ed, *g );
-        VertexDescriptor vdT = target( ed, *g );
+        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, *g );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, *g );
         QPainterPath path;
-        path.moveTo( vertexCoord[vdS].x(), -vertexCoord[vdS].y() );
-        path.lineTo( vertexCoord[vdT].x(), -vertexCoord[vdT].y() );
+        path.moveTo( (*g)[vdS].coordPtr->x(), -(*g)[vdS].coordPtr->y() );
+        path.lineTo( (*g)[vdT].coordPtr->x(), -(*g)[vdT].coordPtr->y() );
 
         GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
@@ -83,6 +85,8 @@ GraphicsView::GraphicsView( QWidget *parent )
 
 	_scene = new QGraphicsScene( this );
     _scene->setSceneRect( -DEFAULT_WIDTH/2.0, -DEFAULT_HEIGHT/2.0, DEFAULT_WIDTH, DEFAULT_HEIGHT );  // x, y, w, h
+
+    _is_simplifiedFlag = false;
     this->setScene( _scene );
 }
 

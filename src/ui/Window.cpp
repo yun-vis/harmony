@@ -1,11 +1,11 @@
-#include "Window.h"
+#include "ui/Window.h"
 
 ofstream    ofs( "../batch.txt" );
 
 //----------------------------------------------------------
 // Window
 //----------------------------------------------------------
-Window::Window( QOpenGLWidget *parent )
+Window::Window( QWidget *parent )
     : QMainWindow( parent )
 {
     _gv = new GraphicsView( this );
@@ -20,15 +20,15 @@ Window::~Window()
 {
 }
 
-void Window::init( Metro * __metro, Metro * __simmetro,
+void Window::init( Boundary * __boundary, Boundary * __simplifiedBoundary,
                    Smooth * __smooth, Octilinear * __octilinear )
 {
-    _metro = __metro;
-    _simmetro = __simmetro;
+    _boundary = __boundary;
+    _simplifiedBoundary = __simplifiedBoundary;
     _smooth = __smooth;
     _octilinear = __octilinear;
 
-    _gv->init( _metro, _simmetro );
+    _gv->init( _boundary, _simplifiedBoundary );
 
     _content_width = DEFAULT_WIDTH - LEFTRIGHT_MARGIN;
     _content_height = DEFAULT_HEIGHT - TOPBOTTOM_MARGIN;
@@ -56,6 +56,7 @@ void Window::createActions( void )
     connect( selSmoothLSAct, SIGNAL( triggered() ), this, SLOT( selectSmoothLS() ) );
     selOctilinearLSAct = new QAction( tr("O&ctilinear Original (LS)"), this );
     connect( selOctilinearLSAct, SIGNAL( triggered() ), this, SLOT( selectOctilinearLS() ) );
+
     // conjugate gradient
     selSmoothSmallCGAct = new QAction( tr("S&mooth Small (CG)"), this );
     connect( selSmoothSmallCGAct, SIGNAL( triggered() ), this, SLOT( selectSmoothSmallCG() ) );
@@ -93,17 +94,17 @@ void Window::createMenus( void )
 void Window::selectData( void )
 {
     // load file
-    //string datafilename = "../data/vienna-ubahn.txt";
-    string datafilename = "../data/synthetic.txt";
-    _metro->load( datafilename.c_str() );
+    string datafilename = "../data/vienna-ubahn.txt";
+    //string datafilename = "../data/synthetic.txt";
+    _boundary->load( datafilename.c_str() );
 
     postLoad();
 }
 
 void Window::postLoad( void )
 {
-    _metro->adjustsize( _content_width/2, _content_height/2 );
-    _metro->clearConflicts();
+    _boundary->adjustsize( _content_width/2, _content_height/2 );
+    _boundary->clearConflicts();
 
     redrawAllScene();
 }
@@ -121,22 +122,23 @@ void Window::redrawAllScene( void )
 
 void Window::selectCloneGraph( void )
 {
-    _simmetro->cloneLayout( *_metro );
-    _simmetro->clearConflicts();
+    _simplifiedBoundary->cloneLayout( *_boundary );
+    _simplifiedBoundary->clearConflicts();
 
     redrawAllScene();
 }
 
 void Window::selectMinDistance( void )
 {
-    _simmetro->simplifyLayout();
+    _simplifiedBoundary->simplifyLayout();
+    _gv->setIssimplifiedFlag( true );
     redrawAllScene();
 }
 
 void Window::selectMovebackSmooth( void )
 {
     bool isFinished = true;
-    isFinished = _simmetro->movebackSmooth( *_metro );
+    isFinished = _simplifiedBoundary->movebackNodes( *_boundary, TYPE_SMOOTH );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -144,7 +146,7 @@ void Window::selectMovebackSmooth( void )
 void Window::selectMovebackOctilinear( void )
 {
     bool isFinished = true;
-    isFinished = _simmetro->movebackOctilinear( *_metro );
+    isFinished = _simplifiedBoundary->movebackNodes( *_boundary, TYPE_OCTILINEAR );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -154,14 +156,14 @@ void Window::selectSmoothSmallCG( void )
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
-    unsigned int nLabels = _simmetro->nLabels();
-    _smooth->prepare( _simmetro, _content_width, _content_height );
-    err = _smooth->ConjugateGradient( 3 * _simmetro->nStations() );
+    unsigned int nLabels = _simplifiedBoundary->nLabels();
+    _smooth->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+    err = _smooth->ConjugateGradient( 3 * _simplifiedBoundary->nStations() );
     _smooth->retrieve();
 
-    cerr << "simNStation = " << _simmetro->nStations() << endl;
-    cerr << "nStation = " << _metro->nStations() << endl;
-    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simmetro->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedBoundary->nStations() << endl;
+    cerr << "nStation = " << _boundary->nStations() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundary->nStations() << endl;
 
     // run smooth optimization
     while( true ) {
@@ -171,11 +173,11 @@ void Window::selectSmoothSmallCG( void )
 
         // check if all nodes are moved back
 #ifdef  DEBUG
-        cerr << " num_vertices( _simmetro->g() ) = " << num_vertices( _simmetro->g() ) << endl
-             << " num_vertices( _metro->g() ) = " << num_vertices( _metro->g() ) << endl 
+        cerr << " num_vertices( _simplifiedBoundary->g() ) = " << num_vertices( _simplifiedBoundary->g() ) << endl
+             << " num_vertices( _boundary->g() ) = " << num_vertices( _boundary->g() ) << endl 
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
-        if( num_vertices( _simmetro->g() ) == ( num_vertices( _metro->g() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedBoundary->g() ) == ( num_vertices( _boundary->g() ) + nLabels ) ) {
             break;
         }
         else {
@@ -184,12 +186,12 @@ void Window::selectSmoothSmallCG( void )
             }
         }
 
-        _smooth->prepare( _simmetro, _content_width/2, _content_height/2 );
-        if( num_vertices( _simmetro->g() ) == ( num_vertices( _metro->g() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _metro->nStations() + nLabels - _simmetro->nStations() ), 30 );
+        _smooth->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundary->g() ) == ( num_vertices( _boundary->g() ) + nLabels ) ) {
+            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _metro->nStations() + nLabels - _simmetro->nStations() ), 30 );
+            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
         err = _smooth->ConjugateGradient( iter );
         _smooth->retrieve();
@@ -197,9 +199,9 @@ void Window::selectSmoothSmallCG( void )
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
-    //_simmetro->adjustsize( width(), height() );
+    //_simplifiedBoundary->adjustsize( width(), height() );
     _smooth->clear();
-    _metro->cloneSmooth( *_simmetro );
+    _boundary->cloneSmooth( *_simplifiedBoundary );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
     // ofs << "Total Time CG = " << clock() - start_time << endl;
@@ -210,17 +212,19 @@ void Window::selectSmoothSmallCG( void )
 void Window::selectSmooth( OPTTYPE opttype )
 {
     // run smooth optimization
-    int iter = 0;
-    _smooth->prepare( _metro, _content_width/2, _content_height/2 );
+    _smooth->prepare( _boundary, _content_width/2, _content_height/2 );
     switch( opttype ){
         case LEAST_SQUARE:
-            iter = 2 * _metro->nStations();
-            //iter = 20;
+        {
+            int iter = _boundary->nStations();
             _smooth->LeastSquare( iter );
+        }
             break;
         case CONJUGATE_GRADIENT:
-            iter = 2 * _metro->nStations();
+        {
+            int iter = _boundary->nStations();
             _smooth->ConjugateGradient( iter );
+        }
             break;
         default:
             break;
@@ -247,12 +251,12 @@ void Window::selectOctilinearSmallCG( void )
 {
     // run coarse octilinear optimization
     double err = 0.0;
-    unsigned int nLabels = _simmetro->nLabels();
+    unsigned int nLabels = _simplifiedBoundary->nLabels();
 
-    _octilinear->prepare( _simmetro, _content_width/2, _content_height/2 );
-    err = _octilinear->ConjugateGradient( 5 * _simmetro->nStations() );
+    _octilinear->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+    err = _octilinear->ConjugateGradient( 5 * _simplifiedBoundary->nStations() );
     _octilinear->retrieve();
-    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simmetro->nStations() << endl;
+    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundary->nStations() << endl;
 
     // run octilinear optimization
     while( true ) {
@@ -261,7 +265,7 @@ void Window::selectOctilinearSmallCG( void )
         int iter = 0;
 
         // check if all nodes are moved back
-        if( num_vertices( _simmetro->g() ) == ( num_vertices( _metro->g() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedBoundary->g() ) == ( num_vertices( _boundary->g() ) + nLabels ) ) {
             break;
         }
         else {
@@ -270,12 +274,12 @@ void Window::selectOctilinearSmallCG( void )
             }
         }
 
-        _octilinear->prepare( _simmetro, _content_width/2, _content_height/2 );
-        if( num_vertices( _simmetro->g() ) == ( num_vertices( _metro->g() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _metro->nStations() + nLabels - _simmetro->nStations() ), 30 );
+        _octilinear->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundary->g() ) == ( num_vertices( _boundary->g() ) + nLabels ) ) {
+            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _metro->nStations() + nLabels - _simmetro->nStations() ), 30 );
+            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
         err = _octilinear->ConjugateGradient( iter );
         _octilinear->retrieve();
@@ -284,7 +288,7 @@ void Window::selectOctilinearSmallCG( void )
     }
 
     _octilinear->clear();
-    _metro->cloneOctilinear( *_simmetro );
+    _boundary->cloneOctilinear( *_simplifiedBoundary );
 
     redrawAllScene();
 }
@@ -292,16 +296,20 @@ void Window::selectOctilinearSmallCG( void )
 void Window::selectOctilinear( OPTTYPE opttype )
 {
     // run octilinear optimization
-    double iter = 0;
-    _octilinear->prepare( _metro, _content_width/2, _content_height/2 );
+    _octilinear->prepare( _boundary, _content_width/2, _content_height/2 );
+
     switch( opttype ) {
         case LEAST_SQUARE:
-            iter = 2 * _metro->nStations();
+        {
+            int iter = _boundary->nStations();
             _octilinear->LeastSquare( iter );
+        }
             break;
         case CONJUGATE_GRADIENT:
-            iter = 2 * _metro->nStations();
+        {
+            int iter = _boundary->nStations();
             _octilinear->ConjugateGradient( iter );
+        }
             break;
         default:
             break;
@@ -333,21 +341,36 @@ void Window::keyPressEvent( QKeyEvent *e )
             selectData();
             break;
         }
+        case Qt::Key_A:
+        {
+            if( _gv->getIssimplifiedFlag() == true )
+                _gv->setIssimplifiedFlag( false );
+            else
+                _gv->setIssimplifiedFlag( true );
+            break;
+        }
         case Qt::Key_C:
         {
             selectCloneGraph();
             break;
         }
+        case Qt::Key_M:
+        {
+            selectMinDistance();
+            break;
+        }
         case Qt::Key_S:
         {
             selectCloneGraph();
-            selectSmoothSmallCG();
+            selectSmoothCG();
+            //selectSmoothSmallCG();
             break;
         }
         case Qt::Key_O:
         {
             selectCloneGraph();
-            selectOctilinearSmallCG();
+            selectOctilinearCG();
+            //selectOctilinearSmallCG();
             break;
         }
         case Qt::Key_Q:
