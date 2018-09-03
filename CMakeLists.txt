@@ -67,6 +67,10 @@ set(HEADERS
         include/base/Coord2.h
         include/base/Grid2.h
         include/base/Boundary.h
+        include/base/BoundaryEdgeProperty.h
+        include/base/BoundaryGraph.h
+        include/base/BoundaryGraphProperty.h
+        include/base/BoundaryVertexProperty.h
         include/base/UndirectedBaseEdgeProperty.h
         include/base/UndirectedBaseGraph.h
         include/base/UndirectedBaseGraphProperty.h
@@ -84,6 +88,10 @@ set(SOURCES
         src/base/Grid2.cpp
         src/base/Line2.cpp
         src/base/Boundary.cpp
+        src/base/BoundaryEdgeProperty.cpp
+        src/base/BoundaryGraph.cpp
+        src/base/BoundaryGraphProperty.cpp
+        src/base/BoundaryVertexProperty.cpp
         src/base/UndirectedBaseEdgeProperty.cpp
         src/base/UndirectedBaseGraph.cpp
         src/base/UndirectedBaseGraphProperty.cpp

@@ -18,8 +18,8 @@
 
 using namespace std;
 
-#include "Coord2.h"
-#include "Common.h"
+#include "base/Coord2.h"
+#include "base/Common.h"
 
 
 //------------------------------------------------------------------------------

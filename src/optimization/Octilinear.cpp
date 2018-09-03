@@ -37,7 +37,7 @@ using namespace std;
 void Octilinear::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
     _boundary                      = __boundary;
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
     unsigned int nVertices      = _boundary->nStations();
     unsigned int nEdges         = _boundary->nEdges();
     _d_Alpha                    = _boundary->dAlpha();
@@ -97,7 +97,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 //
 void Octilinear::_initCoefs( void )
 {
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
     unsigned int nVertices      = _boundary->nStations();
     //unsigned int nEdges         = _boundary->nEdges();
 
@@ -107,10 +107,10 @@ void Octilinear::_initCoefs( void )
     _coef << Eigen::MatrixXd::Zero( _nConstrs, _nVars );
 
     // Regular edge octilinearty
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph )
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph )
     {
-        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
         unsigned int idS = MIN2( g[ vdS ].id, g[ vdT ].id );
         unsigned int idT = MAX2( g[ vdS ].id, g[ vdT ].id );
 
@@ -126,7 +126,7 @@ void Octilinear::_initCoefs( void )
     }
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         unsigned int id = g[ vertex ].id;
 
@@ -157,14 +157,14 @@ void Octilinear::_initCoefs( void )
 //
 void Octilinear::_initVars( void )
 {
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
     unsigned int nVertices      = _boundary->nStations();
 
     // initialization
     _var.resize( _nVars );
 
     unsigned int nRows = 0;
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         _var( nRows, 0 ) = g[ vertex ].coordPtr->x();
         _var( nRows + nVertices, 0 ) = g[ vertex ].coordPtr->y();
@@ -180,13 +180,13 @@ void Octilinear::_initVars( void )
 
 void Octilinear::_updateEdgeCurAngle( void )
 {
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
 
     // initialization
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
 
-        UndirectedBaseGraph::vertex_descriptor vS = source( edge, g );
-        UndirectedBaseGraph::vertex_descriptor vT = target( edge, g );
+        BoundaryGraph::vertex_descriptor vS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vT = target( edge, g );
         Coord2 vi, vj;
         if( g[ vS ].id < g[ vT ].id ){
             vi = *g[ vS ].coordPtr;
@@ -203,7 +203,7 @@ void Octilinear::_updateEdgeCurAngle( void )
     }
 
 #ifdef  DEBUG
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
         cerr << "EID = " << g[ edge ].id
              << ", edgeCurAngle = " << g[ edge ].angle << endl;
     }
@@ -212,14 +212,14 @@ void Octilinear::_updateEdgeCurAngle( void )
 
 void Octilinear::_setTargetAngle( void )
 {
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
 
     double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
                            M_PI/4.0, M_PI/2.0, 3.0*M_PI/4.0, M_PI };
 
-    vector< vector< UndirectedBaseGraph::vertex_descriptor > > vdVec( OCTILINEAR_SECTOR );
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
-        UndirectedBaseGraph::degree_size_type degrees = out_degree( vertex, g );
+    vector< vector< BoundaryGraph::vertex_descriptor > > vdVec( OCTILINEAR_SECTOR );
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
+        BoundaryGraph::degree_size_type degrees = out_degree( vertex, g );
         vdVec[ OCTILINEAR_SECTOR - degrees ].push_back( vertex );
     }
 
@@ -234,7 +234,7 @@ void Octilinear::_setTargetAngle( void )
 #endif  // DEBUG
 
     // initialization
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
         g[ edge ].targetAngle = 2.0*M_PI;
     }
 
@@ -242,32 +242,32 @@ void Octilinear::_setTargetAngle( void )
     for( int i = 0; i < vdVec.size(); i++ ){
         for( int j = 0; j < vdVec[ i ].size(); j++ ){
 
-            map< double, UndirectedBaseGraph::edge_descriptor > circM;
+            map< double, BoundaryGraph::edge_descriptor > circM;
             // sort the angle
-            UndirectedBaseGraph::out_edge_iterator e, e_end;
+            BoundaryGraph::out_edge_iterator e, e_end;
             for ( tie( e, e_end ) = out_edges( vdVec[i][j], g ); e != e_end; ++e ) {
-                UndirectedBaseGraph::edge_descriptor ed = *e;
-                UndirectedBaseGraph::vertex_descriptor vS = source( ed, g );
-                UndirectedBaseGraph::vertex_descriptor vT = target( ed, g );
+                BoundaryGraph::edge_descriptor ed = *e;
+                BoundaryGraph::vertex_descriptor vS = source( ed, g );
+                BoundaryGraph::vertex_descriptor vT = target( ed, g );
                 double angle = g[ ed ].angle;
 
                 if ( g[ vS ].id > g[ vT ].id ) {
                     if ( angle > 0 ) angle = -M_PI + g[ ed ].angle;
                     else angle = M_PI + g[ ed ].angle;
                 }
-                circM.insert( pair< double, UndirectedBaseGraph::edge_descriptor >( angle, ed ) );
+                circM.insert( pair< double, BoundaryGraph::edge_descriptor >( angle, ed ) );
                 //cerr << "eID = " << edgeID[ ed ] << " angle = " << angle << " curAngle = " << edgeCurAngle[ ed ] << endl;
                 // cerr << "sID = " << vertexID[ vS ] << " tID = " << vertexID[ vT ] << endl;
             }
 
             // assign the sector
             int index = 0;
-            for ( map< double, UndirectedBaseGraph::edge_descriptor >::iterator it = circM.begin();
+            for ( map< double, BoundaryGraph::edge_descriptor >::iterator it = circM.begin();
                   it != circM.end(); it++ ) {
 
-                UndirectedBaseGraph::edge_descriptor ed = it->second;
-                UndirectedBaseGraph::vertex_descriptor vS = source( ed, g );
-                UndirectedBaseGraph::vertex_descriptor vT = target( ed, g );
+                BoundaryGraph::edge_descriptor ed = it->second;
+                BoundaryGraph::vertex_descriptor vS = source( ed, g );
+                BoundaryGraph::vertex_descriptor vT = target( ed, g );
 
                 if( g[ ed ].targetAngle == 2.0*M_PI ){
                     double angle = g[ ed ].angle;
@@ -313,7 +313,7 @@ void Octilinear::_setTargetAngle( void )
     }
 
 #ifdef  DEBUG
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
         cerr << "eid = "<< edgeID[ edge ] << " angle = " << edgeCurAngle[ edge ] 
              << " target = " << edgeTarget[ edge ] + edgeCurAngle[ edge ] 
              << " rotate = " << edgeTarget[ edge ] << endl;
@@ -355,7 +355,7 @@ double Octilinear::_findRotateAngle( double input )
 //
 void Octilinear::_initOutputs( void )
 {
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
 
     // initialization
     unsigned int nRows = 0;
@@ -365,10 +365,10 @@ void Octilinear::_initOutputs( void )
     _updateEdgeCurAngle();
     _setTargetAngle();
     // Regular edge octilinearty
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph )
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph )
     {
-        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
         Coord2 vi, vj;
         if( g[ vdS ].id < g[ vdT ].id ){
             vi = *g[ vdS ].smoothPtr;
@@ -403,7 +403,7 @@ void Octilinear::_initOutputs( void )
 
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         _output( nRows, 0 ) = _w_position * g[ vertex ].smoothPtr->x();
         nRows++;
@@ -429,7 +429,7 @@ void Octilinear::_initOutputs( void )
 //
 void Octilinear::_updateCoefs( void )
 {
-    UndirectedBaseGraph               & g             = _boundary->g();
+    BoundaryGraph               & g             = _boundary->g();
     unsigned int        nVertices       = _boundary->nStations();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
@@ -442,7 +442,7 @@ void Octilinear::_updateCoefs( void )
     nVE = _boundary->VEconflict().size();
 #endif // OCTILINEAR_CONFLICT
 #ifdef OCTILINEAR_BOUNDARY
-    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph )
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
     {
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
@@ -464,7 +464,7 @@ void Octilinear::_updateCoefs( void )
 
 #ifdef  OCTILINEAR_BOUNDARY
     // add boundary coefficient
-    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph ){
 
         unsigned int id = g[ vd ].id;
         double minD = _d_Beta/2.0;
@@ -495,10 +495,10 @@ void Octilinear::_updateCoefs( void )
     unsigned int countVE = 0;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
           it != _boundary->VEconflict().end(); ++it ) {
-        UndirectedBaseGraph::vertex_descriptor vdV = it->second.first;
-        UndirectedBaseGraph::edge_descriptor ed = it->second.second;
-        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, g );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, g );
+        BoundaryGraph::vertex_descriptor vdV = it->second.first;
+        BoundaryGraph::edge_descriptor ed = it->second.second;
+        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
         unsigned int idV = g[ vdV ].id;
         unsigned int idS = g[ vdS ].id;
         unsigned int idT = g[ vdT ].id;
@@ -539,7 +539,7 @@ void Octilinear::_updateCoefs( void )
 //
 void Octilinear::_updateOutputs( void )
 {
-    UndirectedBaseGraph               & g             = _boundary->g();
+    BoundaryGraph               & g             = _boundary->g();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
     vector< double >    ratioR          = _boundary->ratioR();
@@ -551,7 +551,7 @@ void Octilinear::_updateOutputs( void )
     nVE = _boundary->VEconflict().size();
 #endif  // OCTILINEAR_CONFLICT
 #ifdef  OCTILINEAR_BOUNDARY
-    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph )
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
     {
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
@@ -568,10 +568,10 @@ void Octilinear::_updateOutputs( void )
     _updateEdgeCurAngle();
     //_setTargetAngle();
     // Regular edge length
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph )
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph )
     {
-        UndirectedBaseGraph::vertex_descriptor vdS = source( edge, g );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( edge, g );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
         //Coord2 vi = vertexSmooth[ vdS ];
         //Coord2 vj = vertexSmooth[ vdT ];
         Coord2 vi, vj;
@@ -606,7 +606,7 @@ void Octilinear::_updateOutputs( void )
     }
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         // x
         _output( nRows, 0 ) = oldOutput( nRows, 0 );
@@ -619,7 +619,7 @@ void Octilinear::_updateOutputs( void )
 
 #ifdef  OCTILINEAR_BOUNDARY
     // boundary constraints
-    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph ){
 
         double minD = _d_Beta/2.0;
         //if( vertexIsStation[ vd ] == false )
@@ -649,10 +649,10 @@ void Octilinear::_updateOutputs( void )
     unsigned int countVE = 0;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
           it != _boundary->VEconflict().end(); ++it ) {
-        UndirectedBaseGraph::vertex_descriptor vdV = it->second.first;
-        UndirectedBaseGraph::edge_descriptor ed = it->second.second;
-        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, g );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, g );
+        BoundaryGraph::vertex_descriptor vdV = it->second.first;
+        BoundaryGraph::edge_descriptor ed = it->second.second;
+        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
         unsigned int idV = g[ vdV ].id;
         unsigned int idS = g[ vdS ].id;
         unsigned int idT = g[ vdT ].id;
@@ -813,21 +813,21 @@ double Octilinear::ConjugateGradient( unsigned int iter )
 //
 void Octilinear::retrieve( void )
 {
-    UndirectedBaseGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->g();
     unsigned int nVertices      = _boundary->nStations();
 
     // find the vertex that is too close to an edge
-    vector< UndirectedBaseGraph::vertex_descriptor > vdVec;
+    vector< BoundaryGraph::vertex_descriptor > vdVec;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
           it != _boundary->VEconflict().end(); ++it ) {
-        UndirectedBaseGraph::vertex_descriptor vdV = it->second.first;
+        BoundaryGraph::vertex_descriptor vdV = it->second.first;
         vdVec.push_back( vdV );
     }
 
     unsigned int nRows = 0;
     // update coordinates
     // but freeze the vertex that is too close to an edge
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         bool doClose = false;
         for( unsigned int i = 0; i < vdVec.size(); i++ ){
@@ -853,10 +853,10 @@ void Octilinear::retrieve( void )
 
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;
-    BGL_FORALL_VERTICES( vertex, g, UndirectedBaseGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
         cerr << "V(" << vertexID[ vertex ] << ") = " << vertexSmooth[ vertex ];
     }
-    BGL_FORALL_EDGES( edge, g, UndirectedBaseGraph ){
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
         cerr << "E(" << edgeID[ edge ] << ") : smoAngle= " << edgeSmoAngle[ edge ] << endl;
     }
 #endif  // DEBUG

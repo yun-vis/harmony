@@ -19,8 +19,8 @@
 
 using namespace std;
 
-#include "Coord2.h"
-#include "Common.h"
+#include "base/Coord2.h"
+#include "base/Common.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -55,14 +55,10 @@ class UndirectedBaseVertexProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
     unsigned int                id;
-    unsigned int                initID;
-    vector< unsigned int >      lineID;
 
     double                      weight;
     string                      name;
 
-    Coord2 *                    geoPtr;
-    Coord2 *                    smoothPtr;
     Coord2 *                    coordPtr;
 
     double *                    widthPtr;

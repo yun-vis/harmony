@@ -1,6 +1,6 @@
 #include "ui/Window.h"
 
-ofstream    ofs( "../batch.txt" );
+//ofstream    ofs( "../batch.txt" );
 
 //----------------------------------------------------------
 // Window

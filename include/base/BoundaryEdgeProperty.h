@@ -1,5 +1,5 @@
 //******************************************************************************
-// UndirectedBaseEdgeProperty.h
+// BoundaryEdgeProperty.h
 //	: header file for 2D coordinaes
 //
 //------------------------------------------------------------------------------
@@ -8,8 +8,8 @@
 //
 //******************************************************************************
 
-#ifndef	_UndirectedBaseEdgeProperty_H
-#define _UndirectedBaseEdgeProperty_H
+#ifndef	_BoundaryEdgeProperty_H
+#define _BoundaryEdgeProperty_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -21,6 +21,7 @@ using namespace std;
 
 #include "base/Coord2.h"
 #include "base/Line2.h"
+#include "base/UndirectedBaseEdgeProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -32,7 +33,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class UndirectedBaseEdgeProperty {
+class BoundaryEdgeProperty: public UndirectedBaseEdgeProperty {
 
   protected:
 
@@ -44,12 +45,12 @@ class UndirectedBaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    UndirectedBaseEdgeProperty();				// constructor (default)
-    UndirectedBaseEdgeProperty( const UndirectedBaseEdgeProperty & e ) {
+    BoundaryEdgeProperty();				// constructor (default)
+    BoundaryEdgeProperty( const BoundaryEdgeProperty & e ) {
 	   id	    = e.id;
 	   weight	= e.weight;
     }					// copy constructor
-    virtual ~UndirectedBaseEdgeProperty() {}		// destructor
+    virtual ~BoundaryEdgeProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -58,10 +59,12 @@ class UndirectedBaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                id;
+    unsigned int                initID;
+    vector< unsigned int >      lineID;
 
-    double                      angle;
-    double                      weight;
+    double                      geoAngle;
+    double                      smoothAngle;
+    double                      targetAngle;
 
     void		                init( void )		      { _init(); }
 
@@ -81,13 +84,13 @@ class UndirectedBaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const UndirectedBaseEdgeProperty & v );
+    friend ostream &	operator << ( ostream & s, const BoundaryEdgeProperty & v );
 				// Output
-    friend istream &	operator >> ( istream & s, UndirectedBaseEdgeProperty & v );
+    friend istream &	operator >> ( istream & s, BoundaryEdgeProperty & v );
 				// Input
-    virtual const char * className( void ) const { return "UndirectedBaseEdgeProperty"; }
+    virtual const char * className( void ) const { return "BoundaryEdgeProperty"; }
 				// class name
 
 };
 
-#endif // _UndirectedBaseEdgeProperty_H
+#endif // _BoundaryEdgeProperty_H

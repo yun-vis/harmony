@@ -16,13 +16,13 @@
 
 using namespace std;
 
-#include "UndirectedBaseGraph.h"
-#include "Grid2.h"
+#include "base/BoundaryGraph.h"
+#include "base/Grid2.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
 //------------------------------------------------------------------------------
-typedef pair< UndirectedBaseGraph::vertex_descriptor, UndirectedBaseGraph::edge_descriptor >	VEPair;
+typedef pair< BoundaryGraph::vertex_descriptor, BoundaryGraph::edge_descriptor >	VEPair;
 typedef pair< unsigned int, unsigned int >	        VVIDPair;
 typedef map< Grid2, VEPair >                        VEMap;
 
@@ -38,13 +38,13 @@ typedef map< Grid2, VEPair >                        VEMap;
 class Boundary
 {
 private:
-    UndirectedBaseGraph graph;
-    vector< vector< UndirectedBaseGraph::vertex_descriptor > >        _shortestPathM;
+    BoundaryGraph graph;
+    vector< vector< BoundaryGraph::vertex_descriptor > >        _shortestPathM;
     
 protected:
     
-    vector< vector< UndirectedBaseGraph::edge_descriptor > >	_line;
-    vector< vector< UndirectedBaseGraph::vertex_descriptor > >	_lineSta;
+    vector< vector< BoundaryGraph::edge_descriptor > >	_line;
+    vector< vector< BoundaryGraph::vertex_descriptor > >	_lineSta;
     double					    _lineColor  [ MAX_LINES ][ 3 ];
     char					    _lineName   [ MAX_LINES ][ MAX_STR ];
     unsigned int				_nLines;
@@ -91,13 +91,13 @@ public:
     const double &			        dAlpha( void ) const { return _distAlpha; }
     const double &			        dBeta( void ) const { return _distBeta; }
     
-    const UndirectedBaseGraph &		g( void ) const { return graph; }
-    UndirectedBaseGraph &			g( void )	    { return graph; }
+    const BoundaryGraph &		g( void ) const { return graph; }
+    BoundaryGraph &			g( void )	    { return graph; }
 
-    const vector< vector< UndirectedBaseGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
+    const vector< vector< BoundaryGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
 
-    const vector< vector< UndirectedBaseGraph::edge_descriptor > > &      line( void ) const { return _line; }
-    const vector< vector< UndirectedBaseGraph::vertex_descriptor > > &    lineSta( void ) const { return _lineSta; }
+    const vector< vector< BoundaryGraph::edge_descriptor > > &      line( void ) const { return _line; }
+    const vector< vector< BoundaryGraph::vertex_descriptor > > &    lineSta( void ) const { return _lineSta; }
 
     const vector< unsigned int > &              removedVertices( void ) const { return _removedVertices; }
     const vector< VVIDPair > &                  removedEdges( void ) const { return _removedEdges; }

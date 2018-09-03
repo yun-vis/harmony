@@ -11,13 +11,13 @@
 //------------------------------------------------------------------------------
 void GraphicsView::_item_nodes( void )
 {
-    UndirectedBaseGraph * g =  NULL;
+    BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
         g = & _simplifiedBoundary->g();
     else
         g = & _boundary->g();
 
-    BGL_FORALL_VERTICES( vd, *g, UndirectedBaseGraph ) {
+    BGL_FORALL_VERTICES( vd, *g, BoundaryGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
@@ -32,16 +32,16 @@ void GraphicsView::_item_nodes( void )
 
 void GraphicsView::_item_edges( void )
 {
-    UndirectedBaseGraph * g =  NULL;
+    BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
         g = & _simplifiedBoundary->g();
     else
         g = & _boundary->g();
 
-    BGL_FORALL_EDGES( ed, *g, UndirectedBaseGraph ) {
+    BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {
 
-        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, *g );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, *g );
+        BoundaryGraph::vertex_descriptor vdS = source( ed, *g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, *g );
         QPainterPath path;
         path.moveTo( (*g)[vdS].coordPtr->x(), -(*g)[vdS].coordPtr->y() );
         path.lineTo( (*g)[vdT].coordPtr->x(), -(*g)[vdT].coordPtr->y() );
