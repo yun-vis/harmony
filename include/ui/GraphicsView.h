@@ -18,6 +18,7 @@ using namespace std;
 #ifndef Q_MOC_RUN
 #include "ui/GraphicsBallItem.h"
 #include "ui/GraphicsEdgeItem.h"
+#include "ui/GraphicsPolygonItem.h"
 #include "base/Boundary.h"
 #endif // Q_MOC_RUN
 
@@ -47,11 +48,14 @@ class GraphicsView : public QGraphicsView
 private:
 
     bool                _is_simplifiedFlag;
+    bool                _is_polygonFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
 
 protected:
 
+    void _item_seeds( void );
+    void _item_polygons( void );
     void _item_nodes( void );
     void _item_edges( void );
 
@@ -62,8 +66,11 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
-    bool &          setIssimplifiedFlag( bool __is_simplifiedFlag )     { return _is_simplifiedFlag = __is_simplifiedFlag; }
-    const bool &    getIssimplifiedFlag( void ) const                   { return _is_simplifiedFlag; }
+    bool &          isSimplifiedFlag( void )        { return _is_simplifiedFlag; }
+    const bool &    isSimplifiedFlag( void ) const  { return _is_simplifiedFlag; }
+
+    bool &          isPolygonFlag( void )           { return _is_polygonFlag; }
+    const bool &    isPolygonFlag( void ) const     { return _is_polygonFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

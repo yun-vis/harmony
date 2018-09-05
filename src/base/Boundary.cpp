@@ -978,8 +978,8 @@ void Boundary::load( const char * filename )
 
                 graph[ oldED ].lineID.push_back( _nLines );
                 eachline.push_back( oldED );
-                bool test = false;
-                tie( oldED, test ) = edge( oldVT, oldVS, graph );
+                //bool test = false;
+                //tie( oldED, test ) = edge( oldVT, oldVS, graph );
             }
             else{
                 BoundaryGraph::vertex_descriptor src = vertex( indexS, graph );
@@ -1034,6 +1034,145 @@ void Boundary::load( const char * filename )
 #endif  // DEBUG
 
     return;
+}
+
+//
+//  Boundary::buildBoundaryGraph --    build the boundary from the voronoi cell
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::buildBoundaryGraph( void )
+{
+    for( unsigned int i = 0; i < _polygons.size(); i++ ){
+        for( unsigned int j = 1; j < _polygons[i].size(); j++ ){
+
+            Coord2 &coordS = _polygons[i][j-1];
+            Coord2 &coordT = _polygons[i][j];
+
+            // Check if the station exists or not
+            BoundaryGraph::vertex_descriptor curVDS = NULL;
+            BoundaryGraph::vertex_descriptor curVDT = NULL;
+
+
+
+            // add vertices
+            for( unsigned int k = j-1; k <= j; k++ ){
+
+                BoundaryGraph::vertex_descriptor curVD = NULL;
+
+                // Check if the station exists or not
+                BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+                {
+                    Coord2 &c = *graph[ vertex ].coordPtr;
+                    if( fabs( (_polygons[i][k]-c).norm() ) < 1e-2 ){
+
+#ifdef DEBUG
+                        cerr << "The node has been in the database." << endl;
+#endif  // DEBUG
+                        if( k == j-1 ) curVD = curVDS = vertex;
+                        if( k == j ) curVD = curVDT = vertex;
+                        break;
+                    }
+                }
+
+                if ( curVD == NULL ){
+
+                    curVD = add_vertex( graph );
+                    vector< unsigned int > lineID = graph[ curVD ].lineID;
+                    lineID.push_back( _nLines );
+
+                    double x = _polygons[i][k].x();
+                    double y = _polygons[i][k].y();
+                    graph[ curVD ].geoPtr = new Coord2( x, y );
+                    graph[ curVD ].smoothPtr = new Coord2( x, y );
+                    graph[ curVD ].coordPtr = new Coord2( x, y );
+                    graph[ curVD ].id = graph[ curVD ].initID = _nStations;
+                    graph[ curVD ].name = to_string( graph[ curVD ].id );
+                    graph[ curVD ].weight = 1.0;
+                    graph[ curVD ].lineID.push_back( _nLines );
+
+                    if( k == j-1 ) curVDS = curVD;
+                    if( k == j ) curVDT = curVD;
+                    _nStations++;
+                }
+                else{
+                    graph[ curVD ].lineID.push_back( _nLines );
+#ifdef DEBUG
+                    cerr << "[Existing] curV : lineID = " << endl;
+                for ( unsigned int k = 0; k < vertexLineID[ curVD ].size(); ++k )
+                    cerr << "lineID[ " << setw( 3 ) << k << " ] = " << vertexLineID[ curVD ][ k ] << endl;
+#endif  // DEBUG
+                }
+            }
+
+            if( i == 0 ){
+                cerr << "i[0], vdS = " << graph[ curVDS ].id << ", vdT = " << graph[ curVDT ].id << endl;
+            }
+
+            // add edges
+            // search previous edge
+            bool found = false;
+            BoundaryGraph::edge_descriptor oldED;
+            //BoundaryGraph::vertex_descriptor oldVS = ptrSta[ origID ];
+            //BoundaryGraph::vertex_descriptor oldVT = ptrSta[ destID ];
+            //unsigned int indexS = graph[ curVDS ].initID;
+            //unsigned int indexT = graph[ curVDT ].initID;
+            tie( oldED, found ) = edge( curVDS, curVDT, graph );
+
+
+            if ( found == true ) {
+
+                graph[ oldED ].lineID.push_back( _nLines );
+                //eachline.push_back( oldED );
+                //bool test = false;
+                //tie( oldED, test ) = edge( oldVT, oldVS, graph );
+            }
+            else{
+
+                //BoundaryGraph::vertex_descriptor src = vertex( indexS, graph );
+                //BoundaryGraph::vertex_descriptor tar = vertex( indexT, graph );
+
+                // handle fore edge
+                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( curVDS, curVDT, graph );
+                BoundaryGraph::edge_descriptor foreED = foreE.first;
+
+                // calculate geographical angle
+                Coord2 coordO;
+                Coord2 coordD;
+                if( graph[ curVDS ].initID < graph[ curVDT ].initID ){
+                    coordO = *graph[ curVDS ].coordPtr;
+                    coordD = *graph[ curVDT ].coordPtr;
+                }
+                else{
+                    coordO = *graph[ curVDT ].coordPtr;
+                    coordD = *graph[ curVDS ].coordPtr;
+                }
+                double diffX = coordD.x() - coordO.x();
+                double diffY = coordD.y() - coordO.y();
+                double angle = atan2( diffY, diffX );
+
+                graph[ foreED ].initID = graph[ foreED ].id = _nEdges;
+                graph[ foreED ].weight = 1.0;
+                graph[ foreED ].geoAngle = angle;
+                graph[ foreED ].smoothAngle = angle;
+                graph[ foreED ].angle = angle;
+                graph[ foreED ].lineID.push_back( _nLines );
+
+                //eachline.push_back( foreED );
+#ifdef  DEBUG
+                cout << "nEdges = " << _nEdges << " angle = " << angle << endl;
+#endif  // DEBUG
+                _nEdges++;
+            }
+
+        }
+    }
+
+    cerr << "nV = " << num_vertices( graph ) << " nE = " << num_edges( graph ) << endl;
 }
 
 // end of header file

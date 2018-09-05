@@ -1,5 +1,5 @@
 // Smooth.cpp
-//  : program file for the metro network
+//  : program file for the boundary network
 //
 //------------------------------------------------------------------------------
 //
@@ -29,7 +29,7 @@ using namespace std;
 //  Smooth::_init --        initialize the constrained optimization problem
 //
 //  Inputs
-//      __boundary : pointer to metro
+//      __boundary : pointer to boundary
 //
 //  Outputs
 //      none

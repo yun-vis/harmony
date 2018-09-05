@@ -1,5 +1,5 @@
-#ifndef GraphicsBallItem_H
-#define GraphicsBallItem_H
+#ifndef GraphicsPolygonItem_H
+#define GraphicsPolygonItem_H
 
 #include <iostream>
 #include <iomanip>
@@ -14,9 +14,9 @@
 
 using namespace std;
 
-#ifndef Q_MOC_RUN
-#include "base/Coord2.h"
-#endif // Q_MOC_RUN
+//#ifndef Q_MOC_RUN
+#include "base/Common.h"
+//#endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsItem>
@@ -32,31 +32,27 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsBallItem : public  QGraphicsRectItem
+class GraphicsPolygonItem : public QGraphicsPolygonItem
 {
 private:
 
-    unsigned int _id;
 
 protected:
 
 
 public:
-    explicit GraphicsBallItem( QGraphicsItem *parent = Q_NULLPTR );
-    explicit GraphicsBallItem( const QRectF &rect, QGraphicsItem *parent = Q_NULLPTR );
-    explicit GraphicsBallItem( qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent = Q_NULLPTR );
-    ~GraphicsBallItem();
+    explicit GraphicsPolygonItem( QGraphicsItem *parent = Q_NULLPTR );
+    explicit GraphicsPolygonItem( QPolygonF &polygon, QGraphicsItem *parent = Q_NULLPTR );
+    ~GraphicsPolygonItem();
+
+    int type( void ) const Q_DECL_OVERRIDE;
 
     // source from the qt library
-    //QRectF rect() const;
-    //void setRect(const QRectF &rect);
-    //inline void setRect(qreal x, qreal y, qreal w, qreal h);
+    //QPainterPath path() const;
+    //void setPath(const QPainterPath &path);
 
     //QPainterPath shape() const Q_DECL_OVERRIDE;
     //bool contains(const QPointF &point) const Q_DECL_OVERRIDE;
-
-    //bool isObscuredBy(const QGraphicsItem *item) const Q_DECL_OVERRIDE;
-    //QPainterPath opaqueArea() const Q_DECL_OVERRIDE;
 
 //------------------------------------------------------------------------------
 //      Reimplementation
@@ -66,20 +62,19 @@ public:
     void paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
                 QWidget *widget = Q_NULLPTR ) Q_DECL_OVERRIDE;
 
+
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
-    unsigned int &	        id( void ) 	        { return _id; }
-    const unsigned int &	id( void ) const	{ return _id; }
 
 
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
-    void    init      ( void );
+
 
 private:
 
 };
 
-#endif // GraphicsBallItem_H
+#endif // GraphicsPolygonItem_H

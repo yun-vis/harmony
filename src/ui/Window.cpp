@@ -131,7 +131,7 @@ void Window::selectCloneGraph( void )
 void Window::selectMinDistance( void )
 {
     _simplifiedBoundary->simplifyLayout();
-    _gv->setIssimplifiedFlag( true );
+    _gv->isSimplifiedFlag() = true;
     redrawAllScene();
 }
 
@@ -332,6 +332,30 @@ void Window::selectOctilinearCG( void )
     redrawAllScene();
 }
 
+void Window::selectVoronoi( void )
+{
+    Voronoi voronoi;
+    _boundary->seeds().clear();
+    _boundary->polygons().clear();
+    for( int i = 0; i < 10; i++ ){
+
+        int x = rand()%( _content_width+1 ) - _content_width/2;
+        int y = rand()%( _content_height+1 ) - _content_height/2;
+        _boundary->seeds().push_back( Coord2( x, y ) );
+    }
+    voronoi.init( _boundary->seeds(), _boundary->polygons(), width(), height() );
+    voronoi.createVoronoiDiagram();
+    _gv->isPolygonFlag() = true;
+    redrawAllScene();
+}
+
+void Window::selectBuildBoundary( void )
+{
+    _boundary->buildBoundaryGraph();
+    _gv->isSimplifiedFlag() = false;
+    redrawAllScene();
+}
+
 void Window::keyPressEvent( QKeyEvent *e )
 {
     switch( e->key() ) {
@@ -341,12 +365,16 @@ void Window::keyPressEvent( QKeyEvent *e )
             selectData();
             break;
         }
-        case Qt::Key_A:
+        case Qt::Key_1:
         {
-            if( _gv->getIssimplifiedFlag() == true )
-                _gv->setIssimplifiedFlag( false );
-            else
-                _gv->setIssimplifiedFlag( true );
+            _gv->isSimplifiedFlag() = !_gv->isSimplifiedFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_2:
+        {
+            _gv->isPolygonFlag() = !_gv->isPolygonFlag();
+            redrawAllScene();
             break;
         }
         case Qt::Key_C:
@@ -373,6 +401,16 @@ void Window::keyPressEvent( QKeyEvent *e )
             //selectOctilinearSmallCG();
             break;
         }
+        case Qt::Key_B:
+        {
+            selectBuildBoundary();
+            break;
+        }
+        case Qt::Key_V:
+        {
+            selectVoronoi();
+            break;
+        }
         case Qt::Key_Q:
         case Qt::Key_Escape:
             close();
@@ -381,5 +419,4 @@ void Window::keyPressEvent( QKeyEvent *e )
             QWidget::keyPressEvent( e );
     }
 
-    redrawAllScene();
 }

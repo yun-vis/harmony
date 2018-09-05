@@ -80,8 +80,8 @@ public:
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-    void prepare( Boundary * __metro, double __width, double __height ) {
-        _init( __metro, __width, __height );
+    void prepare( Boundary * __boundary, double __width, double __height ) {
+        _init( __boundary, __width, __height );
     }
 
 //------------------------------------------------------------------------------

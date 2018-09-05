@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -DIL_STD")
+set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
 
 # compiler setting
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -26,13 +26,12 @@ if (UNIX AND NOT APPLE)
   set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
 
   # add the libraries you need below
-  set(OPENGL_FLAG GL GLU glut)
   find_package(OpenGL REQUIRED)
   find_package(GLUT REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -lgmp -lCGAL -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
-
+  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -lCGAL -lgmp -lmpr -lboost -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
+    
 elseif(APPLE)
 
   message(status "Setting CLANG flags")
@@ -40,21 +39,29 @@ elseif(APPLE)
   # add the libraries you need below
   find_package(GLUT REQUIRED)
   find_package(OpenGL REQUIRED)
+  find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -lgmp -lCGAL -ldl -lpthread -framework OpenGL -framework GLUT")
+  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -lboost-mt -lboost_thread-mt -lboost_system-mt -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
 
 endif()
 
+# mandatory for CGAL, or will get a undefined reference to CGAL::assertion_fail
+include(${CGAL_USE_FILE})
+
 include_directories(
         /opt/local/include
+        /usr/include
+        /usr/include/x86_64-linux-gnu
         ${CMAKE_SOURCE_DIR}/include
         ${QT5_PATH_DIR}/include
 )
 link_directories(
         /opt/local/lib
+        /usr/lib/x86_64-linux-gnu/
         ${CMAKE_SOURCE_DIR}/src
         ${QT5_PATH_DIR}/lib
 )
+
 
 # automatically grab all the source files
 #file(GLOB SOURCES src/*.cpp)
@@ -79,9 +86,11 @@ set(HEADERS
         include/optimization/Smooth.h
         include/ui/GraphicsBallItem.h
         include/ui/GraphicsEdgeItem.h
+        include/ui/GraphicsPolygonItem.h
         include/ui/GraphicsView.h
         include/ui/Window.h
         include/ui/Window.ui
+        include/voronoi/Voronoi.h
     )
 set(SOURCES
         src/base/Coord2.cpp
@@ -100,8 +109,10 @@ set(SOURCES
         src/optimization/Smooth.cpp
         src/ui/GraphicsBallItem.cpp
         src/ui/GraphicsEdgeItem.cpp
+        src/ui/GraphicsPolygonItem.cpp
         src/ui/GraphicsView.cpp
         src/ui/Window.cpp
+        src/voronoi/Voronoi.cpp
         src/main.cpp
     )
 

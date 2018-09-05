@@ -38,7 +38,12 @@ typedef map< Grid2, VEPair >                        VEMap;
 class Boundary
 {
 private:
+
     BoundaryGraph graph;
+
+    vector< Coord2 >            _seeds;
+    vector < vector< Coord2 > > _polygons;
+
     vector< vector< BoundaryGraph::vertex_descriptor > >        _shortestPathM;
     
 protected:
@@ -94,6 +99,11 @@ public:
     const BoundaryGraph &		g( void ) const { return graph; }
     BoundaryGraph &			g( void )	    { return graph; }
 
+    const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
+    vector< Coord2 > &			            seeds( void )	        { return _seeds; }
+    const vector < vector< Coord2 > > &		polygons( void ) const  { return _polygons; }
+    vector < vector< Coord2 > > &			polygons( void )	    { return _polygons; }
+
     const vector< vector< BoundaryGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
 
     const vector< vector< BoundaryGraph::edge_descriptor > > &      line( void ) const { return _line; }
@@ -123,6 +133,7 @@ public:
     void adjustsize( const int & width, const int & height );   // normalize the Boundary size
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
+    void buildBoundaryGraph( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

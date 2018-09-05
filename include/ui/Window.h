@@ -23,6 +23,7 @@ using namespace std;
 #include "optimization/Smooth.h"
 #include "optimization/Octilinear.h"
 #include "ui/GraphicsView.h"
+#include "voronoi/Voronoi.h"
 
 #define REMOVEBACKNUM   (15)
 
@@ -89,6 +90,10 @@ public slots:
     void selectOctilinearCG( void );
     void selectSmooth( OPTTYPE opttype = CONJUGATE_GRADIENT );
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
+
+    // voronoi
+    void selectVoronoi( void );
+    void selectBuildBoundary( void );
 
 public:
     explicit Window( QWidget *parent = 0 );
