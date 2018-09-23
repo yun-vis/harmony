@@ -21,12 +21,15 @@ Window::~Window()
 }
 
 void Window::init( Boundary * __boundary, Boundary * __simplifiedBoundary,
+                   Force * __force,
                    Smooth * __smooth, Octilinear * __octilinear )
 {
     _boundary = __boundary;
     _simplifiedBoundary = __simplifiedBoundary;
-    _smooth = __smooth;
-    _octilinear = __octilinear;
+
+    _forcePtr = __force;
+    _smoothPtr = __smooth;
+    _octilinearPtr = __octilinear;
 
     _gv->init( _boundary, _simplifiedBoundary );
 
@@ -120,6 +123,13 @@ void Window::redrawAllScene( void )
     QCoreApplication::processEvents();
 }
 
+void Window::selectForce( void )
+{
+    _forcePtr->init( _boundary );
+    //_forcePtr->run();
+    redrawAllScene();
+}
+
 void Window::selectCloneGraph( void )
 {
     _simplifiedBoundary->cloneLayout( *_boundary );
@@ -157,9 +167,9 @@ void Window::selectSmoothSmallCG( void )
     clock_t start_time = clock();
     double err = 0.0;
     unsigned int nLabels = _simplifiedBoundary->nLabels();
-    _smooth->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _smooth->ConjugateGradient( 3 * _simplifiedBoundary->nStations() );
-    _smooth->retrieve();
+    _smoothPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundary->nStations() );
+    _smoothPtr->retrieve();
 
     cerr << "simNStation = " << _simplifiedBoundary->nStations() << endl;
     cerr << "nStation = " << _boundary->nStations() << endl;
@@ -186,21 +196,21 @@ void Window::selectSmoothSmallCG( void )
             }
         }
 
-        _smooth->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+        _smoothPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
         if( num_vertices( _simplifiedBoundary->g() ) == ( num_vertices( _boundary->g() ) + nLabels ) ) {
             iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
         else{
             iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
-        err = _smooth->ConjugateGradient( iter );
-        _smooth->retrieve();
+        err = _smoothPtr->ConjugateGradient( iter );
+        _smoothPtr->retrieve();
 
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
     //_simplifiedBoundary->adjustsize( width(), height() );
-    _smooth->clear();
+    _smoothPtr->clear();
     _boundary->cloneSmooth( *_simplifiedBoundary );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
@@ -212,25 +222,25 @@ void Window::selectSmoothSmallCG( void )
 void Window::selectSmooth( OPTTYPE opttype )
 {
     // run smooth optimization
-    _smooth->prepare( _boundary, _content_width/2, _content_height/2 );
+    _smoothPtr->prepare( _boundary, _content_width/2, _content_height/2 );
     switch( opttype ){
         case LEAST_SQUARE:
         {
             int iter = _boundary->nStations();
-            _smooth->LeastSquare( iter );
+            _smoothPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
             int iter = _boundary->nStations();
-            _smooth->ConjugateGradient( iter );
+            _smoothPtr->ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _smooth->retrieve();
-    _smooth->clear();
+    _smoothPtr->retrieve();
+    _smoothPtr->clear();
 
     redrawAllScene();
 }
@@ -253,9 +263,9 @@ void Window::selectOctilinearSmallCG( void )
     double err = 0.0;
     unsigned int nLabels = _simplifiedBoundary->nLabels();
 
-    _octilinear->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _octilinear->ConjugateGradient( 5 * _simplifiedBoundary->nStations() );
-    _octilinear->retrieve();
+    _octilinearPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedBoundary->nStations() );
+    _octilinearPtr->retrieve();
     //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundary->nStations() << endl;
 
     // run octilinear optimization
@@ -274,20 +284,20 @@ void Window::selectOctilinearSmallCG( void )
             }
         }
 
-        _octilinear->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+        _octilinearPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
         if( num_vertices( _simplifiedBoundary->g() ) == ( num_vertices( _boundary->g() ) + nLabels ) ) {
             iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
         else{
             iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
         }
-        err = _octilinear->ConjugateGradient( iter );
-        _octilinear->retrieve();
+        err = _octilinearPtr->ConjugateGradient( iter );
+        _octilinearPtr->retrieve();
 
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
 
-    _octilinear->clear();
+    _octilinearPtr->clear();
     _boundary->cloneOctilinear( *_simplifiedBoundary );
 
     redrawAllScene();
@@ -296,26 +306,26 @@ void Window::selectOctilinearSmallCG( void )
 void Window::selectOctilinear( OPTTYPE opttype )
 {
     // run octilinear optimization
-    _octilinear->prepare( _boundary, _content_width/2, _content_height/2 );
+    _octilinearPtr->prepare( _boundary, _content_width/2, _content_height/2 );
 
     switch( opttype ) {
         case LEAST_SQUARE:
         {
             int iter = _boundary->nStations();
-            _octilinear->LeastSquare( iter );
+            _octilinearPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
             int iter = _boundary->nStations();
-            _octilinear->ConjugateGradient( iter );
+            _octilinearPtr->ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _octilinear->retrieve();
-    _octilinear->clear();
+    _octilinearPtr->retrieve();
+    _octilinearPtr->clear();
 
     redrawAllScene();
 }
@@ -337,13 +347,17 @@ void Window::selectVoronoi( void )
     Voronoi voronoi;
     _boundary->seeds().clear();
     _boundary->polygons().clear();
+
+    // seed initialization
     for( int i = 0; i < 10; i++ ){
 
         int x = rand()%( _content_width+1 ) - _content_width/2;
         int y = rand()%( _content_height+1 ) - _content_height/2;
         _boundary->seeds().push_back( Coord2( x, y ) );
     }
-    voronoi.init( _boundary->seeds(), _boundary->polygons(), width(), height() );
+    _boundary->buildSkeleton();
+
+    voronoi.init( _boundary->seeds(), _boundary->polygons(), _content_width, _content_height );
     voronoi.createVoronoiDiagram();
     _gv->isPolygonFlag() = true;
     redrawAllScene();
@@ -380,6 +394,11 @@ void Window::keyPressEvent( QKeyEvent *e )
         case Qt::Key_C:
         {
             selectCloneGraph();
+            break;
+        }
+        case Qt::Key_F:
+        {
+            selectForce();
             break;
         }
         case Qt::Key_M:

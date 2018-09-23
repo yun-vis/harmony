@@ -1,5 +1,5 @@
 //******************************************************************************
-// BaseEdgeProperty.cc
+// BaseVertexProperty.cc
 //	: program file for 2D coordinates
 //
 //------------------------------------------------------------------------------
@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#include "base/UndirectedBaseEdgeProperty.h"
+#include "base/SkeletonVertexProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ using namespace std;
 //	Protected Functions
 //------------------------------------------------------------------------------
 //
-//  UndirectedBaseEdgeProperty::_init -- initialize the graph.
+//  SkeletonVertexProperty::_init -- initialize the graph.
 //
 //  Inputs
 //  none
@@ -41,10 +41,12 @@ using namespace std;
 //  Outputs
 //  none
 //
-void UndirectedBaseEdgeProperty::_init( void )
+void SkeletonVertexProperty::_init( void )
 {
-	id = 0;
-	weight = 1.0;
+    id          = 0;
+    coordPtr    = NULL;
+    widthPtr    = NULL;
+    heightPtr   = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -52,11 +54,11 @@ void UndirectedBaseEdgeProperty::_init( void )
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
 
 //
-//  UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty -- default constructor
+//  SkeletonVertexProperty::SkeletonVertexProperty -- default constructor
 //
 //  Inputs
 //  none
@@ -64,7 +66,7 @@ void UndirectedBaseEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty()
+SkeletonVertexProperty::SkeletonVertexProperty()
 {
     _init();
 }
@@ -85,12 +87,12 @@ UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty()
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: UndirectedBaseEdgeProperty
+//	obj	: SkeletonVertexProperty
 //
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const UndirectedBaseEdgeProperty & obj )
+ostream & operator << ( ostream & stream, const SkeletonVertexProperty & obj )
 {
     // set the output formatting
     stream << setiosflags( ios::showpoint );
@@ -106,12 +108,12 @@ ostream & operator << ( ostream & stream, const UndirectedBaseEdgeProperty & obj
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: UndirectedBaseEdgeProperty
+//	obj	: SkeletonVertexProperty
 //
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, UndirectedBaseEdgeProperty & obj )
+istream & operator >> ( istream & stream, SkeletonVertexProperty & obj )
 {
     return stream;
 }

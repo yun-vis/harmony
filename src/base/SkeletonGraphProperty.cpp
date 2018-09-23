@@ -1,6 +1,6 @@
 //******************************************************************************
-// BaseEdgeProperty.cc
-//	: program file for 2D coordinates
+// SkeletonGraphProperty.cc
+//	: program file for 2D coordinatse
 //
 //------------------------------------------------------------------------------
 //
@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#include "base/UndirectedBaseEdgeProperty.h"
+#include "base/SkeletonGraphProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ using namespace std;
 //	Protected Functions
 //------------------------------------------------------------------------------
 //
-//  UndirectedBaseEdgeProperty::_init -- initialize the graph.
+//  SkeletonGraphProperty::_init -- initialize the graph.
 //
 //  Inputs
 //  none
@@ -41,10 +41,11 @@ using namespace std;
 //  Outputs
 //  none
 //
-void UndirectedBaseEdgeProperty::_init( void )
+void SkeletonGraphProperty::_init( void )
 {
-	id = 0;
-	weight = 1.0;
+    centerPtr   = NULL;
+    width       = DEFAULT_WIDTH;
+    height      = DEFAULT_HEIGHT;
 }
 
 //------------------------------------------------------------------------------
@@ -52,11 +53,11 @@ void UndirectedBaseEdgeProperty::_init( void )
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
 
 //
-//  UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty -- default constructor
+//  SkeletonGraphProperty::SkeletonGraphProperty -- default constructor
 //
 //  Inputs
 //  none
@@ -64,7 +65,7 @@ void UndirectedBaseEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty()
+SkeletonGraphProperty::SkeletonGraphProperty()
 {
     _init();
 }
@@ -72,7 +73,7 @@ UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty()
 
 
 //------------------------------------------------------------------------------
-//	Assignment operators
+//	Assignment opereators
 //------------------------------------------------------------------------------
 
 
@@ -85,12 +86,12 @@ UndirectedBaseEdgeProperty::UndirectedBaseEdgeProperty()
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: UndirectedBaseEdgeProperty
+//	obj	: SkeletonGraphProperty
 //
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const UndirectedBaseEdgeProperty & obj )
+ostream & operator << ( ostream & stream, const SkeletonGraphProperty & obj )
 {
     // set the output formatting
     stream << setiosflags( ios::showpoint );
@@ -106,12 +107,12 @@ ostream & operator << ( ostream & stream, const UndirectedBaseEdgeProperty & obj
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: UndirectedBaseEdgeProperty
+//	obj	: SkeletonGraphProperty
 //
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, UndirectedBaseEdgeProperty & obj )
+istream & operator >> ( istream & stream, SkeletonGraphProperty & obj )
 {
     return stream;
 }

@@ -1,5 +1,5 @@
 //******************************************************************************
-// BoundaryVertexProperty.h
+// SkeletonEdgeProperty.h
 //	: header file for 2D coordinaes
 //
 //------------------------------------------------------------------------------
@@ -8,8 +8,8 @@
 //
 //******************************************************************************
 
-#ifndef	_BoundaryVertexProperty_H
-#define _BoundaryVertexProperty_H
+#ifndef	_SkeletonEdgeProperty_H
+#define _SkeletonEdgeProperty_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -20,8 +20,9 @@
 using namespace std;
 
 #include "base/Coord2.h"
-#include "base/Common.h"
-#include "base/UndirectedBaseVertexProperty.h"
+#include "base/Line2.h"
+#include "base/UndirectedBaseEdgeProperty.h"
+
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -32,21 +33,24 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
+class SkeletonEdgeProperty: public UndirectedBaseEdgeProperty {
 
   protected:
 
       void		    _init( void );
+
 
   public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BoundaryVertexProperty();				// constructor (default)
-    BoundaryVertexProperty( const BoundaryVertexProperty & v ) {
+    SkeletonEdgeProperty();				// constructor (default)
+    SkeletonEdgeProperty( const SkeletonEdgeProperty & e ) {
+	   id	    = e.id;
+	   weight	= e.weight;
     }					// copy constructor
-    virtual ~BoundaryVertexProperty() {}		// destructor
+    virtual ~SkeletonEdgeProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -58,15 +62,15 @@ class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
     unsigned int                initID;
     vector< unsigned int >      lineID;
 
-    Coord2 *                    geoPtr;
-    Coord2 *                    smoothPtr;
-    Coord2 *                    forcePtr;
+    double                      geoAngle;
+    double                      smoothAngle;
+    double                      targetAngle;
+
+    void		                init( void )		      { _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-    void		                init( void )		{ _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -80,14 +84,13 @@ class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-
-    friend ostream &	operator << ( ostream & s, const BoundaryVertexProperty & v );
+    friend ostream &	operator << ( ostream & s, const SkeletonEdgeProperty & v );
 				// Output
-    friend istream &	operator >> ( istream & s, BoundaryVertexProperty & v );
+    friend istream &	operator >> ( istream & s, SkeletonEdgeProperty & v );
 				// Input
-    virtual const char * className( void ) const { return "BoundaryVertexProperty"; }
+    virtual const char * className( void ) const { return "SkeletonEdgeProperty"; }
 				// class name
 
 };
 
-#endif // _BoundaryVertexProperty_H
+#endif // _SkeletonEdgeProperty_H

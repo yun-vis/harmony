@@ -8,8 +8,8 @@
 //
 //******************************************************************************
 
-#ifndef	_BoundaryVertexProperty_H
-#define _BoundaryVertexProperty_H
+#ifndef	_SkeletonVertexProperty_H
+#define _SkeletonVertexProperty_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -32,7 +32,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
+class SkeletonVertexProperty: public UndirectedBaseVertexProperty {
 
   protected:
 
@@ -43,10 +43,10 @@ class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BoundaryVertexProperty();				// constructor (default)
-    BoundaryVertexProperty( const BoundaryVertexProperty & v ) {
+    SkeletonVertexProperty();				// constructor (default)
+    SkeletonVertexProperty( const SkeletonVertexProperty & v ) {
     }					// copy constructor
-    virtual ~BoundaryVertexProperty() {}		// destructor
+    virtual ~SkeletonVertexProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -81,13 +81,13 @@ class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
 //	I/O functions
 //------------------------------------------------------------------------------
 
-    friend ostream &	operator << ( ostream & s, const BoundaryVertexProperty & v );
+    friend ostream &	operator << ( ostream & s, const SkeletonVertexProperty & v );
 				// Output
-    friend istream &	operator >> ( istream & s, BoundaryVertexProperty & v );
+    friend istream &	operator >> ( istream & s, SkeletonVertexProperty & v );
 				// Input
-    virtual const char * className( void ) const { return "BoundaryVertexProperty"; }
+    virtual const char * className( void ) const { return "SkeletonVertexProperty"; }
 				// class name
 
 };
 
-#endif // _BoundaryVertexProperty_H
+#endif // _SkeletonVertexProperty_H

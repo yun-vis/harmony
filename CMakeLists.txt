@@ -71,17 +71,24 @@ link_directories(
 
 set(HEADERS
         include/base/Common.h
+        include/base/Config.h
         include/base/Coord2.h
+        include/base/Polygon2.h
         include/base/Grid2.h
         include/base/Boundary.h
         include/base/BoundaryEdgeProperty.h
         include/base/BoundaryGraph.h
         include/base/BoundaryGraphProperty.h
         include/base/BoundaryVertexProperty.h
+        include/base/SkeletonEdgeProperty.h
+        include/base/SkeletonGraph.h
+        include/base/SkeletonGraphProperty.h
+        include/base/SkeletonVertexProperty.h
         include/base/UndirectedBaseEdgeProperty.h
         include/base/UndirectedBaseGraph.h
         include/base/UndirectedBaseGraphProperty.h
         include/base/UndirectedBaseVertexProperty.h
+        include/optimization/Force.h
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
         include/ui/GraphicsBallItem.h
@@ -93,7 +100,9 @@ set(HEADERS
         include/voronoi/Voronoi.h
     )
 set(SOURCES
+        src/base/Config.cpp
         src/base/Coord2.cpp
+        src/base/Polygon2.cpp
         src/base/Grid2.cpp
         src/base/Line2.cpp
         src/base/Boundary.cpp
@@ -101,10 +110,15 @@ set(SOURCES
         src/base/BoundaryGraph.cpp
         src/base/BoundaryGraphProperty.cpp
         src/base/BoundaryVertexProperty.cpp
+        src/base/SkeletonEdgeProperty.cpp
+        src/base/SkeletonGraph.cpp
+        src/base/SkeletonGraphProperty.cpp
+        src/base/SkeletonVertexProperty.cpp
         src/base/UndirectedBaseEdgeProperty.cpp
         src/base/UndirectedBaseGraph.cpp
         src/base/UndirectedBaseGraphProperty.cpp
         src/base/UndirectedBaseVertexProperty.cpp
+        src/optimization/Force.cpp
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
         src/ui/GraphicsBallItem.cpp

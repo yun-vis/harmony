@@ -43,7 +43,7 @@ using namespace std;
 //
 Boundary::Boundary( void )
 {
-    clearGraph( graph );
+    clearGraph( _graph );
 
     _shortestPathM.clear();
     _line.clear();
@@ -75,7 +75,7 @@ Boundary::Boundary( void )
 //
 Boundary::Boundary( const Boundary & obj )
 {
-    graph = obj.g();
+    _graph = obj.g();
 
     _shortestPathM = obj.spM();
     _line = obj.line();
@@ -116,7 +116,7 @@ Boundary::Boundary( const Boundary & obj )
 //
 Boundary::~Boundary( void )
 {
-    clearGraph( graph );
+    clearGraph( _graph );
 
     _shortestPathM.clear();
     _line.clear();
@@ -146,7 +146,7 @@ Boundary::~Boundary( void )
 //
 void Boundary::clear( void )
 {
-    clearGraph( graph );
+    clearGraph( _graph );
 
     _shortestPathM.clear();
     _line.clear();
@@ -165,9 +165,8 @@ void Boundary::clear( void )
     _ratioR.clear();
 }
 
-
 //
-//  Boundary::~checkVEConflicrs --    detect vertex-edge pair that is close to each other
+//  Boundary::checkVEConflicrs --    detect vertex-edge pair that is close to each other
 //
 //  Inputs
 //  none
@@ -182,23 +181,23 @@ bool Boundary::checkVEConflicts( void )
     _VEconflict.clear();
 
     // find the vertex-edge pair that has smaller distance than the threshold
-    BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+    BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
     {
         double              distThreshold   = _distBeta/2.0;
 
-        Coord2 coord = *graph[ vertex ].smoothPtr;
-        unsigned idV = graph[ vertex ].id;
+        Coord2 coord = *_graph[ vertex ].smoothPtr;
+        unsigned idV = _graph[ vertex ].id;
 
-        BGL_FORALL_EDGES( edge, graph, BoundaryGraph )
+        BGL_FORALL_EDGES( edge, _graph, BoundaryGraph )
         {
-            unsigned idE = graph[ edge ].id;
-            BoundaryGraph::vertex_descriptor vdS = source( edge, graph );
-            BoundaryGraph::vertex_descriptor vdT = target( edge, graph );
+            unsigned idE = _graph[ edge ].id;
+            BoundaryGraph::vertex_descriptor vdS = source( edge, _graph );
+            BoundaryGraph::vertex_descriptor vdT = target( edge, _graph );
 
             if ( ( vertex != vdS ) && ( vertex != vdT ) ) {
 
-                Coord2 coordS = *graph[ vdS ].smoothPtr;
-                Coord2 coordT = *graph[ vdT ].smoothPtr;
+                Coord2 coordS = *_graph[ vdS ].smoothPtr;
+                Coord2 coordT = *_graph[ vdT ].smoothPtr;
 
                 double m = ( coordS.y() - coordT.y() ) / ( coordS.x() - coordT.x() );
                 double k = coordS.y() - m * coordS.x();
@@ -241,11 +240,11 @@ bool Boundary::checkVEConflicts( void )
           it != _VEconflict.end(); ++it ) {
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
         BoundaryGraph::edge_descriptor ed = it->second.second;
-        BoundaryGraph::vertex_descriptor vdS = source( ed, graph );
-        BoundaryGraph::vertex_descriptor vdT = target( ed, graph );
-        Coord2 & pointV = *graph[ vdV ].smoothPtr;
-        Coord2 & pointS = *graph[ vdS ].smoothPtr;
-        Coord2 & pointT = *graph[ vdT ].smoothPtr;
+        BoundaryGraph::vertex_descriptor vdS = source( ed, _graph );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, _graph );
+        Coord2 & pointV = *_graph[ vdV ].smoothPtr;
+        Coord2 & pointS = *_graph[ vdS ].smoothPtr;
+        Coord2 & pointT = *_graph[ vdT ].smoothPtr;
 
         double m = ( pointS.y() - pointT.y() ) / ( pointS.x() - pointT.x() );
         double k = pointS.y() - m * pointS.x();
@@ -300,9 +299,9 @@ void Boundary::adjustsize( const int & width, const int & height )
     double aspect = ( double )width/( double )height;
 
     // Scan all the vertex coordinates first
-    BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+    BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
     {
-        Coord2 coord = *graph[ vertex ].geoPtr;
+        Coord2 coord = *_graph[ vertex ].geoPtr;
         if ( coord.x() < xMin ) xMin = coord.x();
         if ( coord.x() > xMax ) xMax = coord.x();
         if ( coord.y() < yMin ) yMin = coord.y();
@@ -329,11 +328,11 @@ void Boundary::adjustsize( const int & width, const int & height )
     yMid    = 0.5 * ( yMin + yMax );
 
     // Normalize the coordinates
-    BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+    BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
     {
-        Coord2 geo = *graph[ vertex ].geoPtr;
-        Coord2 smooth = *graph[ vertex ].smoothPtr;
-        Coord2 coord = *graph[ vertex ].coordPtr;
+        Coord2 geo = *_graph[ vertex ].geoPtr;
+        Coord2 smooth = *_graph[ vertex ].smoothPtr;
+        Coord2 coord = *_graph[ vertex ].coordPtr;
 
         geo.setX( width  * ( geo.x() - xMid ) / xRange );
         geo.setY( height * ( geo.y() - yMid ) / yRange );
@@ -342,12 +341,12 @@ void Boundary::adjustsize( const int & width, const int & height )
         coord.setX( width  * ( coord.x() - xMid ) / xRange );
         coord.setY( height * ( coord.y() - yMid ) / yRange );
 
-        graph[ vertex ].geoPtr->x() = geo.x();
-        graph[ vertex ].geoPtr->y() = geo.y();
-        graph[ vertex ].smoothPtr->x() = smooth.x();
-        graph[ vertex ].smoothPtr->y() = smooth.y();
-        graph[ vertex ].coordPtr->x() = coord.x();
-        graph[ vertex ].coordPtr->y() = coord.y();
+        _graph[ vertex ].geoPtr->x() = geo.x();
+        _graph[ vertex ].geoPtr->y() = geo.y();
+        _graph[ vertex ].smoothPtr->x() = smooth.x();
+        _graph[ vertex ].smoothPtr->y() = smooth.y();
+        _graph[ vertex ].coordPtr->x() = coord.x();
+        _graph[ vertex ].coordPtr->y() = coord.y();
 
     }
 
@@ -355,14 +354,14 @@ void Boundary::adjustsize( const int & width, const int & height )
     int nAlpha = 0;
     int nBeta = 0;
     double totallength = 0.0;
-    BGL_FORALL_EDGES( edge, graph, BoundaryGraph )
+    BGL_FORALL_EDGES( edge, _graph, BoundaryGraph )
     {
-        BoundaryGraph::vertex_descriptor vdS = source( edge, graph );
-        BoundaryGraph::vertex_descriptor vdT = target( edge, graph );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, _graph );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, _graph );
 
-        Coord2 coord = *graph[ vdT ].geoPtr - *graph[ vdS ].geoPtr;
+        Coord2 coord = *_graph[ vdT ].geoPtr - *_graph[ vdS ].geoPtr;
         totallength += coord.norm();
-        double w = graph[ edge ].weight;
+        double w = _graph[ edge ].weight;
         if( w == 1.0 ) nBeta++;
         else nAlpha++;
     }
@@ -390,31 +389,31 @@ void Boundary::simplifyLayout( void )
     _removedVertices.clear();
     _removedEdges.clear();
     _removedWeights.clear();
-    //printGraph( graph );
+    //printGraph( _graph );
 
     while( true ){
         // find minimal distance of middle node to the line composed by its neighbors
         BoundaryGraph::vertex_descriptor mvd, mvdP, mvdN;
         bool noDegreeTwo = true;
         double minDist = INFINITY;
-        BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+        BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
         {
-            BoundaryGraph::degree_size_type degrees = out_degree( vertex, graph );
+            BoundaryGraph::degree_size_type degrees = out_degree( vertex, _graph );
 
             if( degrees == 2 ){
 
                 noDegreeTwo = false;
                 BoundaryGraph::out_edge_iterator e, e_end;
-                tie( e, e_end ) = out_edges( vertex, graph );
+                tie( e, e_end ) = out_edges( vertex, _graph );
                 BoundaryGraph::edge_descriptor edP = *e;
-                BoundaryGraph::vertex_descriptor vTP = target( edP, graph );
+                BoundaryGraph::vertex_descriptor vTP = target( edP, _graph );
                 e++;
                 BoundaryGraph::edge_descriptor edN = *e;
-                BoundaryGraph::vertex_descriptor vTN = target( edN, graph );
+                BoundaryGraph::vertex_descriptor vTN = target( edN, _graph );
 
-                Coord2 p = *graph[ vTP ].coordPtr;
-                Coord2 c = *graph[ vertex ].coordPtr;
-                Coord2 n = *graph[ vTN ].coordPtr;
+                Coord2 p = *_graph[ vTP ].coordPtr;
+                Coord2 c = *_graph[ vertex ].coordPtr;
+                Coord2 n = *_graph[ vTN ].coordPtr;
                 double m = ( p.y() - n.y() ) / ( p.x() - n.x() );
                 double k = p.y() - m * p.x();
                 double dist = fabs( m * c.x() - c.y() + k ) / sqrt( SQUARE( m ) + 1.0 );
@@ -436,56 +435,56 @@ void Boundary::simplifyLayout( void )
         }
 
         // check condition
-        cerr << "count = " << count << ", minID = " << graph[ mvd ].initID << ", minDist = " << minDist << endl;
+        cerr << "count = " << count << ", minID = " << _graph[ mvd ].initID << ", minDist = " << minDist << endl;
         // if( minDist > threshold || noDegreeTwo == true || vertexIsStation[ mvd ] == false ) break;
         if( minDist > threshold || noDegreeTwo == true ) break;
 
         // delete vertex and corresponding neighbor edges
         BoundaryGraph::edge_descriptor      edP, edN;
         bool                found = false;
-        tie( edP, found ) = edge( mvd, mvdP, graph );
+        tie( edP, found ) = edge( mvd, mvdP, _graph );
         assert( found == true );
-        tie( edN, found ) = edge( mvd, mvdN, graph );
+        tie( edN, found ) = edge( mvd, mvdN, _graph );
         assert( found == true );
-        double weight = graph[ edP ].weight + graph[ edN ].weight;
+        double weight = _graph[ edP ].weight + _graph[ edN ].weight;
 
         // remove stations and edges
-        remove_edge( edP, graph );
-        _removedEdges.push_back( VVIDPair( graph[ mvd ].initID, graph[ mvdP ].initID ) );
-        _removedWeights.push_back( graph[ edP ].weight );
-        remove_edge( edN, graph );
-        _removedEdges.push_back( VVIDPair( graph[ mvd ].initID, graph[ mvdN ].initID ) );
-        _removedWeights.push_back( graph[ edN ].weight );
-        clear_vertex( mvd, graph );
-        remove_vertex( mvd, graph );
-        _removedVertices.push_back( graph[ mvd ].weight );
+        remove_edge( edP, _graph );
+        _removedEdges.push_back( VVIDPair( _graph[ mvd ].initID, _graph[ mvdP ].initID ) );
+        _removedWeights.push_back( _graph[ edP ].weight );
+        remove_edge( edN, _graph );
+        _removedEdges.push_back( VVIDPair( _graph[ mvd ].initID, _graph[ mvdN ].initID ) );
+        _removedWeights.push_back( _graph[ edN ].weight );
+        clear_vertex( mvd, _graph );
+        remove_vertex( mvd, _graph );
+        _removedVertices.push_back( _graph[ mvd ].weight );
 
         // cerr << "mv = " << vertexID[ mvd ] << " mvdP = " << vertexID[ mvdP ] << " mvdN = " << vertexID[ mvdN ] << endl;
         // cerr << "wS = " << edgeWeight[ edP ] << " wT = " << edgeWeight[ edN ] << endl;
 
         // add new edges
-        pair< BoundaryGraph::edge_descriptor, unsigned int > addE = add_edge( mvdP, mvdN, graph );
+        pair< BoundaryGraph::edge_descriptor, unsigned int > addE = add_edge( mvdP, mvdN, _graph );
         BoundaryGraph::edge_descriptor addED = addE.first;
 
         // calculate geographical angle
         Coord2 coordO;
         Coord2 coordD;
-        if( graph[ mvdP ].initID < graph[ mvdN ].initID ){
-            coordO = *graph[ mvdP ].coordPtr;
-            coordD = *graph[ mvdN ].coordPtr;
+        if( _graph[ mvdP ].initID < _graph[ mvdN ].initID ){
+            coordO = *_graph[ mvdP ].coordPtr;
+            coordD = *_graph[ mvdN ].coordPtr;
         }
         else{
-            coordO = *graph[ mvdN ].coordPtr;
-            coordD = *graph[ mvdP ].coordPtr;
+            coordO = *_graph[ mvdN ].coordPtr;
+            coordD = *_graph[ mvdP ].coordPtr;
         }
         double diffX = coordD.x() - coordO.x();
         double diffY = coordD.y() - coordO.y();
         double angle = atan2( diffY, diffX );
 
-        graph[ addED ].weight = weight;
-        graph[ addED ].geoAngle = angle;
-        graph[ addED ].smoothAngle = angle;
-        graph[ addED ].angle = angle;
+        _graph[ addED ].weight = weight;
+        _graph[ addED ].geoAngle = angle;
+        _graph[ addED ].smoothAngle = angle;
+        _graph[ addED ].angle = angle;
 
 #ifdef  DEBUG
         cerr << "addWeight = " << weight <<endl;
@@ -528,17 +527,17 @@ void Boundary::reorderID( void )
 {
     // reorder vertexID
     _nStations = 0;
-    BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+    BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
     {
-        graph[ vertex ].id      = _nStations;
+        _graph[ vertex ].id      = _nStations;
         // cerr << "VID = " << vertexIndex[ vertex ] << endl;
         _nStations++;
     }
 
     _nEdges = 0;
-    BGL_FORALL_EDGES( edge, graph, BoundaryGraph )
+    BGL_FORALL_EDGES( edge, _graph, BoundaryGraph )
     {
-        graph[ edge ].id      = _nEdges;
+        _graph[ edge ].id      = _nEdges;
         // cerr << "EID = " << edgeIndex[ edge ] << endl;
         _nEdges++;
     }
@@ -560,23 +559,7 @@ bool Boundary::movebackNodes( const Boundary & obj, const LAYOUTTYPE type )
         return true;
 
     BoundaryGraph oGraph = obj.g();
-/*
-    // simplified graph
-    VertexIndexMap      vertexIndex     = get( vertex_index, graph );
-    VertexIDMap         vertexID        = get( vertex_myid, graph );
-    VertexGeoMap        vertexGeo       = get( vertex_mygeo, graph );
-    VertexSmoothMap     vertexSmooth    = get( vertex_mysmooth, graph );
-    VertexCoordMap      vertexCoord     = get( vertex_mycoord, graph );
-    EdgeIDMap           edgeID          = get( edge_myid, graph );
-    EdgeWeightMap       edgeWeight      = get( edge_weight, graph );
-    EdgeGeoAngleMap     edgeGeoAngle    = get( edge_mygeoangle, graph );
-    EdgeSmoAngleMap     edgeSmoAngle    = get( edge_mysmoangle, graph );
-    EdgeCurAngleMap     edgeCurAngle    = get( edge_mycurangle, graph );
 
-    // original graph
-    VertexGeoMap        oVertexGeo      = get( vertex_mygeo, oGraph );
-    VertexSmoothMap     oVertexSmooth   = get( vertex_mysmooth, oGraph );
-*/
     //cerr << "_removedVerteces = " << _removedVertices.size() << endl;
     //cerr << "_removedEdges = " << _removedEdges.size() << endl;
 
@@ -594,46 +577,46 @@ bool Boundary::movebackNodes( const Boundary & obj, const LAYOUTTYPE type )
     _removedWeights.pop_back();
 
 
-    // find BoundaryGraph::vertex_descriptor in simplified graph
+    // find BoundaryGraph::vertex_descriptor in simplified _graph
     BoundaryGraph::vertex_descriptor vdS, vdT;
-    BGL_FORALL_VERTICES( vd, graph, BoundaryGraph ){
+    BGL_FORALL_VERTICES( vd, _graph, BoundaryGraph ){
             // cerr << "vertexIndex[ vd ] = " << vertexIndex[ vd ] << endl;
-            if ( graph[ vd ].initID == idS ) vdS = vd;
-            if ( graph[ vd ].initID == idT ) vdT = vd;
+            if ( _graph[ vd ].initID == idS ) vdS = vd;
+            if ( _graph[ vd ].initID == idT ) vdT = vd;
         }
 
     bool found = false;
     BoundaryGraph::edge_descriptor ed;
-    tie( ed, found ) = edge( vdS, vdT, graph );
+    tie( ed, found ) = edge( vdS, vdT, _graph );
     // remove edge
-    remove_edge( ed, graph );
+    remove_edge( ed, _graph );
     // add vertex
-    BoundaryGraph::vertex_descriptor vdNew = add_vertex( graph );
-    graph[ vdNew ].initID = idV;
+    BoundaryGraph::vertex_descriptor vdNew = add_vertex( _graph );
+    _graph[ vdNew ].initID = idV;
     BoundaryGraph::vertex_descriptor vdO = vertex( idV, oGraph );
-    Coord2 coord = ( wT * *graph[ vdS ].coordPtr + wS * *graph[ vdT ].coordPtr ) / ( wS + wT );
-    graph[ vdNew ].geoPtr->x() = oGraph[ vdO ].geoPtr->x();
-    graph[ vdNew ].geoPtr->y() = oGraph[ vdO ].geoPtr->y();
-    graph[ vdNew ].smoothPtr->x() = oGraph[ vdO ].smoothPtr->x();
-    graph[ vdNew ].smoothPtr->y() = oGraph[ vdO ].smoothPtr->y();
-    graph[ vdNew ].coordPtr->x() = coord.x();
-    graph[ vdNew ].coordPtr->y() = coord.y();
+    Coord2 coord = ( wT * *_graph[ vdS ].coordPtr + wS * *_graph[ vdT ].coordPtr ) / ( wS + wT );
+    _graph[ vdNew ].geoPtr->x() = oGraph[ vdO ].geoPtr->x();
+    _graph[ vdNew ].geoPtr->y() = oGraph[ vdO ].geoPtr->y();
+    _graph[ vdNew ].smoothPtr->x() = oGraph[ vdO ].smoothPtr->x();
+    _graph[ vdNew ].smoothPtr->y() = oGraph[ vdO ].smoothPtr->y();
+    _graph[ vdNew ].coordPtr->x() = coord.x();
+    _graph[ vdNew ].coordPtr->y() = coord.y();
 
     // add edge
-    ed = add_edge( vdNew, vdS, graph ).first;
-    graph[ ed ].weight = wS;
+    ed = add_edge( vdNew, vdS, _graph ).first;
+    _graph[ ed ].weight = wS;
     // add  edge
-    ed = add_edge( vdNew, vdT, graph ).first;
-    graph[ ed ].weight = wT;
+    ed = add_edge( vdNew, vdT, _graph ).first;
+    _graph[ ed ].weight = wT;
 
     // reorder vertexID
     reorderID();
 
     // update edge angle of simplified Boundary layout
-    BGL_FORALL_EDGES( edge, graph, BoundaryGraph ){
+    BGL_FORALL_EDGES( edge, _graph, BoundaryGraph ){
 
-        BoundaryGraph::vertex_descriptor vdS = source( edge, graph );
-        BoundaryGraph::vertex_descriptor vdT = target( edge, graph );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, _graph );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, _graph );
 
         // calculate geographical angle
         Coord2 coordO, coordD;
@@ -641,52 +624,52 @@ bool Boundary::movebackNodes( const Boundary & obj, const LAYOUTTYPE type )
         if( type == TYPE_SMOOTH || type == TYPE_OCTILINEAR ){
 
             // geo angle
-            if( graph[ vdS ].id < graph[ vdT ].id ){
-                coordO = *graph[ vdS ].geoPtr;
-                coordD = *graph[ vdT ].geoPtr;
+            if( _graph[ vdS ].id < _graph[ vdT ].id ){
+                coordO = *_graph[ vdS ].geoPtr;
+                coordD = *_graph[ vdT ].geoPtr;
             }
             else{
-                coordO = *graph[ vdT ].geoPtr;
-                coordD = *graph[ vdS ].geoPtr;
+                coordO = *_graph[ vdT ].geoPtr;
+                coordD = *_graph[ vdS ].geoPtr;
             }
             double diffX = coordD.x() - coordO.x();
             double diffY = coordD.y() - coordO.y();
             double angle = atan2( diffY, diffX );
 
-            graph[ edge ].geoAngle = angle;
+            _graph[ edge ].geoAngle = angle;
 
             // current angle
-            if( graph[ vdS ].id < graph[ vdT ].id ){
-                coordO = *graph[ vdS ].coordPtr;
-                coordD = *graph[ vdT ].coordPtr;
+            if( _graph[ vdS ].id < _graph[ vdT ].id ){
+                coordO = *_graph[ vdS ].coordPtr;
+                coordD = *_graph[ vdT ].coordPtr;
             }
             else{
-                coordO = *graph[ vdT ].coordPtr;
-                coordD = *graph[ vdS ].coordPtr;
+                coordO = *_graph[ vdT ].coordPtr;
+                coordD = *_graph[ vdS ].coordPtr;
             }
             diffX = coordD.x() - coordO.x();
             diffY = coordD.y() - coordO.y();
             angle = atan2( diffY, diffX );
 
-            graph[ edge ].angle = angle;
+            _graph[ edge ].angle = angle;
         }
 
         if( type == TYPE_OCTILINEAR ){
 
             // smooth angle
-            if( graph[ vdS ].id < graph[ vdT ].id ){
-                coordO = *graph[ vdS ].smoothPtr;
-                coordD = *graph[ vdT ].smoothPtr;
+            if( _graph[ vdS ].id < _graph[ vdT ].id ){
+                coordO = *_graph[ vdS ].smoothPtr;
+                coordD = *_graph[ vdT ].smoothPtr;
             }
             else{
-                coordO = *graph[ vdT ].smoothPtr;
-                coordD = *graph[ vdS ].smoothPtr;
+                coordO = *_graph[ vdT ].smoothPtr;
+                coordD = *_graph[ vdS ].smoothPtr;
             }
             double diffX = coordD.x() - coordO.x();
             double diffY = coordD.y() - coordO.y();
             double angle = atan2( diffY, diffX );
 
-            graph[ edge ].smoothAngle = angle;
+            _graph[ edge ].smoothAngle = angle;
         }
 
     }
@@ -705,8 +688,8 @@ bool Boundary::movebackNodes( const Boundary & obj, const LAYOUTTYPE type )
 //
 void Boundary::cloneLayout( const Boundary & obj )
 {
-    graph.clear();
-    graph = obj.g();
+    _graph.clear();
+    _graph = obj.g();
 
     _nLines = obj._nLines;
     _nStations = obj._nStations;
@@ -756,17 +739,17 @@ void Boundary::cloneSmooth( const Boundary & obj )
 
     // copy stations
     BGL_FORALL_VERTICES( vdS, sGraph, BoundaryGraph ){
-        BGL_FORALL_VERTICES( vd, graph, BoundaryGraph ){
-            if ( graph[ vd ].initID == sGraph[ vdS ].initID ) {
-                graph[ vd ].smoothPtr->x() = sGraph[ vdS ].smoothPtr->x();
-                graph[ vd ].smoothPtr->y() = sGraph[ vdS ].smoothPtr->y();
-                graph[ vd ].coordPtr->x() = sGraph[ vdS ].coordPtr->x();
-                graph[ vd ].coordPtr->y() = sGraph[ vdS ].coordPtr->y();
+        BGL_FORALL_VERTICES( vd, _graph, BoundaryGraph ){
+            if ( _graph[ vd ].initID == sGraph[ vdS ].initID ) {
+                _graph[ vd ].smoothPtr->x() = sGraph[ vdS ].smoothPtr->x();
+                _graph[ vd ].smoothPtr->y() = sGraph[ vdS ].smoothPtr->y();
+                _graph[ vd ].coordPtr->x() = sGraph[ vdS ].coordPtr->x();
+                _graph[ vd ].coordPtr->y() = sGraph[ vdS ].coordPtr->y();
             }
         }
     }
 
-    //printGraph( graph );
+    //printGraph( _graph );
 }
 
 //
@@ -784,11 +767,11 @@ void Boundary::cloneOctilinear( const Boundary & obj )
 
     // copy stations
     BGL_FORALL_VERTICES( vdS, sGraph, BoundaryGraph ){
-        BGL_FORALL_VERTICES( vd, graph, BoundaryGraph ){
+        BGL_FORALL_VERTICES( vd, _graph, BoundaryGraph ){
 
-            if ( graph[ vd ].initID == sGraph[ vdS ].initID ) {
-                graph[ vd ].coordPtr->x() = sGraph[ vdS ].coordPtr->x();
-                graph[ vd ].coordPtr->y() = sGraph[ vdS ].coordPtr->y();
+            if ( _graph[ vd ].initID == sGraph[ vdS ].initID ) {
+                _graph[ vd ].coordPtr->x() = sGraph[ vdS ].coordPtr->x();
+                _graph[ vd ].coordPtr->y() = sGraph[ vdS ].coordPtr->y();
             }
         }
     }
@@ -892,9 +875,9 @@ void Boundary::load( const char * filename )
 
             // Check if the station exists or not
             BoundaryGraph::vertex_descriptor curVD = NULL;
-            BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+            BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
             {
-                string name = graph[ vertex ].name;
+                string name = _graph[ vertex ].name;
                 if( strcmp( argument, name.c_str() ) == 0 ){
 
 #ifdef DEBUG
@@ -909,24 +892,24 @@ void Boundary::load( const char * filename )
 
             if ( curVD == NULL ){
 
-                curVD = add_vertex( graph );
-                vector< unsigned int > lineID = graph[ curVD ].lineID;
+                curVD = add_vertex( _graph );
+                vector< unsigned int > lineID = _graph[ curVD ].lineID;
                 lineID.push_back( _nLines );
 
-                graph[ curVD ].geoPtr = new Coord2( x, y );
-                graph[ curVD ].smoothPtr = new Coord2( x, y );
-                graph[ curVD ].coordPtr = new Coord2( x, y );
-                graph[ curVD ].id = graph[ curVD ].initID = _nStations;
-                graph[ curVD ].name = argument;
+                _graph[ curVD ].geoPtr = new Coord2( x, y );
+                _graph[ curVD ].smoothPtr = new Coord2( x, y );
+                _graph[ curVD ].coordPtr = new Coord2( x, y );
+                _graph[ curVD ].id = _graph[ curVD ].initID = _nStations;
+                _graph[ curVD ].name = argument;
                 //vertexName[ curVD ].assign( argument );
-                graph[ curVD ].weight = 1.0;
-                graph[ curVD ].lineID.push_back( _nLines );
+                _graph[ curVD ].weight = 1.0;
+                _graph[ curVD ].lineID.push_back( _nLines );
 
                 _nStations++;
 
             }
             else{
-                graph[ curVD ].lineID.push_back( _nLines );
+                _graph[ curVD ].lineID.push_back( _nLines );
 #ifdef DEBUG
                 cerr << "[Existing] curV : lineID = " << endl;
                 for ( unsigned int k = 0; k < vertexLineID[ curVD ].size(); ++k )
@@ -969,47 +952,47 @@ void Boundary::load( const char * filename )
             BoundaryGraph::edge_descriptor oldED;
             BoundaryGraph::vertex_descriptor oldVS = ptrSta[ origID ];
             BoundaryGraph::vertex_descriptor oldVT = ptrSta[ destID ];
-            unsigned int indexS = graph[ oldVS ].initID;
-            unsigned int indexT = graph[ oldVT ].initID;
+            unsigned int indexS = _graph[ oldVS ].initID;
+            unsigned int indexT = _graph[ oldVT ].initID;
 
-            tie( oldED, found ) = edge( oldVS, oldVT, graph );
+            tie( oldED, found ) = edge( oldVS, oldVT, _graph );
 
             if ( found == true ) {
 
-                graph[ oldED ].lineID.push_back( _nLines );
+                _graph[ oldED ].lineID.push_back( _nLines );
                 eachline.push_back( oldED );
                 //bool test = false;
-                //tie( oldED, test ) = edge( oldVT, oldVS, graph );
+                //tie( oldED, test ) = edge( oldVT, oldVS, _graph );
             }
             else{
-                BoundaryGraph::vertex_descriptor src = vertex( indexS, graph );
-                BoundaryGraph::vertex_descriptor tar = vertex( indexT, graph );
+                BoundaryGraph::vertex_descriptor src = vertex( indexS, _graph );
+                BoundaryGraph::vertex_descriptor tar = vertex( indexT, _graph );
 
                 // handle fore edge
-                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( src, tar, graph );
+                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( src, tar, _graph );
                 BoundaryGraph::edge_descriptor foreED = foreE.first;
 
                 // calculate geographical angle
                 Coord2 coordO;
                 Coord2 coordD;
-                if( graph[ src ].initID < graph[ tar ].initID ){
-                    coordO = *graph[ src ].coordPtr;
-                    coordD = *graph[ tar ].coordPtr;
+                if( _graph[ src ].initID < _graph[ tar ].initID ){
+                    coordO = *_graph[ src ].coordPtr;
+                    coordD = *_graph[ tar ].coordPtr;
                 }
                 else{
-                    coordO = *graph[ tar ].coordPtr;
-                    coordD = *graph[ src ].coordPtr;
+                    coordO = *_graph[ tar ].coordPtr;
+                    coordD = *_graph[ src ].coordPtr;
                 }
                 double diffX = coordD.x() - coordO.x();
                 double diffY = coordD.y() - coordO.y();
                 double angle = atan2( diffY, diffX );
 
-                graph[ foreED ].initID = graph[ foreED ].id = _nEdges;
-                graph[ foreED ].weight = weight;
-                graph[ foreED ].geoAngle = angle;
-                graph[ foreED ].smoothAngle = angle;
-                graph[ foreED ].angle = angle;
-                graph[ foreED ].lineID.push_back( _nLines );
+                _graph[ foreED ].initID = _graph[ foreED ].id = _nEdges;
+                _graph[ foreED ].weight = weight;
+                _graph[ foreED ].geoAngle = angle;
+                _graph[ foreED ].smoothAngle = angle;
+                _graph[ foreED ].angle = angle;
+                _graph[ foreED ].lineID.push_back( _nLines );
 
                 eachline.push_back( foreED );
 #ifdef  DEBUG
@@ -1026,11 +1009,11 @@ void Boundary::load( const char * filename )
     }
     ifs.close();
 
-    cout << " numStations = " << _nStations << " num_vertices = " << num_vertices( graph ) << endl;
-    cout << " numEdges = " << _nEdges << " num_edges = " << num_edges( graph ) << endl;
+    cout << " numStations = " << _nStations << " num_vertices = " << num_vertices( _graph ) << endl;
+    cout << " numEdges = " << _nEdges << " num_edges = " << num_edges( _graph ) << endl;
 
 #ifdef  DEBUG
-    printGraph( graph );
+    printGraph( _graph );
 #endif  // DEBUG
 
     return;
@@ -1048,16 +1031,18 @@ void Boundary::load( const char * filename )
 void Boundary::buildBoundaryGraph( void )
 {
     for( unsigned int i = 0; i < _polygons.size(); i++ ){
-        for( unsigned int j = 1; j < _polygons[i].size(); j++ ){
 
-            Coord2 &coordS = _polygons[i][j-1];
-            Coord2 &coordT = _polygons[i][j];
+        Polygon2 &polygon = _polygons[i];
+
+        //cerr << endl << "i = " << i << endl;
+        for( unsigned int j = 1; j < polygon.elements().size(); j++ ){
+
+            Coord2 &coordS = polygon.elements()[j-1];
+            Coord2 &coordT = polygon.elements()[j];
 
             // Check if the station exists or not
             BoundaryGraph::vertex_descriptor curVDS = NULL;
             BoundaryGraph::vertex_descriptor curVDT = NULL;
-
-
 
             // add vertices
             for( unsigned int k = j-1; k <= j; k++ ){
@@ -1065,10 +1050,10 @@ void Boundary::buildBoundaryGraph( void )
                 BoundaryGraph::vertex_descriptor curVD = NULL;
 
                 // Check if the station exists or not
-                BGL_FORALL_VERTICES( vertex, graph, BoundaryGraph )
+                BGL_FORALL_VERTICES( vertex, _graph, BoundaryGraph )
                 {
-                    Coord2 &c = *graph[ vertex ].coordPtr;
-                    if( fabs( (_polygons[i][k]-c).norm() ) < 1e-2 ){
+                    Coord2 &c = *_graph[ vertex ].coordPtr;
+                    if( fabs( (polygon.elements()[k]-c).norm() ) < 1e-2 ){
 
 #ifdef DEBUG
                         cerr << "The node has been in the database." << endl;
@@ -1081,26 +1066,27 @@ void Boundary::buildBoundaryGraph( void )
 
                 if ( curVD == NULL ){
 
-                    curVD = add_vertex( graph );
-                    vector< unsigned int > lineID = graph[ curVD ].lineID;
+                    curVD = add_vertex( _graph );
+                    vector< unsigned int > lineID = _graph[ curVD ].lineID;
                     lineID.push_back( _nLines );
 
-                    double x = _polygons[i][k].x();
-                    double y = _polygons[i][k].y();
-                    graph[ curVD ].geoPtr = new Coord2( x, y );
-                    graph[ curVD ].smoothPtr = new Coord2( x, y );
-                    graph[ curVD ].coordPtr = new Coord2( x, y );
-                    graph[ curVD ].id = graph[ curVD ].initID = _nStations;
-                    graph[ curVD ].name = to_string( graph[ curVD ].id );
-                    graph[ curVD ].weight = 1.0;
-                    graph[ curVD ].lineID.push_back( _nLines );
+                    double x = polygon.elements()[k].x();
+                    double y = polygon.elements()[k].y();
+                    _graph[ curVD ].geoPtr = new Coord2( x, y );
+                    _graph[ curVD ].smoothPtr = new Coord2( x, y );
+                    _graph[ curVD ].coordPtr = new Coord2( x, y );
+                    _graph[ curVD ].forcePtr = new Coord2( 0, 0 );
+                    _graph[ curVD ].id = _graph[ curVD ].initID = _nStations;
+                    _graph[ curVD ].name = to_string( _graph[ curVD ].id );
+                    _graph[ curVD ].weight = 1.0;
+                    _graph[ curVD ].lineID.push_back( _nLines );
 
                     if( k == j-1 ) curVDS = curVD;
                     if( k == j ) curVDT = curVD;
                     _nStations++;
                 }
                 else{
-                    graph[ curVD ].lineID.push_back( _nLines );
+                    _graph[ curVD ].lineID.push_back( _nLines );
 #ifdef DEBUG
                     cerr << "[Existing] curV : lineID = " << endl;
                 for ( unsigned int k = 0; k < vertexLineID[ curVD ].size(); ++k )
@@ -1109,9 +1095,7 @@ void Boundary::buildBoundaryGraph( void )
                 }
             }
 
-            if( i == 0 ){
-                cerr << "i[0], vdS = " << graph[ curVDS ].id << ", vdT = " << graph[ curVDT ].id << endl;
-            }
+            //cerr << "( " << _graph[ curVDS ].id << ", " << _graph[ curVDT ].id << " )" << endl;
 
             // add edges
             // search previous edge
@@ -1119,48 +1103,48 @@ void Boundary::buildBoundaryGraph( void )
             BoundaryGraph::edge_descriptor oldED;
             //BoundaryGraph::vertex_descriptor oldVS = ptrSta[ origID ];
             //BoundaryGraph::vertex_descriptor oldVT = ptrSta[ destID ];
-            //unsigned int indexS = graph[ curVDS ].initID;
-            //unsigned int indexT = graph[ curVDT ].initID;
-            tie( oldED, found ) = edge( curVDS, curVDT, graph );
+            //unsigned int indexS = _graph[ curVDS ].initID;
+            //unsigned int indexT = _graph[ curVDT ].initID;
+            tie( oldED, found ) = edge( curVDS, curVDT, _graph );
 
 
             if ( found == true ) {
 
-                graph[ oldED ].lineID.push_back( _nLines );
+                _graph[ oldED ].lineID.push_back( _nLines );
                 //eachline.push_back( oldED );
                 //bool test = false;
-                //tie( oldED, test ) = edge( oldVT, oldVS, graph );
+                //tie( oldED, test ) = edge( oldVT, oldVS, _graph );
             }
             else{
 
-                //BoundaryGraph::vertex_descriptor src = vertex( indexS, graph );
-                //BoundaryGraph::vertex_descriptor tar = vertex( indexT, graph );
+                //BoundaryGraph::vertex_descriptor src = vertex( indexS, _graph );
+                //BoundaryGraph::vertex_descriptor tar = vertex( indexT, _graph );
 
                 // handle fore edge
-                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( curVDS, curVDT, graph );
+                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( curVDS, curVDT, _graph );
                 BoundaryGraph::edge_descriptor foreED = foreE.first;
 
                 // calculate geographical angle
                 Coord2 coordO;
                 Coord2 coordD;
-                if( graph[ curVDS ].initID < graph[ curVDT ].initID ){
-                    coordO = *graph[ curVDS ].coordPtr;
-                    coordD = *graph[ curVDT ].coordPtr;
+                if( _graph[ curVDS ].initID < _graph[ curVDT ].initID ){
+                    coordO = *_graph[ curVDS ].coordPtr;
+                    coordD = *_graph[ curVDT ].coordPtr;
                 }
                 else{
-                    coordO = *graph[ curVDT ].coordPtr;
-                    coordD = *graph[ curVDS ].coordPtr;
+                    coordO = *_graph[ curVDT ].coordPtr;
+                    coordD = *_graph[ curVDS ].coordPtr;
                 }
                 double diffX = coordD.x() - coordO.x();
                 double diffY = coordD.y() - coordO.y();
                 double angle = atan2( diffY, diffX );
 
-                graph[ foreED ].initID = graph[ foreED ].id = _nEdges;
-                graph[ foreED ].weight = 1.0;
-                graph[ foreED ].geoAngle = angle;
-                graph[ foreED ].smoothAngle = angle;
-                graph[ foreED ].angle = angle;
-                graph[ foreED ].lineID.push_back( _nLines );
+                _graph[ foreED ].initID = _graph[ foreED ].id = _nEdges;
+                _graph[ foreED ].weight = 1.0;
+                _graph[ foreED ].geoAngle = angle;
+                _graph[ foreED ].smoothAngle = angle;
+                _graph[ foreED ].angle = angle;
+                _graph[ foreED ].lineID.push_back( _nLines );
 
                 //eachline.push_back( foreED );
 #ifdef  DEBUG
@@ -1172,7 +1156,55 @@ void Boundary::buildBoundaryGraph( void )
         }
     }
 
-    cerr << "nV = " << num_vertices( graph ) << " nE = " << num_edges( graph ) << endl;
+    cerr << "nV = " << num_vertices( _graph ) << " nE = " << num_edges( _graph ) << endl;
+}
+
+
+//
+//  Boundary::buildSkeleton --    build the skeleton
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::buildSkeleton( void )
+{
+    int size = _seeds.size();
+    for( unsigned int i = 0; i < size; i++ ){
+
+        SkeletonGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
+        _skeleton[ vdNew ].id = i;
+        _skeleton[ vdNew ].initID = i;
+        _skeleton[ vdNew ].coordPtr = new Coord2( _seeds[i].x(), _seeds[i].y() );
+    }
+
+    unsigned int value = 15;
+    for( unsigned int i = 0; i < value; i++ ) {
+
+        unsigned idS = rand()%size;
+        unsigned idT = rand()%size;
+
+        if( idS != idT ){
+
+            SkeletonGraph::vertex_descriptor vdS = vertex( idS, _skeleton );
+            SkeletonGraph::vertex_descriptor vdT = vertex( idT, _skeleton );
+
+            bool found = false;
+            SkeletonGraph::edge_descriptor oldED;
+            tie( oldED, found ) = edge( vdS, vdT, _skeleton );
+
+            if( found == false ){
+
+                // handle fore edge
+                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _skeleton );
+                BoundaryGraph::edge_descriptor foreED = foreE.first;
+
+            }
+        }
+
+    }
 }
 
 // end of header file

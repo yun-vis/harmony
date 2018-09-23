@@ -54,6 +54,7 @@ private:
 
 protected:
 
+    void _item_skeleton( void );
     void _item_seeds( void );
     void _item_polygons( void );
     void _item_nodes( void );
@@ -79,6 +80,7 @@ public:
         _boundary = __boundary;
         _simplifiedBoundary = __simplifiedBoundary;
     }
+    void    initPolygonItems    ( void );
     void    initSceneItems      ( void );
 
 Q_SIGNALS:

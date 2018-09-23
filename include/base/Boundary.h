@@ -17,7 +17,9 @@
 using namespace std;
 
 #include "base/BoundaryGraph.h"
+#include "base/SkeletonGraph.h"
 #include "base/Grid2.h"
+#include "base/Polygon2.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -39,10 +41,11 @@ class Boundary
 {
 private:
 
-    BoundaryGraph graph;
+    BoundaryGraph                           _graph;
+    SkeletonGraph                           _skeleton;
 
-    vector< Coord2 >            _seeds;
-    vector < vector< Coord2 > > _polygons;
+    vector< Coord2 >                        _seeds;
+    map< unsigned int, Polygon2 >           _polygons;
 
     vector< vector< BoundaryGraph::vertex_descriptor > >        _shortestPathM;
     
@@ -95,14 +98,16 @@ public:
     const double &			        meanVSize( void ) const { return _meanVSize; }
     const double &			        dAlpha( void ) const { return _distAlpha; }
     const double &			        dBeta( void ) const { return _distBeta; }
-    
-    const BoundaryGraph &		g( void ) const { return graph; }
-    BoundaryGraph &			g( void )	    { return graph; }
+
+    const BoundaryGraph &		g( void ) const { return _graph; }
+    BoundaryGraph &			    g( void )	    { return _graph; }
+    const SkeletonGraph &		skeleton( void ) const  { return _skeleton; }
+    SkeletonGraph &			    skeleton( void )	    { return _skeleton; }
 
     const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
     vector< Coord2 > &			            seeds( void )	        { return _seeds; }
-    const vector < vector< Coord2 > > &		polygons( void ) const  { return _polygons; }
-    vector < vector< Coord2 > > &			polygons( void )	    { return _polygons; }
+    const map < unsigned int, Polygon2 > &	polygons( void ) const          { return _polygons; }
+    map< unsigned int, Polygon2 > &			polygons( void )	            { return _polygons; }
 
     const vector< vector< BoundaryGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
 
@@ -134,6 +139,7 @@ public:
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
     void buildBoundaryGraph( void );
+    void buildSkeleton( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

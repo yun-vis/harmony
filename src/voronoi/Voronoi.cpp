@@ -32,7 +32,7 @@ void Voronoi::clear( void )
 //	Public functions
 //------------------------------------------------------------------------------
 //
-//  Voronoi::clear --        memory management
+//  Voronoi::create --        create voronoi diagram
 //
 //  Inputs
 //      none
@@ -82,22 +82,18 @@ void Voronoi::createVoronoiDiagram( void )
             const auto &dir    = dray->direction();
             const auto tpoint  = K::Point_2(dsx+RAY_LENGTH*dir.dx(),dsy+RAY_LENGTH*dir.dy());
             if( outgoing )
-                return K::Segment_2(
-                        dray->source(),
-                        tpoint
-                );
+                return K::Segment_2( dray->source(), tpoint );
             else
-                return K::Segment_2(
-                        tpoint,
-                        dray->source()
-                );
+                return K::Segment_2( tpoint, dray->source() );
         }
     };
 
     int fnum = 0;
-    //Loop over the faces of the Voronoi diagram in some arbitrary order
+
+    //Loop over the faces of the Voronoi diagram in some arbitrary order (does not match with seed order)
     for(VD::Face_iterator fit = vd.faces_begin(); fit!=vd.faces_end();++fit,fnum++){
-        CGAL::Polygon_2<K> pgon;
+
+        CGAL::Polygon_2< K > pgon;
 
         //Edge circulators traverse endlessly around a face. Make a note of the
         //starting point so we know when to quit.
@@ -120,7 +116,7 @@ void Voronoi::createVoronoiDiagram( void )
             //Convert the segment/ray into a segment
             const auto this_seg = ConvertToSeg(seg_dual, ec->has_target());
 
-            pgon.push_back(this_seg.source());
+            pgon.push_back( this_seg.source() );
 
             //If the segment has no target, it's a ray. This means that the next
             //segment will also be a ray. We need to connect those two rays with a
@@ -135,15 +131,15 @@ void Voronoi::createVoronoiDiagram( void )
         //In order to crop the Voronoi diagram, we need to convert the bounding box
         //into a polygon. You'd think there'd be an easy way to do this. But there
         //isn't (or I haven't found it).
-        CGAL::Polygon_2<K> bpoly;
-        bpoly.push_back(K::Point_2( bbox.xmin(),bbox.ymin() ));
-        bpoly.push_back(K::Point_2( bbox.xmax(),bbox.ymin() ));
-        bpoly.push_back(K::Point_2( bbox.xmax(),bbox.ymax() ));
-        bpoly.push_back(K::Point_2( bbox.xmin(),bbox.ymax() ));
+        CGAL::Polygon_2< K > bpoly;
+        bpoly.push_back( K::Point_2( bbox.xmin(),bbox.ymin() ));
+        bpoly.push_back( K::Point_2( bbox.xmax(),bbox.ymin() ));
+        bpoly.push_back( K::Point_2( bbox.xmax(),bbox.ymax() ));
+        bpoly.push_back( K::Point_2( bbox.xmin(),bbox.ymax() ));
 
         //Perform the intersection. Since CGAL is very general, it believes the
         //result might be multiple polygons with holes.
-        std::list<CGAL::Polygon_with_holes_2<K>> isect;
+        std::list<CGAL::Polygon_with_holes_2< K >> isect;
         CGAL::intersection( pgon, bpoly, std::back_inserter(isect) );
 
         //But we know better. The intersection of a convex polygon and a box is
@@ -155,7 +151,7 @@ void Voronoi::createVoronoiDiagram( void )
         auto &poly_outer   = poly_w_holes.outer_boundary();
 
         //Print the polygon as a WKT polygon
-        vector< Coord2 > p;
+        vector< K::Point_2 > p;
         // std::cout<<fnum<<", ""\"POLYGON ((";
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
@@ -173,11 +169,75 @@ void Voronoi::createVoronoiDiagram( void )
             double y = boost::lexical_cast< double >( ostr.str().c_str() );
 
             // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
-            p.push_back( Coord2( x, y ) );
+            p.push_back( K::Point_2( x, y ) );
         }
+        
+        // add the end points to generate an enclosed polygon
         p.push_back( p[0] );
         // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
-        _polyVec2DPtr->push_back( p );
+        _polyVec2D.push_back( p );
+    }
+
+    mapSeedsandPolygons();
+}
+
+//
+//  Voronoi::mapSeedsandPolygons -- map seeds and polygons
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Voronoi::mapSeedsandPolygons( void )
+{
+    for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
+
+        K::Point_2 pt( (*_seedVecPtr)[i].x(), (*_seedVecPtr)[i].y() );
+
+        // find appropriate polygon boundary
+        for( unsigned int m = 0; m < _polyVec2D.size(); m++ ) {
+
+            K::Point_2 *points = new K::Point_2[ _polyVec2D[m].size() ];
+            vector< Coord2 > coords;
+            for( unsigned int n = 0; n < _polyVec2D[m].size(); n++ ) {
+
+                // copy to points
+                points[n] = K::Point_2( _polyVec2D[m][n].x(), _polyVec2D[m][n].y() );
+
+                // copy to coords
+                ostringstream ostr;
+                // x
+                ostr.str( "" );
+                ostr << _polyVec2D[m][n].x();
+                double x = boost::lexical_cast< double >( ostr.str().c_str() );
+
+                // y
+                ostr.str( "" );
+                ostr << _polyVec2D[m][n].y();
+                double y = boost::lexical_cast< double >( ostr.str().c_str() );
+
+                coords.push_back( Coord2( x, y ) );
+            }
+
+            CGAL::Bounded_side bside = CGAL::bounded_side_2( points, points+_polyVec2D[m].size(), pt );
+
+            if (bside == CGAL::ON_BOUNDED_SIDE) {
+                Polygon2 poly( coords );
+                (*_polygonVecPtr).insert( pair< unsigned int, Polygon2 >( i, poly ) );
+                // cout << " is inside the polygon.\n";
+                // point inside
+            } else if (bside == CGAL::ON_BOUNDARY) {
+                //cout << " is on the polygon boundary.\n";
+                // point on the border
+            } else if (bside == CGAL::ON_UNBOUNDED_SIDE) {
+                //cout << " is outside the polygon.\n";
+                // point outside
+            }
+
+            delete [] points;
+        }
     }
 }
 

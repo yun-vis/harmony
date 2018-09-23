@@ -16,10 +16,11 @@ int main( int argc, char **argv )
     Boundary simplifiedBoundary, boundary;
     Smooth smooth;
     Octilinear octilinear;
+    Force   force;
 
     window.setGeometry( 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT );
     window.setWindowTitle( "qtBorder" );
-    window.init( &boundary, &simplifiedBoundary, &smooth, &octilinear );
+    window.init( &boundary, &simplifiedBoundary, &force, &smooth, &octilinear );
     window.show();
 
     cerr << "Use: i -> c -> m -> s ->o " << endl;

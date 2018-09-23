@@ -1,27 +1,27 @@
 //******************************************************************************
-// BoundaryVertexProperty.h
+// Polygon2.h
 //	: header file for 2D coordinaes
 //
 //------------------------------------------------------------------------------
 //
-//	Ver 1.00		Date: Tue Dec 27 23:16:12 2011
+//	Ver 1.00		Date: Tue Jun 19 02:36:37 2012
 //
 //******************************************************************************
 
-#ifndef	_BoundaryVertexProperty_H
-#define _BoundaryVertexProperty_H
+#ifndef	_Polygon2_H
+#define _Polygon2_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
-#include <iostream>
+
 #include <vector>
+#include <cmath>
+#include <iostream>
 
 using namespace std;
 
 #include "base/Coord2.h"
-#include "base/Common.h"
-#include "base/UndirectedBaseVertexProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -32,41 +32,47 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
+class Polygon2 {
 
   protected:
 
-      void		    _init( void );
+    unsigned int        _id;
+    vector< Coord2 >    _elements;      // coordinates of end points
+
+    virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
 
   public:
 
 //------------------------------------------------------------------------------
-//	Constructors
+//	Constuructors
 //------------------------------------------------------------------------------
-    BoundaryVertexProperty();				// constructor (default)
-    BoundaryVertexProperty( const BoundaryVertexProperty & v ) {
-    }					// copy constructor
-    virtual ~BoundaryVertexProperty() {}		// destructor
+    Polygon2();				// constructor (default)
+    Polygon2( vector< Coord2 > __elements );
+					        // coordinates as input
+    Polygon2( const Polygon2 & v );		// copy constructor
+    virtual ~Polygon2() {}		// destructor
 
 //------------------------------------------------------------------------------
-//	Assignment operators
+//	Assignment opereators
 //------------------------------------------------------------------------------
+    Polygon2 &		operator = ( const Polygon2 & p );
+    // assignment
 
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                initID;
-    vector< unsigned int >      lineID;
+    void		init( unsigned int __id, vector< Coord2 > __elements )		{ _init( __id, __elements ); }
 
-    Coord2 *                    geoPtr;
-    Coord2 *                    smoothPtr;
-    Coord2 *                    forcePtr;
+    unsigned int &	            id( void )	            { return _id; }
+    const unsigned int &	    id( void ) const	    { return _id; }
+
+    // pointer to an array of coordinates
+    vector< Coord2 > &	        elements( void )	    { return _elements; }
+    const vector< Coord2 > &	elements( void ) const	{ return _elements; }
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-    void		                init( void )		{ _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -76,18 +82,14 @@ class BoundaryVertexProperty: public UndirectedBaseVertexProperty {
 //	Friend functions
 //------------------------------------------------------------------------------
 
-
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-
-    friend ostream &	operator << ( ostream & s, const BoundaryVertexProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, BoundaryVertexProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "BoundaryVertexProperty"; }
-				// class name
+    friend ostream &	operator << ( ostream & s, const Polygon2 & v );
+    friend istream &	operator >> ( istream & s, Polygon2 & v );
+    virtual const char * className( void ) const { return "Polygon2"; }
 
 };
 
-#endif // _BoundaryVertexProperty_H
+
+#endif // _Polygon2_H

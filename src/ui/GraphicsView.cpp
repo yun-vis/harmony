@@ -31,17 +31,52 @@ void GraphicsView::_item_seeds( void )
     }
 }
 
+void GraphicsView::_item_skeleton( void )
+{
+    SkeletonGraph &s = _boundary->skeleton();
+
+    // draw edges
+    BGL_FORALL_EDGES( ed, s, SkeletonGraph ) {
+
+        BoundaryGraph::vertex_descriptor vdS = source( ed, s );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, s );
+        QPainterPath path;
+        path.moveTo( s[vdS].coordPtr->x(), -s[vdS].coordPtr->y() );
+        path.lineTo( s[vdT].coordPtr->x(), -s[vdT].coordPtr->y() );
+
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setPath( path );
+
+        _scene->addItem( itemptr );
+    }
+
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+
+        GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
+        itemptr->id() = s[vd].id;
+
+        //cerr << vertexCoord[vd];
+        _scene->addItem( itemptr );
+    }
+}
+
 void GraphicsView::_item_polygons( void )
 {
     if( _is_polygonFlag == true ){
 
-        vector < vector< Coord2 > > p = _boundary->polygons();
-
-        for( unsigned int i = 0; i < p.size(); i++ ){
+        //vector < vector< Coord2 > > p = _boundary->polygons();
+        map< unsigned int, Polygon2 >  p = _boundary->polygons();
+        map< unsigned int, Polygon2 >::iterator itP = p.begin();
+        for( ; itP != p.end(); itP++ ){
 
             QPolygonF polygon;
-            for( unsigned int j = 0; j < p[i].size(); j++ ){
-                polygon.append( QPointF( p[i][j].x(), -p[i][j].y() ) );
+            for( unsigned int j = 0; j < itP->second.elements().size(); j++ ){
+                polygon.append( QPointF( itP->second.elements()[j].x(), -itP->second.elements()[j].y() ) );
                 // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
             }
 
@@ -57,6 +92,7 @@ void GraphicsView::_item_polygons( void )
         cerr << "polygon.size() = " << p.size() << endl;
     }
 }
+
 
 void GraphicsView::_item_nodes( void )
 {
@@ -114,7 +150,8 @@ void GraphicsView::initSceneItems ( void )
     _scene->clear();
 
     _item_polygons();
-    _item_seeds();
+    _item_skeleton();
+    //_item_seeds();
     _item_edges();
     _item_nodes();
 

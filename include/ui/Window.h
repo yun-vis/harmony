@@ -20,6 +20,7 @@ using namespace std;
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QApplication>
 
+#include "optimization/Force.h"
 #include "optimization/Smooth.h"
 #include "optimization/Octilinear.h"
 #include "ui/GraphicsView.h"
@@ -32,12 +33,17 @@ class Window : public QMainWindow
     Q_OBJECT
 private:
 
+    // rendering
     GraphicsView    *_gv;
 
+    // data structure
     Boundary        *_boundary;
     Boundary        *_simplifiedBoundary;
-    Smooth          *_smooth;
-    Octilinear      *_octilinear;
+
+    // optimization
+    Force           *_forcePtr;
+    Smooth          *_smoothPtr;
+    Octilinear      *_octilinearPtr;
 
     // display
     int         _content_width;
@@ -81,6 +87,9 @@ public slots:
     void selectMovebackSmooth( void );
     void selectMovebackOctilinear( void );
 
+    // force
+    void selectForce( void );
+
     // optimization
     void selectSmoothLS( void );
     void selectOctilinearLS( void );
@@ -99,8 +108,8 @@ public:
     explicit Window( QWidget *parent = 0 );
     ~Window();
 
-    void init( Boundary * __metro, Boundary * __simmetro,
-               Smooth * __smooth, Octilinear * __octilinear );
+    void init( Boundary * __metro, Boundary * __simmetro, Force * __force,
+               Smooth * __smoothPtr, Octilinear * __octilinearPtr );
 
 protected:
 

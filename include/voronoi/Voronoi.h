@@ -30,9 +30,10 @@ using namespace std;
 #include <CGAL/Boolean_set_operations_2.h>
 #include <CGAL/bounding_box.h>
 #include <CGAL/Polygon_2.h>
+#include <CGAL/Polygon_2_algorithms.h>
 
 #include <boost/lexical_cast.hpp>
-#include <base/Coord2.h>
+#include <base/Polygon2.h>
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -41,10 +42,19 @@ using namespace std;
 //Used to convert otherwise infinite rays into looooong line segments
 const int RAY_LENGTH = 1000;
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel K;
-//typedef CGAL::Regular_triangulation_filtered_traits_2<K>  Traits;
 
+typedef CGAL::Exact_predicates_exact_constructions_kernel K;
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel KI;
+
+#ifdef __linux__
+typedef CGAL::Regular_triangulation_filtered_traits_2<K>  Traits;
+typedef CGAL::Regular_triangulation_2<Traits> RT2;
+#endif  // __linux__
+
+#ifdef __APPLE__
 typedef CGAL::Regular_triangulation_2<K> RT2;
+#endif  // __MAC__
+
 typedef CGAL::Regular_triangulation_adaptation_traits_2<RT2>         AT;
 typedef CGAL::Regular_triangulation_degeneracy_removal_policy_2<RT2> DRP;
 typedef CGAL::Voronoi_diagram_2<RT2, AT, DRP> VD;
@@ -61,14 +71,15 @@ private:
 
     unsigned int _width, _height;
     vector< Coord2 > * _seedVecPtr;
-    vector < vector< Coord2 > > * _polyVec2DPtr;
+    vector< vector< K::Point_2 > > _polyVec2D;
+    map< unsigned int, Polygon2 >  *_polygonVecPtr;
 
 protected:
 
-    void    _init ( vector< Coord2 > & __seedVec, vector < vector< Coord2 > > & __polyVec2D,
+    void    _init ( vector< Coord2 > & __seedVec, map< unsigned int, Polygon2 > &__polygonVec,
                     unsigned int __width, unsigned int __height ){
         _seedVecPtr = &__seedVec;
-        _polyVec2DPtr = &__polyVec2D;
+        _polygonVecPtr = &__polygonVec;
         _width = __width;
         _height = __height;
     }
@@ -86,11 +97,12 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void init( vector< Coord2 > & __seedVec, vector < vector< Coord2 > > & __polyVec2D,
+    void init( vector< Coord2 > & __seedVec, map< unsigned int, Polygon2 > &__polygonVec,
                unsigned int __width, unsigned int __height ){
-        _init( __seedVec, __polyVec2D, __width, __height );
+        _init( __seedVec, __polygonVec, __width, __height );
     }
     void createVoronoiDiagram( void );
+    void mapSeedsandPolygons( void );
 
 //------------------------------------------------------------------------------
 //  Initialization functions
