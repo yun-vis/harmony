@@ -44,18 +44,24 @@ void Voronoi::createVoronoiDiagram( void )
 {
     vector< RT2::Weighted_point > wpoints;
 
-    // copy points
+    // initialization
+    _polyVec2D.clear();
+    _polygonVecPtr->clear();
     wpoints.clear();
+
+    // copy points
+    //cerr << "points:" << endl;
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
         wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].x(), (*_seedVecPtr)[i].y() ), 0 ) );
+        //cerr << (*_seedVecPtr)[i];
     }
 
     //Find the bounding box of the points. This will be used to crop the Voronoi
     //diagram later.
     //const K::Iso_rectangle_2 bbox = CGAL::bounding_box( wpoints.begin(), wpoints.end() );
     const K::Iso_rectangle_2 bbox( K::Point_2( -(int)_width/2, -(int)_height/2 ), K::Point_2( (int)_width/2, (int)_height/2 ) );
-    cerr << "bbox = " << bbox << endl;
+    //cerr << "bbox = " << bbox << endl;
 
     //Create a Regular Triangulation from the points
     RT2 rt( wpoints.begin(), wpoints.end() );
@@ -88,10 +94,9 @@ void Voronoi::createVoronoiDiagram( void )
         }
     };
 
-    int fnum = 0;
-
     //Loop over the faces of the Voronoi diagram in some arbitrary order (does not match with seed order)
-    for(VD::Face_iterator fit = vd.faces_begin(); fit!=vd.faces_end();++fit,fnum++){
+    int fnum = 0;
+    for( VD::Face_iterator fit = vd.faces_begin(); fit!=vd.faces_end(); ++fit, fnum++ ){
 
         CGAL::Polygon_2< K > pgon;
 
@@ -100,10 +105,12 @@ void Voronoi::createVoronoiDiagram( void )
         VD::Face::Ccb_halfedge_circulator ec_start = fit->ccb();
 
         //Find a bounded edge to start on
-        for(;ec_start->is_unbounded();ec_start++){}
+        //for(;ec_start->is_unbounded();ec_start++){}
+
 
         //Current location of the edge circulator
         VD::Face::Ccb_halfedge_circulator ec = ec_start;
+
 
         do {
             //A half edge circulator representing a ray doesn't carry direction
@@ -126,16 +133,17 @@ void Voronoi::createVoronoiDiagram( void )
                 const auto next_seg = ConvertToSeg(nseg_dual, ec->next()->has_target());
                 pgon.push_back(next_seg.target());
             }
+
         } while ( ++ec != ec_start ); //Loop until we get back to the beginning
 
         //In order to crop the Voronoi diagram, we need to convert the bounding box
         //into a polygon. You'd think there'd be an easy way to do this. But there
         //isn't (or I haven't found it).
         CGAL::Polygon_2< K > bpoly;
-        bpoly.push_back( K::Point_2( bbox.xmin(),bbox.ymin() ));
-        bpoly.push_back( K::Point_2( bbox.xmax(),bbox.ymin() ));
-        bpoly.push_back( K::Point_2( bbox.xmax(),bbox.ymax() ));
-        bpoly.push_back( K::Point_2( bbox.xmin(),bbox.ymax() ));
+        bpoly.push_back( K::Point_2( bbox.xmin(), bbox.ymin() ));
+        bpoly.push_back( K::Point_2( bbox.xmax(), bbox.ymin() ));
+        bpoly.push_back( K::Point_2( bbox.xmax(), bbox.ymax() ));
+        bpoly.push_back( K::Point_2( bbox.xmin(), bbox.ymax() ));
 
         //Perform the intersection. Since CGAL is very general, it believes the
         //result might be multiple polygons with holes.
@@ -152,10 +160,10 @@ void Voronoi::createVoronoiDiagram( void )
 
         //Print the polygon as a WKT polygon
         vector< K::Point_2 > p;
-        // std::cout<<fnum<<", ""\"POLYGON ((";
+        //cout << fnum << ", ""\"POLYGON ((" ;
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
-            //std::cout<<v->x()<<" "<<v->y()<<", ";
+            // cout << v->x() << " " << v->y() << ", ";
             ostringstream ostr;
 
             // x
@@ -171,13 +179,14 @@ void Voronoi::createVoronoiDiagram( void )
             // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
             p.push_back( K::Point_2( x, y ) );
         }
-        
+
         // add the end points to generate an enclosed polygon
+        p.push_back( p[0] );
         p.push_back( p[0] );
         // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
         _polyVec2D.push_back( p );
-    }
 
+    }
     mapSeedsandPolygons();
 }
 

@@ -81,7 +81,9 @@ void GraphicsView::_item_polygons( void )
             }
 
             GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
-            QColor color( rand()%256, rand()%256, rand()%256, 100 );
+            vector< double > rgb;
+            pickBrewerColor( itP->first, rgb );
+            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
             itemptr->setPolygon( polygon );
@@ -98,9 +100,9 @@ void GraphicsView::_item_nodes( void )
 {
     BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
-        g = & _simplifiedBoundary->g();
+        g = & _simplifiedBoundary->boundary();
     else
-        g = & _boundary->g();
+        g = & _boundary->boundary();
 
     BGL_FORALL_VERTICES( vd, *g, BoundaryGraph ) {
 
@@ -120,9 +122,9 @@ void GraphicsView::_item_edges( void )
 {
     BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
-        g = & _simplifiedBoundary->g();
+        g = & _simplifiedBoundary->boundary();
     else
-        g = & _boundary->g();
+        g = & _boundary->boundary();
 
     BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {
 

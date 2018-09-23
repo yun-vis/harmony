@@ -42,7 +42,7 @@ using namespace std;
 //  Outputs
 //	none
 //
-void Force::_init( Boundary * __boundary )
+void Force::_init( Boundary * __boundary, int __width, int __height )
 {
     // srand48( time( NULL ) );
     srand48( 3 );
@@ -51,6 +51,9 @@ void Force::_init( Boundary * __boundary )
 
     _center_x = 0.0;
     _center_y = 0.0;
+    _width = __width;
+    _height = __height;
+    _mode = TYPE_FORCE;
 
     string configFilePath = "../configs/force.conf";
     int result;
@@ -68,10 +71,48 @@ void Force::_init( Boundary * __boundary )
         _paramKr = stof( paramKr );
     }
 
+    if ( conf.has( "ratio_force" ) ){
+        string paramRatioForce = conf.gets( "ratio_force" );
+        _paramRatioForce = stof( paramRatioForce );
+    }
+
+    if ( conf.has( "ratio_voronoi" ) ){
+        string paramRatioVoronoi = conf.gets( "ratio_voronoi" );
+        _paramRatioVoronoi = stof( paramRatioVoronoi );
+    }
+
+    if ( conf.has( "transformation_step" ) ){
+        string paramTransformationStep = conf.gets( "transformation_step" );
+        _paramTransformationStep = stof( paramTransformationStep );
+    }
+
+    if ( conf.has( "cell_ratio" ) ){
+        string paramCellRatio = conf.gets( "cell_ratio" );
+        _paramCellRatio = stof( paramCellRatio );
+    }
+
+    if ( conf.has( "displacement_limit" ) ){
+        string paramDisplacementLimit = conf.gets( "displacement_limit" );
+        _paramDisplacementLimit = stof( paramDisplacementLimit );
+    }
+
+    if ( conf.has( "final_epsilon" ) ){
+        string paramFinalEpsilon = conf.gets( "final_epsilon" );
+        _paramFinalEpsilon = stof( paramFinalEpsilon );
+    }
+
     cerr << "filepath: " << configFilePath << endl;
     cerr << "ka: " << _paramKa << endl;
     cerr << "kr: " << _paramKr << endl;
+    cerr << "ratio_force: " << _paramRatioForce << endl;
+    cerr << "ratio_voronoi: " << _paramRatioVoronoi << endl;
+    cerr << "transformation_step: " << _paramTransformationStep << endl;
+    cerr << "cell_ratio: " << _paramCellRatio << endl;
+    cerr << "displacement_limit: " << _paramDisplacementLimit << endl;
+    cerr << "final_epsilon: " << _paramFinalEpsilon << endl;
 }
+
+
 
 //
 //  Force::force --	compute the displacements exerted by the force-directed model
@@ -86,14 +127,16 @@ void Force::_force( void )
 {
     SkeletonGraph & s = _boundaryPtr->skeleton();
 
-    //double side = _window_side * SCREEN_SIDE;
-    //double L = sqrt( SQUARE( side ) / ( double )max( 1.0, ( double )_nAnnotated ) );
-    double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
+    double side = _width * _height;
+    double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( s ) ) );
+    //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 
+    // cerr << "nV = " << num_vertices(s) << " nE = " << num_edges(s) << endl;
     BGL_FORALL_VERTICES( vdi, s, SkeletonGraph ) {
 
-        Coord2 shift( 0.0, 0.0 );
-        *s[ vdi ].forcePtr = shift;
+        // initialization
+        s[ vdi ].force.x() = 0.0;
+        s[ vdi ].force.y() = 0.0;
 
         BGL_FORALL_VERTICES( vdj, s, SkeletonGraph ) {
 
@@ -115,13 +158,19 @@ void Force::_force( void )
 
                 if ( isExisted ) {
                     // Drawing force by the spring
-                    *s[ vdi ].forcePtr += _paramKa * ( dist - L ) * unit;
+                    s[ vdi ].force += _paramKa * ( dist - L ) * unit;
                 }
                 // Replusive force by Couloum's power
-                *s[ vdi ].forcePtr -= ( _paramKr/SQUARE( dist ) ) * unit;
+                s[ vdi ].force -= ( _paramKr/SQUARE( dist ) ) * unit;
             }
         }
     }
+
+#ifdef DEBUG
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        cerr << "id[" << s[vd].id << "] = " << s[ vd ].force;
+    }
+#endif // DEBUG
 }
 
 
@@ -137,116 +186,98 @@ void Force::_force( void )
 double Force::_gap( void )
 {
     const char theName[] = "Force::_gap : ";
-/*
-    Graph &		g	= ( Graph & )*this;
+
+    SkeletonGraph & s = _boundaryPtr->skeleton();
     vector< Coord2 >	displace;
     double		err		= 0.0;
-    // const double	scale		= TRANSFORMATION_STEP;
-    const double	scale		= TRANSFORMATION_STEP*min(1.0,100.0/( double )num_vertices( *this ));
-    const double	force		= CELL_RATIO;
-    
-    VertexIDMap		vertexID	= get( vertex_myid, g );
-    VertexCoordMap	vertexCoord	= get( vertex_mycoord, g );
-    VertexShiftMap	vertexShift	= get( vertex_myshift, g );
-    VertexForceMap	vertexForce	= get( vertex_myforce, g );
-    VertexPlaceMap	vertexPlace	= get( vertex_myplace, g );
-    VertexSwitchMap	vertexSwitch	= get( vertex_myswitch, g );
-    VertexOverlapMap	vertexOverlap	= get( vertex_myoverlap, g );
-    VertexRatioMap	vertexRatio	= get( vertex_myratio, g );
-    
-    //cerr << "Force::_net->gp() = " << gp() << endl;
-    //cerr << "Force::_net->clut() = " << clut() << endl;
-    
+
+    // const double	scale		= _paramTransformationStep;
+    const double	scale		= _paramTransformationStep*min(1.0,100.0/( double )num_vertices( s ));
+    const double	force		= _paramCellRatio;
+
+    // initialization
     displace.clear();
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
+
+    // apply forces
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+
         Coord2 val;
-	switch ( _mode ) {
-	  case 0:		// force-directed
-	      val = vertexForce[ vd ];
-	      break;
-	  case 1:		// centroidal
-	      val = force*vertexPlace[ vd ];
-	      break;
-	  case 2:		// hybrid simple & adaptive
-	  case 3:
-	      val = ratioF()*vertexForce[ vd ] + force*ratioV()*vertexPlace[ vd ];
-	      break;
-	  case 4:		// smoothing
-	  case 5:
-	      val = vertexRatio[ vd ]*vertexForce[ vd ] +
-		  force*( 1.0 - vertexRatio[ vd ] )*vertexPlace[ vd ];
-#ifdef DEBUG_SMOOTH
-	      cerr << " force = " << vertexForce[ vd ];
-	      cerr << " place = " << vertexPlace[ vd ];
-	      cerr << " ratio = " << vertexRatio[ vd ] << " : " << 1.0 - vertexRatio[ vd ] << endl;
-#endif	// DEBUG_SMOOTH
-	      break;
-	  default:
-	      cerr << "Unexpected error mode" << endl;
-	      break;
+        switch ( _mode ) {
+            case TYPE_FORCE:        // force-directed
+                val = s[vd].force;
+                break;
+            case TYPE_CENTROID:        // centroidal
+                val = force * s[vd].place;
+                break;
+            case TYPE_HYBRID:
+                val = _paramRatioForce * s[vd].force + force * _paramRatioVoronoi * s[vd].place;
+                break;
         }
-	assert( vertexID[ vd ] == displace.size() );
+        assert( s[vd].id == displace.size() );
         displace.push_back( val );
     }
 
     // Scale the displacement of a node at each scale
-    const double limit = DISPLACEMENT_LIMIT;
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
-	unsigned int idV = vertexID[ vd ];
-	vertexShift[ vd ] = scale * displace[ idV ];
-	double norm = vertexShift[ vd ].norm();
-	if ( norm > limit ) {
-	    vertexShift[ vd ] *= ( limit/norm );
-	}
+    const double limit = _paramDisplacementLimit;
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        unsigned int idV = s[ vd ].id;
+        s[ vd ].shift = scale * displace[ idV ];
+        double norm = s[ vd ].shift.norm();
+        if ( norm > limit ) {
+            s[ vd ].shift *= ( limit/norm );
+        }
     }
-    
+
     // Move the entire layout while keeping its barycenter at the origin of the
     // screen coordinates
     Coord2 average;
     average.zero();
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
-        Coord2 newcoord = vertexCoord[ vd ] + vertexShift[ vd ];
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        Coord2 newcoord = *s[ vd ].coordPtr + s[ vd ].shift;
         average += newcoord;
     }
-    average /= ( double )num_vertices( g );
-    
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
-        vertexShift[ vd ] -= average;
+    average /= ( double )num_vertices( s );
+
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        s[ vd ].shift -= average;
     }
-    
+
     // Force the vertices stay within the screen
-    const double central = CONTENT_RATIO;
-    // double central = 0.90;
-    // double minX = -central * SCREEN_SIDE;
-    // double minY = -central * SCREEN_SIDE;
-    // double maxX =  central * SCREEN_SIDE;
-    // double maxY =  central * SCREEN_SIDE;
-    double minX = _center_x - central * _window_side * SCREEN_SIDE;
-    double minY = _center_y - central * _window_side * SCREEN_SIDE;
-    double maxX = _center_x + central * _window_side * SCREEN_SIDE;
-    double maxY = _center_y + central * _window_side * SCREEN_SIDE;
-    // cerr << "[ " << minX << " , " << maxX << " ]  x [ " << minY << " , " << maxY << " ] " << endl;
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
-	if ( vertexSwitch[ vd ] ) {
-	    Coord2 newcoord = vertexCoord[ vd ] + vertexShift[ vd ];
-	    if ( newcoord.x() < minX )
-		vertexShift[ vd ].x() += minX - newcoord.x();
-	    if ( newcoord.x() > maxX )
-		vertexShift[ vd ].x() += maxX - newcoord.x();
-	    if ( newcoord.y() < minY )
-		vertexShift[ vd ].y() += minY - newcoord.y();
-	    if ( newcoord.y() > maxX )
-		vertexShift[ vd ].y() += maxY - newcoord.y();
-	}
+    double minX = _center_x - 0.5 * _width;
+    double minY = _center_y - 0.5 * _height;
+    double maxX = _center_x + 0.5 * _width;
+    double maxY = _center_y + 0.5 * _height;
+
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        Coord2 newcoord = *s[ vd ].coordPtr + s[ vd ].shift;
+        if ( newcoord.x() < minX )
+        s[ vd ].shift.x() += minX - newcoord.x();
+        if ( newcoord.x() > maxX )
+        s[ vd ].shift.x() += maxX - newcoord.x();
+        if ( newcoord.y() < minY )
+        s[ vd ].shift.y() += minY - newcoord.y();
+        if ( newcoord.y() > maxX )
+        s[ vd ].shift.y() += maxY - newcoord.y();
     }
 
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
-        vertexCoord[ vd ] += vertexShift[ vd ]; //vertexCoord[ vd ] renew;
-        err += vertexShift[ vd ].squaredNorm();
+#ifdef DEBUG
+    cerr << "_width = " << _width << " _height = " << _height << endl;
+    cerr << "cx = " << _center_x << " cy = " << _center_y << endl;
+    cerr << "[ " << minX << " , " << maxX << " ]  x [ " << minY << " , " << maxY << " ] " << endl;
+    for( unsigned int i = 0; i < displace.size(); i++ ){
+        cerr << i << ": " << displace[i];
+    }
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        cerr << "id[" << s[vd].id << "] = " << s[ vd ].shift;
+    }
+#endif // DEBUG
+
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        *s[ vd ].coordPtr += s[ vd ].shift; //vertexCoord[ vd ] renew;
+        err += s[ vd ].shift.squaredNorm();
     }
 
-    return err/( double )num_vertices( g );
-*/
+    return err/( double )num_vertices( s );
 }
 
 
@@ -255,17 +286,6 @@ void Force::_onestep( void )
 {
 /*
     Graph &		g	= ( Graph & )*this;
-    VertexIDMap		vertexID	= get( vertex_myid, g );
-    VertexCoordMap	vertexCoord	= get( vertex_mycoord, g );
-    VertexShiftMap	vertexShift	= get( vertex_myshift, g );
-    // VertexForceMap	vertexForce	= get( vertex_myforce, g );
-    // VertexPlaceMap	vertexPlace	= get( vertex_myplace, g );
-    VertexAspectMap     vertexAspect    = get( vertex_myaspect, g );
-    VertexSwitchMap	vertexSwitch	= get( vertex_myswitch, g );
-    VertexOverlapMap	vertexOverlap	= get( vertex_myoverlap, g );
-    VertexRatioMap	vertexRatio	= get( vertex_myratio, g );
-    vector< double >	postRatio;
-    // vector< Coord2 >	displace;
     
     // const double	scale		= TRANSFORMATION_STEP;
     const double	scale		= TRANSFORMATION_STEP*min(1.0,100.0/( double )num_vertices( *this ));
@@ -395,15 +415,15 @@ Force::~Force()
 
 
 //------------------------------------------------------------------------------
-//	Refering to members
+//	Referring to members
 //------------------------------------------------------------------------------
 
 
 //------------------------------------------------------------------------------
-//	Assignment opereators
+//	Assignment operators
 //------------------------------------------------------------------------------
 //
-//  Force::operator = --	assignement
+//  Force::operator = --	assignment
 //
 //  Inputs
 //	obj	: objects of this class

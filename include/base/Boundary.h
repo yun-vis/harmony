@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <tinyxml.h>
 
 using namespace std;
 
@@ -41,7 +42,7 @@ class Boundary
 {
 private:
 
-    BoundaryGraph                           _graph;
+    BoundaryGraph                           _boundary;
     SkeletonGraph                           _skeleton;
 
     vector< Coord2 >                        _seeds;
@@ -99,10 +100,10 @@ public:
     const double &			        dAlpha( void ) const { return _distAlpha; }
     const double &			        dBeta( void ) const { return _distBeta; }
 
-    const BoundaryGraph &		g( void ) const { return _graph; }
-    BoundaryGraph &			    g( void )	    { return _graph; }
-    const SkeletonGraph &		skeleton( void ) const  { return _skeleton; }
-    SkeletonGraph &			    skeleton( void )	    { return _skeleton; }
+    const BoundaryGraph &		    boundary( void ) const  { return _boundary; }
+    BoundaryGraph &			        boundary( void )	    { return _boundary; }
+    const SkeletonGraph &		    skeleton( void ) const  { return _skeleton; }
+    SkeletonGraph &			        skeleton( void )	    { return _skeleton; }
 
     const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
     vector< Coord2 > &			            seeds( void )	        { return _seeds; }
@@ -140,6 +141,7 @@ public:
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
     void buildBoundaryGraph( void );
     void buildSkeleton( void );
+    void forceOnSkeleton( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

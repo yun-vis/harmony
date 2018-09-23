@@ -51,20 +51,28 @@ class Force {
   private:
 
     Boundary        *_boundaryPtr;
+
+    // parameter configuration
     double          _paramKa;
     double          _paramKr;
+    double          _paramRatioForce;
+    double          _paramRatioVoronoi;
+    double          _paramTransformationStep;
+    double          _paramCellRatio;
+    double          _paramDisplacementLimit;
+    double          _paramFinalEpsilon;
 
   protected:
 
-    unsigned int	_step;	
-
+    unsigned int	_step;
+    FORCETYPE       _mode;  // TYPE_FORCE, TYPE_CENTROID, TYPE_HYBRID
     int			    _width;
     int			    _height;
 
     // center coordinates
     double		    _center_x, _center_y;
 
-    void		_init	( Boundary * __boundary );
+    void		_init	( Boundary * __boundary, int __width, int __height );
     void		_reset	( void );
     void		_random	( void );
     void        _onestep( void );
@@ -97,10 +105,18 @@ class Force {
     const int &			    height( void )	const	{ return _height; }
     int &			        height( void )		    { return _height; }
 
+    const FORCETYPE &		mode( void )	const	{ return _mode; }
+    FORCETYPE &			    mode( void )		    { return _mode; }
+
+    const double &			finalEpsilon ( void )	const	{ return _paramFinalEpsilon; }
+    double &			    finalEpsilon ( void )		    { return _paramFinalEpsilon; }
+
+    double	gap	( void )	{ return _gap(); }
+
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
-    void init( Boundary * __boundary ) { _init( __boundary ); }
+    void init( Boundary * __boundary, int __width, int __height ) { _init( __boundary, __width, __height ); }
     void reset( void )				{ _reset(); }
     void random( void )				{ _random(); }
 

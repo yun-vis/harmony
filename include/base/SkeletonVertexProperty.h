@@ -56,11 +56,12 @@ class SkeletonVertexProperty: public UndirectedBaseVertexProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
     unsigned int                initID;
-    vector< unsigned int >      lineID;
+    //vector< unsigned int >      lineID;
 
-    Coord2 *                    geoPtr;
-    Coord2 *                    smoothPtr;
-    Coord2 *                    forcePtr;
+    Coord2                      shift;       // displacement
+    Coord2                      force;       // displacement of the force-directed algorithm
+    Coord2                      place;       // displacement of the voronoi cells
+
 
 //------------------------------------------------------------------------------
 //	Special functions

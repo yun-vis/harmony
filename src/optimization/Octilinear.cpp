@@ -37,7 +37,7 @@ using namespace std;
 void Octilinear::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
     _boundary                      = __boundary;
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
     unsigned int nEdges         = _boundary->nEdges();
     _d_Alpha                    = _boundary->dAlpha();
@@ -97,7 +97,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 //
 void Octilinear::_initCoefs( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
     //unsigned int nEdges         = _boundary->nEdges();
 
@@ -157,7 +157,7 @@ void Octilinear::_initCoefs( void )
 //
 void Octilinear::_initVars( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
 
     // initialization
@@ -180,7 +180,7 @@ void Octilinear::_initVars( void )
 
 void Octilinear::_updateEdgeCurAngle( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     // initialization
     BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
@@ -212,7 +212,7 @@ void Octilinear::_updateEdgeCurAngle( void )
 
 void Octilinear::_setTargetAngle( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
                            M_PI/4.0, M_PI/2.0, 3.0*M_PI/4.0, M_PI };
@@ -355,7 +355,7 @@ double Octilinear::_findRotateAngle( double input )
 //
 void Octilinear::_initOutputs( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     // initialization
     unsigned int nRows = 0;
@@ -429,7 +429,7 @@ void Octilinear::_initOutputs( void )
 //
 void Octilinear::_updateCoefs( void )
 {
-    BoundaryGraph               & g             = _boundary->g();
+    BoundaryGraph               & g             = _boundary->boundary();
     unsigned int        nVertices       = _boundary->nStations();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
@@ -539,7 +539,7 @@ void Octilinear::_updateCoefs( void )
 //
 void Octilinear::_updateOutputs( void )
 {
-    BoundaryGraph               & g             = _boundary->g();
+    BoundaryGraph               & g             = _boundary->boundary();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
     vector< double >    ratioR          = _boundary->ratioR();
@@ -813,7 +813,7 @@ double Octilinear::ConjugateGradient( unsigned int iter )
 //
 void Octilinear::retrieve( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
 
     // find the vertex that is too close to an edge

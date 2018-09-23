@@ -37,7 +37,7 @@ using namespace std;
 void Smooth::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
     _boundary                   = __boundary;
-    BoundaryGraph & g     = _boundary->g();
+    BoundaryGraph & g     = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
     unsigned int nEdges         = _boundary->nEdges();
     _d_Alpha                    = _boundary->dAlpha();
@@ -115,7 +115,7 @@ void Smooth::_init( Boundary * __boundary, double __half_width, double __half_he
 //
 void Smooth::_initCoefs( void )
 {
-    BoundaryGraph  & g            = _boundary->g();
+    BoundaryGraph  & g            = _boundary->boundary();
     unsigned int nVertices              = _boundary->nStations();
 
     //cerr<< "nVertices = " << nVertices << endl;
@@ -274,7 +274,7 @@ void Smooth::_initCoefs( void )
 //
 void Smooth::_initVars( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
 
     // initialization
@@ -306,7 +306,7 @@ void Smooth::_initVars( void )
 //
 void Smooth::_initOutputs( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     // initialization
     unsigned int nRows = 0;
@@ -391,7 +391,7 @@ void Smooth::_initOutputs( void )
 //
 void Smooth::_updateCoefs( void )
 {
-    BoundaryGraph               & g             = _boundary->g();
+    BoundaryGraph               & g             = _boundary->boundary();
     unsigned int        nVertices       = _boundary->nStations();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
@@ -505,7 +505,7 @@ void Smooth::_updateCoefs( void )
 //
 void Smooth::_updateOutputs( void )
 {
-    BoundaryGraph               & g             = _boundary->g();
+    BoundaryGraph               & g             = _boundary->boundary();
     unsigned int        nVertices       = _boundary->nStations();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
@@ -814,7 +814,7 @@ double Smooth::ConjugateGradient( unsigned int iter )
 //
 void Smooth::retrieve( void )
 {
-    BoundaryGraph        & g            = _boundary->g();
+    BoundaryGraph        & g            = _boundary->boundary();
     unsigned int nVertices      = _boundary->nStations();
 
     vector< vector< BoundaryGraph::vertex_descriptor > > vdMatrix;

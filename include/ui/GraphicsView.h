@@ -31,7 +31,7 @@ using namespace std;
 #include <QtSvg/QSvgGenerator>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
-
+#include "base/Color.h"
 
 //------------------------------------------------------------------------------
 //	Macro definitions

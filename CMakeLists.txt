@@ -88,6 +88,8 @@ set(HEADERS
         include/base/UndirectedBaseGraph.h
         include/base/UndirectedBaseGraphProperty.h
         include/base/UndirectedBaseVertexProperty.h
+        include/base/Timer.h
+        include/base/Color.h
         include/optimization/Force.h
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
@@ -118,6 +120,8 @@ set(SOURCES
         src/base/UndirectedBaseGraph.cpp
         src/base/UndirectedBaseGraphProperty.cpp
         src/base/UndirectedBaseVertexProperty.cpp
+        src/base/Timer.cpp
+        src/base/Color.cpp
         src/optimization/Force.cpp
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
@@ -146,6 +150,6 @@ set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/mo
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_GraphicsView.cpp PROPERTY SKIP_AUTOGEN ON )
 
 add_executable(qtborder ${SOURCES} ${MOC_SRCS} ${MOC_WINDOW} ${MOC_GRAPHICSVIEW})
-target_link_libraries (qtborder ${CMAKE_CXX_FLAGS})
+target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml)
 # qt stuff
 qt5_use_modules(qtborder Core Gui Svg Widgets OpenGL)

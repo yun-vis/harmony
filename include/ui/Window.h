@@ -19,12 +19,14 @@ using namespace std;
 #include <QtGui/QMouseEvent>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QApplication>
+#include <QtCore/QTimer>
 
 #include "optimization/Force.h"
 #include "optimization/Smooth.h"
 #include "optimization/Octilinear.h"
 #include "ui/GraphicsView.h"
 #include "voronoi/Voronoi.h"
+#include "base/Timer.h"
 
 #define REMOVEBACKNUM   (15)
 
@@ -32,6 +34,8 @@ class Window : public QMainWindow
 {
     Q_OBJECT
 private:
+
+    QBasicTimer	    *_timer;
 
     // rendering
     GraphicsView    *_gv;
@@ -74,6 +78,7 @@ private:
     void createMenus( void );
 
     void postLoad( void );
+    void simulateKey( Qt::Key key );
     void redrawAllScene( void );
 
 public slots:
@@ -101,7 +106,9 @@ public slots:
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
 
     // voronoi
+    void loadSkeleton( void );
     void selectVoronoi( void );
+    void selectUpdateVoronoi( void );
     void selectBuildBoundary( void );
 
 public:
@@ -114,6 +121,7 @@ public:
 protected:
 
     void keyPressEvent( QKeyEvent *event );
+    void timerEvent( QTimerEvent *event );
 };
 
 

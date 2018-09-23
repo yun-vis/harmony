@@ -24,6 +24,7 @@ int main( int argc, char **argv )
     window.show();
 
     cerr << "Use: i -> c -> m -> s ->o " << endl;
+    cerr << "Use: v -> 1 -> 2" << endl;
 
     return app.exec();
 }
