@@ -102,6 +102,7 @@ set(HEADERS
         include/voronoi/Voronoi.h
     )
 set(SOURCES
+        src/base/Common.cpp
         src/base/Config.cpp
         src/base/Coord2.cpp
         src/base/Polygon2.cpp

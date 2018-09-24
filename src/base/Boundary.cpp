@@ -1177,9 +1177,9 @@ void Boundary::buildSkeleton( void )
     clearGraph( _skeleton );
 
     // create a xml document
-    TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-A.xml" );
+    //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-A.xml" );
     //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-major.xml" );
-    //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-full.xml" );
+    TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-full.xml" );
     xmlPtr->LoadFile();
 
     TiXmlElement *elemPtr = xmlPtr->FirstChildElement()->FirstChildElement()->FirstChildElement();
@@ -1213,9 +1213,11 @@ void Boundary::buildSkeleton( void )
             _skeleton[ vdNew ].id = i;
             _skeleton[ vdNew ].initID = i;
             _skeleton[ vdNew ].coordPtr = new Coord2( x, y );
-
+            _skeleton[ vdNew ].widthPtr = new double( w );
+            _skeleton[ vdNew ].heightPtr = new double( h );
+            _skeleton[ vdNew ].areaPtr = new double( a );
+            // cerr << "area = " << a << endl;
             _seeds.push_back( Coord2( x, y ) );
-
         }
         else if ( key == "edge" ){
             string id = elemPtr->Attribute( "id" );
@@ -1242,7 +1244,6 @@ void Boundary::buildSkeleton( void )
                 // handle fore edge
                 pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _skeleton );
                 BoundaryGraph::edge_descriptor foreED = foreE.first;
-
             }
         }
         else {
@@ -1252,9 +1253,8 @@ void Boundary::buildSkeleton( void )
     //cerr << "nV = " << num_vertices( _skeleton ) << " nE = " << num_edges( _skeleton ) << endl;
 }
 
-
 //
-//  Boundary::forceOnSkeleton --    force for extending the layout of the skeleton
+//  Boundary::normalizeSkeleton --    normalize the skeleton
 //
 //  Inputs
 //  none
@@ -1262,10 +1262,37 @@ void Boundary::buildSkeleton( void )
 //  Outputs
 //  none
 //
-void Boundary::forceOnSkeleton( void )
+void Boundary::normalizeSkeleton( const int & width, const int & height )
 {
+    // initialization
+    double xMin =  INFINITY;
+    double xMax = -INFINITY;
+    double yMin =  INFINITY;
+    double yMax = -INFINITY;
+
+    // Scan all the vertex coordinates first
+    BGL_FORALL_VERTICES( vd, _skeleton, SkeletonGraph )
+    {
+        Coord2 coord = *_skeleton[ vd ].coordPtr;
+        if ( coord.x() < xMin ) xMin = coord.x();
+        if ( coord.x() > xMax ) xMax = coord.x();
+        if ( coord.y() < yMin ) yMin = coord.y();
+        if ( coord.y() > yMax ) yMax = coord.y();
+    }
+
+    // Normalize the coordinates
+    BGL_FORALL_VERTICES( vd, _skeleton, SkeletonGraph )
+    {
+        Coord2 coord;
+        coord.x() = 0.8* (double)width * ( _skeleton[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.4*(double)width;
+        coord.y() = 0.8* (double)height * ( _skeleton[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.4*(double)height;
+        _skeleton[ vd ].coordPtr->x() = coord.x();
+        _skeleton[ vd ].coordPtr->y() = coord.y();
+        // cerr << coord;
+    }
 
 }
+
 
 // end of header file
 // Do not add any stuff under this line.

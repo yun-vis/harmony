@@ -7,6 +7,12 @@
 #ifndef _Common_H               // begining of header file
 #define _Common_H               // notifying that this file is included
 
+#include <string>
+#include <iostream>
+#include <sstream>
+
+using namespace::std;
+
 //------------------------------------------------------------------------------
 //	Macro Switches
 //------------------------------------------------------------------------------
@@ -154,5 +160,6 @@ enum LAYOUTTYPE{ TYPE_GEOGRAPHY, TYPE_SMOOTH, TYPE_OCTILINEAR };
 enum OPTTYPE{ LEAST_SQUARE, CONJUGATE_GRADIENT };
 enum FORCETYPE{ TYPE_FORCE, TYPE_CENTROID, TYPE_HYBRID };
 
+double stringToDouble( string str );
 
 #endif // _Common_H

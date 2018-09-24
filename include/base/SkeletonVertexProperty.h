@@ -57,6 +57,8 @@ class SkeletonVertexProperty: public UndirectedBaseVertexProperty {
 //------------------------------------------------------------------------------
     unsigned int                initID;
     //vector< unsigned int >      lineID;
+    double *                    areaPtr;
+
 
     Coord2                      shift;       // displacement
     Coord2                      force;       // displacement of the force-directed algorithm

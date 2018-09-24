@@ -360,60 +360,26 @@ void Window::selectUpdateVoronoi( void )
     _boundary->seeds().clear();
     _boundary->polygons().clear();
 
+    vector< double > seedWeightVec;
+
     SkeletonGraph &s = _boundary->skeleton();
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
         _boundary->seeds().push_back( *s[vd].coordPtr );
+        seedWeightVec.push_back( *s[vd].areaPtr );
+        // cerr << "a = " << *s[vd].areaPtr << endl;
     }
 
-    voronoi.init( _boundary->seeds(), _boundary->polygons(), _content_width, _content_height );
+    voronoi.init( _boundary->seeds(), seedWeightVec, _boundary->polygons(), _content_width, _content_height );
+    //voronoi.createWeightedVoronoiDiagram();
     voronoi.createVoronoiDiagram();
-    cerr << "built voronoi..." << endl;
-    //_gv->isPolygonFlag() = true;
+    //cerr << "built voronoi..." << envdl;
+    _gv->isSkeletonFlag() = true;
+    _gv->isPolygonFlag() = true;
     redrawAllScene();
-}
-
-void Window::loadSkeleton( void )
-{
-    string filename = "../data/skeleton.txt";
-    ifstream ifs( filename.c_str() );
-    char buf[ MAX_STR ];
-
-    if ( !ifs ) {
-        cerr << "Cannot open the target file : " << filename << endl;
-        return;
-    }
-
-    while ( true ) {
-
-        istringstream istr;
-        double x, y, width, height, area;
-
-        ifs.getline( buf, sizeof( buf ) );
-
-        // the end of file.
-        if ( buf[ 0 ] == '#' ) {
-            cerr << "nV = " << _boundary->seeds().size() << endl;
-            break;
-        }
-
-        istr.clear();
-        istr.str( buf );
-        istr >> x >> y >> width >> height >> area;
-
-#ifdef DEBUG
-        cerr << " x = " << x << " y = " << y
-             << " w = " << width << " h = " << height << " a = " << area << endl;
-#endif DEBUG
-        _boundary->seeds().push_back( Coord2( x, y ) );
-
-    }
-
-    cerr << "Loading skeleton..." << endl;
 }
 
 void Window::selectVoronoi( void )
 {
-    Voronoi voronoi;
     _boundary->seeds().clear();
     _boundary->polygons().clear();
 
@@ -437,11 +403,9 @@ void Window::selectVoronoi( void )
     _boundary->seeds().push_back( Coord2( -414, -276 ) );
 #endif // DEBUG
     _boundary->buildSkeleton();
+    _boundary->normalizeSkeleton( _content_width, _content_height );
 
-    voronoi.init( _boundary->seeds(), _boundary->polygons(), _content_width, _content_height );
-    voronoi.createVoronoiDiagram();
-    _gv->isPolygonFlag() = true;
-    redrawAllScene();
+    selectUpdateVoronoi();
 }
 
 void Window::selectBuildBoundary( void )
@@ -479,13 +443,27 @@ void Window::timerEvent( QTimerEvent *event )
 #endif // SKIP
             break;
         }
+        case TYPE_CENTROID:
+        {
+            _forcePtr->centroid();
+            err = _forcePtr->gap();
+            if ( err < _forcePtr->finalEpsilon() ) {
+                _timer->stop();
+                cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
+                cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
+            }
+        }
+        case TYPE_HYBRID:
+        {
+
+        }
         default:
             break;
     }
 
     // create voronoi diagram
     static int num = 0;
-    if( num % 3 == 0 ) {
+    if( num % 5 == 0 ) {
         simulateKey( Qt::Key_U );
         num = 0;
     }
@@ -796,6 +774,12 @@ void Window::keyPressEvent( QKeyEvent *event )
             break;
         }
         case Qt::Key_4:
+        {
+            _gv->isSkeletonFlag() = !_gv->isSkeletonFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_5:
         {
             _gv->isPolygonFlag() = !_gv->isPolygonFlag();
             redrawAllScene();

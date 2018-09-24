@@ -137,11 +137,11 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
     void adjustsize( const int & width, const int & height );   // normalize the Boundary size
+    void normalizeSkeleton( const int & width, const int & height );   // normalize the Boundary size
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
     void buildBoundaryGraph( void );
     void buildSkeleton( void );
-    void forceOnSkeleton( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

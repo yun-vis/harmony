@@ -71,14 +71,17 @@ private:
 
     unsigned int _width, _height;
     vector< Coord2 > * _seedVecPtr;
+    vector< double > * _seedWeightVecPtr;
     vector< vector< K::Point_2 > > _polyVec2D;
     map< unsigned int, Polygon2 >  *_polygonVecPtr;
 
 protected:
 
-    void    _init ( vector< Coord2 > & __seedVec, map< unsigned int, Polygon2 > &__polygonVec,
+    void    _init ( vector< Coord2 > & __seedVec, vector< double > & __seedWeightVec,
+                    map< unsigned int, Polygon2 > &__polygonVec,
                     unsigned int __width, unsigned int __height ){
         _seedVecPtr = &__seedVec;
+        _seedWeightVecPtr = &__seedWeightVec;
         _polygonVecPtr = &__polygonVec;
         _width = __width;
         _height = __height;
@@ -97,11 +100,13 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void init( vector< Coord2 > & __seedVec, map< unsigned int, Polygon2 > &__polygonVec,
+    void init( vector< Coord2 > & __seedVec, vector< double > & __seedWeightVec,
+               map< unsigned int, Polygon2 > &__polygonVec,
                unsigned int __width, unsigned int __height ){
-        _init( __seedVec, __polygonVec, __width, __height );
+        _init( __seedVec, __seedWeightVec, __polygonVec, __width, __height );
     }
     void createVoronoiDiagram( void );
+    void createWeightedVoronoiDiagram( void );
     void mapSeedsandPolygons( void );
 
 //------------------------------------------------------------------------------

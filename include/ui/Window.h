@@ -106,7 +106,6 @@ public slots:
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
 
     // voronoi
-    void loadSkeleton( void );
     void selectVoronoi( void );
     void selectUpdateVoronoi( void );
     void selectBuildBoundary( void );

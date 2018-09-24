@@ -78,6 +78,7 @@ class Force {
     void        _onestep( void );
 
     void		_force		( void );
+    void		_centroid	( void );
     double		_gap		( void );
 
   public:
@@ -124,6 +125,7 @@ class Force {
 //	Misc. functions
 //------------------------------------------------------------------------------
     void	force	( void )		{ _force(); }
+    void	centroid( void )		{ _centroid(); }
 
 //------------------------------------------------------------------------------
 //	static functions

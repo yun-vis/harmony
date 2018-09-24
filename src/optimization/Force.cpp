@@ -32,7 +32,6 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Protected Functions
 //------------------------------------------------------------------------------
-
 //
 //  Force::_init --	initialize the network (called once when necessary)
 //
@@ -63,42 +62,42 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
 
     if ( conf.has( "ka" ) ){
         string paramKa = conf.gets( "ka" );
-        _paramKa = stof( paramKa );
+        _paramKa = stringToDouble( paramKa );
     }
 
     if ( conf.has( "kr" ) ){
         string paramKr = conf.gets( "kr" );
-        _paramKr = stof( paramKr );
+        _paramKr = stringToDouble( paramKr );
     }
 
     if ( conf.has( "ratio_force" ) ){
         string paramRatioForce = conf.gets( "ratio_force" );
-        _paramRatioForce = stof( paramRatioForce );
+        _paramRatioForce = stringToDouble( paramRatioForce );
     }
 
     if ( conf.has( "ratio_voronoi" ) ){
         string paramRatioVoronoi = conf.gets( "ratio_voronoi" );
-        _paramRatioVoronoi = stof( paramRatioVoronoi );
+        _paramRatioVoronoi = stringToDouble( paramRatioVoronoi );
     }
 
     if ( conf.has( "transformation_step" ) ){
         string paramTransformationStep = conf.gets( "transformation_step" );
-        _paramTransformationStep = stof( paramTransformationStep );
+        _paramTransformationStep = stringToDouble( paramTransformationStep );
     }
 
     if ( conf.has( "cell_ratio" ) ){
         string paramCellRatio = conf.gets( "cell_ratio" );
-        _paramCellRatio = stof( paramCellRatio );
+        _paramCellRatio = stringToDouble( paramCellRatio );
     }
 
     if ( conf.has( "displacement_limit" ) ){
         string paramDisplacementLimit = conf.gets( "displacement_limit" );
-        _paramDisplacementLimit = stof( paramDisplacementLimit );
+        _paramDisplacementLimit = stringToDouble( paramDisplacementLimit );
     }
 
     if ( conf.has( "final_epsilon" ) ){
         string paramFinalEpsilon = conf.gets( "final_epsilon" );
-        _paramFinalEpsilon = stof( paramFinalEpsilon );
+        _paramFinalEpsilon = stringToDouble( paramFinalEpsilon );
     }
 
     cerr << "filepath: " << configFilePath << endl;
@@ -127,7 +126,7 @@ void Force::_force( void )
 {
     SkeletonGraph & s = _boundaryPtr->skeleton();
 
-    double side = _width * _height;
+    double side = 0.1 * _width * _height ;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( s ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 
@@ -173,6 +172,78 @@ void Force::_force( void )
 #endif // DEBUG
 }
 
+//
+//  Force::centroid --	compute the displacements exerted by the voronoi centroid
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Force::_centroid( void )
+{
+    // const char theName[] = "Net::centroid : ";
+    SkeletonGraph & s = _boundaryPtr->skeleton();
+
+    int				h = ( int )_height;
+    int				w = ( int )_width;
+/*
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        s[ vd ].place.zero();
+        vertexNum[ vd ] = 0;
+    }
+
+    int ws = _diagram->widthStep;
+    int nc = _diagram->nChannels;
+    Coord2 cur;
+    for ( int i = 0; i < h; ++i ) {
+        cur.y() = 1.0 - ( ( double )i+0.5 )/( double )h;
+        for ( int j = 0; j < w; ++j ) {
+            cur.x() = ( ( double )j+0.5 )/( double )w;
+
+            unsigned char R = ( unsigned char )( _diagram->imageData[ i*ws + j*nc + 0 ] );
+            unsigned char G = ( unsigned char )( _diagram->imageData[ i*ws + j*nc + 1 ] );
+            unsigned char B = ( unsigned char )( _diagram->imageData[ i*ws + j*nc + 2 ] );
+            unsigned int colorID = (unsigned int)R*65536 + (unsigned int)G*256 + (unsigned int)B;
+            // if the pixel retains the background color
+            map< unsigned int, unsigned int >::iterator	iter = _colorMap.find( colorID );
+
+            if ( iter == _colorMap.end() ) { //colorMap -> ( colorID, vertexID[vd] )
+                // cerr << " colorID = " << colorID << endl;
+                // cerr << " R = " << (int)R << " G = " << (int)G << " B = " << (int)B << endl;
+                // assert( iter != colorMap.end() );
+            }
+            else {
+                unsigned int idV = iter->second;    //find vertexID[vd] from colorID
+                VertexDescriptor vd = vertex( idV, g );
+                vertexPlace[ vd ] += cur; //point of each pixels
+                vertexNum[ vd ]++;  // number of pixels belonging to node territory
+            }
+        }
+    }
+
+    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+        // Find the average pixel coordinates of each vertex
+        if ( ! vertexSwitch[ vd ] ) {
+            vertexPlace[ vd ].zero();
+        }
+        else if ( vertexNum[ vd ] != 0 ) {
+            Coord2 dest = vertexPlace[ vd ] /= ( double )vertexNum[ vd ];
+            // Screen coordinates have been already translated
+            // double nx =  SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ); //SCREEN_SIDE == 2
+            // double ny =  SCREEN_SIDE * ( 2.0*dest.y() - 1.0 );
+            double nx = _window_side * SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ) + _center_x;
+            double ny = _window_side * SCREEN_SIDE * ( 2.0*dest.y() - 1.0 ) + _center_y;
+            vertexPlace[ vd ] = Coord2( nx, ny ) - vertexCoord[ vd ];
+        }
+        else {
+            cerr << "%%%%%%%%%% Number of pixels vanishes!!!" << endl;
+            vertexPlace[ vd ].zero();
+        }
+    }
+*/
+}
 
 //
 //  Force::_gap --	return the convergence error in laying out the graph
@@ -192,8 +263,8 @@ double Force::_gap( void )
     double		err		= 0.0;
 
     // const double	scale		= _paramTransformationStep;
-    const double	scale		= _paramTransformationStep*min(1.0,100.0/( double )num_vertices( s ));
-    const double	force		= _paramCellRatio;
+    const double	scale		= (double)_paramTransformationStep*(double)MIN2( 1.0, 100.0/( double )num_vertices( s ) );
+    const double	cell		= _paramCellRatio;
 
     // initialization
     displace.clear();
@@ -207,10 +278,10 @@ double Force::_gap( void )
                 val = s[vd].force;
                 break;
             case TYPE_CENTROID:        // centroidal
-                val = force * s[vd].place;
+                val = cell * s[vd].place;
                 break;
             case TYPE_HYBRID:
-                val = _paramRatioForce * s[vd].force + force * _paramRatioVoronoi * s[vd].place;
+                val = _paramRatioForce * s[vd].force + cell * _paramRatioVoronoi * s[vd].place;
                 break;
         }
         assert( s[vd].id == displace.size() );
@@ -243,21 +314,23 @@ double Force::_gap( void )
     }
 
     // Force the vertices stay within the screen
-    double minX = _center_x - 0.5 * _width;
-    double minY = _center_y - 0.5 * _height;
-    double maxX = _center_x + 0.5 * _width;
-    double maxY = _center_y + 0.5 * _height;
+    double margin = 10.0;
+    double minX = _center_x - 0.5 * _width  + margin;
+    double minY = _center_y - 0.5 * _height + margin;
+    double maxX = _center_x + 0.5 * _width  - margin;
+    double maxY = _center_y + 0.5 * _height - margin;
 
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+
         Coord2 newcoord = *s[ vd ].coordPtr + s[ vd ].shift;
         if ( newcoord.x() < minX )
-        s[ vd ].shift.x() += minX - newcoord.x();
+            s[ vd ].shift.x() += minX - newcoord.x();
         if ( newcoord.x() > maxX )
-        s[ vd ].shift.x() += maxX - newcoord.x();
+            s[ vd ].shift.x() += maxX - newcoord.x();
         if ( newcoord.y() < minY )
-        s[ vd ].shift.y() += minY - newcoord.y();
-        if ( newcoord.y() > maxX )
-        s[ vd ].shift.y() += maxY - newcoord.y();
+            s[ vd ].shift.y() += minY - newcoord.y();
+        if ( newcoord.y() > maxY )
+            s[ vd ].shift.y() += maxY - newcoord.y();
     }
 
 #ifdef DEBUG
@@ -268,7 +341,8 @@ double Force::_gap( void )
         cerr << i << ": " << displace[i];
     }
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
-        cerr << "id[" << s[vd].id << "] = " << s[ vd ].shift;
+        cerr << "force[" << s[vd].id << "] = " << s[ vd ].force;
+        cerr << "shift[" << s[vd].id << "] = " << s[ vd ].shift;
     }
 #endif // DEBUG
 

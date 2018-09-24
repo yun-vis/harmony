@@ -48,7 +48,7 @@ class GraphicsView : public QGraphicsView
 private:
 
     bool                _is_simplifiedFlag;
-    bool                _is_polygonFlag;
+    bool                _is_skeletonFlag, _is_polygonFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
 
@@ -70,6 +70,8 @@ public:
     bool &          isSimplifiedFlag( void )        { return _is_simplifiedFlag; }
     const bool &    isSimplifiedFlag( void ) const  { return _is_simplifiedFlag; }
 
+    bool &          isSkeletonFlag( void )          { return _is_skeletonFlag; }
+    const bool &    isSkeletonFlag( void ) const    { return _is_skeletonFlag; }
     bool &          isPolygonFlag( void )           { return _is_polygonFlag; }
     const bool &    isPolygonFlag( void ) const     { return _is_polygonFlag; }
 

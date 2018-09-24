@@ -11,24 +11,21 @@
 //------------------------------------------------------------------------------
 void GraphicsView::_item_seeds( void )
 {
-    if( _is_polygonFlag == true ){
+    vector< Coord2 > seeds = _boundary->seeds();
 
-        vector< Coord2 > seeds = _boundary->seeds();
+    for( unsigned int i = 0; i < seeds.size(); i++ ){
 
-        for( unsigned int i = 0; i < seeds.size(); i++ ){
+        GraphicsBallItem *itemptr = new GraphicsBallItem;
+        //itemptr->setPen( Qt::NoPen );
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
+        itemptr->setRect( QRectF( seeds[i].x(), -seeds[i].y(), 10, 10 ) );
+        itemptr->id() = i;
 
-            GraphicsBallItem *itemptr = new GraphicsBallItem;
-            //itemptr->setPen( Qt::NoPen );
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( seeds[i].x(), -seeds[i].y(), 10, 10 ) );
-            itemptr->id() = i;
-
-            //cerr << vertexCoord[vd];
-            _scene->addItem( itemptr );
-        }
-        cerr << "seeds.size() = " << seeds.size() << endl;
+        //cerr << vertexCoord[vd];
+        _scene->addItem( itemptr );
     }
+    cerr << "seeds.size() = " << seeds.size() << endl;
 }
 
 void GraphicsView::_item_skeleton( void )
@@ -67,32 +64,30 @@ void GraphicsView::_item_skeleton( void )
 
 void GraphicsView::_item_polygons( void )
 {
-    if( _is_polygonFlag == true ){
+    //vector < vector< Coord2 > > p = _boundary->polygons();
+    map< unsigned int, Polygon2 >  p = _boundary->polygons();
+    map< unsigned int, Polygon2 >::iterator itP = p.begin();
+    for( ; itP != p.end(); itP++ ){
 
-        //vector < vector< Coord2 > > p = _boundary->polygons();
-        map< unsigned int, Polygon2 >  p = _boundary->polygons();
-        map< unsigned int, Polygon2 >::iterator itP = p.begin();
-        for( ; itP != p.end(); itP++ ){
-
-            QPolygonF polygon;
-            for( unsigned int j = 0; j < itP->second.elements().size(); j++ ){
-                polygon.append( QPointF( itP->second.elements()[j].x(), -itP->second.elements()[j].y() ) );
-                // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
-            }
-
-            GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
-            vector< double > rgb;
-            pickBrewerColor( itP->first, rgb );
-            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
-            itemptr->setPolygon( polygon );
-
-            //cerr << vertexCoord[vd];
-            _scene->addItem( itemptr );
+        QPolygonF polygon;
+        for( unsigned int j = 0; j < itP->second.elements().size(); j++ ){
+            polygon.append( QPointF( itP->second.elements()[j].x(), -itP->second.elements()[j].y() ) );
+            // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
         }
-        cerr << "polygon.size() = " << p.size() << endl;
+
+        GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+        vector< double > rgb;
+        pickBrewerColor( itP->first, rgb );
+        QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+        itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+        itemptr->setPolygon( polygon );
+
+        //cerr << vertexCoord[vd];
+        _scene->addItem( itemptr );
     }
+    // cerr << "polygon.size() = " << p.size() << endl;
+
 }
 
 
@@ -151,9 +146,9 @@ void GraphicsView::initSceneItems ( void )
     // initialization
     _scene->clear();
 
-    _item_polygons();
-    _item_skeleton();
-    //_item_seeds();
+    if( _is_polygonFlag == true ) _item_polygons();
+    if( _is_skeletonFlag == true ) _item_skeleton();
+    // if( _is_polygonFlag == true ) _item_seeds();
     _item_edges();
     _item_nodes();
 
@@ -179,6 +174,7 @@ GraphicsView::GraphicsView( QWidget *parent )
 
     _is_simplifiedFlag = false;
     _is_polygonFlag = false;
+    _is_skeletonFlag = false;
     this->setScene( _scene );
 }
 
