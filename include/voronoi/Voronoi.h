@@ -31,6 +31,8 @@ using namespace std;
 #include <CGAL/bounding_box.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_2_algorithms.h>
+#include <CGAL/centroid.h>
+#include <CGAL/double.h>
 
 #include <boost/lexical_cast.hpp>
 #include <base/Polygon2.h>
@@ -58,7 +60,9 @@ typedef CGAL::Regular_triangulation_2<K> RT2;
 typedef CGAL::Regular_triangulation_adaptation_traits_2<RT2>         AT;
 typedef CGAL::Regular_triangulation_degeneracy_removal_policy_2<RT2> DRP;
 typedef CGAL::Voronoi_diagram_2<RT2, AT, DRP> VD;
+typedef CGAL::Polygon_2< K >::Vertex_circulator                      Vertex_circulator;
 
+using CGAL::ORIGIN;
 
 //----------------------------------------------------------------------
 //	Defining macros
@@ -108,6 +112,7 @@ public:
     void createVoronoiDiagram( void );
     void createWeightedVoronoiDiagram( void );
     void mapSeedsandPolygons( void );
+    Coord2 centroid( CGAL::Polygon_2< K > polyg );
 
 //------------------------------------------------------------------------------
 //  Initialization functions

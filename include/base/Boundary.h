@@ -44,6 +44,7 @@ private:
 
     BoundaryGraph                           _boundary;
     SkeletonGraph                           _skeleton;
+    SkeletonGraph                           _composite;
 
     vector< Coord2 >                        _seeds;
     map< unsigned int, Polygon2 >           _polygons;
@@ -142,6 +143,7 @@ public:
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
     void buildBoundaryGraph( void );
     void buildSkeleton( void );
+    void decomposeSkeleton( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

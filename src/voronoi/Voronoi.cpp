@@ -32,6 +32,47 @@ void Voronoi::clear( void )
 //	Public functions
 //------------------------------------------------------------------------------
 //
+//  Voronoi::centroid --        return polygon centroid
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+Coord2 Voronoi::centroid( CGAL::Polygon_2< K > polyg )
+{
+    Coord2 center( 0.0, 0.0 );
+
+    // check if the polygon has at least three vertices
+    assert( polyg.size() >= 3 );
+    Vertex_circulator start = polyg.vertices_circulator();
+    Vertex_circulator cur = start;
+    Vertex_circulator next = cur;
+    ++next;
+    CGAL::Vector_2< K > centre( 0, 0 );
+    double a = 0.0, atot = 0.0;
+    do {
+        // cerr << CGAL::to_double( ((*cur).x()) * ((*next).y()) - ((*next).x()) * ((*cur).y()) ) << endl;
+        a = CGAL::to_double( ((*cur).x()) * ((*next).y()) - ((*next).x()) * ((*cur).y()) );
+        centre = centre + a * ((*cur - ORIGIN) + (*next - ORIGIN));
+        atot = atot + a;
+        cur = next;
+        ++next;
+    } while (cur != start);
+    atot = 3*atot;
+    centre = centre/atot;
+
+    double x = to_double( (ORIGIN + centre).x() );
+    double y = to_double( (ORIGIN + centre).y() );
+    center.x() = x;
+    center.y() = y;
+
+    // return ORIGIN + centre;
+    return center;
+}
+
+//
 //  Voronoi::createWeightedVoronoiDiagram --        create voronoi diagram
 //
 //  Inputs
@@ -163,26 +204,13 @@ void Voronoi::createWeightedVoronoiDiagram( void )
         //cout << fnum << ", ""\"POLYGON ((" ;
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
-            // cout << v->x() << " " << v->y() << ", ";
-            ostringstream ostr;
-
-            // x
-            ostr.str( "" );
-            ostr << v->x();
-            double x = boost::lexical_cast< double >( ostr.str().c_str() );
-
-            // y
-            ostr.str( "" );
-            ostr << v->y();
-            double y = boost::lexical_cast< double >( ostr.str().c_str() );
-
             // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
-            p.push_back( K::Point_2( x, y ) );
+            p.push_back( K::Point_2( to_double( v->x() ), to_double( v->y() ) ) );
         }
 
         // add the end points to generate an enclosed polygon
         p.push_back( p[0] );
-        p.push_back( p[0] );
+        // p.push_back( p[0] );
         // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
         _polyVec2D.push_back( p );
 
@@ -322,29 +350,15 @@ void Voronoi::createVoronoiDiagram( void )
         //cout << fnum << ", ""\"POLYGON ((" ;
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
-            // cout << v->x() << " " << v->y() << ", ";
-            ostringstream ostr;
-
-            // x
-            ostr.str( "" );
-            ostr << v->x();
-            double x = boost::lexical_cast< double >( ostr.str().c_str() );
-
-            // y
-            ostr.str( "" );
-            ostr << v->y();
-            double y = boost::lexical_cast< double >( ostr.str().c_str() );
-
             // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
-            p.push_back( K::Point_2( x, y ) );
+            p.push_back( K::Point_2( to_double( v->x() ), to_double( v->y() ) ) );
         }
 
         // add the end points to generate an enclosed polygon
         p.push_back( p[0] );
-        p.push_back( p[0] );
+        // p.push_back( p[0] );
         // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
         _polyVec2D.push_back( p );
-
     }
     mapSeedsandPolygons();
 }
@@ -373,27 +387,32 @@ void Voronoi::mapSeedsandPolygons( void )
 
                 // copy to points
                 points[n] = K::Point_2( _polyVec2D[m][n].x(), _polyVec2D[m][n].y() );
-
-                // copy to coords
-                ostringstream ostr;
-                // x
-                ostr.str( "" );
-                ostr << _polyVec2D[m][n].x();
-                double x = boost::lexical_cast< double >( ostr.str().c_str() );
-
-                // y
-                ostr.str( "" );
-                ostr << _polyVec2D[m][n].y();
-                double y = boost::lexical_cast< double >( ostr.str().c_str() );
-
-                coords.push_back( Coord2( x, y ) );
+                coords.push_back( Coord2( to_double( _polyVec2D[m][n].x() ), to_double( _polyVec2D[m][n].y() ) ) );
             }
 
             CGAL::Bounded_side bside = CGAL::bounded_side_2( points, points+_polyVec2D[m].size(), pt );
 
             if (bside == CGAL::ON_BOUNDED_SIDE) {
+
+                // compute polygon area
+                CGAL::Polygon_2< K > bpoly;
+                for( unsigned int n = 0; n < _polyVec2D[m].size(); n++ ) {
+                   bpoly.push_back( K::Point_2( _polyVec2D[m][n].x(), _polyVec2D[m][n].y() ) );
+                }
+
+                // copy polygon
                 Polygon2 poly( coords );
+                poly.area() = to_double( bpoly.area() );
+                Coord2 center = centroid( bpoly );
+                poly.center() = center;
                 (*_polygonVecPtr).insert( pair< unsigned int, Polygon2 >( i, poly ) );
+                map< unsigned int, Polygon2 >::iterator itP = _polygonVecPtr->end();
+                itP--;
+                itP->second.area() = poly.area();
+                itP->second.center().x() = center.x();
+                itP->second.center().y() = center.y();
+                // cerr << "area = " << itP->second.area() << endl;
+                // cerr << "pgon_area = " << poly.area() << endl;
                 // cout << " is inside the polygon.\n";
                 // point inside
             } else if (bside == CGAL::ON_BOUNDARY) {

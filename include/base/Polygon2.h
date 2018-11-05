@@ -37,6 +37,8 @@ class Polygon2 {
   protected:
 
     unsigned int        _id;
+    double              _area;
+    Coord2              _center;
     vector< Coord2 >    _elements;      // coordinates of end points
 
     virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
@@ -65,6 +67,14 @@ class Polygon2 {
 
     unsigned int &	            id( void )	            { return _id; }
     const unsigned int &	    id( void ) const	    { return _id; }
+
+    // area
+    double &	                area( void )	        { return _area; }
+    const double &	            area( void ) const	    { return _area; }
+
+    // barycenter
+    Coord2 &	                center( void )	        { return _center; }
+    const Coord2 &	            center( void ) const	{ return _center; }
 
     // pointer to an array of coordinates
     vector< Coord2 > &	        elements( void )	    { return _elements; }

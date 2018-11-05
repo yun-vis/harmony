@@ -64,11 +64,13 @@ void GraphicsView::_item_skeleton( void )
 
 void GraphicsView::_item_polygons( void )
 {
+    SkeletonGraph &s = _boundary->skeleton();
     //vector < vector< Coord2 > > p = _boundary->polygons();
     map< unsigned int, Polygon2 >  p = _boundary->polygons();
     map< unsigned int, Polygon2 >::iterator itP = p.begin();
     for( ; itP != p.end(); itP++ ){
 
+        //cerr << "t area = " << itP->second.area() << endl;
         QPolygonF polygon;
         for( unsigned int j = 0; j < itP->second.elements().size(); j++ ){
             polygon.append( QPointF( itP->second.elements()[j].x(), -itP->second.elements()[j].y() ) );
@@ -77,7 +79,9 @@ void GraphicsView::_item_polygons( void )
 
         GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
         vector< double > rgb;
-        pickBrewerColor( itP->first, rgb );
+        SkeletonGraph::vertex_descriptor vd = vertex( itP->first, s );
+        unsigned int gid = s[vd].initID;
+        pickBrewerColor( gid, rgb );
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
         itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
@@ -87,7 +91,6 @@ void GraphicsView::_item_polygons( void )
         _scene->addItem( itemptr );
     }
     // cerr << "polygon.size() = " << p.size() << endl;
-
 }
 
 

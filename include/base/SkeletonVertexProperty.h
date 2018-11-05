@@ -59,11 +59,9 @@ class SkeletonVertexProperty: public UndirectedBaseVertexProperty {
     //vector< unsigned int >      lineID;
     double *                    areaPtr;
 
-
     Coord2                      shift;       // displacement
     Coord2                      force;       // displacement of the force-directed algorithm
     Coord2                      place;       // displacement of the voronoi cells
-
 
 //------------------------------------------------------------------------------
 //	Special functions

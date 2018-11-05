@@ -403,6 +403,7 @@ void Window::selectVoronoi( void )
     _boundary->seeds().push_back( Coord2( -414, -276 ) );
 #endif // DEBUG
     _boundary->buildSkeleton();
+    _boundary->decomposeSkeleton();
     _boundary->normalizeSkeleton( _content_width, _content_height );
 
     selectUpdateVoronoi();

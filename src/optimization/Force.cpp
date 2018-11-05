@@ -52,7 +52,8 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
     _center_y = 0.0;
     _width = __width;
     _height = __height;
-    _mode = TYPE_FORCE;
+    //_mode = TYPE_FORCE;
+    _mode = TYPE_CENTROID;
 
     string configFilePath = "../configs/force.conf";
     int result;
@@ -126,7 +127,7 @@ void Force::_force( void )
 {
     SkeletonGraph & s = _boundaryPtr->skeleton();
 
-    double side = 0.1 * _width * _height ;
+    double side = 0.5 * _width * _height ;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( s ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 
@@ -185,15 +186,27 @@ void Force::_centroid( void )
 {
     // const char theName[] = "Net::centroid : ";
     SkeletonGraph & s = _boundaryPtr->skeleton();
+    map< unsigned int, Polygon2 >  &p = _boundaryPtr->polygons();
 
-    int				h = ( int )_height;
-    int				w = ( int )_width;
-/*
+    int	h = ( int )_height;
+    int	w = ( int )_width;
+
+    // initialization
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
         s[ vd ].place.zero();
-        vertexNum[ vd ] = 0;
+        // vertexNum[ vd ] = 0;
     }
 
+#ifdef DEBUG
+    map< unsigned int, Polygon2 >::iterator itP = p.begin();
+    for( ; itP != p.end(); itP++ ) {
+        cerr << "polygon 1st = " << itP->second.elements()[0] << endl;
+        cerr << "polygon area = " << itP->second.area() << endl;
+        cerr << "polygon center = " << itP->second.center() << endl;
+    }
+#endif // DEBUG
+
+/*
     int ws = _diagram->widthStep;
     int nc = _diagram->nChannels;
     Coord2 cur;
@@ -222,27 +235,33 @@ void Force::_centroid( void )
             }
         }
     }
+*/
 
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+
+        map< unsigned int, Polygon2 >::iterator itP = p.begin();
+        advance( itP, s[vd].id );
+
         // Find the average pixel coordinates of each vertex
-        if ( ! vertexSwitch[ vd ] ) {
-            vertexPlace[ vd ].zero();
-        }
-        else if ( vertexNum[ vd ] != 0 ) {
-            Coord2 dest = vertexPlace[ vd ] /= ( double )vertexNum[ vd ];
+        if ( itP->second.area() != 0 ) {
+
+            Coord2 dest = itP->second.center();
             // Screen coordinates have been already translated
             // double nx =  SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ); //SCREEN_SIDE == 2
             // double ny =  SCREEN_SIDE * ( 2.0*dest.y() - 1.0 );
-            double nx = _window_side * SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ) + _center_x;
-            double ny = _window_side * SCREEN_SIDE * ( 2.0*dest.y() - 1.0 ) + _center_y;
-            vertexPlace[ vd ] = Coord2( nx, ny ) - vertexCoord[ vd ];
+            //double nx = _window_side * SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ) + _center_x;
+            //double ny = _window_side * SCREEN_SIDE * ( 2.0*dest.y() - 1.0 ) + _center_y;
+            //s[ vd ].place = Coord2( nx, ny ) - *s[ vd ].coordPtr;
+
+            //cerr << "dest = " << dest;
+            s[ vd ].place = dest - *s[ vd ].coordPtr;
         }
         else {
             cerr << "%%%%%%%%%% Number of pixels vanishes!!!" << endl;
-            vertexPlace[ vd ].zero();
+            s[ vd ].place.zero();
         }
     }
-*/
+
 }
 
 //

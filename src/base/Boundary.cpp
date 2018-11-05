@@ -1177,9 +1177,9 @@ void Boundary::buildSkeleton( void )
     clearGraph( _skeleton );
 
     // create a xml document
-    //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-A.xml" );
+    TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-A.xml" );
     //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-major.xml" );
-    TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-full.xml" );
+    //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-full.xml" );
     xmlPtr->LoadFile();
 
     TiXmlElement *elemPtr = xmlPtr->FirstChildElement()->FirstChildElement()->FirstChildElement();
@@ -1187,14 +1187,14 @@ void Boundary::buildSkeleton( void )
     // should always have a valid root but handle gracefully if it does
     if ( !elemPtr ) return;
 
-    for( elemPtr; elemPtr; elemPtr = elemPtr->NextSiblingElement() ) {
+    for( ; elemPtr; elemPtr = elemPtr->NextSiblingElement() ) {
 
         const string key = elemPtr->Value();
 
         if( key == "node" ){
             string id = elemPtr->Attribute( "id" );
             id.erase( 0, 1 );
-            int i = stoi( id );
+            int vid = stoi( id );
             const string sx = elemPtr->Attribute( "x" );
             double x = stod( sx );
             const string sy = elemPtr->Attribute( "y" );
@@ -1210,8 +1210,8 @@ void Boundary::buildSkeleton( void )
                  << " w = " << w << " h = " << h << " a = " << a << endl;
 #endif // DEBUG
             SkeletonGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
-            _skeleton[ vdNew ].id = i;
-            _skeleton[ vdNew ].initID = i;
+            _skeleton[ vdNew ].id = vid;
+            _skeleton[ vdNew ].initID = vid;
             _skeleton[ vdNew ].coordPtr = new Coord2( x, y );
             _skeleton[ vdNew ].widthPtr = new double( w );
             _skeleton[ vdNew ].heightPtr = new double( h );
@@ -1222,7 +1222,7 @@ void Boundary::buildSkeleton( void )
         else if ( key == "edge" ){
             string id = elemPtr->Attribute( "id" );
             id.erase( 0, 1 );
-            int i = stoi( id );
+            int eid = stoi( id );
             string source = elemPtr->Attribute( "source" );
             source.erase( 0, 1 );
             int s = stoi( source );
@@ -1242,8 +1242,9 @@ void Boundary::buildSkeleton( void )
             if( found == false ){
 
                 // handle fore edge
-                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _skeleton );
-                BoundaryGraph::edge_descriptor foreED = foreE.first;
+                pair<SkeletonGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _skeleton );
+                SkeletonGraph::edge_descriptor foreED = foreE.first;
+                _skeleton[ foreED ].id = eid;
             }
         }
         else {
@@ -1251,6 +1252,113 @@ void Boundary::buildSkeleton( void )
         }
     }
     //cerr << "nV = " << num_vertices( _skeleton ) << " nE = " << num_edges( _skeleton ) << endl;
+}
+
+//
+//  Boundary::decomposeSkeleton --    decompose the skeleton
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::decomposeSkeleton( void )
+{
+    double unit = 8000.0;
+    unsigned int index = num_vertices( _skeleton );
+
+#ifdef DEBUG
+    BGL_FORALL_EDGES( ed, _skeleton, SkeletonGraph )
+    {
+        cerr << "eID = " << _skeleton[ed].id << endl;
+    }
+#endif // DEBUG
+
+    BGL_FORALL_VERTICES( vd, _skeleton, SkeletonGraph )
+    {
+        int mag = round((*_skeleton[ vd ].widthPtr) * (*_skeleton[ vd ].heightPtr)/unit);
+
+#ifdef DEBUG
+            cerr << "area = " << (*_skeleton[ vd ].widthPtr) * (*_skeleton[ vd ].heightPtr)
+             << " mag = " << mag << endl;
+#endif // DEBUG
+
+        vector< SkeletonGraph::edge_descriptor > removeEVec;
+
+        if( mag > 1 ){
+
+            SkeletonGraph::vertex_descriptor vdC = vd;
+            SkeletonGraph::out_edge_iterator eo, eo_end;
+
+            // record the adjacent vertices for edge connection
+            map< unsigned int, SkeletonGraph::vertex_descriptor > vdAdjacent;
+            bool isFirst = true;
+            // cerr << "degree = " << out_degree( vd, _skeleton ) << endl;
+            for( tie( eo, eo_end ) = out_edges( vd, _skeleton ); eo != eo_end; eo++ ){
+
+                if( isFirst == false ){
+                    SkeletonGraph::edge_descriptor ed = *eo;
+                    SkeletonGraph::vertex_descriptor vdT = target( ed, _skeleton );
+                    vdAdjacent.insert( pair< unsigned int, SkeletonGraph::vertex_descriptor >( _skeleton[ed].id, vdT ) );
+                    //remove_edge( *eo, _skeleton );
+                    removeEVec .push_back( ed );
+                }
+                isFirst = false;
+            }
+
+            // add composite vertices
+            int mapSize = vdAdjacent.size();
+            double interval = (double)(mag - 1.0)/(double)(mapSize);
+            if( mapSize == 0 ) interval = 0;
+            int target = 0;
+            // cerr << "mapSize = " << mapSize << " mag = " << mag << " interval = " << interval << endl;
+            for( int i = 1; i < mag; i++ ){
+
+                // add vertex
+                double cosTheta = 1.0 * cos( 2.0*M_PI*(double)i/(double)mag );
+                double sinTheta = 1.0 * sin( 2.0*M_PI*(double)i/(double)mag );
+                double x = _skeleton[ vd ].coordPtr->x() + 100*cosTheta;
+                double y = _skeleton[ vd ].coordPtr->y() + 100*sinTheta;
+                SkeletonGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
+                _skeleton[ vdNew ].id = index;
+                _skeleton[ vdNew ].initID = _skeleton[vd].initID;
+                _skeleton[ vdNew ].coordPtr = new Coord2( x, y );
+                _skeleton[ vdNew ].widthPtr = new double( sqrt( unit ) );
+                _skeleton[ vdNew ].heightPtr = new double( sqrt( unit ) );
+                _skeleton[ vdNew ].areaPtr = new double( unit );
+
+                // add edge
+                pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _skeleton );
+                BoundaryGraph::edge_descriptor foreED = foreE.first;
+
+                // add edges to adjacent groups
+                // cerr << " i = " << i << " round = " << round( (double)(target+1.0)*interval ) << endl;
+                if( i == round( (target+1)*interval ) ){
+
+                    map< unsigned int, SkeletonGraph::vertex_descriptor >::iterator itA = vdAdjacent.begin();
+                    advance( itA, target );
+
+                    SkeletonGraph::vertex_descriptor vdT = itA->second;
+                    pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, vdNew, _skeleton );
+                    BoundaryGraph::edge_descriptor foreED = foreE.first;
+                    _skeleton[ foreED ].id = itA->first;
+                    target++;
+                }
+
+                // post processing
+                vdC = vdNew;
+                index++;
+            }
+
+            // remove edges
+            // cerr << "eSize = " << removeEVec.size() << endl;
+            for( unsigned int i = 0; i < removeEVec.size(); i++ ){
+                // cerr << "eID = " << _skeleton[removeEVec[i]].id << endl;
+                remove_edge( removeEVec[i], _skeleton );
+            }
+        }
+    }
 }
 
 //
