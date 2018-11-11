@@ -22,16 +22,33 @@
 using namespace std;
 
 #include "base/Boundary.h"
+#include "base/UndirectedPropertyGraph.h"
 
 //------------------------------------------------------------------------------
 //	Protected functions
 //------------------------------------------------------------------------------
+//  Boundary::_stringToDouble -- convert string to double
+//
+//  Inputs
+//      string
+//
+//  Outputs
+//  double
+//
+double Boundary::_stringToDouble( string str )
+{
+    double d = 0.0;
 
+    stringstream ss;
+    ss << str;
+    ss >> d;
+
+    return d;
+}
 
 //------------------------------------------------------------------------------
 //	Public functions
 //------------------------------------------------------------------------------
-
 //
 //  Boundary::Boundary -- default constructor
 //
@@ -165,6 +182,36 @@ void Boundary::clear( void )
     _VEconflict.clear();
     _ratioR.clear();
 }
+
+//
+//  Boundary::findVertexInComplex --    detect vertex-edge pair that is close to each other
+//
+//  Inputs
+//  coord: coordinates of a point
+//  complex: the graph
+//  vd: vertex descriptor
+//
+//  Outputs
+//  isFound: binary
+//
+bool Boundary::findVertexInComplex( Coord2 &coord, SkeletonGraph &complex,
+                                    SkeletonGraph::vertex_descriptor &target )
+{
+    bool isFound = false;
+
+    BGL_FORALL_VERTICES( vd, complex, SkeletonGraph )
+    {
+        //cerr << " vd " << *complex[vd].coordPtr << endl;
+        if( ( coord - *complex[vd].coordPtr ).norm() < 1e-2 ){
+            target = vd;
+            isFound = true;
+        }
+    }
+
+    //cerr << "isFound = " << isFound << endl;
+    return isFound;
+}
+
 
 //
 //  Boundary::checkVEConflicrs --    detect vertex-edge pair that is close to each other
@@ -1031,13 +1078,17 @@ void Boundary::load( const char * filename )
 //
 void Boundary::buildBoundaryGraph( void )
 {
+    // initialization
+    _polygonComplexVD.clear();
     clearGraph( _boundary );
 
-    for( unsigned int i = 0; i < _polygons.size(); i++ ){
+    for( unsigned int i = 0; i < _polygonComplex.size(); i++ ){
 
-        Polygon2 &polygon = _polygons[i];
+        Polygon2 &polygon = _polygonComplex[i];
+        vector< SkeletonGraph::vertex_descriptor > vdVec;
 
         //cerr << endl << "i = " << i << endl;
+        //cerr << endl;
         for( unsigned int j = 1; j < polygon.elements().size(); j++ ){
 
             Coord2 &coordS = polygon.elements()[j-1];
@@ -1048,7 +1099,7 @@ void Boundary::buildBoundaryGraph( void )
             BoundaryGraph::vertex_descriptor curVDT = NULL;
 
             // add vertices
-            for( unsigned int k = j-1; k <= j; k++ ){
+            for( unsigned int k = j-1; k < j+1; k++ ){
 
                 BoundaryGraph::vertex_descriptor curVD = NULL;
 
@@ -1097,6 +1148,8 @@ void Boundary::buildBoundaryGraph( void )
 #endif  // DEBUG
                 }
             }
+            vdVec.push_back( curVDS );
+            // cerr << _boundary[ curVDS ].id << " ";
 
             //cerr << "( " << _boundary[ curVDS ].id << ", " << _boundary[ curVDT ].id << " )" << endl;
 
@@ -1155,8 +1208,8 @@ void Boundary::buildBoundaryGraph( void )
 #endif  // DEBUG
                 _nEdges++;
             }
-
         }
+        _polygonComplexVD.insert( pair< unsigned int, vector< SkeletonGraph::vertex_descriptor > >( i, vdVec ) );
     }
 
     cerr << "nV = " << num_vertices( _boundary ) << " nE = " << num_edges( _boundary ) << endl;
@@ -1268,19 +1321,43 @@ void Boundary::decomposeSkeleton( void )
     double unit = 8000.0;
     unsigned int index = num_vertices( _skeleton );
 
-#ifdef DEBUG
+    // copy skeleton to composite
+    BGL_FORALL_VERTICES( vd, _skeleton, SkeletonGraph )
+    {
+        SkeletonGraph::vertex_descriptor vdNew = add_vertex( _composite );
+        _composite[ vdNew ].id = _skeleton[vd].id;
+        _composite[ vdNew ].initID = _skeleton[vd].initID;
+        _composite[ vdNew ].coordPtr = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
+        _composite[ vdNew ].widthPtr = new double( *_skeleton[vd].widthPtr );
+        _composite[ vdNew ].heightPtr = new double( *_skeleton[vd].heightPtr );
+        _composite[ vdNew ].areaPtr = new double( *_skeleton[vd].areaPtr );
+    }
     BGL_FORALL_EDGES( ed, _skeleton, SkeletonGraph )
     {
-        cerr << "eID = " << _skeleton[ed].id << endl;
+        SkeletonGraph::vertex_descriptor vdS = source( ed, _skeleton );
+        SkeletonGraph::vertex_descriptor vdT = target( ed, _skeleton );
+        SkeletonGraph::vertex_descriptor vdCompoS = vertex( _skeleton[vdS].id, _composite );
+        SkeletonGraph::vertex_descriptor vdCompoT = vertex( _skeleton[vdT].id, _composite );
+
+        // add edge
+        pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, _composite );
+        BoundaryGraph::edge_descriptor foreED = foreE.first;
+        _composite[ foreED ].id = _skeleton[ed].id;
+    }
+
+#ifdef DEBUG
+    BGL_FORALL_EDGES( ed, _composite, SkeletonGraph )
+    {
+        cerr << "eID = " << _composite[ed].id << endl;
     }
 #endif // DEBUG
 
-    BGL_FORALL_VERTICES( vd, _skeleton, SkeletonGraph )
+    BGL_FORALL_VERTICES( vd, _composite, SkeletonGraph )
     {
-        int mag = round((*_skeleton[ vd ].widthPtr) * (*_skeleton[ vd ].heightPtr)/unit);
+        int mag = round((*_composite[ vd ].widthPtr) * (*_composite[ vd ].heightPtr)/unit);
 
 #ifdef DEBUG
-            cerr << "area = " << (*_skeleton[ vd ].widthPtr) * (*_skeleton[ vd ].heightPtr)
+            cerr << "area = " << (*_composite[ vd ].widthPtr) * (*_composite[ vd ].heightPtr)
              << " mag = " << mag << endl;
 #endif // DEBUG
 
@@ -1290,75 +1367,100 @@ void Boundary::decomposeSkeleton( void )
 
             SkeletonGraph::vertex_descriptor vdC = vd;
             SkeletonGraph::out_edge_iterator eo, eo_end;
+            Coord2 origin = *_composite[ vd ].coordPtr;
+            vector< SkeletonGraph::vertex_descriptor > extendVD;
 
             // record the adjacent vertices for edge connection
             map< unsigned int, SkeletonGraph::vertex_descriptor > vdAdjacent;
-            bool isFirst = true;
-            // cerr << "degree = " << out_degree( vd, _skeleton ) << endl;
-            for( tie( eo, eo_end ) = out_edges( vd, _skeleton ); eo != eo_end; eo++ ){
+            // cerr << "degree = " << out_degree( vd, _composite ) << endl;
+            for( tie( eo, eo_end ) = out_edges( vd, _composite ); eo != eo_end; eo++ ){
 
-                if( isFirst == false ){
-                    SkeletonGraph::edge_descriptor ed = *eo;
-                    SkeletonGraph::vertex_descriptor vdT = target( ed, _skeleton );
-                    vdAdjacent.insert( pair< unsigned int, SkeletonGraph::vertex_descriptor >( _skeleton[ed].id, vdT ) );
-                    //remove_edge( *eo, _skeleton );
-                    removeEVec .push_back( ed );
-                }
-                isFirst = false;
+                SkeletonGraph::edge_descriptor ed = *eo;
+                SkeletonGraph::vertex_descriptor vdT = target( ed, _composite );
+                vdAdjacent.insert( pair< unsigned int, SkeletonGraph::vertex_descriptor >( _composite[ed].id, vdT ) );
+                //remove_edge( *eo, _composite );
+                removeEVec .push_back( ed );
             }
 
             // add composite vertices
-            int mapSize = vdAdjacent.size();
-            double interval = (double)(mag - 1.0)/(double)(mapSize);
-            if( mapSize == 0 ) interval = 0;
-            int target = 0;
-            // cerr << "mapSize = " << mapSize << " mag = " << mag << " interval = " << interval << endl;
-            for( int i = 1; i < mag; i++ ){
+            for( int i = 0; i < mag; i++ ){
 
-                // add vertex
                 double cosTheta = 1.0 * cos( 2.0*M_PI*(double)i/(double)mag );
                 double sinTheta = 1.0 * sin( 2.0*M_PI*(double)i/(double)mag );
-                double x = _skeleton[ vd ].coordPtr->x() + 100*cosTheta;
-                double y = _skeleton[ vd ].coordPtr->y() + 100*sinTheta;
-                SkeletonGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
-                _skeleton[ vdNew ].id = index;
-                _skeleton[ vdNew ].initID = _skeleton[vd].initID;
-                _skeleton[ vdNew ].coordPtr = new Coord2( x, y );
-                _skeleton[ vdNew ].widthPtr = new double( sqrt( unit ) );
-                _skeleton[ vdNew ].heightPtr = new double( sqrt( unit ) );
-                _skeleton[ vdNew ].areaPtr = new double( unit );
+                double x = origin.x() + 100*cosTheta;
+                double y = origin.y() + 100*sinTheta;
 
-                // add edge
-                pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _skeleton );
-                BoundaryGraph::edge_descriptor foreED = foreE.first;
+                if( i == 0 ){
 
-                // add edges to adjacent groups
-                // cerr << " i = " << i << " round = " << round( (double)(target+1.0)*interval ) << endl;
-                if( i == round( (target+1)*interval ) ){
+                    _composite[ vd ].coordPtr->x() = x;
+                    _composite[ vd ].coordPtr->y() = y;
 
-                    map< unsigned int, SkeletonGraph::vertex_descriptor >::iterator itA = vdAdjacent.begin();
-                    advance( itA, target );
+                    // post processing
+                    extendVD.push_back( vdC );
+                }
+                else{
 
-                    SkeletonGraph::vertex_descriptor vdT = itA->second;
-                    pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, vdNew, _skeleton );
+                    // add vertex
+                    SkeletonGraph::vertex_descriptor vdNew = add_vertex( _composite );
+                    _composite[ vdNew ].id = index;
+                    _composite[ vdNew ].initID = _composite[vd].initID;
+                    _composite[ vdNew ].coordPtr = new Coord2( x, y );
+                    _composite[ vdNew ].widthPtr = new double( sqrt( unit ) );
+                    _composite[ vdNew ].heightPtr = new double( sqrt( unit ) );
+                    _composite[ vdNew ].areaPtr = new double( unit );
+
+                    // add edge
+                    pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _composite );
                     BoundaryGraph::edge_descriptor foreED = foreE.first;
-                    _skeleton[ foreED ].id = itA->first;
-                    target++;
+                    _composite[ foreED ].id = num_edges( _composite );
+
+                    // add last edge to form a circle
+                    if( i == mag-1 ){
+                        pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew, _composite );
+                        BoundaryGraph::edge_descriptor foreED = foreE.first;
+                        _composite[ foreED ].id = num_edges( _composite );
+                    }
+
+                    // post processing
+                    extendVD.push_back( vdNew );
+                    vdC = vdNew;
+                    index++;
+                }
+            }
+
+            // add edges
+            // cerr << "size = " << vdAdjacent.size() << " ext = " << extendVD.size() << endl;
+            map< unsigned int, SkeletonGraph::vertex_descriptor >::iterator itA;
+            for( itA = vdAdjacent.begin(); itA != vdAdjacent.end(); itA++ ){
+
+                SkeletonGraph::vertex_descriptor cloestVD = extendVD[0];
+                SkeletonGraph::vertex_descriptor vdT = itA->second;
+                double minDist = (*_composite[ cloestVD ].coordPtr - *_composite[ vdT ].coordPtr).norm();
+                for( unsigned int i = 1; i < extendVD.size(); i++ ){
+
+                    SkeletonGraph::vertex_descriptor vdS = extendVD[ i ];
+                    double dist = (*_composite[ vdS ].coordPtr - *_composite[ vdT ].coordPtr).norm();
+
+                    if( dist < minDist ){
+                        cloestVD = extendVD[i];
+                        minDist = dist;
+                    }
                 }
 
-                // post processing
-                vdC = vdNew;
-                index++;
+                pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, _composite );
+                BoundaryGraph::edge_descriptor foreED = foreE.first;
+                _composite[ foreED ].id = itA->first;
             }
 
             // remove edges
             // cerr << "eSize = " << removeEVec.size() << endl;
             for( unsigned int i = 0; i < removeEVec.size(); i++ ){
-                // cerr << "eID = " << _skeleton[removeEVec[i]].id << endl;
-                remove_edge( removeEVec[i], _skeleton );
+                // cerr << "eID = " << _composite[removeEVec[i]].id << endl;
+                remove_edge( removeEVec[i], _composite );
             }
         }
     }
+
 }
 
 //
@@ -1379,9 +1481,9 @@ void Boundary::normalizeSkeleton( const int & width, const int & height )
     double yMax = -INFINITY;
 
     // Scan all the vertex coordinates first
-    BGL_FORALL_VERTICES( vd, _skeleton, SkeletonGraph )
+    BGL_FORALL_VERTICES( vd, _composite, SkeletonGraph )
     {
-        Coord2 coord = *_skeleton[ vd ].coordPtr;
+        Coord2 coord = *_composite[ vd ].coordPtr;
         if ( coord.x() < xMin ) xMin = coord.x();
         if ( coord.x() > xMax ) xMax = coord.x();
         if ( coord.y() < yMin ) yMin = coord.y();
@@ -1399,8 +1501,417 @@ void Boundary::normalizeSkeleton( const int & width, const int & height )
         // cerr << coord;
     }
 
+    BGL_FORALL_VERTICES( vd, _composite, SkeletonGraph )
+    {
+        Coord2 coord;
+        coord.x() = 0.8* (double)width * ( _composite[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.4*(double)width;
+        coord.y() = 0.8* (double)height * ( _composite[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.4*(double)height;
+        _composite[ vd ].coordPtr->x() = coord.x();
+        _composite[ vd ].coordPtr->y() = coord.y();
+        // cerr << coord;
+    }
 }
 
+
+//
+//  Boundary::createPolygonComplex --    create the ploygon complex
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::createPolygonComplex( void )
+{
+    map< unsigned int, Polygon2 >::iterator itP;
+    vector< vector< Polygon2 > > _polygonMat;
+
+    // initialization
+    _polygonComplex.clear();
+
+    // find the sets of the polygons of the same group
+    int nV = num_vertices( _skeleton );
+    _polygonMat.resize( nV );
+    unsigned int id = 0;
+    for( itP = _polygons.begin(); itP != _polygons.end(); itP++ ){
+        int gid = itP->second.gid() = _composite[ vertex( id, _composite ) ].initID;
+        // cerr << "gid = " << gid << " " << itP->second.elements()[0] << endl;
+        _polygonMat[ gid ].push_back( itP->second );
+        id++;
+    }
+
+    for( unsigned int i = 0; i < _polygonMat.size(); i++ ){
+
+        // copy cells to a graph
+        SkeletonGraph complex;
+        unsigned int id = 0;
+        for( unsigned int j = 0; j < _polygonMat[i].size(); j++ ){
+
+            Polygon2 &p = _polygonMat[i][j];
+            vector< SkeletonGraph::vertex_descriptor > vdVec;
+
+            // add vertices
+            for( unsigned int k = 0; k < p.elements().size(); k++ ) {
+
+                SkeletonGraph::vertex_descriptor vd = NULL;
+                //cerr << "p[" << k << "] = " << p.elements()[k];
+                bool isFound = findVertexInComplex( p.elements()[k], complex, vd );
+                if( isFound == true ){
+                    vdVec.push_back( vd );
+                }
+                else{
+                    vd = add_vertex( complex );
+                    complex[ vd ].id = id;
+                    complex[ vd ].initID = i;
+                    complex[ vd ].coordPtr = new Coord2( p.elements()[k].x(), p.elements()[k].y() );
+                    complex[ vd ].widthPtr = new double( 0.0 );
+                    complex[ vd ].heightPtr = new double( 0.0 );
+                    complex[ vd ].areaPtr = new double( 0.0 );
+                    vdVec.push_back( vd );
+                    id++;
+                }
+                //cerr << complex[ vd ].id << " ";
+            }
+            //cerr << endl;
+
+            // add edges
+            unsigned int eid = 0;
+            for( unsigned int k = 1; k < vdVec.size(); k++ ){
+
+                SkeletonGraph::vertex_descriptor vdS = vdVec[ k-1 ];
+                SkeletonGraph::vertex_descriptor vdT = vdVec[ k%vdVec.size() ];
+
+                bool isFound = false;
+                SkeletonGraph::edge_descriptor oldED;
+                tie( oldED, isFound ) = edge( vdS, vdT, complex );
+                if( isFound == true ){
+
+                    complex[ oldED ].weight += 1;
+                }
+                else{
+
+                    pair<SkeletonGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, complex );
+                    SkeletonGraph::edge_descriptor foreED = foreE.first;
+                    complex[ foreED ].id = eid;
+                    complex[ foreED ].weight = 0;
+                    eid++;
+                }
+            }
+        }
+
+        // remove inner edges
+        vector< SkeletonGraph::edge_descriptor > edVec;
+        BGL_FORALL_EDGES( ed, complex, SkeletonGraph )
+        {
+            if( complex[ed].weight > 0 ){
+                edVec.push_back( ed );
+                //cerr << "w = " << complex[ed].weight << endl;
+            }
+        }
+        //cerr << "bnV = " << num_vertices( complex ) << " ";
+        //cerr << "bnE = " << num_edges( complex ) << endl;
+        for( unsigned int j = 0; j < edVec.size(); j++ ){
+            remove_edge( edVec[j], complex );
+        }
+        unsigned int eid = 0;
+        BGL_FORALL_EDGES( ed, complex, SkeletonGraph )
+        {
+            complex[ed].id = eid;
+            complex[ed].visit = false;
+            eid++;
+        }
+
+        // find the vertex with degree > 0
+        //cerr << "nV = " << num_vertices( complex ) << " ";
+        //cerr << "nE = " << num_edges( complex ) << endl;
+        SkeletonGraph::vertex_descriptor vdS;
+        BGL_FORALL_VERTICES( vd, complex, SkeletonGraph )
+        {
+#ifdef DEBUG
+            if ( true ){
+                cerr << " degree = " << out_degree( vd, complex );
+            }
+#endif // DEBUG
+            if( out_degree( vd, complex ) > 0 ) {
+                vdS = vd;
+                break;
+            }
+        }
+
+        // find the contour
+        SkeletonGraph::out_edge_iterator eo, eo_end;
+        SkeletonGraph::vertex_descriptor vdC = vdS;
+        //cerr << "idC = " << complex[vdC].id << " ";
+        Polygon2 polygon;
+        polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
+        while( true ){
+
+            SkeletonGraph::vertex_descriptor vdT = NULL;
+            for( tie( eo, eo_end ) = out_edges( vdC, complex ); eo != eo_end; eo++ ){
+
+                SkeletonGraph::edge_descriptor ed = *eo;
+                if( complex[ed].visit == false ) {
+                    vdT = target( ed, complex );
+                    complex[ed].visit = true;
+                    break;
+                }
+                //cerr << "(" << complex[source( ed, complex )].id << "," << complex[target( ed, complex )].id << ")" << endl;
+            }
+            if( vdS == vdT ) break;
+            else assert( vdT != NULL );
+            //cerr << complex[vdT].id << " ";
+            polygon.elements().push_back( Coord2( complex[vdT].coordPtr->x(), complex[vdT].coordPtr->y() ) );
+            vdC = vdT;
+        }
+        polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
+        //cerr << endl;
+
+        _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, polygon ) );
+    }
+
+}
+
+//
+//  Boundary::writePolygonComplex --    export the ploygon complex
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::writePolygonComplex( void )
+{
+    // graphml
+    string filename = "../data/boundary.graphml";
+
+    ofstream ofs( filename.c_str() );
+    if ( !ofs ) {
+        cerr << "Cannot open the target file : " << filename << endl;
+        return;
+    }
+
+    UndirectedPropertyGraph pg;
+    cerr << "nV = " << num_vertices( _boundary )
+         << " nE = " << num_edges( _boundary ) << endl;
+    BGL_FORALL_VERTICES( vd, _boundary, BoundaryGraph ) {
+
+        UndirectedPropertyGraph::vertex_descriptor pgVD = add_vertex( pg );
+        //put( vertex_index, pg, pgVD, _boundary[ vd ].id ); // vid is automatically assigned
+        put( vertex_myx, pg, pgVD, _boundary[ vd ].coordPtr->x() );
+        put( vertex_myy, pg, pgVD, _boundary[ vd ].coordPtr->y() );
+    }
+    BGL_FORALL_EDGES( ed, _boundary, BoundaryGraph ) {
+
+        BoundaryGraph::vertex_descriptor vdS = source( ed, _boundary );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, _boundary );
+        unsigned int idS = _boundary[ vdS ].id;
+        unsigned int idT = _boundary[ vdT ].id;
+
+        UndirectedPropertyGraph::vertex_descriptor pgVDS = vertex( idS, pg );
+        UndirectedPropertyGraph::vertex_descriptor pgVDT = vertex( idT, pg );
+        pair< UndirectedPropertyGraph::edge_descriptor, unsigned int > foreE = add_edge( pgVDS, pgVDT, pg );
+        UndirectedPropertyGraph::edge_descriptor pgED = foreE.first;
+        put( edge_index, pg, pgED, _boundary[ ed ].id );
+        put( edge_weight, pg, pgED, _boundary[ ed ].weight );
+    }
+
+    dynamic_properties dp;
+    dp.property( "vid", get( vertex_index_t(), pg ) );
+    dp.property( "vx", get( vertex_myx_t(), pg ) );
+    dp.property( "vy", get( vertex_myy_t(), pg ) );
+    dp.property( "eid", get( edge_index_t(), pg ) );
+    dp.property( "weight", get( edge_weight_t(), pg ) );
+
+    write_graphml( ofs, pg, dp, true );
+
+    // polygon contour
+    string polygon_filename = "../data/boundary.txt";
+
+    ofstream pfs( polygon_filename.c_str() );
+    if ( !pfs ) {
+        cerr << "Cannot open the target file : " << polygon_filename << endl;
+        return;
+    }
+
+    map< unsigned int, vector< SkeletonGraph::vertex_descriptor > >::iterator itP;
+    for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
+        vector< SkeletonGraph::vertex_descriptor > &p = itP->second;
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            pfs << _boundary[p[i]].id << "\t";
+        }
+        pfs << endl;
+    }
+}
+
+//
+//  Boundary::readPolygonComplex --    read the ploygon complex
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::readPolygonComplex( void )
+{
+    string filename = "../data/boundary.graphml";
+
+    // initialization
+    clearGraph( _boundary );
+
+    // load GraphML file
+    TiXmlDocument xmlDoc( filename.c_str() );
+
+    xmlDoc.LoadFile();
+
+    if( xmlDoc.ErrorId() > 0 ) {
+        cerr << "ErrorId = " << xmlDoc.ErrorDesc() << " : " << filename << endl;
+        assert( false );
+        return;
+    }
+
+    TiXmlElement* root = xmlDoc.RootElement();
+    if( !root ) return;
+
+    // reading metabolites
+    for( TiXmlElement* rootTag = root->FirstChildElement(); rootTag; rootTag = rootTag->NextSiblingElement() ) {
+
+        string tagname = rootTag->Value();
+        if( tagname == "graph" ){
+
+            //cerr << "rootTag = " << rootTag->Value() << endl;
+            for( TiXmlElement* graphElement = rootTag->FirstChildElement(); graphElement; graphElement = graphElement->NextSiblingElement() ) {
+                string elementname = graphElement->Value();
+
+                if ( elementname == "node" ) {
+
+                    TiXmlElement* node = graphElement->FirstChildElement();
+#ifdef DEBUG
+                    cerr << "node = " << graphElement->Attribute( "id" ) << ", ";
+                    cerr << "( x, y ) = ( " << geometry->Attribute( "X" ) << ", " << geometry->Attribute( "Y" ) << " )" << endl;
+#endif // DEBUG
+                    string dataName = node->Value();
+                    if( dataName == "data" ){
+
+                        // cerr << "value = " << dataName << endl;
+                        string keyAttribute = node->Attribute( "key" );
+
+                        // key1:vid
+                        string key1Text = node->GetText();
+
+                        // key2:vx
+                        node = node->NextSiblingElement();
+                        string key2Text = node->GetText();
+                        // cerr << "x = " << key2Text << endl;
+
+                        // key3:vy
+                        node = node->NextSiblingElement();
+                        string key3Text = node->GetText();
+                        // cerr << "y = " << key3Text << endl;
+
+                        // cerr <<  node->GetText() << endl;
+                        BoundaryGraph::vertex_descriptor vd = add_vertex( _boundary  );
+                        _boundary[ vd ].id = stoi( key1Text );
+                        _boundary[ vd ].coordPtr = new Coord2( _stringToDouble( key2Text ), _stringToDouble( key3Text ) );
+                    }
+                }
+                else if ( elementname == "edge" ) {
+
+                    TiXmlElement* xmledge = graphElement->FirstChildElement();
+                    TiXmlElement* dataElement = xmledge->FirstChildElement();
+
+#ifdef DEBUG
+                    cerr << "edge = " << graphElement->Attribute( "id" ) << " "
+                         << graphElement->Attribute( "source" ) << " "
+                         << graphElement->Attribute( "target" ) << endl;
+                    cerr << "tagname = " << tagname << endl;
+#endif // DEBUG
+
+                    string nodenameS = graphElement->Attribute( "source" );
+                    string nodeIDnameS = nodenameS.substr( 1, nodenameS.length()-1 );
+                    string nodenameT = graphElement->Attribute( "target" );
+                    string nodeIDnameT = nodenameT.substr( 1, nodenameT.length()-1 );
+
+                    int sourceID = stoi( nodeIDnameS );
+                    int targetID = stoi( nodeIDnameT );
+
+                    //update edge information
+                    BoundaryGraph::vertex_descriptor vdS = vertex( sourceID, _boundary );
+                    BoundaryGraph::vertex_descriptor vdT = vertex( targetID, _boundary );
+
+                    // read edge
+
+                    // key0:eid
+                    string key0Text = xmledge->GetText();
+                    // cerr << "eid = " << key0Text << endl;
+
+                    // key4:weight
+                    xmledge = xmledge->NextSiblingElement();
+                    string key4Text = xmledge->GetText();
+                    // cerr << "w = " << key4Text << endl;
+
+                    pair< BoundaryGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _boundary );
+                    BoundaryGraph::edge_descriptor foreED = foreE.first;
+                    _boundary[ foreED ].id = stoi( key0Text );
+                    _boundary[ foreED ].weight = _stringToDouble( key4Text );
+                }
+            }
+        }
+    }
+    // printGraph( _boundary );
+
+    // read polygon contour
+    _polygonComplexVD.clear();
+    string polygon_filename = "../data/boundary.txt";
+
+    ifstream pfs( polygon_filename.c_str() );
+    if ( !pfs ) {
+        cerr << "Cannot open the target file : " << polygon_filename << endl;
+        return;
+    }
+
+    unsigned int id = 0;
+    while( !pfs.eof() ){
+
+        string polyVDVec;
+        getline( pfs, polyVDVec );
+
+        string buf; // have a buffer string
+        stringstream ss( polyVDVec ); // insert the string into a stream
+
+        // a vector to hold our words
+        vector< string > tokens;
+        while (ss >> buf) tokens.push_back( buf );
+        vector< SkeletonGraph::vertex_descriptor > vdVec;
+        for( unsigned int i = 0; i < tokens.size(); i++ ){
+
+            // cerr << tokens[i] << " ";
+            SkeletonGraph::vertex_descriptor vd = vertex( stoi( tokens[i] ), _boundary );
+            vdVec.push_back( vd );
+            // cerr << _boundary[ vd ].id << " ";
+        }
+        // cerr << endl;
+        _polygonComplexVD.insert( pair< unsigned int, vector< SkeletonGraph::vertex_descriptor > >( id, vdVec ) );
+        id++;
+        //_metaFreq.insert( pair< string, unsigned int >( tokens[0], stoi( tokens[1] ) ) );
+        //cerr << tokens[0] << " = " << tokens[1] << endl;
+    }
+    _polygonComplexVD.erase( std::prev( _polygonComplexVD.end() ) );
+
+#ifdef DEBUG
+    map< unsigned int, vector< SkeletonGraph::vertex_descriptor > >::iterator itP;
+    for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
+        vector< SkeletonGraph::vertex_descriptor > &p = itP->second;
+        cerr << "p[" << itP->first << "] = ";
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            cerr << _boundary[p[i]].id << " ";
+        }
+        cerr << endl;
+    }
+#endif // DEBUG
+}
 
 // end of header file
 // Do not add any stuff under this line.

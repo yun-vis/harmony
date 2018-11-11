@@ -402,17 +402,19 @@ void Voronoi::mapSeedsandPolygons( void )
 
                 // copy polygon
                 Polygon2 poly( coords );
-                poly.area() = to_double( bpoly.area() );
                 Coord2 center = centroid( bpoly );
-                poly.center() = center;
+                //poly.area() = to_double( bpoly.area() );
+                //poly.center() = center;
                 (*_polygonVecPtr).insert( pair< unsigned int, Polygon2 >( i, poly ) );
                 map< unsigned int, Polygon2 >::iterator itP = _polygonVecPtr->end();
                 itP--;
                 itP->second.area() = poly.area();
                 itP->second.center().x() = center.x();
                 itP->second.center().y() = center.y();
-                // cerr << "area = " << itP->second.area() << endl;
-                // cerr << "pgon_area = " << poly.area() << endl;
+#ifdef  DEBUG
+                cerr << "area = " << itP->second.area() << endl;
+                cerr << "pgon_area = " << poly.area() << endl;
+#endif  // DEBUG
                 // cout << " is inside the polygon.\n";
                 // point inside
             } else if (bside == CGAL::ON_BOUNDARY) {

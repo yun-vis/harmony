@@ -362,7 +362,8 @@ void Window::selectUpdateVoronoi( void )
 
     vector< double > seedWeightVec;
 
-    SkeletonGraph &s = _boundary->skeleton();
+    //SkeletonGraph &s = _boundary->skeleton();
+    SkeletonGraph &s = _boundary->composite();
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
         _boundary->seeds().push_back( *s[vd].coordPtr );
         seedWeightVec.push_back( *s[vd].areaPtr );
@@ -373,7 +374,7 @@ void Window::selectUpdateVoronoi( void )
     //voronoi.createWeightedVoronoiDiagram();
     voronoi.createVoronoiDiagram();
     //cerr << "built voronoi..." << envdl;
-    _gv->isSkeletonFlag() = true;
+    _gv->isCompositeFlag() = true;
     _gv->isPolygonFlag() = true;
     redrawAllScene();
 }
@@ -456,7 +457,15 @@ void Window::timerEvent( QTimerEvent *event )
         }
         case TYPE_HYBRID:
         {
+            _forcePtr->force();
+            _forcePtr->centroid();
+            err = _forcePtr->gap();
 
+            if ( err < _forcePtr->finalEpsilon() ) {
+                _timer->stop();
+                cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
+                cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
+            }
         }
         default:
             break;
@@ -472,270 +481,6 @@ void Window::timerEvent( QTimerEvent *event )
         num++;
     }
 
-/*
-    switch ( _net->mode() ) {
-        case 0:			// force-directed
-            _net->force();
-            err = _net->gap();
-            if ( _flagConflict ) label_overlap(); //overlap measure
-            if ( err < FINAL_EPSILON ) {
-#ifdef LABELS_WHEN_COMPLETE
-                _flagLabel = true;
-#endif	// LABELS_WHEN_COMPLETE
-                if ( _flagConflict ) {
-                    label_overlap(); //overlap measure
-                }
-                _timer->stop();
-                cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-                cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
-                //cerr << "FINAL widget_count" << widget_count << endl;
-            }
-            break;
-        case 1:			// centroidal Voronoi
-            _net->centroid();
-            err = _net->gap();
-            if ( _flagConflict ) label_overlap(); //overlap measure
-            if ( err < FINAL_EPSILON ) {
-#ifdef LABELS_WHEN_COMPLETE
-                _flagLabel = true;
-#endif	// LABELS_WHEN_COMPLETE
-                if ( _flagConflict ) label_overlap(); //overlap measure
-                _timer->stop();
-                cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
-                cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
-            }
-            break;
-        case 2:			// simple hybrid
-            _net->force();
-            if ( _net->spaceBit() ) _net->centroid();
-            err = _net->gap();
-
-            if ( _flagConflict ) label_overlap(); //overlap measure
-            else {
-                _net->conflictArea() = 0.0;
-                _net->clearClutterBit();
-            }
-
-            if ( ( err < INTERMEDIATE_EPSILON ) &&
-                 ( _net->step() >= STANDARD_LIMIT_STEP + UNIT_STEP ) ) {
-                _net->setSpaceBit();
-                _net->step() -= UNIT_STEP;
-                _net->ratio() = ( double )_net->step()/100.0;
-                // cerr << HERE;
-                cerr << "[Hybrid simple]" << ends;
-                if ( _flagConflict ) {
-                    if ( _net->clutterBit() ) cerr << " XXX ";
-                    else cerr << " OOO ";
-                }
-                cerr << " ratioF = " << _net->ratioF() << " ratioV = " << _net->ratioV()
-                     << " area = " << _net->conflictArea() << " error = " << err << endl;
-            }
-#ifdef SKIP
-                else if ( ( err < FINAL_EPSILON ) &&
-		    ( _net->step() >= STANDARD_LIMIT_STEP+UNIT_STEP ) ) {
-	      _net->step() -= UNIT_STEP;
-	      _net->ratio() = ( double )_net->step()/100.0;
-	      cerr << "[Hybrid simple]" << ends;
-	      if ( _flagConflict ) {
-		  if ( _net->clutterBit() ) cerr << " XXX ";
-		  else cerr << " OOO ";
-	      }
-	      cerr << " ratioF = " << _net->ratioF() << " ratioV = " << _net->ratioV()
-		   << " area = " << _net->conflictArea() << " error = " << err << endl;
-	  }
-#endif	// SKIP
-            else if ( ( err < FINAL_EPSILON ) &&
-                      ( _net->step() <= STANDARD_LIMIT_STEP ) ) {
-                cerr << " ==> Finalized" << endl;
-#ifdef LABELS_WHEN_COMPLETE
-                _flagLabel = true;
-#endif	// LABELS_WHEN_COMPLETE
-                _timer->stop();
-                cerr << "[Simple] Finished Execution Time = " << checkOutETime() << endl;
-                cerr << "[Simple] Finished CPU Time = " << checkOutCPUTime() << endl;
-            }
-            break;
-        case 3:			// hybrid adaptive
-            _net->force();
-            if ( _net->spaceBit() ) _net->centroid();
-            err = _net->gap();
-
-            if ( _flagConflict ) label_overlap(); //overlap measure
-            else {
-                _net->conflictArea() = 0.0;
-                _net->clearClutterBit();
-            }
-
-            if ( _net->clutterBit() &&
-                 ( err < INTERMEDIATE_EPSILON ) &&
-                 ( _net->step() >= MIN_LIMIT_STEP + UNIT_STEP ) ) {
-                _net->setSpaceBit();
-                _net->step() -= UNIT_STEP;
-                _net->ratio() = ( double )_net->step()/100.0;
-                cerr << "[Hybrid Adaptive]" << ends;
-                if ( _flagConflict ) {
-                    if ( _net->clutterBit() ) cerr << " XXX ";
-                    else cerr << " OOO ";
-                }
-                cerr << " ratioF = " << _net->ratioF() << " ratioV = " << _net->ratioV()
-                     << " area = " << _net->conflictArea() << endl;
-            }
-            else if ( ( err < FINAL_EPSILON ) &&
-                      ( ( ! _net->clutterBit() ) || ( _net->step() <= MIN_LIMIT_STEP ) ) ) {
-                cerr << " ==> Finalized" << endl;
-#ifdef LABELS_WHEN_COMPLETE
-                _flagLabel = true;
-#endif	// LABELS_WHEN_COMPLETE
-                _timer->stop();
-                cerr << "[Adaptive] Finished Execution Time = " << checkOutETime() << endl;
-                cerr << "[Adaptive] Finished CPU Time = " << checkOutCPUTime() << endl;
-            }
-            break;
-        case 4:			// Laplacian smoothing
-            _net->force();
-            if ( _net->spaceBit() ) _net->centroid();
-            // if ( _net->step() < 100 ) _net->centroid();
-            err = _net->gap();
-            // print vertex ratios
-#ifdef DEBUG_SMOOTH
-        BGL_FORALL_VERTICES( vd, g, Graph ) {
-	      cerr << vertexRatio[ vd ] << " ";
-	  }
-	  cerr << " error = " << err << endl;
-	  getchar();
-#endif	// DEBUG_SMOOTH
-            if ( _flagConflict ) label_overlap(); //overlap measure
-            else {
-                _net->conflictArea() = 0.0;
-                _net->clearClutterBit();
-            }
-
-            if ( _net->clutterBit() &&
-                 ( err < INTERMEDIATE_EPSILON ) &&
-                 ( _net->step() >= MIN_LIMIT_STEP + UNIT_STEP ) ) {
-#ifdef DEBUG_SMOOTH
-                cerr << "##############################" << endl;
-	      BGL_FORALL_VERTICES( vds, g, Graph ) {
-		  cerr << vertexRatio[ vds ] << " ";
-	      }
-#endif	// DEBUG_SMOOTH
-                _net->setSpaceBit();
-                _net->proceed();
-#ifdef DEBUG_SMOOTH
-                cerr << "##############################" << endl;
-	      BGL_FORALL_VERTICES( vds, g, Graph ) {
-		  cerr << vertexRatio[ vds ] << " ";
-	      }
-#endif	// DEBUG_SMOOTH
-                _net->onestep();
-#ifdef DEBUG_SMOOTH
-                cerr << "##############################" << endl;
-	      BGL_FORALL_VERTICES( vds, g, Graph ) {
-		  cerr << vertexRatio[ vds ] << " ";
-	      }
-	      cerr << "[Onestep Smoothing]" << ends;
-#endif	// DEBUG_SMOOTH
-                if ( _flagConflict ) {
-                    if ( _net->clutterBit() ) cerr << " XXX ";
-                    else cerr << " OOO ";
-                }
-            }
-                // else if ( ( err < FINAL_EPSILON ) && ( ! _net->clutterBit() ) )
-            else if ( ( ! _net->clutterBit() ) ) {
-                cerr << " ==> Finalized" << endl;
-#ifdef LABELS_WHEN_COMPLETE
-                _flagLabel = true;
-#endif	// LABELS_WHEN_COMPLETE
-                _timer->stop();
-                cerr << "[OneStep] Finished Execution Time = " << checkOutETime() << endl;
-                cerr << "[OneStep] Finished CPU Time = " << checkOutCPUTime() << endl;
-            }
-            else if ( err >= INTERMEDIATE_EPSILON ) {
-                _net->onestep();
-            }
-            break;
-        case 5:			// Two-step smoothing
-            _net->force();
-            if ( _net->spaceBit() ) _net->centroid();
-            // if ( _net->step() < 100 ) _net->centroid();
-            err = _net->gap();
-            // print vertex ratios
-#ifdef DEBUG_SMOOTH
-        BGL_FORALL_VERTICES( vd, g, Graph ) {
-	      cerr << vertexRatio[ vd ] << " ";
-	  }
-	  cerr << endl;
-#endif	// DEBUG_SMOOTH
-            if ( _flagConflict ) label_overlap(); //overlap measure
-            else {
-                _net->conflictArea() = 0.0;
-                _net->clearClutterBit();
-            }
-
-            if ( _net->clutterBit() &&
-                 ( err < INTERMEDIATE_EPSILON ) &&
-                 ( _net->step() >= MIN_LIMIT_STEP + UNIT_STEP ) ) {
-                _net->setSpaceBit();
-                _net->proceed();
-                // cerr << "[Twostep Smoothing]" << ends;
-                if ( _flagConflict ) {
-                    if ( _net->clutterBit() ) cerr << " XXX ";
-                    else cerr << " OOO ";
-                }
-            }
-                // else if ( ( err < FINAL_EPSILON ) && ( ! _net->clutterBit() ) )
-            else if ( ( ! _net->clutterBit() ) ) {
-                cerr << " ==> Finalized" << endl;
-#ifdef LABELS_WHEN_COMPLETE
-                _flagLabel = true;
-#endif	// LABELS_WHEN_COMPLETE
-                _timer->stop();
-                cerr << "[TwoStep] Finished Execution Time = " << checkOutETime() << endl;
-                cerr << "[TwoStep] Finished CPU Time = " << checkOutCPUTime() << endl;
-            }
-            else if ( err >= INTERMEDIATE_EPSILON ) {
-                _net->twostep();
-            }
-            break;
-    }
-
-#ifdef SKIP
-    if( _flag2stepsmoothing && _net->smoothingset() ) timecount++;
-    //cerr << " fixratio = " << fixratio << endl;
-
-    if( timecount > 1 ) {
-        fixratio++;
-        if( fixratio < 100 ) {
-            cerr << "************************step 2-B[test up to 100]************************" << endl;
-            cerr << "smoothing of parameter" << " " << fixratio <<  endl;
-            _net->para();
-            cerr << "///////////after smoothing 2-B[test_100step] start///////////" << endl;
-            BGL_FORALL_VERTICES( vd, g, Graph ) {
-                //cerr << "vertexRatio[ " << vertexID[ vd ] << " ] = "
-                //<< vertexRatio[ vd ] << endl;
-                cerr << vertexRatio[ vd ] << endl;
-            }
-            cerr << "///////////after smoothing 2-B[test_100step] end///////////" << endl;
-            cerr << HERE;
-            if ( _flagConflict ) {
-                if ( _net->clutterBit() ) cerr << " XXX ";
-                else cerr << " OOO ";
-            }
-            timecount = 0;
-        }
-        else ;
-    }
-#endif	// SKIP
-
-    if ( ( err < FINAL_EPSILON ) && ( _flagLabel ) && ( _flagConflict ) ) {
-        //_net->evaluation() = 1;
-        //updateGL();
-        label_evaluation();
-        // _net->cleargp();
-        // _net->clearclut();
-    }
-    updateGL();
-*/
     redrawAllScene();
 }
 
@@ -744,17 +489,10 @@ void Window::keyPressEvent( QKeyEvent *event )
 {
     switch( event->key() ) {
 
-        case Qt::Key_I:
-        {
-            selectData();
-            break;
-        }
         case Qt::Key_1:
         {
-            SkeletonGraph       & s = _boundary->skeleton();
-            cerr << "afterV: nV = " << num_vertices(s) << " nE = " << num_edges(s) << endl;
-
-
+            // SkeletonGraph       & s = _boundary->skeleton();
+            // cerr << "afterV: nV = " << num_vertices(s) << " nE = " << num_edges(s) << endl;
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
@@ -766,6 +504,10 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             cerr << "stop timer event" << endl;
             _timer->stop();
+            simulateKey( Qt::Key_E );
+            _boundary->createPolygonComplex();
+            simulateKey( Qt::Key_B );
+            _boundary->writePolygonComplex();
             break;
         }
         case Qt::Key_3:
@@ -782,8 +524,25 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_5:
         {
+            _gv->isCompositeFlag() = !_gv->isCompositeFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_6:
+        {
             _gv->isPolygonFlag() = !_gv->isPolygonFlag();
             redrawAllScene();
+            break;
+        }
+        case Qt::Key_7:
+        {
+            _gv->isPolygonComplexFlag() = !_gv->isPolygonComplexFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_I:
+        {
+            selectData();
             break;
         }
         case Qt::Key_C:
@@ -799,6 +558,11 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_M:
         {
             selectMinDistance();
+            break;
+        }
+        case Qt::Key_R:
+        {
+            _boundary->readPolygonComplex();
             break;
         }
         case Qt::Key_S:
@@ -830,6 +594,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             selectVoronoi();
             break;
         }
+        case Qt::Key_E:
+            _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
+            break;
         case Qt::Key_Q:
         case Qt::Key_Escape:
             close();

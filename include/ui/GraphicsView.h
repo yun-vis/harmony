@@ -48,14 +48,17 @@ class GraphicsView : public QGraphicsView
 private:
 
     bool                _is_simplifiedFlag;
-    bool                _is_skeletonFlag, _is_polygonFlag;
+    bool                _is_skeletonFlag, _is_compositeFlag,
+                        _is_polygonFlag, _is_polygonComplexFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
 
 protected:
 
     void _item_skeleton( void );
+    void _item_composite( void );
     void _item_seeds( void );
+    void _item_polygonComplex( void );
     void _item_polygons( void );
     void _item_nodes( void );
     void _item_edges( void );
@@ -72,8 +75,12 @@ public:
 
     bool &          isSkeletonFlag( void )          { return _is_skeletonFlag; }
     const bool &    isSkeletonFlag( void ) const    { return _is_skeletonFlag; }
+    bool &          isCompositeFlag( void )         { return _is_compositeFlag; }
+    const bool &    isCompositeFlag( void ) const   { return _is_compositeFlag; }
     bool &          isPolygonFlag( void )           { return _is_polygonFlag; }
     const bool &    isPolygonFlag( void ) const     { return _is_polygonFlag; }
+    bool &          isPolygonComplexFlag( void )           { return _is_polygonComplexFlag; }
+    const bool &    isPolygonComplexFlag( void ) const     { return _is_polygonComplexFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods
@@ -84,6 +91,8 @@ public:
     }
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );
+
+    void exportPNG ( double x, double y, double w, double h );
 
 Q_SIGNALS:
 

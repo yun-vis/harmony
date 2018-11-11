@@ -53,7 +53,8 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
     _width = __width;
     _height = __height;
     //_mode = TYPE_FORCE;
-    _mode = TYPE_CENTROID;
+    //_mode = TYPE_CENTROID;
+    _mode = TYPE_HYBRID;
 
     string configFilePath = "../configs/force.conf";
     int result;
@@ -125,7 +126,8 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
 //
 void Force::_force( void )
 {
-    SkeletonGraph & s = _boundaryPtr->skeleton();
+    //SkeletonGraph & s = _boundaryPtr->skeleton();
+    SkeletonGraph & s = _boundaryPtr->composite();
 
     double side = 0.5 * _width * _height ;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( s ) ) );
@@ -185,16 +187,14 @@ void Force::_force( void )
 void Force::_centroid( void )
 {
     // const char theName[] = "Net::centroid : ";
-    SkeletonGraph & s = _boundaryPtr->skeleton();
-    map< unsigned int, Polygon2 >  &p = _boundaryPtr->polygons();
+    //SkeletonGraph & s = _boundaryPtr->skeleton();
+    SkeletonGraph & s = _boundaryPtr->composite();
 
-    int	h = ( int )_height;
-    int	w = ( int )_width;
+    map< unsigned int, Polygon2 >  &p = _boundaryPtr->polygons();
 
     // initialization
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
         s[ vd ].place.zero();
-        // vertexNum[ vd ] = 0;
     }
 
 #ifdef DEBUG
@@ -206,37 +206,6 @@ void Force::_centroid( void )
     }
 #endif // DEBUG
 
-/*
-    int ws = _diagram->widthStep;
-    int nc = _diagram->nChannels;
-    Coord2 cur;
-    for ( int i = 0; i < h; ++i ) {
-        cur.y() = 1.0 - ( ( double )i+0.5 )/( double )h;
-        for ( int j = 0; j < w; ++j ) {
-            cur.x() = ( ( double )j+0.5 )/( double )w;
-
-            unsigned char R = ( unsigned char )( _diagram->imageData[ i*ws + j*nc + 0 ] );
-            unsigned char G = ( unsigned char )( _diagram->imageData[ i*ws + j*nc + 1 ] );
-            unsigned char B = ( unsigned char )( _diagram->imageData[ i*ws + j*nc + 2 ] );
-            unsigned int colorID = (unsigned int)R*65536 + (unsigned int)G*256 + (unsigned int)B;
-            // if the pixel retains the background color
-            map< unsigned int, unsigned int >::iterator	iter = _colorMap.find( colorID );
-
-            if ( iter == _colorMap.end() ) { //colorMap -> ( colorID, vertexID[vd] )
-                // cerr << " colorID = " << colorID << endl;
-                // cerr << " R = " << (int)R << " G = " << (int)G << " B = " << (int)B << endl;
-                // assert( iter != colorMap.end() );
-            }
-            else {
-                unsigned int idV = iter->second;    //find vertexID[vd] from colorID
-                VertexDescriptor vd = vertex( idV, g );
-                vertexPlace[ vd ] += cur; //point of each pixels
-                vertexNum[ vd ]++;  // number of pixels belonging to node territory
-            }
-        }
-    }
-*/
-
     BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
 
         map< unsigned int, Polygon2 >::iterator itP = p.begin();
@@ -246,14 +215,7 @@ void Force::_centroid( void )
         if ( itP->second.area() != 0 ) {
 
             Coord2 dest = itP->second.center();
-            // Screen coordinates have been already translated
-            // double nx =  SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ); //SCREEN_SIDE == 2
-            // double ny =  SCREEN_SIDE * ( 2.0*dest.y() - 1.0 );
-            //double nx = _window_side * SCREEN_SIDE * ( 2.0*dest.x() - 1.0 ) + _center_x;
-            //double ny = _window_side * SCREEN_SIDE * ( 2.0*dest.y() - 1.0 ) + _center_y;
-            //s[ vd ].place = Coord2( nx, ny ) - *s[ vd ].coordPtr;
-
-            //cerr << "dest = " << dest;
+            // cerr << "initID = " << s[vd].initID << endl;
             s[ vd ].place = dest - *s[ vd ].coordPtr;
         }
         else {
@@ -277,7 +239,8 @@ double Force::_gap( void )
 {
     const char theName[] = "Force::_gap : ";
 
-    SkeletonGraph & s = _boundaryPtr->skeleton();
+    //SkeletonGraph & s = _boundaryPtr->skeleton();
+    SkeletonGraph & s = _boundaryPtr->composite();
     vector< Coord2 >	displace;
     double		err		= 0.0;
 

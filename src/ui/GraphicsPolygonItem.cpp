@@ -26,6 +26,15 @@ void GraphicsPolygonItem::paint( QPainter *painter, const QStyleOptionGraphicsIt
 	painter->setBrush( brush() );
     painter->drawPolygon( polygon() );
 
+#ifdef SKIP
+    const QPolygonF &p = polygon();
+    for( unsigned int i = 0; i < p.size(); i++ ){
+        //cerr << p.at(i) << endl;
+        int shift = (rand()%6+1)*3;
+        painter->drawText( p.at(i).x()+shift, p.at(i).y()-shift, QString::fromStdString( to_string( i ) ) );
+    }
+#endif // SKIP
+
     //cerr << "paint x = " << pos().x() << " y = " << pos().y() << endl;
 
     // Qt function

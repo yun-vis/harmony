@@ -58,6 +58,7 @@ include_directories(
 link_directories(
         /opt/local/lib
         /usr/lib/x86_64-linux-gnu/
+
         ${CMAKE_SOURCE_DIR}/src
         ${QT5_PATH_DIR}/lib
 )
@@ -88,6 +89,7 @@ set(HEADERS
         include/base/UndirectedBaseGraph.h
         include/base/UndirectedBaseGraphProperty.h
         include/base/UndirectedBaseVertexProperty.h
+        include/base/UndirectedPropertyGraph.h
         include/base/Timer.h
         include/base/Color.h
         include/optimization/Force.h

@@ -38,15 +38,17 @@ void printGraph( BoundaryGraph & graph )
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print vertex information
     BGL_FORALL_VERTICES( vd, graph, BoundaryGraph ) {
 
         BoundaryGraph::degree_size_type      degrees         = out_degree( vd, graph );
+        cerr << "id = " << graph[ vd ].id << endl;
+        cerr << "coord = " << *graph[ vd ].coordPtr;
     }
-#endif  // DEBUG
+//#endif  // DEBUG
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print edge information
     BGL_FORALL_EDGES( ed, graph, BoundaryGraph ) {
 
@@ -54,8 +56,10 @@ void printGraph( BoundaryGraph & graph )
         BoundaryGraph::vertex_descriptor vdT = target( ed, graph );
 
         cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) " << endl;
-    }
-#endif  // DEBUG
+		cerr << "w = " << graph[ ed ].weight << endl;
+
+	}
+//#endif  // DEBUG
 }
 
 //

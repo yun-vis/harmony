@@ -62,6 +62,7 @@ class UndirectedBaseEdgeProperty {
 
     double                      angle;
     double                      weight;
+    bool                        visit;
 
     void		                init( void )		      { _init(); }
 

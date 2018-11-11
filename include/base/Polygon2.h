@@ -37,9 +37,11 @@ class Polygon2 {
   protected:
 
     unsigned int        _id;
+    unsigned int        _gid;
     double              _area;
     Coord2              _center;
     vector< Coord2 >    _elements;      // coordinates of end points
+    vector< bool >      _isBorders;     // binary for indicating the border of a set of polygons
 
     virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
 
@@ -65,8 +67,12 @@ class Polygon2 {
 //------------------------------------------------------------------------------
     void		init( unsigned int __id, vector< Coord2 > __elements )		{ _init( __id, __elements ); }
 
+    // id
     unsigned int &	            id( void )	            { return _id; }
     const unsigned int &	    id( void ) const	    { return _id; }
+    // group id
+    unsigned int &	            gid( void )	            { return _gid; }
+    const unsigned int &	    gid( void ) const	    { return _gid; }
 
     // area
     double &	                area( void )	        { return _area; }
@@ -79,6 +85,11 @@ class Polygon2 {
     // pointer to an array of coordinates
     vector< Coord2 > &	        elements( void )	    { return _elements; }
     const vector< Coord2 > &	elements( void ) const	{ return _elements; }
+
+    // pointer to a binary array for indicating the border of a set of polygons
+    vector< bool > &	        isBorders( void )	    { return _isBorders; }
+    const vector< bool > &	    isBorders( void ) const	{ return _isBorders; }
+
 
 //------------------------------------------------------------------------------
 //	Special functions

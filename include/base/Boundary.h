@@ -46,8 +46,10 @@ private:
     SkeletonGraph                           _skeleton;
     SkeletonGraph                           _composite;
 
-    vector< Coord2 >                        _seeds;
-    map< unsigned int, Polygon2 >           _polygons;
+    vector< Coord2 >                        _seeds;             // for composite graph
+    map< unsigned int, Polygon2 >           _polygons;          // for composite graph
+    map< unsigned int, Polygon2 >           _polygonComplex;    // for skeleton graph
+    map< unsigned int, vector< SkeletonGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
 
     vector< vector< BoundaryGraph::vertex_descriptor > >        _shortestPathM;
     
@@ -75,6 +77,8 @@ protected:
     // detecting close vertex-edge pairs which have high possibility to overlap
     VEMap                                       _VEconflict;    // vertex-edge pair that is too close to each other
     vector< double >                            _ratioR;        // ratio of vertices projected on the edge, r*v1 + (r-1)*v2
+
+    double                      _stringToDouble( string str );
 
 public:
     
@@ -105,11 +109,15 @@ public:
     BoundaryGraph &			        boundary( void )	    { return _boundary; }
     const SkeletonGraph &		    skeleton( void ) const  { return _skeleton; }
     SkeletonGraph &			        skeleton( void )	    { return _skeleton; }
+    const SkeletonGraph &		    composite( void ) const  { return _composite; }
+    SkeletonGraph &			        composite( void )	     { return _composite; }
 
     const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
     vector< Coord2 > &			            seeds( void )	        { return _seeds; }
     const map < unsigned int, Polygon2 > &	polygons( void ) const          { return _polygons; }
     map< unsigned int, Polygon2 > &			polygons( void )	            { return _polygons; }
+    const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
+    map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }
 
     const vector< vector< BoundaryGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
 
@@ -144,6 +152,11 @@ public:
     void buildBoundaryGraph( void );
     void buildSkeleton( void );
     void decomposeSkeleton( void );
+    void createPolygonComplex( void );
+    void readPolygonComplex( void );
+    void writePolygonComplex( void );
+    bool findVertexInComplex( Coord2 &coord, SkeletonGraph &complex,
+                              SkeletonGraph::vertex_descriptor &target );
 
 //------------------------------------------------------------------------------
 //  File I/O
