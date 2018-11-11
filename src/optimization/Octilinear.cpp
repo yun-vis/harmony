@@ -38,19 +38,45 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 {
     _boundary                      = __boundary;
     BoundaryGraph        & g            = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    unsigned int nVertices      = _boundary->nVertices();
     unsigned int nEdges         = _boundary->nEdges();
     _d_Alpha                    = _boundary->dAlpha();
     _d_Beta                     = _boundary->dBeta();
 
     // initialization
     _nVars = _nConstrs = 0;
-    _w_octilinear = sqrt( 10.0 );
-    _w_position = sqrt( 0.00001 );
-    _w_boundary = sqrt( 20.0 );
-    _w_crossing = sqrt( 20.0 );
     _half_width = __half_width;
     _half_height = __half_height;
+
+    string configFilePath = "../configs/octilinear.conf";
+
+    //read config file
+    Base::Config conf( configFilePath );
+
+    //_w_octilinear = sqrt( 10.0 );
+    //_w_position = sqrt( 0.00001 );
+    //_w_boundary = sqrt( 20.0 );
+    //_w_crossing = sqrt( 20.0 );
+
+    if ( conf.has( "w_octilinear" ) ){
+        string paramOctilinear = conf.gets( "w_octilinear" );
+        _w_octilinear = sqrt( stringToDouble( paramOctilinear ) );
+    }
+
+    if ( conf.has( "w_position" ) ){
+        string paramPosition = conf.gets( "w_position" );
+        _w_position = sqrt( stringToDouble( paramPosition ) );
+    }
+
+    if ( conf.has( "w_boundary" ) ){
+        string paramBoundary = conf.gets( "w_boundary" );
+        _w_boundary = sqrt( stringToDouble( paramBoundary ) );
+    }
+
+    if ( conf.has( "w_crossing" ) ){
+        string paramCrossing = conf.gets( "w_crossing" );
+        _w_crossing = sqrt( stringToDouble( paramCrossing ) );
+    }
 
 #ifdef DEBUG
     cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nVertices = " << nEdges << endl;
@@ -98,7 +124,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 void Octilinear::_initCoefs( void )
 {
     BoundaryGraph        & g            = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    unsigned int nVertices      = _boundary->nVertices();
     //unsigned int nEdges         = _boundary->nEdges();
 
     // initialization
@@ -158,7 +184,7 @@ void Octilinear::_initCoefs( void )
 void Octilinear::_initVars( void )
 {
     BoundaryGraph        & g            = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    unsigned int nVertices      = _boundary->nVertices();
 
     // initialization
     _var.resize( _nVars );
@@ -430,7 +456,7 @@ void Octilinear::_initOutputs( void )
 void Octilinear::_updateCoefs( void )
 {
     BoundaryGraph               & g             = _boundary->boundary();
-    unsigned int        nVertices       = _boundary->nStations();
+    unsigned int        nVertices       = _boundary->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
     vector< double >    ratioR          = _boundary->ratioR();
@@ -813,8 +839,8 @@ double Octilinear::ConjugateGradient( unsigned int iter )
 //
 void Octilinear::retrieve( void )
 {
-    BoundaryGraph        & g            = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    BoundaryGraph & g           = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
     // find the vertex that is too close to an edge
     vector< BoundaryGraph::vertex_descriptor > vdVec;

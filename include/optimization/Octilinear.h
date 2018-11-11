@@ -19,6 +19,7 @@
 using namespace std;
 
 #include "base/Boundary.h"
+#include "base/Config.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types

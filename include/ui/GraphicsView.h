@@ -49,7 +49,8 @@ private:
 
     bool                _is_simplifiedFlag;
     bool                _is_skeletonFlag, _is_compositeFlag,
-                        _is_polygonFlag, _is_polygonComplexFlag;
+                        _is_polygonFlag, _is_polygonComplexFlag,
+                        _is_boundaryFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
 
@@ -81,6 +82,8 @@ public:
     const bool &    isPolygonFlag( void ) const     { return _is_polygonFlag; }
     bool &          isPolygonComplexFlag( void )           { return _is_polygonComplexFlag; }
     const bool &    isPolygonComplexFlag( void ) const     { return _is_polygonComplexFlag; }
+    bool &          isBoundaryFlag( void )         { return _is_boundaryFlag; }
+    const bool &    isBoundaryFlag( void ) const   { return _is_boundaryFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

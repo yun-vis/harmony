@@ -70,7 +70,7 @@ Boundary::Boundary( void )
     // _lineName.clear();
 
     _nLines = 0;
-    _nStations  = 0;
+    _nVertices  = 0;
     _nEdges = 0;
     _meanVSize = 0.0;
 
@@ -106,8 +106,8 @@ Boundary::Boundary( const Boundary & obj )
     }
 
     _nLines     = obj._nLines;
-    _nStations  = obj._nStations;
-    _nEdges     = obj._nEdges;
+    //_nStations  = obj._nStations;
+    //_nEdges     = obj._nEdges;
     _meanVSize = obj._meanVSize;
 
     _removedVertices = obj.removedVertices();
@@ -141,8 +141,8 @@ Boundary::~Boundary( void )
     _lineSta.clear();
 
     _nLines = 0;
-    _nStations  = 0;
-    _nEdges  = 0;
+    //_nStations  = 0;
+    //_nEdges  = 0;
     _meanVSize = 0.0;
 
     _removedVertices.clear();
@@ -171,8 +171,8 @@ void Boundary::clear( void )
     _lineSta.clear();
 
     _nLines = 0;
-    _nStations  = 0;
-    _nEdges  = 0;
+    //_nStations  = 0;
+    //_nEdges  = 0;
     _meanVSize = 0.0;
 
     _removedVertices.clear();
@@ -574,20 +574,20 @@ void Boundary::simplifyLayout( void )
 void Boundary::reorderID( void )
 {
     // reorder vertexID
-    _nStations = 0;
+    unsigned int nVertices = 0;
     BGL_FORALL_VERTICES( vertex, _boundary, BoundaryGraph )
     {
-        _boundary[ vertex ].id      = _nStations;
+        _boundary[ vertex ].id      = nVertices;
         // cerr << "VID = " << vertexIndex[ vertex ] << endl;
-        _nStations++;
+        nVertices++;
     }
 
-    _nEdges = 0;
+    unsigned int nEdges = 0;
     BGL_FORALL_EDGES( edge, _boundary, BoundaryGraph )
     {
-        _boundary[ edge ].id      = _nEdges;
+        _boundary[ edge ].id      = nEdges;
         // cerr << "EID = " << edgeIndex[ edge ] << endl;
-        _nEdges++;
+        nEdges++;
     }
 }
 
@@ -740,7 +740,7 @@ void Boundary::cloneLayout( const Boundary & obj )
     _boundary = obj.boundary();
 
     _nLines = obj._nLines;
-    _nStations = obj._nStations;
+    _nVertices = obj._nVertices;
     _nEdges = obj._nEdges;
     _nLabels = obj._nLabels;
     _distAlpha = obj._distAlpha;
@@ -851,8 +851,8 @@ void Boundary::load( const char * filename )
     _line.clear();
     _lineSta.clear();
     _nLines = 0;
-    _nStations = 0;
-    _nEdges = 0;
+    unsigned int _nStations = 0;
+    unsigned int _nEdges = 0;
 
     while ( true ) {
 
@@ -910,7 +910,7 @@ void Boundary::load( const char * filename )
             ifs.getline( buf, sizeof( buf ) );
             // the end of station info.
             if ( buf[ 0 ] == '#' ) {
-                cerr << "The end of the line: nStations = " << _nStations << endl;
+                // cerr << "The end of the line: nStations = " << _nStations << endl;
                 break;
             }
 
@@ -1081,7 +1081,11 @@ void Boundary::buildBoundaryGraph( void )
     // initialization
     _polygonComplexVD.clear();
     clearGraph( _boundary );
+    _nVertices = 0;
+    _nEdges = 0;
+    _nLines = 0;
 
+    // create boundary graph
     for( unsigned int i = 0; i < _polygonComplex.size(); i++ ){
 
         Polygon2 &polygon = _polygonComplex[i];
@@ -1130,14 +1134,14 @@ void Boundary::buildBoundaryGraph( void )
                     _boundary[ curVD ].smoothPtr = new Coord2( x, y );
                     _boundary[ curVD ].coordPtr = new Coord2( x, y );
                     _boundary[ curVD ].forcePtr = new Coord2( 0, 0 );
-                    _boundary[ curVD ].id = _boundary[ curVD ].initID = _nStations;
+                    _boundary[ curVD ].id = _boundary[ curVD ].initID = _nVertices;
                     _boundary[ curVD ].name = to_string( _boundary[ curVD ].id );
                     _boundary[ curVD ].weight = 1.0;
                     _boundary[ curVD ].lineID.push_back( _nLines );
 
                     if( k == j-1 ) curVDS = curVD;
                     if( k == j ) curVDT = curVD;
-                    _nStations++;
+                    _nVertices++;
                 }
                 else{
                     _boundary[ curVD ].lineID.push_back( _nLines );
@@ -1212,7 +1216,18 @@ void Boundary::buildBoundaryGraph( void )
         _polygonComplexVD.insert( pair< unsigned int, vector< SkeletonGraph::vertex_descriptor > >( i, vdVec ) );
     }
 
-    cerr << "nV = " << num_vertices( _boundary ) << " nE = " << num_edges( _boundary ) << endl;
+    // create lines
+    // _line.resize( _polygonComplexVD.size() );
+    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
+    // map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
+    for( itS = _polygonComplexVD.begin(); itS != _polygonComplexVD.end(); itS++ ){
+        vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
+        _lineSta.push_back( vdVec );
+    }
+    _nLines = _polygonComplexVD.size();
+
+    cerr << "nV = " << _nVertices << " nE = " << _nEdges
+         << " nL = " << _nLines << endl;
 }
 
 
@@ -1813,8 +1828,16 @@ void Boundary::readPolygonComplex( void )
 
                         // cerr <<  node->GetText() << endl;
                         BoundaryGraph::vertex_descriptor vd = add_vertex( _boundary  );
-                        _boundary[ vd ].id = stoi( key1Text );
-                        _boundary[ vd ].coordPtr = new Coord2( _stringToDouble( key2Text ), _stringToDouble( key3Text ) );
+                        double x = _stringToDouble( key2Text );
+                        double y = _stringToDouble( key3Text );
+                        _boundary[ vd ].geoPtr = new Coord2( x, y );
+                        _boundary[ vd ].smoothPtr = new Coord2( x, y );
+                        _boundary[ vd ].coordPtr = new Coord2( x, y );
+                        _boundary[ vd ].forcePtr = new Coord2( 0, 0 );
+                        _boundary[ vd ].id = _boundary[ vd ].initID = stoi( key1Text );
+                        _boundary[ vd ].name = to_string( _boundary[ vd ].id );
+                        _boundary[ vd ].weight = 1.0;
+                        _boundary[ vd ].lineID.push_back( _nLines );
                     }
                 }
                 else if ( elementname == "edge" ) {
@@ -1854,8 +1877,28 @@ void Boundary::readPolygonComplex( void )
 
                     pair< BoundaryGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _boundary );
                     BoundaryGraph::edge_descriptor foreED = foreE.first;
-                    _boundary[ foreED ].id = stoi( key0Text );
+
+                    // calculate geographical angle
+                    Coord2 coordO;
+                    Coord2 coordD;
+                    if( _boundary[ vdS ].initID < _boundary[ vdT ].initID ){
+                        coordO = *_boundary[ vdS ].coordPtr;
+                        coordD = *_boundary[ vdT ].coordPtr;
+                    }
+                    else{
+                        coordO = *_boundary[ vdT ].coordPtr;
+                        coordD = *_boundary[ vdS ].coordPtr;
+                    }
+                    double diffX = coordD.x() - coordO.x();
+                    double diffY = coordD.y() - coordO.y();
+                    double angle = atan2( diffY, diffX );
+
+                    _boundary[ foreED ].initID = _boundary[ foreED ].id = stoi( key0Text );
                     _boundary[ foreED ].weight = _stringToDouble( key4Text );
+                    _boundary[ foreED ].geoAngle = angle;
+                    _boundary[ foreED ].smoothAngle = angle;
+                    _boundary[ foreED ].angle = angle;
+                    _boundary[ foreED ].lineID.push_back( _nLines );
                 }
             }
         }
@@ -1864,6 +1907,7 @@ void Boundary::readPolygonComplex( void )
 
     // read polygon contour
     _polygonComplexVD.clear();
+    _polygonComplex.clear();
     string polygon_filename = "../data/boundary.txt";
 
     ifstream pfs( polygon_filename.c_str() );
@@ -1885,21 +1929,41 @@ void Boundary::readPolygonComplex( void )
         vector< string > tokens;
         while (ss >> buf) tokens.push_back( buf );
         vector< SkeletonGraph::vertex_descriptor > vdVec;
+        Polygon2 polygon;
         for( unsigned int i = 0; i < tokens.size(); i++ ){
 
             // cerr << tokens[i] << " ";
-            SkeletonGraph::vertex_descriptor vd = vertex( stoi( tokens[i] ), _boundary );
+            BoundaryGraph::vertex_descriptor vd = vertex( stoi( tokens[i] ), _boundary );
             vdVec.push_back( vd );
+            polygon.elements().push_back( *_boundary[ vd ].coordPtr );
             // cerr << _boundary[ vd ].id << " ";
         }
         // cerr << endl;
-        _polygonComplexVD.insert( pair< unsigned int, vector< SkeletonGraph::vertex_descriptor > >( id, vdVec ) );
+        _polygonComplex.insert( pair< unsigned int, Polygon2 > ( id, polygon ) );
+        _polygonComplexVD.insert( pair< unsigned int, vector< BoundaryGraph::vertex_descriptor > >( id, vdVec ) );
         id++;
         //_metaFreq.insert( pair< string, unsigned int >( tokens[0], stoi( tokens[1] ) ) );
         //cerr << tokens[0] << " = " << tokens[1] << endl;
     }
+    _polygonComplex.erase( std::prev( _polygonComplex.end() ) );
     _polygonComplexVD.erase( std::prev( _polygonComplexVD.end() ) );
 
+    _nVertices = num_vertices( _boundary );
+    _nEdges = num_edges( _boundary );
+    // _nLines = _polygonComplex.size();
+
+    // create lines
+    // _line.resize( _polygonComplexVD.size() );
+    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
+    // map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
+    for( itS = _polygonComplexVD.begin(); itS != _polygonComplexVD.end(); itS++ ){
+        vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
+        _lineSta.push_back( vdVec );
+    }
+    _nLines = _polygonComplexVD.size();
+
+    cerr << "nV = " << _nVertices << " nE = " << _nEdges
+         << " nL = " << _nLines << endl;
 #ifdef DEBUG
     map< unsigned int, vector< SkeletonGraph::vertex_descriptor > >::iterator itP;
     for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){

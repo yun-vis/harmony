@@ -19,6 +19,7 @@
 using namespace std;
 
 #include "base/Boundary.h"
+#include "base/Config.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -43,7 +44,7 @@ private:
 
     unsigned int    _nVars;
     unsigned int    _nConstrs;
-    double          _w_focuslength, _w_angle, _w_position;
+    double          _w_angle, _w_position;
     double          _w_contextlength;
     double          _w_boundary, _w_crossing;
     double          _w_labelangle;

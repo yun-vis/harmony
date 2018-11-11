@@ -49,7 +49,7 @@ private:
     vector< Coord2 >                        _seeds;             // for composite graph
     map< unsigned int, Polygon2 >           _polygons;          // for composite graph
     map< unsigned int, Polygon2 >           _polygonComplex;    // for skeleton graph
-    map< unsigned int, vector< SkeletonGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
+    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
 
     vector< vector< BoundaryGraph::vertex_descriptor > >        _shortestPathM;
     
@@ -60,7 +60,7 @@ protected:
     double					    _lineColor  [ MAX_LINES ][ 3 ];
     char					    _lineName   [ MAX_LINES ][ MAX_STR ];
     unsigned int				_nLines;
-    unsigned int				_nStations;
+    unsigned int				_nVertices;
     unsigned int				_nSbeforeSim;   // station no. before simplification
     unsigned int				_nLabels;
     unsigned int				_nEdges;
@@ -97,9 +97,9 @@ public:
         return & _lineName[ lineID ][ 0 ];
     }
     
-    const unsigned int &			nStations( void ) const { return _nStations; }
+    const unsigned int &			nVertices( void ) const { return _nVertices; }
     const unsigned int &			nEdges( void ) const { return _nEdges; }
-    const unsigned int &			nLines( void ) const { return _nLines; }
+    //const unsigned int &			nLines( void ) const { return _nLines; }
     const unsigned int &			nLabels( void ) const { return _nLabels; }
     const double &			        meanVSize( void ) const { return _meanVSize; }
     const double &			        dAlpha( void ) const { return _distAlpha; }

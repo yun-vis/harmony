@@ -57,7 +57,6 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
     _mode = TYPE_HYBRID;
 
     string configFilePath = "../configs/force.conf";
-    int result;
 
     //read config file
     Base::Config conf( configFilePath );

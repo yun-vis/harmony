@@ -37,30 +37,66 @@ using namespace std;
 void Smooth::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
     _boundary                   = __boundary;
-    BoundaryGraph & g     = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    BoundaryGraph & g           = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
     unsigned int nEdges         = _boundary->nEdges();
     _d_Alpha                    = _boundary->dAlpha();
     _d_Beta                     = _boundary->dBeta();
 
     // initialization
     _nVars = _nConstrs = 0;
-    _w_focuslength      = sqrt(  5.0  ); // <- 5.0
-    _w_contextlength    = sqrt(  2.5  ); // <- 5.0
-    _w_angle        = sqrt(  1.0  ); // <- 1.0
-    _w_position     = sqrt(  0.025 ); // <- 0.05
-    _w_boundary     = sqrt( 20.0  ); // <- 15.0
-    _w_crossing     = sqrt( 60.0  ); // <- 15.0
-    //_w_labelangle   = sqrt( 20.0  ); // <- 1.0
     _half_width = __half_width;
     _half_height = __half_height;
 
-#ifdef  DEBUG
+    //_w_focuslength      = sqrt(  5.0  ); // <- 5.0
+    //_w_contextlength    = sqrt(  2.5  ); // <- 5.0
+    //_w_angle            = sqrt(  1.0  ); // <- 1.0
+    //_w_position         = sqrt(  0.025 ); // <- 0.05
+    //_w_boundary         = sqrt( 20.0  ); // <- 15.0
+    //_w_crossing         = sqrt( 60.0  ); // <- 15.0
+    //_w_labelangle   = sqrt( 20.0  ); // <- 1.0
+
+    string configFilePath = "../configs/smooth.conf";
+
+    //read config file
+    Base::Config conf( configFilePath );
+
+    if ( conf.has( "w_contextlength" ) ){
+        string paramContextlength = conf.gets( "w_contextlength" );
+        _w_contextlength = sqrt( stringToDouble( paramContextlength ) );
+    }
+
+    if ( conf.has( "w_angle" ) ){
+        string paramAngle = conf.gets( "w_angle" );
+        _w_angle = sqrt( stringToDouble( paramAngle ) );
+    }
+
+    if ( conf.has( "w_position" ) ){
+        string paramPosition = conf.gets( "w_position" );
+        _w_position = sqrt( stringToDouble( paramPosition ) );
+    }
+
+    if ( conf.has( "w_boundary" ) ){
+        string paramBoundary = conf.gets( "w_boundary" );
+        _w_boundary = sqrt( stringToDouble( paramBoundary ) );
+    }
+
+    if ( conf.has( "w_crossing" ) ){
+        string paramCrossing = conf.gets( "w_crossing" );
+        _w_crossing = sqrt( stringToDouble( paramCrossing ) );
+    }
+
+//#ifdef  DEBUG
     cout << " smooth: numStations = " << nVertices << " num_vertices = " << num_vertices( g ) << endl;
     cout << " smooth: numEdges = " << nEdges << " num_edges = " << num_edges( g ) << endl;
-    cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nLabels = " << nLabels << " nEdges = " << nEdges << endl;
+    //cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nLabels = " << nLabels << " nEdges = " << nEdges << endl;
     cerr << "_d_Alpha = " << _d_Alpha << " _d_Beta = " << _d_Beta << endl;
-#endif  // DEBUG
+    cerr << "_w_contextlength = " << _w_contextlength << endl
+         << "_w_angle = " << _w_angle << endl
+         << "_w_position = " << _w_position << endl
+         << "_w_boundary = " << _w_boundary << endl
+         << "_w_crossing = " << _w_crossing << endl;
+//#endif  // DEBUG
 
 //------------------------------------------------------------------------------
 //      Total number of linear variables
@@ -116,7 +152,7 @@ void Smooth::_init( Boundary * __boundary, double __half_width, double __half_he
 void Smooth::_initCoefs( void )
 {
     BoundaryGraph  & g            = _boundary->boundary();
-    unsigned int nVertices              = _boundary->nStations();
+    unsigned int nVertices              = _boundary->nVertices();
 
     //cerr<< "nVertices = " << nVertices << endl;
 
@@ -274,8 +310,8 @@ void Smooth::_initCoefs( void )
 //
 void Smooth::_initVars( void )
 {
-    BoundaryGraph        & g            = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    BoundaryGraph & g           = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
     // initialization
     _var.resize( _nVars );
@@ -392,7 +428,7 @@ void Smooth::_initOutputs( void )
 void Smooth::_updateCoefs( void )
 {
     BoundaryGraph               & g             = _boundary->boundary();
-    unsigned int        nVertices       = _boundary->nStations();
+    unsigned int        nVertices       = _boundary->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
     vector< double >    ratioR          = _boundary->ratioR();
@@ -505,8 +541,8 @@ void Smooth::_updateCoefs( void )
 //
 void Smooth::_updateOutputs( void )
 {
-    BoundaryGraph               & g             = _boundary->boundary();
-    unsigned int        nVertices       = _boundary->nStations();
+    BoundaryGraph       & g             = _boundary->boundary();
+    unsigned int        nVertices       = _boundary->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
     vector< double >    ratioR          = _boundary->ratioR();
@@ -814,8 +850,8 @@ double Smooth::ConjugateGradient( unsigned int iter )
 //
 void Smooth::retrieve( void )
 {
-    BoundaryGraph        & g            = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nStations();
+    BoundaryGraph        & g    = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
     vector< vector< BoundaryGraph::vertex_descriptor > > vdMatrix;
     // find the vertex that is too close to an edge
@@ -904,7 +940,6 @@ void Smooth::retrieve( void )
 
         g[ edge ].smoothAngle = angle;
         g[ edge ].angle = angle;
-
     }
 
     // check possible conflict

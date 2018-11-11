@@ -180,11 +180,11 @@ void Window::selectSmoothSmallCG( void )
     double err = 0.0;
     unsigned int nLabels = _simplifiedBoundary->nLabels();
     _smoothPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundary->nStations() );
+    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundary->nVertices() );
     _smoothPtr->retrieve();
 
-    cerr << "simNStation = " << _simplifiedBoundary->nStations() << endl;
-    cerr << "nStation = " << _boundary->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedBoundary->nVertices() << endl;
+    cerr << "nStation = " << _boundary->nVertices() << endl;
     // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundary->nStations() << endl;
 
     // run smooth optimization
@@ -210,10 +210,10 @@ void Window::selectSmoothSmallCG( void )
 
         _smoothPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
         if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
+            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
+            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
         err = _smoothPtr->ConjugateGradient( iter );
         _smoothPtr->retrieve();
@@ -238,13 +238,13 @@ void Window::selectSmooth( OPTTYPE opttype )
     switch( opttype ){
         case LEAST_SQUARE:
         {
-            int iter = _boundary->nStations();
+            int iter = _boundary->nVertices();
             _smoothPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _boundary->nStations();
+            int iter = _boundary->nVertices();
             _smoothPtr->ConjugateGradient( iter );
         }
             break;
@@ -276,9 +276,9 @@ void Window::selectOctilinearSmallCG( void )
     unsigned int nLabels = _simplifiedBoundary->nLabels();
 
     _octilinearPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedBoundary->nStations() );
+    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedBoundary->nVertices() );
     _octilinearPtr->retrieve();
-    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundary->nStations() << endl;
+    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundary->nVertices() << endl;
 
     // run octilinear optimization
     while( true ) {
@@ -298,10 +298,10 @@ void Window::selectOctilinearSmallCG( void )
 
         _octilinearPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
         if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
+            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundary->nStations() + nLabels - _simplifiedBoundary->nStations() ), 30 );
+            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
         err = _octilinearPtr->ConjugateGradient( iter );
         _octilinearPtr->retrieve();
@@ -323,13 +323,13 @@ void Window::selectOctilinear( OPTTYPE opttype )
     switch( opttype ) {
         case LEAST_SQUARE:
         {
-            int iter = _boundary->nStations();
+            int iter = _boundary->nVertices();
             _octilinearPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _boundary->nStations();
+            int iter = _boundary->nVertices();
             _octilinearPtr->ConjugateGradient( iter );
         }
             break;
@@ -537,6 +537,12 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_7:
         {
             _gv->isPolygonComplexFlag() = !_gv->isPolygonComplexFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_8:
+        {
+            _gv->isBoundaryFlag() = !_gv->isBoundaryFlag();
             redrawAllScene();
             break;
         }

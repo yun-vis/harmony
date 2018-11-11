@@ -219,8 +219,10 @@ void GraphicsView::initSceneItems ( void )
     if( _is_compositeFlag == true ) _item_composite();
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
-    _item_edges();
-    _item_nodes();
+    if( _is_boundaryFlag == true ){
+        _item_edges();
+        _item_nodes();
+    }
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -267,6 +269,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_polygonComplexFlag = false;
     _is_skeletonFlag = false;
     _is_compositeFlag = false;
+    _is_boundaryFlag = false;
     this->setScene( _scene );
 }
 
