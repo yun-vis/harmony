@@ -238,6 +238,30 @@ void Octilinear::_updateEdgeCurAngle( void )
 
 void Octilinear::_setTargetAngle( void )
 {
+    BoundaryGraph        &g            = _boundary->boundary();
+
+    double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
+                           M_PI/4.0, M_PI/2.0, 3.0*M_PI/4.0, M_PI };
+
+    // initialization
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
+
+        double targetAngle = 2.0*M_PI;
+        double minDist = 2.0*M_PI + 1.0;
+        for( unsigned int i = 0; i < 9; i++ ){
+            double dist = fabs( g[ edge ].angle - sector[i] );
+            if( dist < minDist ){
+                minDist = dist;
+                targetAngle = sector[i];
+            }
+        }
+        g[ edge ].targetAngle = targetAngle;
+    }
+}
+
+#ifdef  SKIP
+void Octilinear::_setTargetAngle( void )
+{
     BoundaryGraph        & g            = _boundary->boundary();
 
     double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
@@ -346,6 +370,7 @@ void Octilinear::_setTargetAngle( void )
     }
 #endif  // DEBUG
 }
+#endif // SKIP
 
 #ifdef  SKIP
 double Octilinear::_findRotateAngle( double input )
@@ -411,6 +436,9 @@ void Octilinear::_initOutputs( void )
         double angle = g[ edge ].angle;
         double theta = g[ edge ].targetAngle - angle;
 #ifdef  DEBUG
+        cerr << "e( " << g[vdS].id << "," << g[vdT].id << " )"
+             << " targetAngle = " << g[ edge ].targetAngle
+             << " angle = " << g[ edge ].angle << endl;
         cerr << "eid = " << edgeID[ edge ] << " ";
 #endif  // DEBUG
         double cosTheta = cos( theta ), sinTheta = sin( theta );
