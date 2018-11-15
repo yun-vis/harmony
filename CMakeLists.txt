@@ -11,11 +11,11 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
 
 # compiler setting
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -std=gnu++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 else()
     set(CMAKE_CXX_STANDARD 11)
 endif()
@@ -23,14 +23,14 @@ endif()
 if (UNIX AND NOT APPLE)
 
   message(status "Setting G++ flags")
-  set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
+  #set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
 
   # add the libraries you need below
   find_package(OpenGL REQUIRED)
   find_package(GLUT REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -lCGAL -lgmp -lmpr -lboost -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltinyxml -lCGAL -lgmp -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
     
 elseif(APPLE)
 
@@ -41,7 +41,7 @@ elseif(APPLE)
   find_package(OpenGL REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -lboost-mt -lboost_thread-mt -lboost_system-mt -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltinyxml -lboost-mt -lboost_thread-mt -lboost_system-mt -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
 
 endif()
 
@@ -58,7 +58,6 @@ include_directories(
 link_directories(
         /opt/local/lib
         /usr/lib/x86_64-linux-gnu/
-
         ${CMAKE_SOURCE_DIR}/src
         ${QT5_PATH_DIR}/lib
 )
@@ -153,6 +152,7 @@ set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/mo
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_GraphicsView.cpp PROPERTY SKIP_AUTOGEN ON )
 
 add_executable(qtborder ${SOURCES} ${MOC_SRCS} ${MOC_WINDOW} ${MOC_GRAPHICSVIEW})
-target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml)
+message("CMAKE_CXX_FLAGS" ${CMAKE_CXX_FLAGS})
+target_link_libraries (qtborder ${CMAKE_CXX_FLAGS})
 # qt stuff
 qt5_use_modules(qtborder Core Gui Svg Widgets OpenGL)
