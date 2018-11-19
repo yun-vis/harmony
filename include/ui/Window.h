@@ -30,7 +30,7 @@ using namespace std;
 
 #define REMOVEBACKNUM   (15)
 
-class Window : public QMainWindow
+class Window : public QMainWindow, public PathwayData
 {
     Q_OBJECT
 private:

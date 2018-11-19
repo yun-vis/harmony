@@ -20,6 +20,8 @@ using namespace std;
 #include "ui/GraphicsEdgeItem.h"
 #include "ui/GraphicsPolygonItem.h"
 #include "base/Boundary.h"
+#include "base/Pathway.h"
+#include "base/PathwayData.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -31,6 +33,7 @@ using namespace std;
 #include <QtSvg/QSvgGenerator>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
+
 #include "base/Color.h"
 
 //------------------------------------------------------------------------------
@@ -41,7 +44,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsView : public QGraphicsView
+class GraphicsView : public QGraphicsView, public PathwayData
 {
     Q_OBJECT
 
@@ -50,19 +53,19 @@ private:
     bool                _is_simplifiedFlag;
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
-                        _is_boundaryFlag;
+                        _is_boundaryFlag, _is_pathwayFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
 
 protected:
 
+    void _item_boundary( void );
     void _item_skeleton( void );
     void _item_composite( void );
+    void _item_pathways( void );
     void _item_seeds( void );
     void _item_polygonComplex( void );
     void _item_polygons( void );
-    void _item_nodes( void );
-    void _item_edges( void );
 
 public:
     explicit GraphicsView( QWidget *parent = 0 );
@@ -84,6 +87,8 @@ public:
     const bool &    isPolygonComplexFlag( void ) const     { return _is_polygonComplexFlag; }
     bool &          isBoundaryFlag( void )         { return _is_boundaryFlag; }
     const bool &    isBoundaryFlag( void ) const   { return _is_boundaryFlag; }
+    bool &          isPathwayFlag( void )          { return _is_pathwayFlag; }
+    const bool &    isPathwayFlag( void ) const    { return _is_pathwayFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

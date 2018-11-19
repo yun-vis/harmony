@@ -11,15 +11,24 @@
 int main( int argc, char **argv )
 {
     QApplication app( argc, argv );
-    Window window;
 
+//----------------------------------------------------------
+// data
+//----------------------------------------------------------
+    Pathway pathway;
     Boundary simplifiedBoundary, boundary;
     Smooth smooth;
     Octilinear octilinear;
     Force   force;
 
+//----------------------------------------------------------
+// view
+//----------------------------------------------------------
+    Window window;
+
     window.setGeometry( 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT );
     window.setWindowTitle( "qtBorder" );
+    window.setPathwayData( &pathway );
     window.init( &boundary, &simplifiedBoundary, &force, &smooth, &octilinear );
     window.show();
 

@@ -20,7 +20,7 @@ using namespace std;
 
 #include "Coord2.h"
 #include "Common.h"
-#include "base/UndirectedBaseGraphProperty.h"
+#include "graph/BaseGraphProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryGraphProperty : public UndirectedBaseGraphProperty{
+class BoundaryGraphProperty : public BaseGraphProperty{
 
   protected:
 

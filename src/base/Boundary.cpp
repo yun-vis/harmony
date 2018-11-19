@@ -22,7 +22,7 @@
 using namespace std;
 
 #include "base/Boundary.h"
-#include "base/UndirectedPropertyGraph.h"
+#include "graph/UndirectedPropertyGraph.h"
 
 //------------------------------------------------------------------------------
 //	Protected functions
@@ -925,7 +925,7 @@ void Boundary::load( const char * filename )
             BoundaryGraph::vertex_descriptor curVD = NULL;
             BGL_FORALL_VERTICES( vertex, _boundary, BoundaryGraph )
             {
-                string name = _boundary[ vertex ].name;
+                string name = *_boundary[ vertex ].namePtr;
                 if( strcmp( argument, name.c_str() ) == 0 ){
 
 #ifdef DEBUG
@@ -948,7 +948,7 @@ void Boundary::load( const char * filename )
                 _boundary[ curVD ].smoothPtr = new Coord2( x, y );
                 _boundary[ curVD ].coordPtr = new Coord2( x, y );
                 _boundary[ curVD ].id = _boundary[ curVD ].initID = _nStations;
-                _boundary[ curVD ].name = argument;
+                _boundary[ curVD ].namePtr = new string( argument );
                 //vertexName[ curVD ].assign( argument );
                 _boundary[ curVD ].weight = 1.0;
                 _boundary[ curVD ].lineID.push_back( _nLines );
@@ -1135,7 +1135,7 @@ void Boundary::buildBoundaryGraph( void )
                     _boundary[ curVD ].coordPtr = new Coord2( x, y );
                     _boundary[ curVD ].forcePtr = new Coord2( 0, 0 );
                     _boundary[ curVD ].id = _boundary[ curVD ].initID = _nVertices;
-                    _boundary[ curVD ].name = to_string( _boundary[ curVD ].id );
+                    _boundary[ curVD ].namePtr = new string( to_string( _boundary[ curVD ].id ) );
                     _boundary[ curVD ].weight = 1.0;
                     _boundary[ curVD ].lineID.push_back( _nLines );
 
@@ -1835,7 +1835,7 @@ void Boundary::readPolygonComplex( void )
                         _boundary[ vd ].coordPtr = new Coord2( x, y );
                         _boundary[ vd ].forcePtr = new Coord2( 0, 0 );
                         _boundary[ vd ].id = _boundary[ vd ].initID = stoi( key1Text );
-                        _boundary[ vd ].name = to_string( _boundary[ vd ].id );
+                        _boundary[ vd ].namePtr = new string( to_string( _boundary[ vd ].id ) );
                         _boundary[ vd ].weight = 1.0;
                         _boundary[ vd ].lineID.push_back( _nLines );
                     }

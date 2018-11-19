@@ -159,7 +159,7 @@ void GraphicsView::_item_polygons( void )
 }
 
 
-void GraphicsView::_item_nodes( void )
+void GraphicsView::_item_boundary( void )
 {
     BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
@@ -167,6 +167,23 @@ void GraphicsView::_item_nodes( void )
     else
         g = & _boundary->boundary();
 
+    // draw edges
+    BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {
+
+        BoundaryGraph::vertex_descriptor vdS = source( ed, *g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, *g );
+        QPainterPath path;
+        path.moveTo( (*g)[vdS].coordPtr->x(), -(*g)[vdS].coordPtr->y() );
+        path.lineTo( (*g)[vdT].coordPtr->x(), -(*g)[vdT].coordPtr->y() );
+
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setPath( path );
+
+        _scene->addItem( itemptr );
+    }
+
+    // draw vertices
     BGL_FORALL_VERTICES( vd, *g, BoundaryGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
@@ -180,29 +197,44 @@ void GraphicsView::_item_nodes( void )
     }
 }
 
-
-void GraphicsView::_item_edges( void )
+void GraphicsView::_item_pathways( void )
 {
-    BoundaryGraph * g =  NULL;
-    if( _is_simplifiedFlag == true )
-        g = & _simplifiedBoundary->boundary();
-    else
-        g = & _boundary->boundary();
+    vector< UndirectedBaseGraph > &lsubg    = _pathway->lsubG();
 
-    BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {
+    // create edge object from the spanning tree and add it to the scene
+    for( unsigned int i = 0; i < lsubg.size(); i++ ){
 
-        BoundaryGraph::vertex_descriptor vdS = source( ed, *g );
-        BoundaryGraph::vertex_descriptor vdT = target( ed, *g );
-        QPainterPath path;
-        path.moveTo( (*g)[vdS].coordPtr->x(), -(*g)[vdS].coordPtr->y() );
-        path.lineTo( (*g)[vdT].coordPtr->x(), -(*g)[vdT].coordPtr->y() );
+        // draw edges
+        BGL_FORALL_EDGES( ed, lsubg[i], UndirectedBaseGraph ) {
 
-        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setPath( path );
+            UndirectedBaseGraph::vertex_descriptor vdS = source( ed, lsubg[i] );
+            UndirectedBaseGraph::vertex_descriptor vdT = target( ed, lsubg[i] );
 
-        _scene->addItem( itemptr );
+            QPainterPath path;
+            path.moveTo( lsubg[i][vdS].coordPtr->x(), -lsubg[i][vdS].coordPtr->y() );
+            path.lineTo( lsubg[i][vdT].coordPtr->x(), -lsubg[i][vdT].coordPtr->y() );
+
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
+            //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+            itemptr->setPath( path );
+            _scene->addItem( itemptr );
+        }
+
+        // draw vertices
+        BGL_FORALL_VERTICES( vd, lsubg[i], UndirectedBaseGraph ) {
+
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( lsubg[i][vd].coordPtr->x(), -lsubg[i][vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = lsubg[i][vd].id;
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
     }
 }
 
@@ -219,10 +251,8 @@ void GraphicsView::initSceneItems ( void )
     if( _is_compositeFlag == true ) _item_composite();
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
-    if( _is_boundaryFlag == true ){
-        _item_edges();
-        _item_nodes();
-    }
+    if( _is_boundaryFlag == true ) _item_boundary();
+    if( _is_boundaryFlag == true ) _item_pathways();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -270,6 +300,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_skeletonFlag = false;
     _is_compositeFlag = false;
     _is_boundaryFlag = false;
+    _is_pathwayFlag = false;
     this->setScene( _scene );
 }
 

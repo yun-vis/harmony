@@ -38,6 +38,7 @@ void Window::init( Boundary * __boundary, Boundary * __simplifiedBoundary,
     _smoothPtr = __smooth;
     _octilinearPtr = __octilinear;
 
+    _gv->setPathwayData( _pathway );
     _gv->init( _boundary, _simplifiedBoundary );
 }
 
@@ -174,7 +175,7 @@ void Window::selectMovebackOctilinear( void )
 }
 
 void Window::selectSmoothSmallCG( void )
-{    
+{
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
@@ -196,7 +197,7 @@ void Window::selectSmoothSmallCG( void )
         // check if all nodes are moved back
 #ifdef  DEBUG
         cerr << " num_vertices( _simplifiedBoundary->boundary() ) = " << num_vertices( _simplifiedBoundary->boundary() ) << endl
-             << " num_vertices( _boundary->boundary() ) = " << num_vertices( _boundary->boundary() ) << endl 
+             << " num_vertices( _boundary->boundary() ) = " << num_vertices( _boundary->boundary() ) << endl
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
         if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
@@ -543,6 +544,26 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_8:
         {
             _gv->isBoundaryFlag() = !_gv->isBoundaryFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_9:
+        {
+            _gv->isPathwayFlag() = !_gv->isPathwayFlag();
+            redrawAllScene();
+            break;
+        }
+        case Qt::Key_L:
+        {
+            // load setting
+            _pathway->init( "../xml/A/", "../xml/tmp/",
+                            "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
+            _pathway->generate();
+            _pathway->initLayout( _boundary->polygonComplex() );
+
+            // set widget and graphicsview
+            //_pathway->normalization();
+
             redrawAllScene();
             break;
         }

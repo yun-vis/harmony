@@ -14,7 +14,8 @@
 
 QRectF GraphicsPolygonItem::boundingRect( void ) const
 {
-    //return rect();
+    QRectF rect;
+    return rect;
 }
 
 void GraphicsPolygonItem::paint( QPainter *painter, const QStyleOptionGraphicsItem *option,

@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
+#set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
 
 # compiler setting
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -30,8 +30,8 @@ if (UNIX AND NOT APPLE)
   find_package(GLUT REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltinyxml -lCGAL -lgmp -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
-    
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lCGAL -lgmp -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
+
 elseif(APPLE)
 
   message(status "Setting CLANG flags")
@@ -41,7 +41,7 @@ elseif(APPLE)
   find_package(OpenGL REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ltinyxml -lboost-mt -lboost_thread-mt -lboost_system-mt -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
+  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lboost-mt -lboost_thread-mt -lboost_system-mt -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
 
 endif()
 
@@ -71,26 +71,34 @@ link_directories(
 
 set(HEADERS
         include/base/Common.h
+        include/base/CommonClass.h
         include/base/Config.h
         include/base/Coord2.h
         include/base/Polygon2.h
         include/base/Grid2.h
-        include/base/Boundary.h
-        include/base/BoundaryEdgeProperty.h
-        include/base/BoundaryGraph.h
-        include/base/BoundaryGraphProperty.h
-        include/base/BoundaryVertexProperty.h
-        include/base/SkeletonEdgeProperty.h
-        include/base/SkeletonGraph.h
-        include/base/SkeletonGraphProperty.h
-        include/base/SkeletonVertexProperty.h
-        include/base/UndirectedBaseEdgeProperty.h
-        include/base/UndirectedBaseGraph.h
-        include/base/UndirectedBaseGraphProperty.h
-        include/base/UndirectedBaseVertexProperty.h
-        include/base/UndirectedPropertyGraph.h
         include/base/Timer.h
         include/base/Color.h
+        include/base/Boundary.h
+        include/base/Pathway.h
+        include/base/PathwayData.h.h
+        include/graph/MetaboliteEdgeProperty.h
+        include/graph/MetaboliteGraph.h
+        include/graph/MetaboliteGraphProperty.h
+        include/graph/MetaboliteVertexProperty.h
+        include/graph/BoundaryEdgeProperty.h
+        include/graph/BoundaryGraph.h
+        include/graph/BoundaryGraphProperty.h
+        include/graph/BoundaryVertexProperty.h
+        include/graph/SkeletonEdgeProperty.h
+        include/graph/SkeletonGraph.h
+        include/graph/SkeletonGraphProperty.h
+        include/graph/SkeletonVertexProperty.h
+        include/graph/BaseEdgeProperty.h
+        include/graph/BaseGraphProperty.h
+        include/graph/BaseVertexProperty.h
+        include/graph/DirectedBaseGraph.h
+        include/graph/UndirectedBaseGraph.h
+        include/graph/UndirectedPropertyGraph.h
         include/optimization/Force.h
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
@@ -109,21 +117,28 @@ set(SOURCES
         src/base/Polygon2.cpp
         src/base/Grid2.cpp
         src/base/Line2.cpp
-        src/base/Boundary.cpp
-        src/base/BoundaryEdgeProperty.cpp
-        src/base/BoundaryGraph.cpp
-        src/base/BoundaryGraphProperty.cpp
-        src/base/BoundaryVertexProperty.cpp
-        src/base/SkeletonEdgeProperty.cpp
-        src/base/SkeletonGraph.cpp
-        src/base/SkeletonGraphProperty.cpp
-        src/base/SkeletonVertexProperty.cpp
-        src/base/UndirectedBaseEdgeProperty.cpp
-        src/base/UndirectedBaseGraph.cpp
-        src/base/UndirectedBaseGraphProperty.cpp
-        src/base/UndirectedBaseVertexProperty.cpp
         src/base/Timer.cpp
         src/base/Color.cpp
+        src/base/Boundary.cpp
+        src/base/Pathway.cpp
+        src/base/PathwayData.cpp
+        src/graph/MetaboliteEdgeProperty.cpp
+        src/graph/MetaboliteGraph.cpp
+        src/graph/MetaboliteGraphProperty.cpp
+        src/graph/MetaboliteVertexProperty.cpp
+        src/graph/BoundaryEdgeProperty.cpp
+        src/graph/BoundaryGraph.cpp
+        src/graph/BoundaryGraphProperty.cpp
+        src/graph/BoundaryVertexProperty.cpp
+        src/graph/SkeletonEdgeProperty.cpp
+        src/graph/SkeletonGraph.cpp
+        src/graph/SkeletonGraphProperty.cpp
+        src/graph/SkeletonVertexProperty.cpp
+        src/graph/DirectedBaseGraph.cpp
+        src/graph/UndirectedBaseGraph.cpp
+        src/graph/BaseEdgeProperty.cpp
+        src/graph/BaseGraphProperty.cpp
+        src/graph/BaseVertexProperty.cpp
         src/optimization/Force.cpp
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
@@ -153,6 +168,6 @@ set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/mo
 
 add_executable(qtborder ${SOURCES} ${MOC_SRCS} ${MOC_WINDOW} ${MOC_GRAPHICSVIEW})
 message("CMAKE_CXX_FLAGS" ${CMAKE_CXX_FLAGS})
-target_link_libraries (qtborder ${CMAKE_CXX_FLAGS})
+target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml)
 # qt stuff
 qt5_use_modules(qtborder Core Gui Svg Widgets OpenGL)
