@@ -141,10 +141,10 @@ void Pathway::initLayout( map< unsigned int, Polygon2 > &polygonComplex )
 			if( minY > _layoutSubGraph[i][vd].coordPtr->y() ) minY = _layoutSubGraph[i][vd].coordPtr->y();
         }
         // normalization
-        double scale = 0.5;
+        double scale = 0.1;
         double half_w = scale*(rb.x()-lt.x());
         double half_h = scale*(lt.y()-rb.y());
-        cerr << "c = " << center;
+        // cerr << "c = " << center;
 		BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], UndirectedBaseGraph ) {
 
 			//_layoutSubGraph[i][vd].coordPtr->x() = center.x();

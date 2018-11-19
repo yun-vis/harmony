@@ -41,20 +41,20 @@ using namespace std;
 //  Outputs
 //	none
 //
-void Force::_init( Boundary * __boundary, int __width, int __height )
+void Force::_init( ForceGraph * __graph, int __width, int __height )
 {
     // srand48( time( NULL ) );
     srand48( 3 );
 
-    _boundaryPtr = __boundary;
+    _graphPtr = __graph;
 
     _center_x = 0.0;
     _center_y = 0.0;
     _width = __width;
     _height = __height;
-    //_mode = TYPE_FORCE;
+    _mode = TYPE_FORCE;
     //_mode = TYPE_CENTROID;
-    _mode = TYPE_HYBRID;
+    //_mode = TYPE_HYBRID;
 
     string configFilePath = "../configs/force.conf";
 
@@ -112,7 +112,69 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
     cerr << "final_epsilon: " << _paramFinalEpsilon << endl;
 }
 
+//
+//  Force::setContour --	set polygon outline
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Force::setContour( Polygon2 &p )
+{
+    _contour = p;
 
+#ifdef DEBUG
+    vector< Coord2 > &coordVec = _contour.elements();
+    for( unsigned int i = 0; i < coordVec.size(); i++ ){
+        cerr << coordVec[i];
+    }
+    cerr << endl;
+#endif // DEBUG
+}
+
+//
+//  Force::_init --	initialize the network (called once when necessary)
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+bool Force::_inContour( Coord2 &coord )
+{
+    bool isIn = false;
+
+    vector< Coord2 > &coordVec = _contour.elements();
+
+    K::Point_2 pt( coord.x(), coord.y() );
+    K::Point_2 *points = new K::Point_2[ coordVec.size() ];
+    for( unsigned int n = 0; n < coordVec.size(); n++ ) {
+
+        // copy to points
+        points[n] = K::Point_2( coordVec[n].x(), coordVec[n].y() );
+    }
+
+    CGAL::Bounded_side bside = CGAL::bounded_side_2( points, points+coordVec.size(), pt );
+
+    if (bside == CGAL::ON_BOUNDED_SIDE) {
+
+        isIn = true;
+        // cout << " is inside the polygon.\n";
+        // point inside
+    } else if (bside == CGAL::ON_BOUNDARY) {
+        //cout << " is on the polygon boundary.\n";
+        // point on the border
+    } else if (bside == CGAL::ON_UNBOUNDED_SIDE) {
+        //cout << " is outside the polygon.\n";
+        // point outside
+    }
+    delete [] points;
+
+    return isIn;
+}
 
 //
 //  Force::force --	compute the displacements exerted by the force-directed model
@@ -125,21 +187,21 @@ void Force::_init( Boundary * __boundary, int __width, int __height )
 //
 void Force::_force( void )
 {
-    //SkeletonGraph & s = _boundaryPtr->skeleton();
-    SkeletonGraph & s = _boundaryPtr->composite();
+    ForceGraph & s = *_graphPtr;
+    //ForceGraph & s = _graphPtr->composite();
 
     double side = 0.5 * _width * _height ;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( s ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 
     // cerr << "nV = " << num_vertices(s) << " nE = " << num_edges(s) << endl;
-    BGL_FORALL_VERTICES( vdi, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vdi, s, ForceGraph ) {
 
         // initialization
-        s[ vdi ].force.x() = 0.0;
-        s[ vdi ].force.y() = 0.0;
+        s[ vdi ].forcePtr->x() = 0.0;
+        s[ vdi ].forcePtr->y() = 0.0;
 
-        BGL_FORALL_VERTICES( vdj, s, SkeletonGraph ) {
+        BGL_FORALL_VERTICES( vdj, s, ForceGraph ) {
 
             if ( vdi == vdj ) {
                 ; // do nothing
@@ -153,22 +215,22 @@ void Force::_force( void )
                 dist = diff.norm();
                 unit = diff.unit();
                 
-                SkeletonGraph::edge_descriptor	ed;
+                ForceGraph::edge_descriptor	ed;
                 bool isExisted;
                 tie( ed, isExisted ) = edge( vdi, vdj, s );
 
                 if ( isExisted ) {
                     // Drawing force by the spring
-                    s[ vdi ].force += _paramKa * ( dist - L ) * unit;
+                    *s[ vdi ].forcePtr += _paramKa * ( dist - L ) * unit;
                 }
                 // Replusive force by Couloum's power
-                s[ vdi ].force -= ( _paramKr/SQUARE( dist ) ) * unit;
+                *s[ vdi ].forcePtr -= ( _paramKr/SQUARE( dist ) ) * unit;
             }
         }
     }
 
 #ifdef DEBUG
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
         cerr << "id[" << s[vd].id << "] = " << s[ vd ].force;
     }
 #endif // DEBUG
@@ -185,14 +247,15 @@ void Force::_force( void )
 //
 void Force::_centroid( void )
 {
+/*
     // const char theName[] = "Net::centroid : ";
-    //SkeletonGraph & s = _boundaryPtr->skeleton();
-    SkeletonGraph & s = _boundaryPtr->composite();
+    //ForceGraph & s = _graphPtr->composite();
+    ForceGraph & s = *_graphPtr;
 
-    map< unsigned int, Polygon2 >  &p = _boundaryPtr->polygons();
+    map< unsigned int, Polygon2 >  &p = _graphPtr->polygons();
 
     // initialization
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
         s[ vd ].place.zero();
     }
 
@@ -205,7 +268,7 @@ void Force::_centroid( void )
     }
 #endif // DEBUG
 
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
         map< unsigned int, Polygon2 >::iterator itP = p.begin();
         advance( itP, s[vd].id );
@@ -222,7 +285,7 @@ void Force::_centroid( void )
             s[ vd ].place.zero();
         }
     }
-
+*/
 }
 
 //
@@ -238,8 +301,7 @@ double Force::_gap( void )
 {
     const char theName[] = "Force::_gap : ";
 
-    //SkeletonGraph & s = _boundaryPtr->skeleton();
-    SkeletonGraph & s = _boundaryPtr->composite();
+    ForceGraph & s = *_graphPtr;
     vector< Coord2 >	displace;
     double		err		= 0.0;
 
@@ -251,18 +313,18 @@ double Force::_gap( void )
     displace.clear();
 
     // apply forces
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
         Coord2 val;
         switch ( _mode ) {
             case TYPE_FORCE:        // force-directed
-                val = s[vd].force;
+                val = *s[vd].forcePtr;
                 break;
             case TYPE_CENTROID:        // centroidal
-                val = cell * s[vd].place;
+                val = cell * *s[vd].placePtr;
                 break;
             case TYPE_HYBRID:
-                val = _paramRatioForce * s[vd].force + cell * _paramRatioVoronoi * s[vd].place;
+                val = _paramRatioForce * *s[vd].forcePtr + cell * _paramRatioVoronoi * *s[vd].placePtr;
                 break;
         }
         assert( s[vd].id == displace.size() );
@@ -271,28 +333,30 @@ double Force::_gap( void )
 
     // Scale the displacement of a node at each scale
     const double limit = _paramDisplacementLimit;
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
         unsigned int idV = s[ vd ].id;
-        s[ vd ].shift = scale * displace[ idV ];
-        double norm = s[ vd ].shift.norm();
+        *s[ vd ].shiftPtr = scale * displace[ idV ];
+        double norm = s[ vd ].shiftPtr->norm();
         if ( norm > limit ) {
-            s[ vd ].shift *= ( limit/norm );
+            *s[ vd ].shiftPtr *= ( limit/norm );
         }
     }
 
     // Move the entire layout while keeping its barycenter at the origin of the
     // screen coordinates
+/*
     Coord2 average;
     average.zero();
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
-        Coord2 newcoord = *s[ vd ].coordPtr + s[ vd ].shift;
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
+        Coord2 newcoord = *s[ vd ].coordPtr + *s[ vd ].shiftPtr;
         average += newcoord;
     }
     average /= ( double )num_vertices( s );
 
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
-        s[ vd ].shift -= average;
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
+        *s[ vd ].shiftPtr -= average;
     }
+*/
 
     // Force the vertices stay within the screen
     double margin = 10.0;
@@ -301,17 +365,17 @@ double Force::_gap( void )
     double maxX = _center_x + 0.5 * _width  - margin;
     double maxY = _center_y + 0.5 * _height - margin;
 
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
-        Coord2 newcoord = *s[ vd ].coordPtr + s[ vd ].shift;
+        Coord2 newcoord = *s[ vd ].coordPtr + *s[ vd ].shiftPtr;
         if ( newcoord.x() < minX )
-            s[ vd ].shift.x() += minX - newcoord.x();
+            s[ vd ].shiftPtr->x() += minX - newcoord.x();
         if ( newcoord.x() > maxX )
-            s[ vd ].shift.x() += maxX - newcoord.x();
+            s[ vd ].shiftPtr->x() += maxX - newcoord.x();
         if ( newcoord.y() < minY )
-            s[ vd ].shift.y() += minY - newcoord.y();
+            s[ vd ].shiftPtr->y() += minY - newcoord.y();
         if ( newcoord.y() > maxY )
-            s[ vd ].shift.y() += maxY - newcoord.y();
+            s[ vd ].shiftPtr->y() += maxY - newcoord.y();
     }
 
 #ifdef DEBUG
@@ -321,96 +385,24 @@ double Force::_gap( void )
     for( unsigned int i = 0; i < displace.size(); i++ ){
         cerr << i << ": " << displace[i];
     }
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
         cerr << "force[" << s[vd].id << "] = " << s[ vd ].force;
         cerr << "shift[" << s[vd].id << "] = " << s[ vd ].shift;
     }
 #endif // DEBUG
 
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
-        *s[ vd ].coordPtr += s[ vd ].shift; //vertexCoord[ vd ] renew;
-        err += s[ vd ].shift.squaredNorm();
+    // update vertex coordinates
+    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
+
+        Coord2 coordNew = *s[ vd ].coordPtr + *s[ vd ].shiftPtr;
+        if( _inContour( coordNew ) ){
+            *s[ vd ].coordPtr += *s[ vd ].shiftPtr; //vertexCoord[ vd ] renew;
+            // err += s[ vd ].shiftPtr->squaredNorm();
+        }
+        err += s[ vd ].shiftPtr->squaredNorm();
     }
 
     return err/( double )num_vertices( s );
-}
-
-
-
-void Force::_onestep( void )
-{
-/*
-    Graph &		g	= ( Graph & )*this;
-    
-    // const double	scale		= TRANSFORMATION_STEP;
-    const double	scale		= TRANSFORMATION_STEP*min(1.0,100.0/( double )num_vertices( *this ));
-    const double	force		= CELL_RATIO;
-    unsigned int	nNeighbors = 0;
-    multimap< double, VertexDescriptor > neighbor;
-
-    // double Vnum =	num_vertices(*this);
-    //double rad = 2.0*sqrt(2.0/Vnum);
-    //double rad = 2.0*sqrt(2.0/Vnum)*window_side();
-    // double rad = 2.0*sqrt(4.0/Vnum)*window_side();
-    // cerr << "##############################" << "Force::_onestep" << endl;
-
-    postRatio.clear();
-    BGL_FORALL_VERTICES( vdi, g, Graph ) {
-	double curRatio = 1.0;
-	if ( vertexSwitch[ vdi ] ) {
-	    nNeighbors = 0;
-	    neighbor.clear();
-	    BGL_FORALL_VERTICES( vdj, g, Graph ) {
-		if ( vertexSwitch[ vdj ] && ( vdi != vdj ) ) {
-#ifdef CHEBYSHEV_DISTANCE
-		    // *** Chebychev distance
-		    double aspect = vertexAspect[ vdi ];
-		    Coord2 diff = vertexCoord[ vdj ] - vertexCoord[ vdi ];
-		    double d = max( abs( diff.x() ), aspect * abs( diff.y() ) );
-#else	// CHEBYSHEV_DISTANCE
-		    // *** Euclidean distance
-		    double d = ( vertexCoord[ vdi ] - vertexCoord[ vdj ] ).norm();
-#endif	// CHEBYSHEV_DISTANCE
-		    neighbor.insert( pair< double, VertexDescriptor >( d, vdj ) );
-		    if ( nNeighbors < K_NEIGHBORS ) nNeighbors++;
-		    else {
-			multimap< double, VertexDescriptor >::iterator last = neighbor.end();
-			last--;
-			neighbor.erase( last );
-		    }
-		}
-	    }
-	    curRatio = 0.0;
-	    // unsigned int counter = 0;
-	    for ( multimap< double, VertexDescriptor >::iterator iter = neighbor.begin();
-		  iter != neighbor.end(); ++iter ) {
-		curRatio += vertexRatio[ iter->second ];
-		// counter++;
-	    }
-	    // cerr << " nNeighbors = " << nNeighbors << " counter = " << counter << endl;
-	    // assert( nNeighbors == counter );
-#ifdef DEBUG_SMOOTH
-	    cerr << " nAdj = " << nAdj;
-#endif	// DEBUG_SMOOTH
-	    if ( nNeighbors > 0 ) curRatio /= ( double )nNeighbors;
-	    else {
-#ifdef RESPONSIVE_CONTROL
-		curRatio = 1.0; 
-#else	// RESPONSIVE_CONTROL
-		curRatio = vertexRatio[ vdi ];
-#endif	// RESPONSIVE_CONTROL
-	    }
-	}
-	postRatio.push_back( curRatio );
-	assert( vertexID[ vdi ] == postRatio.size() - 1 );
-    }
-
-    BGL_FORALL_VERTICES( vd, g, Graph ) {
-	if ( vertexSwitch[ vd ] ) {
-	    vertexRatio[ vd ] = min( MAX_RATIO, max( MIN_RATIO, postRatio[ vertexID[ vd ] ] ) );
-	}
-    }
-*/
 }
 
 //------------------------------------------------------------------------------

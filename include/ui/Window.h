@@ -45,7 +45,9 @@ private:
     Boundary        *_simplifiedBoundary;
 
     // optimization
-    Force           *_forcePtr;
+    Force           *_forceBoundaryPtr;
+    vector< Force > *_forceCellVecPtr;
+    vector< ForceGraph * >      _forceGraph;
     Smooth          *_smoothPtr;
     Octilinear      *_octilinearPtr;
 
@@ -114,7 +116,8 @@ public:
     explicit Window( QWidget *parent = 0 );
     ~Window();
 
-    void init( Boundary * __metro, Boundary * __simmetro, Force * __force,
+    void init( Boundary * __boundary, Boundary * __simBoundary,
+               Force * __forceBoundary, vector< Force > * __forceCellVec,
                Smooth * __smoothPtr, Octilinear * __octilinearPtr );
 
 protected:

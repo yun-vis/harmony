@@ -14,8 +14,27 @@
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
-#include "base/Boundary.h"
+
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Boolean_set_operations_2.h>
+#include <CGAL/bounding_box.h>
+#include <CGAL/Polygon_2.h>
+#include <CGAL/Polygon_2_algorithms.h>
+#include <CGAL/centroid.h>
+#include <CGAL/double.h>
+
+#include <boost/lexical_cast.hpp>
+
+#include "graph/ForceGraph.h"
 #include "base/Config.h"
+#include "base/Polygon2.h"
+
+//------------------------------------------------------------------------------
+//	Defining data types
+//------------------------------------------------------------------------------
+typedef CGAL::Exact_predicates_exact_constructions_kernel K;
+typedef CGAL::Polygon_2< K >::Vertex_circulator                      Vertex_circulator;
+
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -50,7 +69,9 @@ class Force {
 
   private:
 
-    Boundary        *_boundaryPtr;
+    Coord2          _center;
+    Polygon2        _contour;
+    ForceGraph     *_graphPtr;
 
     // parameter configuration
     double          _paramKa;
@@ -72,16 +93,17 @@ class Force {
     // center coordinates
     double		    _center_x, _center_y;
 
-    void		_init	( Boundary * __boundary, int __width, int __height );
+    void		_init	( ForceGraph * __graph, int __width, int __height );
     void		_reset	( void );
     void		_random	( void );
-    void        _onestep( void );
 
     void		_force		( void );
     void		_centroid	( void );
     double		_gap		( void );
 
-  public:
+    bool        _inContour( Coord2 &coord );
+
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
@@ -106,6 +128,12 @@ class Force {
     const int &			    height( void )	const	{ return _height; }
     int &			        height( void )		    { return _height; }
 
+    const Coord2 &		    center( void )	const	{ return _center; }
+    Coord2 &			    center( void )		    { return _center; }
+
+    const Polygon2 &		contour( void )	const	{ return _contour; }
+    Polygon2 &			    contour( void )		    { return _contour; }
+
     const FORCETYPE &		mode( void )	const	{ return _mode; }
     FORCETYPE &			    mode( void )		    { return _mode; }
 
@@ -117,9 +145,10 @@ class Force {
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
-    void init( Boundary * __boundary, int __width, int __height ) { _init( __boundary, __width, __height ); }
+    void init( ForceGraph * __graph, int __width, int __height ) { _init( __graph, __width, __height ); }
     void reset( void )				{ _reset(); }
     void random( void )				{ _random(); }
+    void setContour( Polygon2 &p );
 
 //------------------------------------------------------------------------------
 //	Misc. functions

@@ -81,6 +81,10 @@ set(HEADERS
         include/base/Boundary.h
         include/base/Pathway.h
         include/base/PathwayData.h.h
+        include/graph/ForceEdgeProperty.h
+        include/graph/ForceGraph.h
+        include/graph/ForceGraphProperty.h
+        include/graph/ForceVertexProperty.h
         include/graph/MetaboliteEdgeProperty.h
         include/graph/MetaboliteGraph.h
         include/graph/MetaboliteGraphProperty.h
@@ -122,6 +126,10 @@ set(SOURCES
         src/base/Boundary.cpp
         src/base/Pathway.cpp
         src/base/PathwayData.cpp
+        src/graph/ForceEdgeProperty.cpp
+        src/graph/ForceGraph.cpp
+        src/graph/ForceGraphProperty.cpp
+        src/graph/ForceVertexProperty.cpp
         src/graph/MetaboliteEdgeProperty.cpp
         src/graph/MetaboliteGraph.cpp
         src/graph/MetaboliteGraphProperty.cpp

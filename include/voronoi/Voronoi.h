@@ -35,7 +35,7 @@ using namespace std;
 #include <CGAL/double.h>
 
 #include <boost/lexical_cast.hpp>
-#include <base/Polygon2.h>
+#include "base/Polygon2.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
