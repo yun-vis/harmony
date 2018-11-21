@@ -41,7 +41,7 @@ class SkeletonGraphProperty : public BaseGraphProperty{
   public:
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
     SkeletonGraphProperty();				// constructor (default)
     SkeletonGraphProperty( const SkeletonGraphProperty & v ) {

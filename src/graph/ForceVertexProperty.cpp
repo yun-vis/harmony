@@ -43,10 +43,7 @@ using namespace std;
 //
 void ForceVertexProperty::_init( void )
 {
-    id          = 0;
-    coordPtr    = NULL;
-    widthPtr    = NULL;
-    heightPtr   = NULL;
+    BaseVertexProperty::init();
 }
 
 //------------------------------------------------------------------------------

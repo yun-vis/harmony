@@ -19,8 +19,6 @@ int main( int argc, char **argv )
     Boundary simplifiedBoundary, boundary;
     Smooth smooth;
     Octilinear octilinear;
-    Force forceBoundary;
-    vector< Force > forceCellVec;
 
 //----------------------------------------------------------
 // view
@@ -30,7 +28,7 @@ int main( int argc, char **argv )
     window.setGeometry( 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT );
     window.setWindowTitle( "qtBorder" );
     window.setPathwayData( &pathway );
-    window.init( &boundary, &simplifiedBoundary, &forceBoundary, &forceCellVec, &smooth, &octilinear );
+    window.init( &boundary, &simplifiedBoundary, &smooth, &octilinear );
     window.show();
 
     cerr << "Use: i -> c -> m -> s ->o" << endl;

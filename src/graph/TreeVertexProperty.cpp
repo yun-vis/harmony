@@ -1,6 +1,6 @@
 //******************************************************************************
-// BoundaryGraphProperty.cc
-//	: program file for 2D coordinatse
+// BaseVertexProperty.cc
+//	: program file for 2D coordinates
 //
 //------------------------------------------------------------------------------
 //
@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#include "base/BoundaryGraphProperty.h"
+#include "graph/TreeVertexProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ using namespace std;
 //	Protected Functions
 //------------------------------------------------------------------------------
 //
-//  BoundaryGraphProperty::_init -- initialize the graph.
+//  TreeVertexProperty::_init -- initialize the graph.
 //
 //  Inputs
 //  none
@@ -41,11 +41,14 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BoundaryGraphProperty::_init( void )
+void TreeVertexProperty::_init( void )
 {
-    centerPtr   = NULL;
-    width       = DEFAULT_WIDTH;
-    height      = DEFAULT_HEIGHT;
+    BaseVertexProperty::_init();
+
+    leafID              = -1;
+    meanCoord.x()       = 0.0;
+    meanCoord.y()       = 0.0;
+    leafVec.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -57,7 +60,7 @@ void BoundaryGraphProperty::_init( void )
 //------------------------------------------------------------------------------
 
 //
-//  BoundaryGraphProperty::BoundaryGraphProperty -- default constructor
+//  TreeVertexProperty::TreeVertexProperty -- default constructor
 //
 //  Inputs
 //  none
@@ -65,7 +68,7 @@ void BoundaryGraphProperty::_init( void )
 //  Outputs
 //  none
 //
-BoundaryGraphProperty::BoundaryGraphProperty()
+TreeVertexProperty::TreeVertexProperty()
 {
     _init();
 }
@@ -86,12 +89,12 @@ BoundaryGraphProperty::BoundaryGraphProperty()
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: BoundaryGraphProperty
+//	obj	: TreeVertexProperty
 //
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BoundaryGraphProperty & obj )
+ostream & operator << ( ostream & stream, const TreeVertexProperty & obj )
 {
     // set the output formatting
     stream << setiosflags( ios::showpoint );
@@ -107,12 +110,12 @@ ostream & operator << ( ostream & stream, const BoundaryGraphProperty & obj )
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: BoundaryGraphProperty
+//	obj	: TreeVertexProperty
 //
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BoundaryGraphProperty & obj )
+istream & operator >> ( istream & stream, TreeVertexProperty & obj )
 {
     return stream;
 }

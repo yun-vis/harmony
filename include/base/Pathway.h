@@ -37,7 +37,7 @@ using namespace std;
 #include "graph/MetaboliteGraph.h"
 #include "graph/UndirectedPropertyGraph.h"
 #include "graph/DirectedBaseGraph.h"
-#include "graph/UndirectedBaseGraph.h"
+#include "graph/ForceGraph.h"
 
 #define DUPL_THRESHOLD	(8)  // <-- Ecoli_Palsson2011_iJO1366
 //#define DUPL_THRESHOLD	(1000) // > 1
@@ -51,10 +51,10 @@ private:
 	map< string, string >		_nV;
 
 	MetaboliteGraph				_graph;
-    UndirectedBaseGraph			_layoutGraph;
+    ForceGraph					_layoutGraph;
 
-    vector< MetaboliteGraph	>		_subGraph;
-    vector< UndirectedBaseGraph	>	_layoutSubGraph;
+    vector< MetaboliteGraph	>	_subGraph;
+    vector< ForceGraph	>		_layoutSubGraph;
 
     map< string, unsigned int > _metaFreq;		// map for recording the frequency of all metabolites
 	map< string, string > 		_metaType;		// map for recording the types of all metabolites
@@ -95,13 +95,13 @@ public:
 //------------------------------------------------------------------------------
     const MetaboliteGraph &           g( void ) const 	 { return _graph; }
     MetaboliteGraph &                 g( void )          { return _graph; }
-    const UndirectedBaseGraph &       lg( void ) const 	 { return _layoutGraph; }
-    UndirectedBaseGraph &             lg( void )         { return _layoutGraph; }
+    const ForceGraph &       lg( void ) const 	 { return _layoutGraph; }
+    ForceGraph &             lg( void )         { return _layoutGraph; }
 
 	const vector< MetaboliteGraph > & subG( void ) const { return _subGraph; }
     vector< MetaboliteGraph > &       subG( void )       { return _subGraph; }
-    const vector< UndirectedBaseGraph > & 		lsubG( void ) const { return _layoutSubGraph; }
-    vector< UndirectedBaseGraph > &           	lsubG( void )       { return _layoutSubGraph; }
+    const vector< ForceGraph > & 		lsubG( void ) const { return _layoutSubGraph; }
+    vector< ForceGraph > &           	lsubG( void )       { return _layoutSubGraph; }
 
 	const map< string, unsigned int > &           metafreq( void ) const { return _metaFreq; }
     map< string, unsigned int > &                 metafreq( void )       { return _metaFreq; }

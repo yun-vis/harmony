@@ -1,5 +1,5 @@
-#ifndef _BoundaryGraph_H
-#define _BoundaryGraph_H
+#ifndef _TreeGraph_H
+#define _TreeGraph_H
 
 
 #include <string>
@@ -18,7 +18,7 @@ using namespace std;
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/iteration_macros.hpp>
 
-// force-directed layout
+// Tree-directed layout
 #include <boost/graph/fruchterman_reingold.hpp>
 //#include <boost/graph/kamada_kawai_spring_layout.hpp>
 #include <boost/graph/random_layout.hpp>
@@ -29,20 +29,20 @@ using namespace std;
 using namespace boost;
 
 #include "base/Coord2.h"
-#include "base/BoundaryGraphProperty.h"
-#include "base/BoundaryVertexProperty.h"
-#include "base/BoundaryEdgeProperty.h"
+#include "graph/TreeGraphProperty.h"
+#include "graph/TreeVertexProperty.h"
+#include "graph/TreeEdgeProperty.h"
 
 
 typedef adjacency_list< listS, listS, undirectedS,
-		BoundaryVertexProperty, BoundaryEdgeProperty,
-		BoundaryGraphProperty >  BoundaryGraph;
+		TreeVertexProperty, TreeEdgeProperty,
+		TreeGraphProperty >  TreeGraph;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( BoundaryGraph & g );
-void clearGraph( BoundaryGraph & g );
+void printGraph( TreeGraph & g );
+void clearGraph( TreeGraph & g );
 
-#endif  // _BoundaryGraph_H
+#endif  // _TreeGraph_H

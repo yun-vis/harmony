@@ -59,12 +59,6 @@ class SkeletonEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                initID;
-    vector< unsigned int >      lineID;
-
-    double                      geoAngle;
-    double                      smoothAngle;
-    double                      targetAngle;
 
     void		                init( void )		      { _init(); }
 

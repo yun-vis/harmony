@@ -1,6 +1,6 @@
 //******************************************************************************
-// SkeletonGraphProperty.h
-//	: header file for 2D coordinaes
+// TreeVertexProperty.h
+//	: header file for 2D coordinates
 //
 //------------------------------------------------------------------------------
 //
@@ -8,31 +8,32 @@
 //
 //******************************************************************************
 
-#ifndef	_SkeletonGraphProperty_H
-#define _SkeletonGraphProperty_H
+#ifndef	_TreeVertexProperty_H
+#define _TreeVertexProperty_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
-#include "Coord2.h"
-#include "Common.h"
-#include "graph/BaseGraphProperty.h"
-
+#include "base/Coord2.h"
+#include "base/Common.h"
+#include "graph/ForceGraph.h"
+#include "graph/BaseVertexProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
 //------------------------------------------------------------------------------
-
+#define VERTEX_CAPACITY (1)
 
 //------------------------------------------------------------------------------
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class SkeletonGraphProperty : public BaseGraphProperty{
+class TreeVertexProperty: public BaseVertexProperty {
 
   protected:
 
@@ -41,12 +42,12 @@ class SkeletonGraphProperty : public BaseGraphProperty{
   public:
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
-    SkeletonGraphProperty();				// constructor (default)
-    SkeletonGraphProperty( const SkeletonGraphProperty & v ) {
+    TreeVertexProperty();				// constructor (default)
+    TreeVertexProperty( const TreeVertexProperty & v ) {
     }					// copy constructor
-    virtual ~SkeletonGraphProperty() {}		// destructor
+    virtual ~TreeVertexProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -55,10 +56,19 @@ class SkeletonGraphProperty : public BaseGraphProperty{
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
+    int                         leafID;
+    unsigned int                level;      // hierarchical level
+
+    Coord2                      meanCoord;
+
+    vector< ForceGraph::vertex_descriptor >  leafVec;
+    vector< unsigned int >      child;      // vid of children
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
+
+    void		                init( void )		{ _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -72,13 +82,14 @@ class SkeletonGraphProperty : public BaseGraphProperty{
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const SkeletonGraphProperty & v );
+
+    friend ostream &	operator << ( ostream & s, const TreeVertexProperty & v );
 				// Output
-    friend istream &	operator >> ( istream & s, SkeletonGraphProperty & v );
+    friend istream &	operator >> ( istream & s, TreeVertexProperty & v );
 				// Input
-    virtual const char * className( void ) const { return "SkeletonGraphProperty"; }
+    virtual const char * className( void ) const { return "TreeVertexProperty"; }
 				// class name
 
 };
 
-#endif // _SkeletonGraphProperty_H
+#endif // _TreeVertexProperty_H

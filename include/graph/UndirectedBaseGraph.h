@@ -35,7 +35,8 @@ using namespace boost;
 
 
 typedef adjacency_list< listS, listS, undirectedS,
-		BaseVertexProperty, BaseEdgeProperty, BaseGraphProperty >  UndirectedBaseGraph;
+		BaseVertexProperty, BaseEdgeProperty,
+		BaseGraphProperty >  UndirectedBaseGraph;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions

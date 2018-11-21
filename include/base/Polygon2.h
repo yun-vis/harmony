@@ -41,9 +41,9 @@ class Polygon2 {
     double              _area;
     Coord2              _center;
     vector< Coord2 >    _elements;      // coordinates of end points
-    vector< bool >      _isBorders;     // binary for indicating the border of a set of polygons
 
     virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
+    void                _clear( void );
 
   public:
 
@@ -66,6 +66,7 @@ class Polygon2 {
 //	Reference to elements
 //------------------------------------------------------------------------------
     void		init( unsigned int __id, vector< Coord2 > __elements )		{ _init( __id, __elements ); }
+    void        clear( void ) { _clear(); }
 
     // id
     unsigned int &	            id( void )	            { return _id; }
@@ -86,14 +87,11 @@ class Polygon2 {
     vector< Coord2 > &	        elements( void )	    { return _elements; }
     const vector< Coord2 > &	elements( void ) const	{ return _elements; }
 
-    // pointer to a binary array for indicating the border of a set of polygons
-    vector< bool > &	        isBorders( void )	    { return _isBorders; }
-    const vector< bool > &	    isBorders( void ) const	{ return _isBorders; }
-
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
+    void boundingBox( Coord2 &center, double &width, double &height );
 
 //------------------------------------------------------------------------------
 //	Intersection check

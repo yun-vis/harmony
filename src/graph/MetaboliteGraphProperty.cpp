@@ -51,9 +51,7 @@ using namespace std;
 //
 void MetaboliteGraphProperty::_init( void )
 {
-    centerPtr   = NULL;
-    width       = DEFAULT_WIDTH;
-    height      = DEFAULT_HEIGHT;
+    BaseGraphProperty::_init();
 }
 
 //

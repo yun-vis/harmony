@@ -4,7 +4,7 @@
 //
 //==============================================================================
 
-#include "base/BoundaryGraph.h"
+#include "graph/TreeGraph.h"
 
 
 //------------------------------------------------------------------------------
@@ -22,10 +22,10 @@
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-//	Customized BoundaryGraph Functions
+//	Customized TreeGraph Functions
 //------------------------------------------------------------------------------
 //
-//  BoundaryGraph::printGraph -- print the graph.
+//  TreeGraph::printGraph -- print the graph.
 //
 //  Inputs
 //  g   : object of Grpah
@@ -33,37 +33,38 @@
 //  Outputs
 //  none
 //
-void printGraph( BoundaryGraph & graph )
+void printGraph( TreeGraph & graph )
 {
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;
 
 //#ifdef  DEBUG
     // print vertex information
-    BGL_FORALL_VERTICES( vd, graph, BoundaryGraph ) {
+	int count = 0;
+    BGL_FORALL_VERTICES( vd, graph, TreeGraph ) {
 
-        BoundaryGraph::degree_size_type      degrees         = out_degree( vd, graph );
-        cerr << "id = " << graph[ vd ].id << endl;
-        cerr << "coord = " << *graph[ vd ].coordPtr;
+        //TreeGraph::degree_size_type      degrees         = out_degree( vd, graph );
+		cerr << "vid = " << graph[vd].id << " level = " << graph[vd].level
+			 << " leafSize = " << graph[vd].leafVec.size() << endl;
+		if( graph[vd].leafVec.size() == 1 ) count++;
     }
+    cerr << "count = " << count << " ?= nVertices = " << num_vertices( graph ) << endl;
 //#endif  // DEBUG
 
-//#ifdef  DEBUG
+#ifdef  DEBUG
     // print edge information
-    BGL_FORALL_EDGES( ed, graph, BoundaryGraph ) {
+    BGL_FORALL_EDGES( ed, graph, TreeGraph ) {
 
-        BoundaryGraph::vertex_descriptor vdS = source( ed, graph );
-        BoundaryGraph::vertex_descriptor vdT = target( ed, graph );
+        TreeGraph::vertex_descriptor vdS = source( ed, graph );
+        TreeGraph::vertex_descriptor vdT = target( ed, graph );
 
         cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) " << endl;
-		cerr << "w = " << graph[ ed ].weight << endl;
-
-	}
-//#endif  // DEBUG
+    }
+#endif  // DEBUG
 }
 
 //
-//  BoundaryGraph::clearGraph -- clear the graph.
+//  TreeGraph::clearGraph -- clear the graph.
 //
 //  Inputs
 //  g   : object of Grpah
@@ -71,10 +72,10 @@ void printGraph( BoundaryGraph & graph )
 //  Outputs
 //  none
 //
-void clearGraph( BoundaryGraph & graph )
+void clearGraph( TreeGraph & graph )
 {
     // clear edges
-	BoundaryGraph::edge_iterator ei, ei_end, e_next;
+	TreeGraph::edge_iterator ei, ei_end, e_next;
 	tie( ei, ei_end ) = edges( graph );
 	for ( e_next = ei; ei != ei_end; ei = e_next ) {
 		e_next++;
@@ -89,9 +90,9 @@ void clearGraph( BoundaryGraph & graph )
 #endif  // SKIP
 
     // clear vertices
-    pair< BoundaryGraph::vertex_iterator, BoundaryGraph::vertex_iterator > vp;
+    pair< TreeGraph::vertex_iterator, TreeGraph::vertex_iterator > vp;
     for ( vp = vertices( graph ); vp.first != vp.second;  ) {
-		BoundaryGraph::vertex_descriptor vd = (*vp.first);
+		TreeGraph::vertex_descriptor vd = (*vp.first);
 		++vp.first;
 		clear_vertex( vd, graph );
 		remove_vertex( vd, graph );

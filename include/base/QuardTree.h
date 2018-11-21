@@ -1,28 +1,26 @@
 //******************************************************************************
-// BoundaryEdgeProperty.h
-//	: header file for 2D coordinaes
+// QuardTree.h
+//	: header file for QuardTree
 //
 //------------------------------------------------------------------------------
 //
-//	Ver 1.00		Date: Tue Dec 27 23:16:12 2011
+//	Ver 1.00		Date: Tue Nov 19 02:36:37 2018
 //
 //******************************************************************************
 
-#ifndef	_BoundaryEdgeProperty_H
-#define _BoundaryEdgeProperty_H
+#ifndef	_QuardTree_H
+#define _QuardTree_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
+
+#include <cmath>
 #include <iostream>
-#include <vector>
 
 using namespace std;
 
-#include "base/Coord2.h"
-#include "base/Line2.h"
-#include "graph/BaseEdgeProperty.h"
-
+#include "graph/TreeGraph.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -33,24 +31,28 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryEdgeProperty: public BaseEdgeProperty {
+class QuardTree {
 
   protected:
 
-      void		    _init( void );
+    ForceGraph                     *_forceGraphPtr;
+    TreeGraph                       _tree;
+    TreeGraph::vertex_descriptor    _root;
 
+    void	    _init( ForceGraph * __forceGraphPtr, double __width, double __height );
+    void        _clear( void );
+
+    // display
+    int         _width;
+    int         _height;
 
   public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BoundaryEdgeProperty();				// constructor (default)
-    BoundaryEdgeProperty( const BoundaryEdgeProperty & e ) {
-	   id	    = e.id;
-	   weight	= e.weight;
-    }					// copy constructor
-    virtual ~BoundaryEdgeProperty() {}		// destructor
+    QuardTree();				        // constructor (default)
+    virtual ~QuardTree();		        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -59,38 +61,45 @@ class BoundaryEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                initID;
-    vector< unsigned int >      lineID;
+    const TreeGraph &       tree( void )       const   { return _tree; }
+    TreeGraph &             tree( void )               { return _tree; }
 
-    double                      geoAngle;
-    double                      smoothAngle;
-    double                      targetAngle;
+    const TreeGraph::vertex_descriptor &       root( void )       const   { return _root; }
+    TreeGraph::vertex_descriptor &             root( void )               { return _root; }
 
-    void		                init( void )		      { _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-//	Intersection check
-//------------------------------------------------------------------------------
+    void subdivide( TreeGraph::vertex_descriptor &vdC,
+                    vector< TreeGraph::vertex_descriptor > &vdFour );
+    bool containVertex( Coord2 &coord,
+                        TreeGraph::vertex_descriptor &vdC );
+    bool insertVertex( ForceGraph::vertex_descriptor &vdF,
+                       TreeGraph::vertex_descriptor &vdC );
+    void init( ForceGraph * __forceGraphPtr, double __width, double __height ){
+        _init( __forceGraphPtr, __width, __height );
+    }
+    void clear( void ){
+        _clear();
+    }
+    void reset( ForceGraph * __forceGraphPtr, double __width, double __height ){
+        _clear();
+        _init( __forceGraphPtr, __width, __height );
+    }
 
 //------------------------------------------------------------------------------
 //	Friend functions
 //------------------------------------------------------------------------------
 
-
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const BoundaryEdgeProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, BoundaryEdgeProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "BoundaryEdgeProperty"; }
-				// class name
+    friend ostream &	operator << ( ostream & s, const QuardTree & v );
+    friend istream &	operator >> ( istream & s, QuardTree & v );
+    virtual const char * className( void ) const { return "QuardTree"; }
 
 };
 
-#endif // _BoundaryEdgeProperty_H
+
+#endif // _QuardTree_H

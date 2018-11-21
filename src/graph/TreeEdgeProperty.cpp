@@ -1,6 +1,6 @@
 //******************************************************************************
 // BaseEdgeProperty.cc
-//	: program file for 2D coordinatse
+//	: program file for 2D coordinates
 //
 //------------------------------------------------------------------------------
 //
@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#include "base/BoundaryEdgeProperty.h"
+#include "graph/TreeEdgeProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ using namespace std;
 //	Protected Functions
 //------------------------------------------------------------------------------
 //
-//  BoundaryEdgeProperty::_init -- initialize the graph.
+//  TreeEdgeProperty::_init -- initialize the graph.
 //
 //  Inputs
 //  none
@@ -41,10 +41,9 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BoundaryEdgeProperty::_init( void )
+void TreeEdgeProperty::_init( void )
 {
-	id = 0;
-	weight = 1.0;
+	BaseEdgeProperty::_init();
 }
 
 //------------------------------------------------------------------------------
@@ -52,11 +51,11 @@ void BoundaryEdgeProperty::_init( void )
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
 
 //
-//  BoundaryEdgeProperty::BoundaryEdgeProperty -- default constructor
+//  TreeEdgeProperty::TreeEdgeProperty -- default constructor
 //
 //  Inputs
 //  none
@@ -64,7 +63,7 @@ void BoundaryEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-BoundaryEdgeProperty::BoundaryEdgeProperty()
+TreeEdgeProperty::TreeEdgeProperty()
 {
     _init();
 }
@@ -85,12 +84,12 @@ BoundaryEdgeProperty::BoundaryEdgeProperty()
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: BoundaryEdgeProperty
+//	obj	: TreeEdgeProperty
 //
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BoundaryEdgeProperty & obj )
+ostream & operator << ( ostream & stream, const TreeEdgeProperty & obj )
 {
     // set the output formatting
     stream << setiosflags( ios::showpoint );
@@ -106,12 +105,12 @@ ostream & operator << ( ostream & stream, const BoundaryEdgeProperty & obj )
 //
 //  Inputs
 //	stream	: reference to output stream
-//	obj	: BoundaryEdgeProperty
+//	obj	: TreeEdgeProperty
 //
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BoundaryEdgeProperty & obj )
+istream & operator >> ( istream & stream, TreeEdgeProperty & obj )
 {
     return stream;
 }

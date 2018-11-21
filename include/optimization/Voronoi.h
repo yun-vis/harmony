@@ -41,7 +41,7 @@ using namespace std;
 //	Defining data types
 //------------------------------------------------------------------------------
 
-//Used to convert otherwise infinite rays into looooong line segments
+//Used to convert otherwise infinite rays into long line segments
 const int RAY_LENGTH = 1000;
 
 
@@ -67,29 +67,31 @@ using CGAL::ORIGIN;
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
+class Seed
+{
+public:
+    unsigned int    id;             // id
+    Coord2          coord;          // position
+    double          weight;         // weight
+    Polygon2        cellPolygon;    // cell polygon
+};
 
 class Voronoi
 {
 
 private:
 
-    unsigned int _width, _height;
-    vector< Coord2 > * _seedVecPtr;
-    vector< double > * _seedWeightVecPtr;
-    vector< vector< K::Point_2 > > _polyVec2D;
-    map< unsigned int, Polygon2 >  *_polygonVecPtr;
+    // contour
+    Polygon2                       *_contourPtr;        // contour of the voronoi diagram
+
+    // seeds
+    vector< Seed >                 *_seedVecPtr;
+    vector< vector< K::Point_2 > >  _polyVec2D;         // map seed points and cell polygon
 
 protected:
 
-    void    _init ( vector< Coord2 > & __seedVec, vector< double > & __seedWeightVec,
-                    map< unsigned int, Polygon2 > &__polygonVec,
-                    unsigned int __width, unsigned int __height ){
-        _seedVecPtr = &__seedVec;
-        _seedWeightVecPtr = &__seedWeightVec;
-        _polygonVecPtr = &__polygonVec;
-        _width = __width;
-        _height = __height;
-    }
+    void    _init ( vector< Seed > & __seedVec, Polygon2 &__contour );
+    void    _clear();
 
 public:
 
@@ -100,14 +102,14 @@ public:
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
+    const vector< Seed > *      seedVec( void )         const   { return _seedVecPtr; }
+    vector< Seed > *            seedVec( void )                 { return _seedVecPtr; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void init( vector< Coord2 > & __seedVec, vector< double > & __seedWeightVec,
-               map< unsigned int, Polygon2 > &__polygonVec,
-               unsigned int __width, unsigned int __height ){
-        _init( __seedVec, __seedWeightVec, __polygonVec, __width, __height );
+    void init( vector< Seed > & __seedVec, Polygon2 &__contour ){
+        _init( __seedVec, __contour );
     }
     void createVoronoiDiagram( void );
     void createWeightedVoronoiDiagram( void );
@@ -121,7 +123,7 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void clear( void );
+    void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------
 //      I/O

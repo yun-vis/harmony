@@ -17,10 +17,10 @@
 
 using namespace std;
 
-#include "base/BoundaryGraph.h"
-#include "base/SkeletonGraph.h"
 #include "base/Grid2.h"
 #include "base/Polygon2.h"
+#include "graph/ForceGraph.h"
+#include "graph/BoundaryGraph.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -43,11 +43,10 @@ class Boundary
 private:
 
     BoundaryGraph                           _boundary;
-    SkeletonGraph                           _skeleton;
-    SkeletonGraph                           _composite;
+    ForceGraph                              _skeleton;
+    ForceGraph                              _composite;
 
-    vector< Coord2 >                        _seeds;             // for composite graph
-    map< unsigned int, Polygon2 >           _polygons;          // for composite graph
+    //map< unsigned int, Polygon2 >           _polygons;          // for composite graph
     map< unsigned int, Polygon2 >           _polygonComplex;    // for skeleton graph
     map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
 
@@ -55,7 +54,7 @@ private:
     
 protected:
     
-    vector< vector< BoundaryGraph::edge_descriptor > >	_line;
+    vector< vector< BoundaryGraph::edge_descriptor > >	    _line;
     vector< vector< BoundaryGraph::vertex_descriptor > >	_lineSta;
     double					    _lineColor  [ MAX_LINES ][ 3 ];
     char					    _lineName   [ MAX_LINES ][ MAX_STR ];
@@ -107,15 +106,15 @@ public:
 
     const BoundaryGraph &		    boundary( void ) const  { return _boundary; }
     BoundaryGraph &			        boundary( void )	    { return _boundary; }
-    const SkeletonGraph &		    skeleton( void ) const  { return _skeleton; }
-    SkeletonGraph &			        skeleton( void )	    { return _skeleton; }
-    const SkeletonGraph &		    composite( void ) const  { return _composite; }
-    SkeletonGraph &			        composite( void )	     { return _composite; }
+    const ForceGraph &		        skeleton( void ) const  { return _skeleton; }
+    ForceGraph &			        skeleton( void )	    { return _skeleton; }
+    const ForceGraph &		        composite( void ) const  { return _composite; }
+    ForceGraph &			        composite( void )	     { return _composite; }
 
-    const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
-    vector< Coord2 > &			            seeds( void )	        { return _seeds; }
-    const map < unsigned int, Polygon2 > &	polygons( void ) const          { return _polygons; }
-    map< unsigned int, Polygon2 > &			polygons( void )	            { return _polygons; }
+    //const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
+    //vector< Coord2 > &			            seeds( void )	        { return _seeds; }
+    //const map < unsigned int, Polygon2 > &	polygons( void ) const          { return _polygons; }
+    //map< unsigned int, Polygon2 > &			polygons( void )	            { return _polygons; }
     const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
     map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }
 
@@ -155,8 +154,8 @@ public:
     void createPolygonComplex( void );
     void readPolygonComplex( void );
     void writePolygonComplex( void );
-    bool findVertexInComplex( Coord2 &coord, SkeletonGraph &complex,
-                              SkeletonGraph::vertex_descriptor &target );
+    bool findVertexInComplex( Coord2 &coord, ForceGraph &complex,
+                              ForceGraph::vertex_descriptor &target );
 
 //------------------------------------------------------------------------------
 //  File I/O

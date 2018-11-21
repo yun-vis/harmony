@@ -20,8 +20,6 @@
 using namespace std;
 
 #include "base/Coord2.h"
-#include "base/Line2.h"
-
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -46,8 +44,8 @@ class BaseEdgeProperty {
 //------------------------------------------------------------------------------
     BaseEdgeProperty();				// constructor (default)
     BaseEdgeProperty( const BaseEdgeProperty & e ) {
-	   id	    = e.id;
-	   weight	= e.weight;
+        id	    = e.id;
+        weight	= e.weight;
     }					// copy constructor
     virtual ~BaseEdgeProperty() {}		// destructor
 
@@ -59,11 +57,13 @@ class BaseEdgeProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
     unsigned int                id;
+
+    double                      angle;
     double                      weight;
+    bool                        visit;
+
     bool                        isFore;
     bool                        isBack;
-    double                      angle;
-    bool                        visit;
 
     void		                init( void )		      { _init(); }
 

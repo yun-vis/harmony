@@ -133,7 +133,7 @@ void Pathway::initLayout( map< unsigned int, Polygon2 > &polygonComplex )
 		center /= (double) coordVec.size();
 
         // initialization
-        BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], UndirectedBaseGraph ) {
+        BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], ForceGraph ) {
 
 			if( maxX < _layoutSubGraph[i][vd].coordPtr->x() ) maxX = _layoutSubGraph[i][vd].coordPtr->x();
 			if( minX > _layoutSubGraph[i][vd].coordPtr->x() ) minX = _layoutSubGraph[i][vd].coordPtr->x();
@@ -145,7 +145,7 @@ void Pathway::initLayout( map< unsigned int, Polygon2 > &polygonComplex )
         double half_w = scale*(rb.x()-lt.x());
         double half_h = scale*(lt.y()-rb.y());
         // cerr << "c = " << center;
-		BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], UndirectedBaseGraph ) {
+		BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], ForceGraph ) {
 
 			//_layoutSubGraph[i][vd].coordPtr->x() = center.x();
 			//_layoutSubGraph[i][vd].coordPtr->y() = center.y();
@@ -508,8 +508,8 @@ void Pathway::genGraph( void )
 	unsigned int nVertices = 0, nEdges = 0;
 
 	_graph[ graph_bundle ].centerPtr	= new Coord2( 0.0, 0.0 );
-	_graph[ graph_bundle ].width		= DEFAULT_WIDTH;
-	_graph[ graph_bundle ].height	    = DEFAULT_HEIGHT;
+	_graph[ graph_bundle ].widthPtr		= new double( DEFAULT_WIDTH );
+	_graph[ graph_bundle ].heightPtr    = new double( DEFAULT_HEIGHT );
 
 	for( unsigned int i = 0; i < _react.size(); i++ ){
 
@@ -517,7 +517,7 @@ void Pathway::genGraph( void )
 		MetaboliteGraph::vertex_descriptor reactVD 		= add_vertex( _graph );
 
 		_graph[ reactVD ].id 			= nVertices;
-		_graph[ reactVD ].subGID		= nVertices;
+		_graph[ reactVD ].groupID		= nVertices;
         _graph[ reactVD ].initID		= nVertices;
         //_graph[ reactVD ].isSelected	= false;
         //_graph[ reactVD ].isNeighbor	= false;
@@ -577,7 +577,7 @@ void Pathway::genGraph( void )
 
 				metaVD 	= add_vertex( _graph );
 				_graph[ metaVD ].id 			= nVertices;
-                _graph[ metaVD ].subGID		    = nVertices;
+                _graph[ metaVD ].groupID	    = nVertices;
 				_graph[ metaVD ].initID			= nVertices;
                 _graph[ metaVD ].stoichiometry  = stoichiometry;
 				//_graph[ metaVD ].isSelected		= false;
@@ -671,7 +671,7 @@ void Pathway::genGraph( void )
 				metaVD 	= add_vertex( _graph );
 
 				_graph[ metaVD ].id 			= nVertices;
-                _graph[ metaVD ].subGID		    = nVertices;
+                _graph[ metaVD ].groupID	    = nVertices;
 				_graph[ metaVD ].initID			= nVertices;
                 _graph[ metaVD ].stoichiometry  = stoichiometry;
 				//_graph[ metaVD ].isSelected		= false;
@@ -775,10 +775,16 @@ void Pathway::genLayoutGraph( void )
 {
     BGL_FORALL_VERTICES( vd, _graph, MetaboliteGraph ){
 
-        UndirectedBaseGraph::vertex_descriptor vdL = add_vertex( _layoutGraph );
+        ForceGraph::vertex_descriptor vdL = add_vertex( _layoutGraph );
         _layoutGraph[ vdL ].id              = _graph[ vd ].id;
-        _layoutGraph[ vdL ].subGID		    = _graph[ vd ].subGID;
+        _layoutGraph[ vdL ].groupID		    = _graph[ vd ].groupID;
+
 		_layoutGraph[ vdL ].coordPtr        = _graph[ vd ].coordPtr;
+        _layoutGraph[ vdL ].prevCoordPtr 	= new Coord2( _graph[ vd ].coordPtr->x(), _graph[ vd ].coordPtr->y() );
+        _layoutGraph[ vdL ].forcePtr 		= new Coord2( 0, 0 );
+        _layoutGraph[ vdL ].placePtr 		= new Coord2( 0, 0 );
+        _layoutGraph[ vdL ].shiftPtr 		= new Coord2( 0, 0 );
+
         _layoutGraph[ vdL ].widthPtr        = _graph[ vd ].widthPtr;
         _layoutGraph[ vdL ].heightPtr       = _graph[ vd ].heightPtr;
     }
@@ -788,16 +794,16 @@ void Pathway::genLayoutGraph( void )
 
         MetaboliteGraph::vertex_descriptor vdS = source( ed, _graph );
         MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
-        UndirectedBaseGraph::vertex_descriptor vdSL = vertex( _graph[ vdS ].id, _layoutGraph );
-        UndirectedBaseGraph::vertex_descriptor vdTL = vertex( _graph[ vdT ].id, _layoutGraph );
+        ForceGraph::vertex_descriptor vdSL = vertex( _graph[ vdS ].id, _layoutGraph );
+        ForceGraph::vertex_descriptor vdTL = vertex( _graph[ vdT ].id, _layoutGraph );
 
 		bool found = false;
-        UndirectedBaseGraph::edge_descriptor oldED;
+        ForceGraph::edge_descriptor oldED;
 		tie( oldED, found ) = edge( vdSL, vdTL, _layoutGraph );
 
 		if( found == false ){
-			pair< UndirectedBaseGraph::edge_descriptor, unsigned int > foreE = add_edge( vdSL, vdTL, _layoutGraph );
-            UndirectedBaseGraph::edge_descriptor edL = foreE.first;
+			pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdSL, vdTL, _layoutGraph );
+            ForceGraph::edge_descriptor edL = foreE.first;
 			_layoutGraph[ edL ].id      = _graph[ ed ].id;
 			_layoutGraph[ edL ].weight  = _graph[ ed ].weight;
 			_layoutGraph[ edL ].isFore  = true;
@@ -1074,8 +1080,8 @@ void Pathway::genSubGraphs( void )
 		unsigned int nVertices = 0, nEdges = 0;
 
 		g[ graph_bundle ].centerPtr	= &iter->second->center;
-		g[ graph_bundle ].width		= iter->second->width;
-		g[ graph_bundle ].height	= iter->second->height;
+		g[ graph_bundle ].widthPtr	= &iter->second->width;
+		g[ graph_bundle ].heightPtr	= &iter->second->height;
 
 		BGL_FORALL_EDGES( ed, _graph, MetaboliteGraph )
 		{
@@ -1098,7 +1104,7 @@ void Pathway::genSubGraphs( void )
 						g[ newSVD ].namePtr  		= &_graph[ vdS ].metaPtr->name;
                         g[ newSVD ].namePixelWidthPtr  	= &_graph[ vdS ].metaPtr->namePixelWidth;
                         g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].metaPtr->namePixelHeight;
-						g[ newSVD ].subGID          = _graph[ vdS ].subGID;
+						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
 						g[ newSVD ].type        	= _graph[ vdS ].type;
                         g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
                         g[ newSVD ].widthPtr       	= _graph[ vdS ].widthPtr;
@@ -1123,7 +1129,7 @@ void Pathway::genSubGraphs( void )
 						g[ newSVD ].namePtr  		= &_graph[ vdS ].reactPtr->abbr;
                         g[ newSVD ].namePixelWidthPtr  	= &_graph[ vdS ].reactPtr->namePixelWidth;
                         g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].reactPtr->namePixelHeight;
-						g[ newSVD ].subGID          = _graph[ vdS ].subGID;
+						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
                         g[ newSVD ].type        	= _graph[ vdS ].type;
 						g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
                         g[ newSVD ].widthPtr       	= _graph[ vdS ].widthPtr;
@@ -1149,7 +1155,7 @@ void Pathway::genSubGraphs( void )
 						g[ newTVD ].namePtr  		= &_graph[ vdT ].metaPtr->name;
                         g[ newTVD ].namePixelWidthPtr  	= &_graph[ vdT ].metaPtr->namePixelWidth;
                         g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].metaPtr->namePixelHeight;
-						g[ newTVD ].subGID          = _graph[ vdT ].subGID;
+						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
 						g[ newTVD ].type       		= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
                         g[ newTVD ].widthPtr       	= _graph[ vdT ].widthPtr;
@@ -1174,7 +1180,7 @@ void Pathway::genSubGraphs( void )
 						g[ newTVD ].namePtr  		= &_graph[ vdT ].reactPtr->abbr;
                         g[ newTVD ].namePixelWidthPtr  	= &_graph[ vdT ].reactPtr->namePixelWidth;
                         g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].reactPtr->namePixelHeight;
-						g[ newTVD ].subGID          = _graph[ vdT ].subGID;
+						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
                         g[ newTVD ].type          	= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
                         g[ newTVD ].widthPtr       	= _graph[ vdT ].widthPtr;
@@ -1214,8 +1220,8 @@ void Pathway::genSubGraphs( void )
 	for( iter = _sub.begin(); iter != _sub.end(); iter++ ){
 
 		_subGraph[ index ][ graph_bundle ].centerPtr = &iter->second->center;
-		_subGraph[ index ][ graph_bundle ].width = iter->second->width;
-		_subGraph[ index ][ graph_bundle ].height = iter->second->height;
+		_subGraph[ index ][ graph_bundle ].widthPtr = &iter->second->width;
+		_subGraph[ index ][ graph_bundle ].heightPtr = &iter->second->height;
 		index++;
 	}
 
@@ -1268,16 +1274,22 @@ void Pathway::genLayoutSubGraphs( void )
 		unsigned int nv = 0;
 		BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ){
 
-            UndirectedBaseGraph::vertex_descriptor vdL = add_vertex( _layoutSubGraph[i] );
+            ForceGraph::vertex_descriptor vdL = add_vertex( _layoutSubGraph[i] );
 			_layoutSubGraph[i][ vdL ].id            = nv;
 			_layoutSubGraph[i][ vdL ].namePtr 		= _subGraph[i][ vd ].namePtr;
             _layoutSubGraph[i][ vdL ].namePixelWidthPtr     = _subGraph[i][ vd ].namePixelWidthPtr;
             _layoutSubGraph[i][ vdL ].namePixelHeightPtr    = _subGraph[i][ vd ].namePixelHeightPtr;
-			_layoutSubGraph[i][ vdL ].subGID        = _subGraph[i][ vd ].subGID;
-            _layoutSubGraph[i][ vdL ].coordPtr      = _subGraph[i][ vd ].coordPtr;
+			_layoutSubGraph[i][ vdL ].groupID       = _subGraph[i][ vd ].groupID;
+
+			_layoutSubGraph[i][ vdL ].coordPtr      = _subGraph[i][ vd ].coordPtr;
+			_layoutSubGraph[i][ vdL ].prevCoordPtr 	= new Coord2( _subGraph[i][ vd ].coordPtr->x(), _subGraph[i][ vd ].coordPtr->y() );
+			_layoutSubGraph[i][ vdL ].forcePtr 		= new Coord2( 0, 0 );
+			_layoutSubGraph[i][ vdL ].placePtr 		= new Coord2( 0, 0 );
+			_layoutSubGraph[i][ vdL ].shiftPtr 		= new Coord2( 0, 0 );
+
 			_layoutSubGraph[i][ vdL ].widthPtr      = _subGraph[i][ vd ].widthPtr;
 			_layoutSubGraph[i][ vdL ].heightPtr     = _subGraph[i][ vd ].heightPtr;
-			indexMap.insert( pair< unsigned int, unsigned int >( _subGraph[i][ vd ].subGID, nv ) );
+			indexMap.insert( pair< unsigned int, unsigned int >( _subGraph[i][ vd ].groupID, nv ) );
 			nv++;
 		}
 
@@ -1285,20 +1297,20 @@ void Pathway::genLayoutSubGraphs( void )
 
 			MetaboliteGraph::vertex_descriptor vdS = source( ed, _subGraph[i] );
 			MetaboliteGraph::vertex_descriptor vdT = target( ed, _subGraph[i] );
-			unsigned int idS = indexMap.find( _subGraph[i][ vdS ].subGID )->second;
-			unsigned int idT = indexMap.find( _subGraph[i][ vdT ].subGID )->second;
-            UndirectedBaseGraph::vertex_descriptor vdSL = vertex( idS, _layoutSubGraph[i] );
-            UndirectedBaseGraph::vertex_descriptor vdTL = vertex( idT, _layoutSubGraph[i] );
+			unsigned int idS = indexMap.find( _subGraph[i][ vdS ].groupID )->second;
+			unsigned int idT = indexMap.find( _subGraph[i][ vdT ].groupID )->second;
+            ForceGraph::vertex_descriptor vdSL = vertex( idS, _layoutSubGraph[i] );
+            ForceGraph::vertex_descriptor vdTL = vertex( idT, _layoutSubGraph[i] );
 
 			//cerr << "idS = " << idS << " idT = " << idT << endl;
 	 		bool found = false;
-            UndirectedBaseGraph::edge_descriptor oldED;
+            ForceGraph::edge_descriptor oldED;
 			tie( oldED, found ) = edge( vdSL, vdTL, _layoutSubGraph[i] );
 
 			if( found == false ){
 
-				pair< UndirectedBaseGraph::edge_descriptor, unsigned int > foreE = add_edge( vdSL, vdTL, _layoutSubGraph[i] );
-                UndirectedBaseGraph::edge_descriptor edL = foreE.first;
+				pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdSL, vdTL, _layoutSubGraph[i] );
+                ForceGraph::edge_descriptor edL = foreE.first;
 				_layoutSubGraph[i][ edL ].id 		= _subGraph[i][ ed ].id;
 				_layoutSubGraph[i][ edL ].weight 	= _subGraph[i][ ed ].weight;
 				_layoutSubGraph[i][ edL ].isFore  	= true;

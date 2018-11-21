@@ -44,8 +44,8 @@ using namespace std;
 void BaseGraphProperty::_init( void )
 {
     centerPtr   = NULL;
-    width       = DEFAULT_WIDTH;
-    height      = DEFAULT_HEIGHT;
+    widthPtr    = new double ( DEFAULT_WIDTH );
+    heightPtr   = new double ( DEFAULT_HEIGHT );
 }
 
 //------------------------------------------------------------------------------

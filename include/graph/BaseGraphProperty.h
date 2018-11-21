@@ -40,7 +40,7 @@ class BaseGraphProperty {
   public:
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
     BaseGraphProperty();				// constructor (default)
     BaseGraphProperty( const BaseGraphProperty & v ) {
@@ -55,8 +55,8 @@ class BaseGraphProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
     Coord2 *                    centerPtr;
-    double                      width;
-    double                      height;
+    double *                    widthPtr;
+    double *                    heightPtr;
 
     void		                init( void )		{ _init(); }
 

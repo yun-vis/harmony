@@ -55,16 +55,19 @@ class BaseVertexProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
     unsigned int                id;
-    unsigned int                subGID;
+    unsigned int                initID;                 // initial id
+    unsigned int                groupID;                // group id
 
-    double                      weight;
     string *                    namePtr;
     double *                    namePixelWidthPtr;      // pixel width of the name
     double *                    namePixelHeightPtr;     // pixel height of the name
 
-    Coord2 *                    coordPtr;
-    double *                    widthPtr;
-    double *                    heightPtr;
+    double                      weight;
+
+    Coord2 *                    coordPtr;               // center coornidates
+    double *                    widthPtr;               // vertex width
+    double *                    heightPtr;              // vertex height
+    double *                    areaPtr;                // vertex area
 
 //------------------------------------------------------------------------------
 //	Special functions

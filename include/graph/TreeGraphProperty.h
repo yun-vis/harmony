@@ -1,5 +1,5 @@
 //******************************************************************************
-// UndirectedBaseEdgeProperty.h
+// TreeGraphProperty.h
 //	: header file for 2D coordinaes
 //
 //------------------------------------------------------------------------------
@@ -8,19 +8,19 @@
 //
 //******************************************************************************
 
-#ifndef	_UndirectedBaseEdgeProperty_H
-#define _UndirectedBaseEdgeProperty_H
+#ifndef	_TreeGraphProperty_H
+#define _TreeGraphProperty_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
 #include <iostream>
-#include <vector>
 
 using namespace std;
 
 #include "base/Coord2.h"
-#include "base/Line2.h"
+#include "base/Common.h"
+#include "graph/BaseGraphProperty.h"
 
 
 //------------------------------------------------------------------------------
@@ -32,24 +32,21 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class UndirectedBaseEdgeProperty {
+class TreeGraphProperty: public BaseGraphProperty {
 
   protected:
 
       void		    _init( void );
-
 
   public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    UndirectedBaseEdgeProperty();				// constructor (default)
-    UndirectedBaseEdgeProperty( const UndirectedBaseEdgeProperty & e ) {
-	   id	    = e.id;
-	   weight	= e.weight;
+    TreeGraphProperty();				// constructor (default)
+    TreeGraphProperty( const TreeGraphProperty & v ) {
     }					// copy constructor
-    virtual ~UndirectedBaseEdgeProperty() {}		// destructor
+    virtual ~TreeGraphProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -58,13 +55,8 @@ class UndirectedBaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                id;
 
-    double                      angle;
-    double                      weight;
-    bool                        visit;
-
-    void		                init( void )		      { _init(); }
+    void		                init( void )		{ _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -82,13 +74,13 @@ class UndirectedBaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const UndirectedBaseEdgeProperty & v );
+    friend ostream &	operator << ( ostream & s, const TreeGraphProperty & v );
 				// Output
-    friend istream &	operator >> ( istream & s, UndirectedBaseEdgeProperty & v );
+    friend istream &	operator >> ( istream & s, TreeGraphProperty & v );
 				// Input
-    virtual const char * className( void ) const { return "UndirectedBaseEdgeProperty"; }
+    virtual const char * className( void ) const { return "TreeGraphProperty"; }
 				// class name
 
 };
 
-#endif // _UndirectedBaseEdgeProperty_H
+#endif // _TreeGraphProperty_H

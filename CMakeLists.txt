@@ -76,11 +76,16 @@ set(HEADERS
         include/base/Coord2.h
         include/base/Polygon2.h
         include/base/Grid2.h
+        include/base/QuardTree.h
         include/base/Timer.h
         include/base/Color.h
         include/base/Boundary.h
         include/base/Pathway.h
         include/base/PathwayData.h.h
+        include/graph/TreeEdgeProperty.h
+        include/graph/TreeGraph.h
+        include/graph/TreeGraphProperty.h
+        include/graph/TreeVertexProperty.h
         include/graph/ForceEdgeProperty.h
         include/graph/ForceGraph.h
         include/graph/ForceGraphProperty.h
@@ -104,6 +109,7 @@ set(HEADERS
         include/graph/UndirectedBaseGraph.h
         include/graph/UndirectedPropertyGraph.h
         include/optimization/Force.h
+        include/optimization/Voronoi.h
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
         include/ui/GraphicsBallItem.h
@@ -112,7 +118,6 @@ set(HEADERS
         include/ui/GraphicsView.h
         include/ui/Window.h
         include/ui/Window.ui
-        include/voronoi/Voronoi.h
     )
 set(SOURCES
         src/base/Common.cpp
@@ -121,11 +126,16 @@ set(SOURCES
         src/base/Polygon2.cpp
         src/base/Grid2.cpp
         src/base/Line2.cpp
+        src/base/QuardTree.cpp
         src/base/Timer.cpp
         src/base/Color.cpp
         src/base/Boundary.cpp
         src/base/Pathway.cpp
         src/base/PathwayData.cpp
+        src/graph/TreeEdgeProperty.cpp
+        src/graph/TreeGraph.cpp
+        src/graph/TreeGraphProperty.cpp
+        src/graph/TreeVertexProperty.cpp
         src/graph/ForceEdgeProperty.cpp
         src/graph/ForceGraph.cpp
         src/graph/ForceGraphProperty.cpp
@@ -148,6 +158,7 @@ set(SOURCES
         src/graph/BaseGraphProperty.cpp
         src/graph/BaseVertexProperty.cpp
         src/optimization/Force.cpp
+        src/optimization/Voronoi.cpp
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
         src/ui/GraphicsBallItem.cpp
@@ -155,7 +166,6 @@ set(SOURCES
         src/ui/GraphicsPolygonItem.cpp
         src/ui/GraphicsView.cpp
         src/ui/Window.cpp
-        src/voronoi/Voronoi.cpp
         src/main.cpp
     )
 

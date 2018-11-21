@@ -1,5 +1,5 @@
 //******************************************************************************
-// SkeletonEdgeProperty.h
+// TreeEdgeProperty.h
 //	: header file for 2D coordinaes
 //
 //------------------------------------------------------------------------------
@@ -8,8 +8,8 @@
 //
 //******************************************************************************
 
-#ifndef	_SkeletonEdgeProperty_H
-#define _SkeletonEdgeProperty_H
+#ifndef	_TreeEdgeProperty_H
+#define _TreeEdgeProperty_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -20,9 +20,7 @@
 using namespace std;
 
 #include "base/Coord2.h"
-#include "base/Line2.h"
 #include "graph/BaseEdgeProperty.h"
-
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -33,7 +31,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class SkeletonEdgeProperty: public BaseEdgeProperty {
+class TreeEdgeProperty: public BaseEdgeProperty {
 
   protected:
 
@@ -45,12 +43,12 @@ class SkeletonEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    SkeletonEdgeProperty();				// constructor (default)
-    SkeletonEdgeProperty( const SkeletonEdgeProperty & e ) {
+    TreeEdgeProperty();				// constructor (default)
+    TreeEdgeProperty( const TreeEdgeProperty & e ) {
 	   id	    = e.id;
 	   weight	= e.weight;
     }					// copy constructor
-    virtual ~SkeletonEdgeProperty() {}		// destructor
+    virtual ~TreeEdgeProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -59,12 +57,6 @@ class SkeletonEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                initID;
-    vector< unsigned int >      lineID;
-
-    double                      geoAngle;
-    double                      smoothAngle;
-    double                      targetAngle;
 
     void		                init( void )		      { _init(); }
 
@@ -84,13 +76,13 @@ class SkeletonEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const SkeletonEdgeProperty & v );
+    friend ostream &	operator << ( ostream & s, const TreeEdgeProperty & v );
 				// Output
-    friend istream &	operator >> ( istream & s, SkeletonEdgeProperty & v );
+    friend istream &	operator >> ( istream & s, TreeEdgeProperty & v );
 				// Input
-    virtual const char * className( void ) const { return "SkeletonEdgeProperty"; }
+    virtual const char * className( void ) const { return "TreeEdgeProperty"; }
 				// class name
 
 };
 
-#endif // _SkeletonEdgeProperty_H
+#endif // _TreeEdgeProperty_H

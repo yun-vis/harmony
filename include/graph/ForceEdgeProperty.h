@@ -20,6 +20,7 @@
 using namespace std;
 
 #include "base/Coord2.h"
+#include "graph/BaseEdgeProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -30,7 +31,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceEdgeProperty {
+class ForceEdgeProperty: public BaseEdgeProperty {
 
   protected:
 
@@ -43,10 +44,9 @@ class ForceEdgeProperty {
 //	Constructors
 //------------------------------------------------------------------------------
     ForceEdgeProperty();				// constructor (default)
-    ForceEdgeProperty( const ForceEdgeProperty & e ) {
-	   id	    = e.id;
-	   weight	= e.weight;
-    }					// copy constructor
+    ForceEdgeProperty( const ForceEdgeProperty & e )
+        : BaseEdgeProperty ( e ) {
+    }					                // copy constructor
     virtual ~ForceEdgeProperty() {}		// destructor
 
 //------------------------------------------------------------------------------
@@ -56,11 +56,6 @@ class ForceEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                id;
-
-    double                      angle;
-    double                      weight;
-    bool                        visit;
 
     void		                init( void )		      { _init(); }
 

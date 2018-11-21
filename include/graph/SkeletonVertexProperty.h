@@ -55,8 +55,7 @@ class SkeletonVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                initID;
-    //vector< unsigned int >      lineID;
+    //unsigned int                initID;
     double *                    areaPtr;
 
     Coord2                      shift;       // displacement

@@ -43,9 +43,7 @@ using namespace std;
 //
 void SkeletonGraphProperty::_init( void )
 {
-    centerPtr   = NULL;
-    width       = DEFAULT_WIDTH;
-    height      = DEFAULT_HEIGHT;
+    BaseGraphProperty::_init();
 }
 
 //------------------------------------------------------------------------------

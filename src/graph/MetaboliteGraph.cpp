@@ -38,7 +38,7 @@ void printGraph( MetaboliteGraph & graph )
     BGL_FORALL_VERTICES( vd, graph, MetaboliteGraph ) {
 
         cerr << " vid = " << graph[vd].id
-             << " label = " << graph[vd].subGID
+             << " gID = " << graph[vd].groupID
              << " x = " << graph[vd].coordPtr->x()
              << " y = " << graph[vd].coordPtr->y()
              << " w = " << *graph[vd].widthPtr

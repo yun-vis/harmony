@@ -21,6 +21,7 @@ using namespace std;
 
 #include "base/Coord2.h"
 #include "base/Common.h"
+#include "graph/BaseVertexProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -31,7 +32,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceVertexProperty {
+class ForceVertexProperty: public BaseVertexProperty {
 
   protected:
 
@@ -54,21 +55,13 @@ class ForceVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                id;
+
     unsigned int                leafID;
 
-    double                      weight;
-    string                      name;
-
-    Coord2 *                    coordPtr;
-    Coord2 *                    forcePtr;
-    Coord2 *                    placePtr;
-    Coord2 *                    shiftPtr;
-    Coord2 *                    velocityPtr;
-
-    double *                    widthPtr;
-    double *                    heightPtr;
-
+    Coord2 *                    prevCoordPtr;   // previous position
+    Coord2 *                    forcePtr;       // spring force
+    Coord2 *                    placePtr;       // voronoi force
+    Coord2 *                    shiftPtr;       // displacement
 
 //------------------------------------------------------------------------------
 //	Special functions

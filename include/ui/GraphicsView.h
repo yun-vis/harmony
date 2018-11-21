@@ -19,6 +19,8 @@ using namespace std;
 #include "ui/GraphicsBallItem.h"
 #include "ui/GraphicsEdgeItem.h"
 #include "ui/GraphicsPolygonItem.h"
+#include "optimization/Force.h"
+#include "base/Color.h"
 #include "base/Boundary.h"
 #include "base/Pathway.h"
 #include "base/PathwayData.h"
@@ -34,7 +36,6 @@ using namespace std;
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
 
-#include "base/Color.h"
 
 //------------------------------------------------------------------------------
 //	Macro definitions
@@ -56,6 +57,8 @@ private:
                         _is_boundaryFlag, _is_pathwayFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
+    Force               *_forceBoundaryPtr;
+    vector< Force >     *_forceCellVecPtr;
 
 protected:
 
@@ -93,9 +96,12 @@ public:
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
-    void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary ){
+    void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary,
+                                  Force *__forceBoundaryPtr, vector< Force > *__forceCellVecPtr ){
         _boundary = __boundary;
         _simplifiedBoundary = __simplifiedBoundary;
+        _forceBoundaryPtr = __forceBoundaryPtr;
+        _forceCellVecPtr = __forceCellVecPtr;
     }
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );

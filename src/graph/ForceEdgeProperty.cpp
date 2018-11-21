@@ -43,8 +43,7 @@ using namespace std;
 //
 void ForceEdgeProperty::_init( void )
 {
-	id = 0;
-	weight = 1.0;
+	BaseEdgeProperty::init();
 }
 
 //------------------------------------------------------------------------------

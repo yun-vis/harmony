@@ -25,7 +25,6 @@ using namespace std;
 #include "optimization/Smooth.h"
 #include "optimization/Octilinear.h"
 #include "ui/GraphicsView.h"
-#include "voronoi/Voronoi.h"
 #include "base/Timer.h"
 
 #define REMOVEBACKNUM   (15)
@@ -45,15 +44,18 @@ private:
     Boundary        *_simplifiedBoundary;
 
     // optimization
-    Force           *_forceBoundaryPtr;
-    vector< Force > *_forceCellVecPtr;
-    vector< ForceGraph * >      _forceGraph;
+    Force           _forceBoundary;
+    vector< Force > _forceCellVec;
+
     Smooth          *_smoothPtr;
     Octilinear      *_octilinearPtr;
 
     // display
-    int         _content_width;
-    int         _content_height;
+    int             _content_width;
+    int             _content_height;
+
+    // force target flag
+    bool            _forceTargetFlag;   // 0: boundary, 1:pathwayCell
 
     // menu
     // load
@@ -83,6 +85,9 @@ private:
     void simulateKey( Qt::Key key );
     void redrawAllScene( void );
 
+    void _init( Boundary * __boundary, Boundary * __simBoundary,
+                Smooth * __smoothPtr, Octilinear * __octilinearPtr );
+
 public slots:
 
     // load
@@ -108,17 +113,22 @@ public slots:
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
 
     // voronoi
-    void selectVoronoi( void );
-    void selectUpdateVoronoi( void );
+    // void selectVoronoi( void );
+    // void selectUpdateVoronoi( void );
     void selectBuildBoundary( void );
+
+    // timer
+    void timerBoundary( void );
+    void timerPathwayCell( void );
 
 public:
     explicit Window( QWidget *parent = 0 );
     ~Window();
 
     void init( Boundary * __boundary, Boundary * __simBoundary,
-               Force * __forceBoundary, vector< Force > * __forceCellVec,
-               Smooth * __smoothPtr, Octilinear * __octilinearPtr );
+               Smooth * __smoothPtr, Octilinear * __octilinearPtr ){
+        _init( __boundary, __simBoundary, _smoothPtr, _octilinearPtr );
+    }
 
 protected:
 

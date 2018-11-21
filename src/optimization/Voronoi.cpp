@@ -10,13 +10,13 @@
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
-#include "voronoi/Voronoi.h"
+#include "optimization/Voronoi.h"
 
 //------------------------------------------------------------------------------
 //	Protected functions
 //------------------------------------------------------------------------------
 //
-//  Voronoi::clear --        memory management
+//  Voronoi::_init --        initialization
 //
 //  Inputs
 //      none
@@ -24,7 +24,22 @@
 //  Outputs
 //      none
 //
-void Voronoi::clear( void )
+void Voronoi::_init( vector< Seed > & __seedVec, Polygon2 &__contour )
+{
+    _seedVecPtr = &__seedVec;
+    _contourPtr = &__contour;
+}
+
+//
+//  Voronoi::_clear --        memory management
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+void Voronoi::_clear( void )
 {
 }
 
@@ -63,8 +78,8 @@ Coord2 Voronoi::centroid( CGAL::Polygon_2< K > polyg )
     atot = 3*atot;
     centre = centre/atot;
 
-    double x = to_double( (ORIGIN + centre).x() );
-    double y = to_double( (ORIGIN + centre).y() );
+    double x = CGAL::to_double( (ORIGIN + centre).x() );
+    double y = CGAL::to_double( (ORIGIN + centre).y() );
     center.x() = x;
     center.y() = y;
 
@@ -87,21 +102,22 @@ void Voronoi::createWeightedVoronoiDiagram( void )
 
     // initialization
     _polyVec2D.clear();
-    _polygonVecPtr->clear();
+    // _polygonVecPtr->clear();
     wpoints.clear();
 
     // copy points
     //cerr << "points:" << endl;
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
-        wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].x(), (*_seedVecPtr)[i].y() ), (*_seedWeightVecPtr)[i] ) );
-        //cerr << "w = " << (*_seedWeightVecPtr)[i] << endl;
-        //cerr << (*_seedVecPtr)[i];
+        wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(), (*_seedVecPtr)[i].coord.y() ),
+                                                (*_seedVecPtr)[i].weight ) );
+        //cerr << "w = " << (*_seedVecPtr)[i].weight << endl;
+        //cerr << (*_seedVecPtr)[i].coord;
     }
 
     //Find the bounding box of the points. This will be used to crop the Voronoi
     //diagram later.
     //const K::Iso_rectangle_2 bbox = CGAL::bounding_box( wpoints.begin(), wpoints.end() );
-    const K::Iso_rectangle_2 bbox( K::Point_2( -(int)_width/2, -(int)_height/2 ), K::Point_2( (int)_width/2, (int)_height/2 ) );
+    //const K::Iso_rectangle_2 bbox( K::Point_2( -(int)_width/2, -(int)_height/2 ), K::Point_2( (int)_width/2, (int)_height/2 ) );
     //cerr << "bbox = " << bbox << endl;
 
     //Create a Regular Triangulation from the points
@@ -181,10 +197,10 @@ void Voronoi::createWeightedVoronoiDiagram( void )
         //into a polygon. You'd think there'd be an easy way to do this. But there
         //isn't (or I haven't found it).
         CGAL::Polygon_2< K > bpoly;
-        bpoly.push_back( K::Point_2( bbox.xmin(), bbox.ymin() ));
-        bpoly.push_back( K::Point_2( bbox.xmax(), bbox.ymin() ));
-        bpoly.push_back( K::Point_2( bbox.xmax(), bbox.ymax() ));
-        bpoly.push_back( K::Point_2( bbox.xmin(), bbox.ymax() ));
+        vector< Coord2 > &eleVec = _contourPtr->elements();
+        for( unsigned int i = 0; i < eleVec.size(); i++ ){
+            bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
+        }
 
         //Perform the intersection. Since CGAL is very general, it believes the
         //result might be multiple polygons with holes.
@@ -205,7 +221,7 @@ void Voronoi::createWeightedVoronoiDiagram( void )
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
             // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
-            p.push_back( K::Point_2( to_double( v->x() ), to_double( v->y() ) ) );
+            p.push_back( K::Point_2( CGAL::to_double( v->x() ), CGAL::to_double( v->y() ) ) );
         }
 
         // add the end points to generate an enclosed polygon
@@ -233,21 +249,21 @@ void Voronoi::createVoronoiDiagram( void )
 
     // initialization
     _polyVec2D.clear();
-    _polygonVecPtr->clear();
+    //_polygonVecPtr->clear();
     wpoints.clear();
 
     // copy points
     //cerr << "points:" << endl;
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
-        wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].x(), (*_seedVecPtr)[i].y() ), 0 ) );
-        //cerr << (*_seedVecPtr)[i];
+        wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(), (*_seedVecPtr)[i].coord.y() ), 0 ) );
+        //cerr << (*_seedVecPt)[i];
     }
 
     //Find the bounding box of the points. This will be used to crop the Voronoi
     //diagram later.
     //const K::Iso_rectangle_2 bbox = CGAL::bounding_box( wpoints.begin(), wpoints.end() );
-    const K::Iso_rectangle_2 bbox( K::Point_2( -(int)_width/2, -(int)_height/2 ), K::Point_2( (int)_width/2, (int)_height/2 ) );
+    //const K::Iso_rectangle_2 bbox( K::Point_2( -(int)_width/2, -(int)_height/2 ), K::Point_2( (int)_width/2, (int)_height/2 ) );
     //cerr << "bbox = " << bbox << endl;
 
     //Create a Regular Triangulation from the points
@@ -327,10 +343,10 @@ void Voronoi::createVoronoiDiagram( void )
         //into a polygon. You'd think there'd be an easy way to do this. But there
         //isn't (or I haven't found it).
         CGAL::Polygon_2< K > bpoly;
-        bpoly.push_back( K::Point_2( bbox.xmin(), bbox.ymin() ));
-        bpoly.push_back( K::Point_2( bbox.xmax(), bbox.ymin() ));
-        bpoly.push_back( K::Point_2( bbox.xmax(), bbox.ymax() ));
-        bpoly.push_back( K::Point_2( bbox.xmin(), bbox.ymax() ));
+        vector< Coord2 > &eleVec = _contourPtr->elements();
+        for( unsigned int i = 0; i < eleVec.size(); i++ ){
+            bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
+        }
 
         //Perform the intersection. Since CGAL is very general, it believes the
         //result might be multiple polygons with holes.
@@ -351,7 +367,7 @@ void Voronoi::createVoronoiDiagram( void )
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
             // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
-            p.push_back( K::Point_2( to_double( v->x() ), to_double( v->y() ) ) );
+            p.push_back( K::Point_2( CGAL::to_double( v->x() ), CGAL::to_double( v->y() ) ) );
         }
 
         // add the end points to generate an enclosed polygon
@@ -376,7 +392,7 @@ void Voronoi::mapSeedsandPolygons( void )
 {
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
-        K::Point_2 pt( (*_seedVecPtr)[i].x(), (*_seedVecPtr)[i].y() );
+        K::Point_2 pt( (*_seedVecPtr)[i].coord.x(), (*_seedVecPtr)[i].coord.y() );
 
         // find appropriate polygon boundary
         for( unsigned int m = 0; m < _polyVec2D.size(); m++ ) {
@@ -387,7 +403,7 @@ void Voronoi::mapSeedsandPolygons( void )
 
                 // copy to points
                 points[n] = K::Point_2( _polyVec2D[m][n].x(), _polyVec2D[m][n].y() );
-                coords.push_back( Coord2( to_double( _polyVec2D[m][n].x() ), to_double( _polyVec2D[m][n].y() ) ) );
+                coords.push_back( Coord2( CGAL::to_double( _polyVec2D[m][n].x() ), CGAL::to_double( _polyVec2D[m][n].y() ) ) );
             }
 
             CGAL::Bounded_side bside = CGAL::bounded_side_2( points, points+_polyVec2D[m].size(), pt );
@@ -403,14 +419,11 @@ void Voronoi::mapSeedsandPolygons( void )
                 // copy polygon
                 Polygon2 poly( coords );
                 Coord2 center = centroid( bpoly );
-                //poly.area() = to_double( bpoly.area() );
-                //poly.center() = center;
-                (*_polygonVecPtr).insert( pair< unsigned int, Polygon2 >( i, poly ) );
-                map< unsigned int, Polygon2 >::iterator itP = _polygonVecPtr->end();
-                itP--;
-                itP->second.area() = poly.area();
-                itP->second.center().x() = center.x();
-                itP->second.center().y() = center.y();
+                poly.center() = center;
+                poly.area() = poly.area();
+                (*_seedVecPtr)[i].cellPolygon = poly;
+
+                //cerr << "area = " << (*_seedVecPtr)[i].cellPolygon.area() << " c = " << (*_seedVecPtr)[i].cellPolygon.center();
 #ifdef  DEBUG
                 cerr << "area = " << itP->second.area() << endl;
                 cerr << "pgon_area = " << poly.area() << endl;
