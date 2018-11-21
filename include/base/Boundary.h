@@ -19,8 +19,8 @@ using namespace std;
 
 #include "base/Grid2.h"
 #include "base/Polygon2.h"
-#include "graph/ForceGraph.h"
 #include "graph/BoundaryGraph.h"
+#include "optimization/Force.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -45,8 +45,8 @@ private:
     BoundaryGraph                           _boundary;
     ForceGraph                              _skeleton;
     ForceGraph                              _composite;
+    Force                                   _forceBoundary;
 
-    //map< unsigned int, Polygon2 >           _polygons;          // for composite graph
     map< unsigned int, Polygon2 >           _polygonComplex;    // for skeleton graph
     map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
 
@@ -111,10 +111,9 @@ public:
     const ForceGraph &		        composite( void ) const  { return _composite; }
     ForceGraph &			        composite( void )	     { return _composite; }
 
-    //const vector < Coord2 > &		        seeds( void ) const     { return _seeds; }
-    //vector< Coord2 > &			            seeds( void )	        { return _seeds; }
-    //const map < unsigned int, Polygon2 > &	polygons( void ) const          { return _polygons; }
-    //map< unsigned int, Polygon2 > &			polygons( void )	            { return _polygons; }
+    const Force &		            forceBoundary( void ) const  { return _forceBoundary; }
+    Force &			                forceBoundary( void )	     { return _forceBoundary; }
+
     const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
     map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }
 

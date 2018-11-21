@@ -44,7 +44,6 @@ private:
     Boundary        *_simplifiedBoundary;
 
     // optimization
-    Force           _forceBoundary;
     vector< Force > _forceCellVec;
 
     Smooth          *_smoothPtr;

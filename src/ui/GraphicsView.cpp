@@ -130,7 +130,7 @@ void GraphicsView::_item_polygonComplex( void )
 void GraphicsView::_item_polygons( void )
 {
     ForceGraph &s = _boundary->composite();
-    vector< Seed > &seedVec = *_forceBoundaryPtr->voronoi().seedVec();
+    vector< Seed > &seedVec = *_boundary->forceBoundary().voronoi().seedVec();
 
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
 

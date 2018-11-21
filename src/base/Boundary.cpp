@@ -1134,12 +1134,7 @@ void Boundary::buildBoundaryGraph( void )
                     _boundary[ curVD ].smoothPtr    = new Coord2( x, y );
 
                     _boundary[ curVD ].coordPtr     = new Coord2( x, y );
-/*
-                    _boundary[ curVD ].prevCoordPtr = new Coord2( x, y );
-                    _boundary[ curVD ].forcePtr     = new Coord2( 0, 0 );
-                    _boundary[ curVD ].placePtr     = new Coord2( 0, 0 );
-                    _boundary[ curVD ].shiftPtr     = new Coord2( 0, 0 );
-*/
+
                     _boundary[ curVD ].id = _boundary[ curVD ].initID = _nVertices;
                     _boundary[ curVD ].namePtr = new string( to_string( _boundary[ curVD ].id ) );
                     _boundary[ curVD ].weight = 1.0;
@@ -1556,28 +1551,21 @@ void Boundary::normalizeSkeleton( const int & width, const int & height )
 //
 void Boundary::createPolygonComplex( void )
 {
-    map< unsigned int, Polygon2 >::iterator itP;
     vector< vector< Polygon2 > > _polygonMat;
+    vector< Seed > &seedVec = *_forceBoundary.voronoi().seedVec();
 
     // initialization
     _polygonComplex.clear();
-/*
+
     // find the sets of the polygons of the same group
     int nV = num_vertices( _skeleton );
     _polygonMat.resize( nV );
-    unsigned int id = 0;
-    for( itP = _polygons.begin(); itP != _polygons.end(); itP++ ){
-        int gid = itP->second.gid() = _composite[ vertex( id, _composite ) ].initID;
-        // cerr << "gid = " << gid << " " << itP->second.elements()[0] << endl;
-        _polygonMat[ gid ].push_back( itP->second );
-        id++;
-    }
-    vector< Seed > &seedVec = *_forceBoundaryPtr->voronoi().seedVec();
-    for( unsigned int i = 0; i < seedVec.size(); i++ ) {
+    assert( seedVec.size() == num_vertices( _composite ) );
+    for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
-        Polygon2 &p = seedVec[i].cellPolygon;
+        int gid = _composite[ vertex( i, _composite ) ].initID;
+        _polygonMat[ gid ].push_back( seedVec[i].cellPolygon );
     }
-*/
 
     for( unsigned int i = 0; i < _polygonMat.size(); i++ ){
 

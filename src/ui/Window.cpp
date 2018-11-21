@@ -35,7 +35,7 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary,
     _octilinearPtr = __octilinear;
 
     _gv->setPathwayData( _pathway );
-    _gv->init( _boundary, _simplifiedBoundary, &_forceBoundary, &_forceCellVec );
+    _gv->init( _boundary, _simplifiedBoundary, &_forceCellVec );
 }
 
 void Window::createActions( void )
@@ -402,13 +402,13 @@ void Window::timerBoundary( void )
 {
     double err = 0.0;
 
-    switch ( _forceBoundary.mode() ) {
+    switch ( _boundary->forceBoundary().mode() ) {
         case TYPE_FORCE:
         {
-            _forceBoundary.force();
-            err = _forceBoundary.gap();
+            _boundary->forceBoundary().force();
+            err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
-            if ( err < _forceBoundary.finalEpsilon() ) {
+            if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer->stop();
                 cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -418,10 +418,10 @@ void Window::timerBoundary( void )
         }
         case TYPE_CENTROID:
         {
-            _forceBoundary.centroid();
-            err = _forceBoundary.gap();
+            _boundary->forceBoundary().centroid();
+            err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
-            if ( err < _forceBoundary.finalEpsilon() ) {
+            if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer->stop();
                 cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -429,11 +429,11 @@ void Window::timerBoundary( void )
         }
         case TYPE_HYBRID:
         {
-            _forceBoundary.force();
-            _forceBoundary.centroid();
-            err = _forceBoundary.gap();
+            _boundary->forceBoundary().force();
+            _boundary->forceBoundary().centroid();
+            err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
-            if ( err < _forceBoundary.finalEpsilon() ) {
+            if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer->stop();
                 cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -522,7 +522,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
             contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
 
-            _forceBoundary.init( &_boundary->composite(), contour );
+            _boundary->forceBoundary().init( &_boundary->composite(), contour );
 
 #ifdef SKIP
             void *ptr = &_boundary->boundary();
