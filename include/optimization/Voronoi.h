@@ -114,7 +114,6 @@ public:
     void createVoronoiDiagram( void );
     void createWeightedVoronoiDiagram( void );
     void mapSeedsandPolygons( void );
-    Coord2 centroid( CGAL::Polygon_2< K > polyg );
 
 //------------------------------------------------------------------------------
 //  Initialization functions

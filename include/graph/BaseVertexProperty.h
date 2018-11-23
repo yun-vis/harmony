@@ -69,6 +69,8 @@ class BaseVertexProperty {
     double *                    heightPtr;              // vertex height
     double *                    areaPtr;                // vertex area
 
+    int                         color;                  // color type
+
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------

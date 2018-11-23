@@ -121,16 +121,7 @@ void Pathway::initLayout( map< unsigned int, Polygon2 > &polygonComplex )
 
 		// compute boundary
 		advance( itP, i );
-		Coord2 lt( INFINITY, -INFINITY ), rb( -INFINITY, INFINITY ), center( 0.0, 0.0 );
-		vector< Coord2 > &coordVec = itP->second.elements();
-		for( unsigned int k = 0; k < coordVec.size(); k++ ){
-			if( coordVec[k].x() < lt.x() ) lt.x() = coordVec[k].x();
-			if( coordVec[k].x() > rb.x() ) rb.x() = coordVec[k].x();
-			if( coordVec[k].y() > lt.y() ) lt.y() = coordVec[k].y();
-			if( coordVec[k].y() < rb.y() ) rb.y() = coordVec[k].y();
-			center += coordVec[k];
-		}
-		center /= (double) coordVec.size();
+		Coord2 &centroid = itP->second.centroid();
 
         // initialization
         BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], ForceGraph ) {
@@ -140,17 +131,23 @@ void Pathway::initLayout( map< unsigned int, Polygon2 > &polygonComplex )
 			if( maxY < _layoutSubGraph[i][vd].coordPtr->y() ) maxY = _layoutSubGraph[i][vd].coordPtr->y();
 			if( minY > _layoutSubGraph[i][vd].coordPtr->y() ) minY = _layoutSubGraph[i][vd].coordPtr->y();
         }
-        // normalization
-        double scale = 0.1;
-        double half_w = scale*(rb.x()-lt.x());
-        double half_h = scale*(lt.y()-rb.y());
-        // cerr << "c = " << center;
+
+#ifdef DEBUG
+		cerr << "centroid = " << centroid;
+		cerr << "minX = " << minX << " maxX = " << maxX << " minY = " << minY << " maxY = " << maxY << endl;
+		cerr << "c = " << center;
+#endif // DEBUG
+
+		// normalization
+        double scale = 0.05;
+        double half_w = scale*( maxX-minX );
+        double half_h = scale*( maxY-minY );
 		BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], ForceGraph ) {
 
-			//_layoutSubGraph[i][vd].coordPtr->x() = center.x();
-			//_layoutSubGraph[i][vd].coordPtr->y() = center.y();
-			_layoutSubGraph[i][vd].coordPtr->x() = half_w * (_layoutSubGraph[i][vd].coordPtr->x() - minX)/( maxX - minX )+center.x() - scale * half_w;
-			_layoutSubGraph[i][vd].coordPtr->y() = half_h * (_layoutSubGraph[i][vd].coordPtr->y() - minY)/( maxY - minY )+center.y() - scale * half_h;
+			//_layoutSubGraph[i][vd].coordPtr->x() = centroid.x();
+			//_layoutSubGraph[i][vd].coordPtr->y() = centroid.y();
+			_layoutSubGraph[i][vd].coordPtr->x() = half_w * (_layoutSubGraph[i][vd].coordPtr->x() - minX)/( maxX - minX )+centroid.x() - scale * half_w;
+			_layoutSubGraph[i][vd].coordPtr->y() = half_h * (_layoutSubGraph[i][vd].coordPtr->y() - minY)/( maxY - minY )+centroid.y() - scale * half_h;
 		}
     }
 }

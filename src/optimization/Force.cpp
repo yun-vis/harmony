@@ -173,8 +173,17 @@ void Force::_clear( void )
 bool Force::_inContour( Coord2 &coord )
 {
     bool isIn = false;
-
     vector< Coord2 > &coordVec = _contour.elements();
+
+#ifdef DEBUG
+    cerr << "nContour = " << coordVec.size() << endl;
+    cerr << "coord = " << coord;
+    for( unsigned int n = 0; n < coordVec.size(); n++ ) {
+        // copy to points
+        cerr << "x = " << coordVec[n].x() << " y = " << coordVec[n].y() << endl;
+    }
+    cerr << endl;
+#endif // DEBUG
 
     K::Point_2 pt( coord.x(), coord.y() );
     K::Point_2 *points = new K::Point_2[ coordVec.size() ];
@@ -251,7 +260,9 @@ void Force::_force( void )
                     *g[ vdi ].forcePtr += _paramKa * ( dist - L ) * unit;
                 }
                 // Replusive force by Couloum's power
-                *g[ vdi ].forcePtr -= ( _paramKr/SQUARE( dist ) ) * unit;
+                if( dist > 0 ){
+                    *g[ vdi ].forcePtr -= ( _paramKr/SQUARE( dist ) ) * unit;
+                }
             }
         }
     }
@@ -296,7 +307,6 @@ void Force::_initSeed( void )
 void Force::_centroid( void )
 {
     _initSeed();
-
     //_voronoi.init( _seedVec, _contour );
     //_voronoi.createWeightedVoronoiDiagram();
     _voronoi.createVoronoiDiagram();
@@ -328,6 +338,7 @@ void Force::_centroid( void )
         }
     }
 }
+
 
 //
 //  Force::BarnesHut --	compute the displacements exerted by the force-directed model
@@ -402,7 +413,9 @@ void Force::_BarnesHut( void )
             if( theta < _paramThetaThreshold ){
 
                 Coord2 unit = diff.unit();
-                *g[ vd ].forcePtr -= tree[vdCur].leafVec.size() * ( _paramKr/SQUARE( d ) ) * unit;
+                if( d > 0 ){
+                    *g[ vd ].forcePtr -= tree[vdCur].leafVec.size() * ( _paramKr/SQUARE( d ) ) * unit;
+                }
                 //cerr << "theta = " << theta << endl;
             }
             else{
@@ -498,6 +511,12 @@ double Force::_gap( void )
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
 
         Coord2 coordNew = *g[ vd ].coordPtr + *g[ vd ].shiftPtr;
+
+#ifdef DEBUG
+        cerr << "id = " << g[vd].id << endl
+             << "coord = " << *g[ vd ].coordPtr
+             << "shift = " << *g[ vd ].shiftPtr;
+#endif // DEBUG
         if( !_inContour( coordNew ) ){
             g[ vd ].shiftPtr->x() = 0.0;
             g[ vd ].shiftPtr->y() = 0.0;

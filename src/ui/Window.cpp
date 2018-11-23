@@ -31,11 +31,13 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary,
     _boundary = __boundary;
     _simplifiedBoundary = __simBoundary;
 
+    _cell.setPathwayData( _pathway );
+
     _smoothPtr = __smooth;
     _octilinearPtr = __octilinear;
 
     _gv->setPathwayData( _pathway );
-    _gv->init( _boundary, _simplifiedBoundary, &_forceCellVec );
+    _gv->init( _boundary, _simplifiedBoundary, &_cell );
 }
 
 void Window::createActions( void )
@@ -134,8 +136,7 @@ void Window::redrawAllScene( void )
 
 void Window::selectForce( void )
 {
-    //_forceBoundaryPtr->init( _boundary );
-    //_forceBoundaryPtr->run();
+    simulateKey( Qt::Key_F );
     redrawAllScene();
 }
 
@@ -350,51 +351,48 @@ void Window::selectOctilinearCG( void )
     selectOctilinear( CONJUGATE_GRADIENT );
     redrawAllScene();
 }
-/*
-void Window::selectUpdateVoronoi( void )
-{
-    Voronoi voronoi;
-    _boundary->seeds().clear();
-    _boundary->polygons().clear();
-
-    vector< double > seedWeightVec;
-
-    //SkeletonGraph &s = _boundary->skeleton();
-    SkeletonGraph &s = _boundary->composite();
-    BGL_FORALL_VERTICES( vd, s, SkeletonGraph ) {
-        _boundary->seeds().push_back( *s[vd].coordPtr );
-        seedWeightVec.push_back( *s[vd].areaPtr );
-        // cerr << "a = " << *s[vd].areaPtr << endl;
-    }
-
-    voronoi.init( _boundary->seeds(), seedWeightVec, _boundary->polygons(), _content_width, _content_height );
-    //voronoi.createWeightedVoronoiDiagram();
-    voronoi.createVoronoiDiagram();
-    //cerr << "built voronoi..." << envdl;
-    _gv->isCompositeFlag() = true;
-    _gv->isPolygonFlag() = true;
-    redrawAllScene();
-}
-
-void Window::selectVoronoi( void )
-{
-
-    _boundary->seeds().clear();
-    _boundary->polygons().clear();
-
-
-    _boundary->buildSkeleton();
-    _boundary->decomposeSkeleton();
-    _boundary->normalizeSkeleton( _content_width, _content_height );
-
-    selectUpdateVoronoi();
-}
-*/
 
 void Window::selectBuildBoundary( void )
 {
     _boundary->buildBoundaryGraph();
     _gv->isSimplifiedFlag() = false;
+    redrawAllScene();
+}
+
+void Window::_timerBoundaryStart( void )
+{
+    _forceTargetFlag = false;
+
+    Polygon2 contour;
+    contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
+    contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
+    contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
+    contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
+
+    _boundary->forceBoundary().init( &_boundary->composite(), contour );
+
+#ifdef SKIP
+    void *ptr = &_boundary->boundary();
+            ForceGraph *fgPtr = (ForceGraph*) (ptr);
+            _forceBoundary.init( fgPtr, contour );
+            printGraph( *fgPtr );
+#endif // SKIP
+
+    _gv->isPolygonFlag() = true;
+}
+
+void Window::_timerBoundaryStop( void )
+{
+    simulateKey( Qt::Key_E );
+    _boundary->createPolygonComplex();
+    simulateKey( Qt::Key_B );
+    _boundary->writePolygonComplex();
+
+    _gv->isPolygonFlag() = false;
+    _gv->isPolygonComplexFlag() = true;
+    _gv->isBoundaryFlag() = true;
+    _gv->isCompositeFlag() = true;
+
     redrawAllScene();
 }
 
@@ -410,6 +408,7 @@ void Window::timerBoundary( void )
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer->stop();
+                _timerBoundaryStop();
                 cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
                 //cerr << "FINAL widget_count" << widget_count << endl;
@@ -423,6 +422,7 @@ void Window::timerBoundary( void )
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer->stop();
+                _timerBoundaryStop();
                 cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
@@ -435,6 +435,7 @@ void Window::timerBoundary( void )
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer->stop();
+                _timerBoundaryStop();
                 cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
@@ -444,20 +445,31 @@ void Window::timerBoundary( void )
     }
 }
 
+void Window::_timerPathwayCellStart( void )
+{
+    _forceTargetFlag = true;
+}
+
+void Window::_timerPathwayCellStop( void )
+{
+    redrawAllScene();
+}
+
 void Window::timerPathwayCell( void )
 {
     double err = 0.0;
 
-    for( unsigned int i = 0; i < _forceCellVec.size(); i++ ){
+    for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
 
-        switch ( _forceCellVec[i].mode() ) {
+        switch ( _cell.forceCellVec()[i].mode() ) {
             case TYPE_FORCE:
             {
-                _forceCellVec[i].force();
-                err = _forceCellVec[i].gap();
+                _cell.forceCellVec()[i].force();
+                err = _cell.forceCellVec()[i].gap();
                 cerr << "err = " << err << endl;
-                if ( err < _forceCellVec[i].finalEpsilon() ) {
+                if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                     _timer->stop();
+                    _timerPathwayCellStop();
                     cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     cerr << "[Force-Directed] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
                     //cerr << "FINAL widget_count" << widget_count << endl;
@@ -466,22 +478,24 @@ void Window::timerPathwayCell( void )
             }
             case TYPE_CENTROID:
             {
-                _forceCellVec[i].centroid();
-                err = _forceCellVec[i].gap();
-                if ( err < _forceCellVec[i].finalEpsilon() ) {
+                _cell.forceCellVec()[i].centroid();
+                err = _cell.forceCellVec()[i].gap();
+                if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                     _timer->stop();
+                    _timerPathwayCellStop();
                     cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     cerr << "[Centroidal] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
                 }
             }
             case TYPE_HYBRID:
             {
-                _forceCellVec[i].force();
-                _forceCellVec[i].centroid();
-                err = _forceCellVec[i].gap();
+                _cell.forceCellVec()[i].force();
+                _cell.forceCellVec()[i].centroid();
+                err = _cell.forceCellVec()[i].gap();
 
-                if ( err < _forceCellVec[i].finalEpsilon() ) {
+                if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                     _timer->stop();
+                    _timerPathwayCellStop();
                     cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
                 }
@@ -514,23 +528,7 @@ void Window::keyPressEvent( QKeyEvent *event )
 
         case Qt::Key_1:
         {
-            _forceTargetFlag = false;
-
-            Polygon2 contour;
-            contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
-            contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
-            contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
-            contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
-
-            _boundary->forceBoundary().init( &_boundary->composite(), contour );
-
-#ifdef SKIP
-            void *ptr = &_boundary->boundary();
-            ForceGraph *fgPtr = (ForceGraph*) (ptr);
-            _forceBoundary.init( fgPtr, contour );
-            printGraph( *fgPtr );
-#endif // SKIP
-
+            _timerBoundaryStart();
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
@@ -542,27 +540,12 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             cerr << "stop timer event" << endl;
             _timer->stop();
-            simulateKey( Qt::Key_E );
-            _boundary->createPolygonComplex();
-            simulateKey( Qt::Key_B );
-            _boundary->writePolygonComplex();
+            _timerBoundaryStop();
             break;
         }
         case Qt::Key_3:
         {
-            _forceTargetFlag = true;
-
-            vector< ForceGraph > &lsubg    = _pathway->lsubG();
-            map< unsigned int, Polygon2 >  pc = _boundary->polygonComplex();
-            _forceCellVec.resize( lsubg.size() );
-
-            for( unsigned int i = 0; i < lsubg.size(); i++ ){
-
-                // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
-                map< unsigned int, Polygon2 >::iterator itP = pc.begin();
-                advance( itP, i );
-                _forceCellVec[i].init( &lsubg[i], itP->second );
-            }
+            _timerPathwayCellStart();
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
@@ -574,6 +557,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             cerr << "stop timer event" << endl;
             _timer->stop();
+            _timerPathwayCellStop();
             break;
         }
 /*
@@ -616,7 +600,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_9:
         {
-            _gv->isPathwayFlag() = !_gv->isPathwayFlag();
+            _gv->isCellPolygonFlag() = !_gv->isCellPolygonFlag();
             redrawAllScene();
             break;
         }
@@ -630,6 +614,13 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // set widget and graphicsview
             //_pathway->normalization();
+            //_gv->isPathwayFlag() = true;
+
+            // initialize cell
+            _cell.clear();
+            _cell.init( &_boundary->polygonComplex() );
+
+            _gv->isCellFlag() = true;
             redrawAllScene();
             break;
         }
@@ -641,11 +632,6 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_C:
         {
             selectCloneGraph();
-            break;
-        }
-        case Qt::Key_F:
-        {
-            selectForce();
             break;
         }
         case Qt::Key_M:
@@ -680,9 +666,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             selectBuildBoundary();
             break;
         }
+        case Qt::Key_P:
+        case Qt::Key_F:
         case Qt::Key_U:
         {
-            //selectUpdateVoronoi();
             break;
         }
         case Qt::Key_V:
@@ -698,8 +685,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             break;
         }
         case Qt::Key_E:
+        {
             _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
             break;
+        }
         case Qt::Key_Q:
         case Qt::Key_Escape:
             close();
@@ -707,5 +696,4 @@ void Window::keyPressEvent( QKeyEvent *event )
         default:
             QWidget::keyPressEvent( event );
     }
-
 }

@@ -15,17 +15,6 @@
 
 using namespace std;
 
-#ifndef Q_MOC_RUN
-#include "ui/GraphicsBallItem.h"
-#include "ui/GraphicsEdgeItem.h"
-#include "ui/GraphicsPolygonItem.h"
-#include "optimization/Force.h"
-#include "base/Color.h"
-#include "base/Boundary.h"
-#include "base/Pathway.h"
-#include "base/PathwayData.h"
-#endif // Q_MOC_RUN
-
 #include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QApplication>
@@ -36,6 +25,17 @@ using namespace std;
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
 
+#ifndef Q_MOC_RUN
+#include "ui/GraphicsBallItem.h"
+#include "ui/GraphicsEdgeItem.h"
+#include "ui/GraphicsPolygonItem.h"
+#include "optimization/Force.h"
+#include "base/Color.h"
+#include "base/Boundary.h"
+#include "base/Cell.h"
+#include "base/Pathway.h"
+#include "base/PathwayData.h"
+#endif // Q_MOC_RUN
 
 //------------------------------------------------------------------------------
 //	Macro definitions
@@ -54,10 +54,11 @@ private:
     bool                _is_simplifiedFlag;
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
-                        _is_boundaryFlag, _is_pathwayFlag;
+                        _is_boundaryFlag, _is_pathwayFlag,
+                        _is_cellFlag, _is_cellPolygonFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
-    vector< Force >     *_forceCellVecPtr;
+    Cell                *_cellPtr;
 
 protected:
 
@@ -65,9 +66,11 @@ protected:
     void _item_skeleton( void );
     void _item_composite( void );
     void _item_pathways( void );
+    void _item_cells( void );
     void _item_seeds( void );
     void _item_polygonComplex( void );
     void _item_polygons( void );
+    void _item_cellPolygons( void );
 
 public:
     explicit GraphicsView( QWidget *parent = 0 );
@@ -87,19 +90,23 @@ public:
     const bool &    isPolygonFlag( void ) const     { return _is_polygonFlag; }
     bool &          isPolygonComplexFlag( void )           { return _is_polygonComplexFlag; }
     const bool &    isPolygonComplexFlag( void ) const     { return _is_polygonComplexFlag; }
-    bool &          isBoundaryFlag( void )         { return _is_boundaryFlag; }
-    const bool &    isBoundaryFlag( void ) const   { return _is_boundaryFlag; }
-    bool &          isPathwayFlag( void )          { return _is_pathwayFlag; }
-    const bool &    isPathwayFlag( void ) const    { return _is_pathwayFlag; }
+    bool &          isBoundaryFlag( void )          { return _is_boundaryFlag; }
+    const bool &    isBoundaryFlag( void ) const    { return _is_boundaryFlag; }
+    bool &          isPathwayFlag( void )           { return _is_pathwayFlag; }
+    const bool &    isPathwayFlag( void ) const     { return _is_pathwayFlag; }
+    bool &          isCellFlag( void )              { return _is_cellFlag; }
+    const bool &    isCellFlag( void ) const        { return _is_cellFlag; }
+    bool &          isCellPolygonFlag( void )       { return _is_cellPolygonFlag; }
+    const bool &    isCellPolygonFlag( void ) const { return _is_cellPolygonFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
     void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary,
-                                  vector< Force > *__forceCellVecPtr ){
+                                  Cell * __cellPtr ){
         _boundary = __boundary;
         _simplifiedBoundary = __simplifiedBoundary;
-        _forceCellVecPtr = __forceCellVecPtr;
+        _cellPtr = __cellPtr;
     }
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );

@@ -47,47 +47,6 @@ void Voronoi::_clear( void )
 //	Public functions
 //------------------------------------------------------------------------------
 //
-//  Voronoi::centroid --        return polygon centroid
-//
-//  Inputs
-//      none
-//
-//  Outputs
-//      none
-//
-Coord2 Voronoi::centroid( CGAL::Polygon_2< K > polyg )
-{
-    Coord2 center( 0.0, 0.0 );
-
-    // check if the polygon has at least three vertices
-    assert( polyg.size() >= 3 );
-    Vertex_circulator start = polyg.vertices_circulator();
-    Vertex_circulator cur = start;
-    Vertex_circulator next = cur;
-    ++next;
-    CGAL::Vector_2< K > centre( 0, 0 );
-    double a = 0.0, atot = 0.0;
-    do {
-        // cerr << CGAL::to_double( ((*cur).x()) * ((*next).y()) - ((*next).x()) * ((*cur).y()) ) << endl;
-        a = CGAL::to_double( ((*cur).x()) * ((*next).y()) - ((*next).x()) * ((*cur).y()) );
-        centre = centre + a * ((*cur - ORIGIN) + (*next - ORIGIN));
-        atot = atot + a;
-        cur = next;
-        ++next;
-    } while (cur != start);
-    atot = 3*atot;
-    centre = centre/atot;
-
-    double x = CGAL::to_double( (ORIGIN + centre).x() );
-    double y = CGAL::to_double( (ORIGIN + centre).y() );
-    center.x() = x;
-    center.y() = y;
-
-    // return ORIGIN + centre;
-    return center;
-}
-
-//
 //  Voronoi::createWeightedVoronoiDiagram --        create voronoi diagram
 //
 //  Inputs
@@ -346,6 +305,7 @@ void Voronoi::createVoronoiDiagram( void )
         vector< Coord2 > &eleVec = _contourPtr->elements();
         for( unsigned int i = 0; i < eleVec.size(); i++ ){
             bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
+            //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
         }
 
         //Perform the intersection. Since CGAL is very general, it believes the
@@ -355,7 +315,7 @@ void Voronoi::createVoronoiDiagram( void )
 
         //But we know better. The intersection of a convex polygon and a box is
         //always a single polygon without holes. Let's assert this.
-        assert( isect.size()==1 );
+        //assert( isect.size()==1 );
 
         //And recover the polygon of interest
         auto &poly_w_holes = isect.front();
@@ -370,7 +330,7 @@ void Voronoi::createVoronoiDiagram( void )
             p.push_back( K::Point_2( CGAL::to_double( v->x() ), CGAL::to_double( v->y() ) ) );
         }
 
-        // add the end points to generate an enclosed polygon
+        // add theend points to generate an enclosed polygon
         p.push_back( p[0] );
         // p.push_back( p[0] );
         // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
@@ -410,16 +370,10 @@ void Voronoi::mapSeedsandPolygons( void )
 
             if (bside == CGAL::ON_BOUNDED_SIDE) {
 
-                // compute polygon area
-                CGAL::Polygon_2< K > bpoly;
-                for( unsigned int n = 0; n < _polyVec2D[m].size(); n++ ) {
-                   bpoly.push_back( K::Point_2( _polyVec2D[m][n].x(), _polyVec2D[m][n].y() ) );
-                }
-
                 // copy polygon
                 Polygon2 poly( coords );
-                Coord2 center = centroid( bpoly );
-                poly.center() = center;
+                poly.updateCentroid();
+                poly.center() = poly.centroid();
                 poly.area() = poly.area();
                 (*_seedVecPtr)[i].cellPolygon = poly;
 

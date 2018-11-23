@@ -39,7 +39,8 @@ class Polygon2 {
     unsigned int        _id;
     unsigned int        _gid;
     double              _area;
-    Coord2              _center;
+    Coord2              _center;        // average of the elements
+    Coord2              _centroid;      // centroid of the elements
     vector< Coord2 >    _elements;      // coordinates of end points
 
     virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
@@ -83,6 +84,10 @@ class Polygon2 {
     Coord2 &	                center( void )	        { return _center; }
     const Coord2 &	            center( void ) const	{ return _center; }
 
+    // centroid
+    Coord2 &	                centroid( void )	    { return _centroid; }
+    const Coord2 &	            centroid( void ) const	{ return _centroid; }
+
     // pointer to an array of coordinates
     vector< Coord2 > &	        elements( void )	    { return _elements; }
     const vector< Coord2 > &	elements( void ) const	{ return _elements; }
@@ -92,6 +97,7 @@ class Polygon2 {
 //	Special functions
 //------------------------------------------------------------------------------
     void boundingBox( Coord2 &center, double &width, double &height );
+    void updateCentroid( void );
 
 //------------------------------------------------------------------------------
 //	Intersection check

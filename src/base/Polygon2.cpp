@@ -21,6 +21,13 @@ using namespace std;
 
 #include "base/Polygon2.h"
 
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Polygon_2.h>
+
+typedef CGAL::Exact_predicates_exact_constructions_kernel K;
+typedef CGAL::Polygon_2< K >::Vertex_circulator           Vertex_circulator;
+
+using CGAL::ORIGIN;
 
 //------------------------------------------------------------------------------
 //	Macro Definitions
@@ -109,6 +116,7 @@ Polygon2::Polygon2( const Polygon2 & v )
     _gid = v._gid;
     _area = v._area;
     _center = v._center;
+    _centroid = v._centroid;
     _elements = v._elements;
 }
 
@@ -133,6 +141,7 @@ Polygon2 & Polygon2::operator = ( const Polygon2 & p )
         _gid = p._gid;
         _area = p._area;
         _center = p._center;
+        _centroid = p._centroid;
         _elements = p._elements;
     } 
     return *this;
@@ -155,6 +164,42 @@ void Polygon2::boundingBox( Coord2 &center, double &width, double &height )
     center.y() = ( minY + maxY )/2.0;
     width = maxX - minX;
     height = maxY - minY;
+}
+
+void Polygon2::updateCentroid( void )
+{
+    CGAL::Polygon_2< K > polygon;
+    _centroid.x() = 0.0;
+    _centroid.y() = 0.0;
+
+    // initialization
+    for( unsigned int i = 0; i < _elements.size(); i++ ){
+        polygon.push_back( K::Point_2( _elements[i].x(), _elements[i].y() ) );
+    }
+
+    // check if the polygon has at least three vertices
+    assert( polygon.size() >= 3 );
+    Vertex_circulator start = polygon.vertices_circulator();
+    Vertex_circulator cur = start;
+    Vertex_circulator next = cur;
+    ++next;
+    CGAL::Vector_2< K > center( 0, 0 );
+    double a = 0.0, atot = 0.0;
+    do {
+        // cerr << CGAL::to_double( ((*cur).x()) * ((*next).y()) - ((*next).x()) * ((*cur).y()) ) << endl;
+        a = CGAL::to_double( ((*cur).x()) * ((*next).y()) - ((*next).x()) * ((*cur).y()) );
+        center = center + a * ((*cur - ORIGIN) + (*next - ORIGIN));
+        atot = atot + a;
+        cur = next;
+        ++next;
+    } while (cur != start);
+    atot = 3*atot;
+    center = center/atot;
+
+    double x = CGAL::to_double( (ORIGIN + center).x() );
+    double y = CGAL::to_double( (ORIGIN + center).y() );
+    _centroid.x() = x;
+    _centroid.y() = y;
 }
 
 //------------------------------------------------------------------------------

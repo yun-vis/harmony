@@ -1475,7 +1475,7 @@ void Boundary::decomposeSkeleton( void )
                 }
 
                 pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, _composite );
-                BoundaryGraph::edge_descriptor foreED = foreE.first;
+                ForceGraph::edge_descriptor foreED = foreE.first;
                 _composite[ foreED ].id = itA->first;
             }
 
@@ -1640,6 +1640,7 @@ void Boundary::createPolygonComplex( void )
         for( unsigned int j = 0; j < edVec.size(); j++ ){
             remove_edge( edVec[j], complex );
         }
+        // reorder edge id
         unsigned int eid = 0;
         BGL_FORALL_EDGES( ed, complex, ForceGraph )
         {
@@ -1690,8 +1691,11 @@ void Boundary::createPolygonComplex( void )
             polygon.elements().push_back( Coord2( complex[vdT].coordPtr->x(), complex[vdT].coordPtr->y() ) );
             vdC = vdT;
         }
-        polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
-        //cerr << endl;
+        // add the first point
+        // polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
+        polygon.updateCentroid();
+
+        //cerr << "p[" << i << "] = " << polygon << endl;
 
         _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, polygon ) );
     }
@@ -1719,8 +1723,13 @@ void Boundary::writePolygonComplex( void )
     }
 
     UndirectedPropertyGraph pg;
-    cerr << "nV = " << num_vertices( _boundary )
+
+#ifdef DEBUG
+    cerr << "Boundary::writePolygonComplex: "
+         << "nV = " << num_vertices( _boundary )
          << " nE = " << num_edges( _boundary ) << endl;
+#endif // DEBUG
+
     BGL_FORALL_VERTICES( vd, _boundary, BoundaryGraph ) {
 
         UndirectedPropertyGraph::vertex_descriptor pgVD = add_vertex( pg );
@@ -1972,9 +1981,11 @@ void Boundary::readPolygonComplex( void )
     }
     _nLines = _polygonComplexVD.size();
 
-    cerr << "nV = " << _nVertices << " nE = " << _nEdges
-         << " nL = " << _nLines << endl;
 #ifdef DEBUG
+    cerr << "Boundary::readPolygonComplex:"
+         << "nV = " << _nVertices << " nE = " << _nEdges
+         << " nL = " << _nLines << endl;
+
     map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
     for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
         vector< ForceGraph::vertex_descriptor > &p = itP->second;

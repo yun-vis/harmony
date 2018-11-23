@@ -237,6 +237,84 @@ void GraphicsView::_item_pathways( void )
     }
 }
 
+void GraphicsView::_item_cells( void )
+{
+    vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
+
+    // create edge object from the spanning tree and add it to the scene
+    for( unsigned int i = 0; i < cellGVec.size(); i++ ){
+
+        // draw edges
+        BGL_FORALL_EDGES( ed, cellGVec[i], ForceGraph ) {
+
+            ForceGraph::vertex_descriptor vdS = source( ed, cellGVec[i] );
+            ForceGraph::vertex_descriptor vdT = target( ed, cellGVec[i] );
+
+            QPainterPath path;
+            path.moveTo( cellGVec[i][vdS].coordPtr->x(), -cellGVec[i][vdS].coordPtr->y() );
+            path.lineTo( cellGVec[i][vdT].coordPtr->x(), -cellGVec[i][vdT].coordPtr->y() );
+
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
+            //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+            itemptr->setPath( path );
+            _scene->addItem( itemptr );
+        }
+
+        // draw vertices
+        BGL_FORALL_VERTICES( vd, cellGVec[i], ForceGraph ) {
+
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( cellGVec[i][vd].coordPtr->x(), -cellGVec[i][vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = cellGVec[i][vd].id;
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+}
+
+void GraphicsView::_item_cellPolygons( void )
+{
+    vector< Force >      &cellFVec    = _cellPtr->forceCellVec();
+    vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
+
+    for( unsigned int k = 1; k < 2; k++ ){
+    //for( unsigned int k = 0; k < cellFVec.size(); k++ ){
+
+        vector< Seed > &seedVec = *cellFVec[k].voronoi().seedVec();
+
+        for( unsigned int i = 0; i < seedVec.size(); i++ ){
+
+            Polygon2 &p = seedVec[i].cellPolygon;
+
+            QPolygonF polygon;
+            for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+            }
+
+            GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+            vector< double > rgb;
+            ForceGraph::vertex_descriptor vd = vertex( i, cellGVec[k] );
+
+            unsigned int gid = cellGVec[k][vd].groupID;
+            pickBrewerColor( gid, rgb );
+            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 0 ), Qt::SolidPattern ) );
+            itemptr->setPolygon( polygon );
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+}
+
 //------------------------------------------------------------------------------
 //	Public functions
 //------------------------------------------------------------------------------
@@ -251,7 +329,9 @@ void GraphicsView::initSceneItems ( void )
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
     if( _is_boundaryFlag == true ) _item_boundary();
-    if( _is_boundaryFlag == true ) _item_pathways();
+    if( _is_pathwayFlag == true ) _item_pathways();
+    if( _is_cellFlag == true ) _item_cells();
+    if( _is_cellPolygonFlag == true ) _item_cellPolygons();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -300,6 +380,8 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_compositeFlag = false;
     _is_boundaryFlag = false;
     _is_pathwayFlag = false;
+    _is_cellFlag = false;
+    _is_cellPolygonFlag = false;
     this->setScene( _scene );
 }
 

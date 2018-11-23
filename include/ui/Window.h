@@ -43,8 +43,8 @@ private:
     Boundary        *_boundary;
     Boundary        *_simplifiedBoundary;
 
-    // optimization
-    vector< Force > _forceCellVec;
+    // cells of subgraphs
+    Cell            _cell;
 
     Smooth          *_smoothPtr;
     Octilinear      *_octilinearPtr;
@@ -87,6 +87,11 @@ private:
     void _init( Boundary * __boundary, Boundary * __simBoundary,
                 Smooth * __smoothPtr, Octilinear * __octilinearPtr );
 
+    void _timerBoundaryStart( void );
+    void _timerBoundaryStop( void );
+    void _timerPathwayCellStart( void );
+    void _timerPathwayCellStop( void );
+
 public slots:
 
     // load
@@ -112,8 +117,6 @@ public slots:
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
 
     // voronoi
-    // void selectVoronoi( void );
-    // void selectUpdateVoronoi( void );
     void selectBuildBoundary( void );
 
     // timer
