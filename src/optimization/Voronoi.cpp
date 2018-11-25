@@ -216,7 +216,7 @@ void Voronoi::createVoronoiDiagram( void )
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
         wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(), (*_seedVecPtr)[i].coord.y() ), 0 ) );
-        //cerr << (*_seedVecPt)[i];
+        cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
     }
 
     //Find the bounding box of the points. This will be used to crop the Voronoi
@@ -238,12 +238,17 @@ void Voronoi::createVoronoiDiagram( void )
     //that ray is intersected with the bounding box defined above and returned as
     //a segment.
     const auto ConvertToSeg = [&](const CGAL::Object seg_obj, bool outgoing) -> K::Segment_2 {
+
         //One of these will succeed and one will have a NULL pointer
-        const K::Segment_2 *dseg = CGAL::object_cast<K::Segment_2>(&seg_obj);
-        const K::Ray_2     *dray = CGAL::object_cast<K::Ray_2>(&seg_obj);
-        if (dseg) { //Okay, we have a segment
+        const K::Segment_2 *dseg = CGAL::object_cast< K::Segment_2 >( &seg_obj );
+        const K::Line_2    *line = CGAL::object_cast< K::Line_2 >( &seg_obj );
+        const K::Ray_2     *dray = CGAL::object_cast< K::Ray_2 >( &seg_obj );
+
+        if ( dseg != NULL ) { //Okay, we have a segment
+            // cerr << "dseg = " << *dseg << endl;
             return *dseg;
-        } else {    //Must be a ray
+        }
+        else if ( dray != NULL ){    //Must be a ray
             const auto &source = dray->source();
             const auto dsx     = source.x();
             const auto dsy     = source.y();
@@ -253,6 +258,11 @@ void Voronoi::createVoronoiDiagram( void )
                 return K::Segment_2( dray->source(), tpoint );
             else
                 return K::Segment_2( tpoint, dray->source() );
+        }
+        else if ( line != NULL ) {    //Must be a line
+        }
+        else{
+            cerr << "Something is wong here at " << __LINE__ << " in " << __FILE__ << endl;
         }
     };
 
@@ -273,17 +283,18 @@ void Voronoi::createVoronoiDiagram( void )
         //Current location of the edge circulator
         VD::Face::Ccb_halfedge_circulator ec = ec_start;
 
-
         do {
             //A half edge circulator representing a ray doesn't carry direction
             //information. To get it, we take the dual of the dual of the half-edge.
             //The dual of a half-edge circulator is the edge of a Delaunay triangle.
             //The dual of the edge of Delaunay triangle is either a segment or a ray.
-            // const CGAL::Object seg_dual = rt.dual(ec->dual());
-            const CGAL::Object seg_dual = vd.dual().dual(ec->dual());
+            //const CGAL::Object seg_dual = rt.dual( ec->dual() );
+            const CGAL::Object seg_dual = vd.dual().dual( ec->dual() );
+
+            // cerr << "seg_dual = " << vd << endl;
 
             //Convert the segment/ray into a segment
-            const auto this_seg = ConvertToSeg(seg_dual, ec->has_target());
+            const auto this_seg = ConvertToSeg( seg_dual, ec->has_target() );
 
             pgon.push_back( this_seg.source() );
 
@@ -291,8 +302,8 @@ void Voronoi::createVoronoiDiagram( void )
             //segment will also be a ray. We need to connect those two rays with a
             //segment. The following accomplishes this.
             if(!ec->has_target()){
-                const CGAL::Object nseg_dual = vd.dual().dual(ec->next()->dual());
-                const auto next_seg = ConvertToSeg(nseg_dual, ec->next()->has_target());
+                const CGAL::Object nseg_dual = vd.dual().dual( ec->next()->dual() );
+                const auto next_seg = ConvertToSeg( nseg_dual, ec->next()->has_target() );
                 pgon.push_back(next_seg.target());
             }
 

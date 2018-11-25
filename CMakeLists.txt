@@ -20,6 +20,8 @@ else()
     set(CMAKE_CXX_STANDARD 11)
 endif()
 
+ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
+
 if (UNIX AND NOT APPLE)
 
   message(status "Setting G++ flags")
@@ -70,6 +72,7 @@ link_directories(
 #set(RESOURCES *.qrc)
 
 set(HEADERS
+        include/base/Boundary.h
         include/base/Common.h
         include/base/CommonClass.h
         include/base/Config.h
@@ -79,7 +82,6 @@ set(HEADERS
         include/base/QuardTree.h
         include/base/Timer.h
         include/base/Color.h
-        include/base/Boundary.h
         include/base/Cell.h
         include/base/Pathway.h
         include/base/PathwayData.h.h

@@ -51,6 +51,8 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour )
 
     _contour.boundingBox( _boxCenter, _width, _height );
 
+    cerr << "contour: _width = " << _width << " _height = " << _height << endl;
+
     _iteration = 1;
     _temperatureDecay = 1.0;
 
@@ -226,6 +228,7 @@ void Force::_force( void )
 {
     ForceGraph & g = *_forceGraphPtr;
 
+    cerr << "force: _width = " << _width << " _height = " << _height << endl;
     double side = 0.5 * _width * _height ;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( g ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
@@ -304,7 +307,7 @@ void Force::_initSeed( void )
 //  Outputs
 //	none
 //
-void Force::_centroid( void )
+void Force::_centroidGeometry( void )
 {
     _initSeed();
     //_voronoi.init( _seedVec, _contour );
@@ -672,7 +675,23 @@ double Force::_verletIntegreation( void )
 //
 Force::Force()
 {
-    //_init();
+    _width = 0.0;
+    _height = 0.0;
+
+    // configuration parameter
+    _paramKa                    = 0.0;
+    _paramKr                    = 0.0;
+    _paramRatioForce            = 0.0;
+    _paramRatioVoronoi          = 0.0;
+    _paramTransformationStep    = 0.0;
+    _paramCellRatio             = 0.0;
+    _paramDisplacementLimit     = 0.0;
+    _paramFinalEpsilon          = 0.0;
+    _paramThetaThreshold        = 0.0;
+    _paramMinTemperature        = 0.0;
+    _paramAlphaTemperature      = 0.0;
+    _paramEnableTemperature     = 0.0;
+    _paramMode                  = TYPE_HYBRID;
 }
 
 
@@ -687,7 +706,23 @@ Force::Force()
 //
 Force::Force( const Force & obj )
 {
-    //_init();
+    _width = obj._width;
+    _height = obj._height;
+
+    // configuration parameter
+    _paramKa                    = obj._paramKa;
+    _paramKr                    = obj._paramKr;
+    _paramRatioForce            = obj._paramRatioForce;
+    _paramRatioVoronoi          = obj._paramRatioVoronoi;
+    _paramTransformationStep    = obj._paramTransformationStep;
+    _paramCellRatio             = obj._paramCellRatio;
+    _paramDisplacementLimit     = obj._paramDisplacementLimit;
+    _paramFinalEpsilon          = obj._paramFinalEpsilon;
+    _paramThetaThreshold        = obj._paramThetaThreshold;
+    _paramMinTemperature        = obj._paramMinTemperature;
+    _paramAlphaTemperature      = obj._paramAlphaTemperature;
+    _paramEnableTemperature     = obj._paramEnableTemperature;
+    _paramMode                  = obj._paramMode;
 }
 
 
@@ -729,6 +764,24 @@ Force::~Force()
 //
 Force & Force::operator = ( const Force & obj )
 {
+    _width = obj._width;
+    _height = obj._height;
+
+    // configuration parameter
+    _paramKa                    = obj._paramKa;
+    _paramKr                    = obj._paramKr;
+    _paramRatioForce            = obj._paramRatioForce;
+    _paramRatioVoronoi          = obj._paramRatioVoronoi;
+    _paramTransformationStep    = obj._paramTransformationStep;
+    _paramCellRatio             = obj._paramCellRatio;
+    _paramDisplacementLimit     = obj._paramDisplacementLimit;
+    _paramFinalEpsilon          = obj._paramFinalEpsilon;
+    _paramThetaThreshold        = obj._paramThetaThreshold;
+    _paramMinTemperature        = obj._paramMinTemperature;
+    _paramAlphaTemperature      = obj._paramAlphaTemperature;
+    _paramEnableTemperature     = obj._paramEnableTemperature;
+    _paramMode                  = obj._paramMode;
+
     return *this;
 }
 

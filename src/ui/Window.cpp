@@ -417,7 +417,7 @@ void Window::timerBoundary( void )
         }
         case TYPE_CENTROID:
         {
-            _boundary->forceBoundary().centroid();
+            _boundary->forceBoundary().centroidGeometry();
             err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
@@ -430,7 +430,7 @@ void Window::timerBoundary( void )
         case TYPE_HYBRID:
         {
             _boundary->forceBoundary().force();
-            _boundary->forceBoundary().centroid();
+            _boundary->forceBoundary().centroidGeometry();
             err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
@@ -461,6 +461,7 @@ void Window::timerPathwayCell( void )
 
     for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
 
+        cerr << "i = " << i << " mode = " << _cell.forceCellVec()[i].mode() << endl;
         switch ( _cell.forceCellVec()[i].mode() ) {
             case TYPE_FORCE:
             {
@@ -478,7 +479,7 @@ void Window::timerPathwayCell( void )
             }
             case TYPE_CENTROID:
             {
-                _cell.forceCellVec()[i].centroid();
+                _cell.forceCellVec()[i].centroidGeometry();
                 err = _cell.forceCellVec()[i].gap();
                 if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                     _timer->stop();
@@ -489,10 +490,9 @@ void Window::timerPathwayCell( void )
             }
             case TYPE_HYBRID:
             {
-                _cell.forceCellVec()[i].force();
-                _cell.forceCellVec()[i].centroid();
+                //_cell.forceCellVec()[i].force();
+                _cell.forceCellVec()[i].centroidGeometry();
                 err = _cell.forceCellVec()[i].gap();
-
                 if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                     _timer->stop();
                     _timerPathwayCellStop();

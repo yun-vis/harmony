@@ -13,19 +13,21 @@
 
 using namespace std;
 
-#include <QtWidgets/QOpenGLWidget>
+#ifndef Q_MOC_RUN
+#include "optimization/Force.h"
+#include "optimization/Smooth.h"
+#include "optimization/Octilinear.h"
+#include "ui/GraphicsView.h"
+#include "base/Timer.h"
+#endif // Q_MOC_RUN
+
+#include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtGui/QMouseEvent>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QApplication>
 #include <QtCore/QTimer>
-
-#include "optimization/Force.h"
-#include "optimization/Smooth.h"
-#include "optimization/Octilinear.h"
-#include "ui/GraphicsView.h"
-#include "base/Timer.h"
 
 #define REMOVEBACKNUM   (15)
 
@@ -92,7 +94,7 @@ private:
     void _timerPathwayCellStart( void );
     void _timerPathwayCellStop( void );
 
-public slots:
+public Q_SLOTS:
 
     // load
     void selectData( void );

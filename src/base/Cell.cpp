@@ -58,8 +58,8 @@ void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
     _buildConnectedComponent();
     _buildCellGraphs();
 
-    for( unsigned int i = 1; i < 2; i++ ){
-    //for( unsigned int i = 0; i < lsubg.size(); i++ ){
+    //for( unsigned int i = 1; i < 2; i++ ){
+    for( unsigned int i = 0; i < lsubg.size(); i++ ){
 
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
         map< unsigned int, Polygon2 >::iterator itP = _polygonComplexPtr->begin();

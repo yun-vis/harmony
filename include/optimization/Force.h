@@ -14,6 +14,7 @@
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
+#include <QImage>
 #include "base/Polygon2.h"
 #include "base/QuardTree.h"
 #include "base/Config.h"
@@ -37,7 +38,8 @@ class Force {
 
     ForceGraph     *_forceGraphPtr;
     vector< Seed >  _seedVec;               // seeds of the voronoi diagram
-    Voronoi         _voronoi;               // voronoi diagram
+    Voronoi         _voronoi;               // geometric voronoi diagram
+    QImage *		_diagram;               // image for computing GPU base voronoi diagram
 
     QuardTree       _quardTree;
     unsigned int    _iteration;             // iteration of the simulation
@@ -60,8 +62,6 @@ class Force {
 
   protected:
 
-    unsigned int	_step;
-
     void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 &__contour );
     void            _clear  ( void );
     void		    _random	( void );
@@ -70,7 +70,7 @@ class Force {
     void		    _BarnesHut  		( void );
 
     void            _initSeed           ( void );
-    void		    _centroid	        ( void );
+    void		    _centroidGeometry   ( void );
 
     double		    _gap		        ( void );
     double		    _verletIntegreation ( void );
@@ -94,10 +94,6 @@ class Force {
 //------------------------------------------------------------------------------
 //	Referencing to members
 //------------------------------------------------------------------------------
-    const unsigned int &	step  ( void )	const	{ return _step; }
-    unsigned int &		    step  ( void )		    { return _step; }
-
-
     const Polygon2 &	    contour ( void )const	{ return _contour; }
     Polygon2 &	    	    contour ( void )	    { return _contour; }
     const double &		    width ( void )	const	{ return _width; }
@@ -113,6 +109,9 @@ class Force {
 
     const Voronoi &         voronoi( void )         const   { return _voronoi; }
     Voronoi &               voronoi( void )                 { return _voronoi; }
+
+    const QImage *          diagram( void )         const   { return _diagram; }
+    QImage *                diagram( void )                 { return _diagram; }
 
     const QuardTree &       quardTree( void )       const   { return _quardTree; }
     QuardTree &             quardTree( void )               { return _quardTree; }
@@ -132,9 +131,9 @@ class Force {
 //------------------------------------------------------------------------------
 //	Force functions
 //------------------------------------------------------------------------------
-    void force	    ( void )        { _force(); }
-    void centroid	( void )	    { _centroid(); }
-    void BarnesHut  ( void )        { _BarnesHut(); }
+    void force	            ( void )        { _force(); }
+    void centroidGeometry   ( void )	    { _centroidGeometry(); }
+    void BarnesHut          ( void )        { _BarnesHut(); }
 
 //------------------------------------------------------------------------------
 //	Specific functions

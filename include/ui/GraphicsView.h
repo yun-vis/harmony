@@ -15,15 +15,6 @@
 
 using namespace std;
 
-#include <QtWidgets/QGraphicsScene>
-#include <QtWidgets/QGraphicsView>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QGraphicsSceneDragDropEvent>
-#include <QtGui/QMouseEvent>
-#include <QtCore/QMimeData>
-#include <QtSvg/QSvgGenerator>
-#include <QtCore/QDir>
-#include <QtCore/QTimer>
 
 #ifndef Q_MOC_RUN
 #include "ui/GraphicsBallItem.h"
@@ -36,6 +27,16 @@ using namespace std;
 #include "base/Pathway.h"
 #include "base/PathwayData.h"
 #endif // Q_MOC_RUN
+
+#include <QtWidgets/QGraphicsScene>
+#include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QGraphicsSceneDragDropEvent>
+#include <QtGui/QMouseEvent>
+#include <QtCore/QMimeData>
+#include <QtSvg/QSvgGenerator>
+#include <QtCore/QDir>
+#include <QtCore/QTimer>
 
 //------------------------------------------------------------------------------
 //	Macro definitions
