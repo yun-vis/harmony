@@ -36,8 +36,8 @@ using namespace std;
 //
 void Octilinear::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
-    _boundary                      = __boundary;
-    BoundaryGraph        & g            = _boundary->boundary();
+    _boundary                   = __boundary;
+    BoundaryGraph        & g    = _boundary->boundary();
     unsigned int nVertices      = _boundary->nVertices();
     unsigned int nEdges         = _boundary->nEdges();
     _d_Alpha                    = _boundary->dAlpha();

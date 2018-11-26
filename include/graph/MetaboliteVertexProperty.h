@@ -59,6 +59,7 @@ class MetaboliteVertexProperty : public BaseVertexProperty {
 	bool			activate;
 	int 			stoichiometry;
 	bool * 			isClonedPtr;
+	Coord2			* centerPtr;		// voronoi center
 	string          type;
 	string          metaType;
     BioNetMetabolite *    metaPtr;		// subsystems record all subsystems related to this metabolite

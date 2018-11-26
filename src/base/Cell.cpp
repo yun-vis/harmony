@@ -65,6 +65,7 @@ void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
         map< unsigned int, Polygon2 >::iterator itP = _polygonComplexPtr->begin();
         advance( itP, i );
         _forceCellVec[i].init( &_forceCellGraphVec[i], itP->second );
+        _forceCellVec[i].id() = i;
     }
 
     cerr << "filepath: " << configFilePath << endl;
@@ -181,8 +182,8 @@ void Cell::_buildCellGraphs( void )
 
                 // add vertex
                 ForceGraph::vertex_descriptor vdNew = add_vertex( fg );
-                double x = itP->second.centroid().x() + rand()%50 - 25;
-                double y = itP->second.centroid().y() + rand()%50 - 25;
+                double x = itP->second.centroid().x() + rand()%100 - 50;
+                double y = itP->second.centroid().y() + rand()%100 - 50;
 
                 fg[ vdNew ].id          = idV;
                 fg[ vdNew ].groupID     = i;
@@ -226,6 +227,33 @@ void Cell::_buildCellGraphs( void )
     }
 
 
+}
+
+void Cell::updatePathwayCoords( void )
+{
+    //vector< multimap< int, CellGroup > >    _cellGroupVec;
+    //vector< multimap< int, CellGroup > >::iterator itC = _cellGroupVec.begin();
+    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+
+    for( unsigned int i = 0; i < _cellGroupVec.size(); i++ ){
+
+        multimap< int, CellGroup >::iterator itC = _cellGroupVec[i].begin();
+        for( ; itC != _cellGroupVec[i].end(); itC++ ){
+
+            int size = itC->second.cellVec.size();
+            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _forceCellGraphVec[i] );
+
+            for( unsigned int j = 0; j < size; j++ ){
+
+                //_forceCellGraphVec[i][vd].coordPtr->x() + rand()%20-10.0;
+                //_forceCellGraphVec[i][vd].coordPtr->y() + rand()%20-10.0;
+
+                //ForceGraph::vertex_descriptor vdC = vertex( itC->second.cellVec[j], lsubg[i] );
+                lsubg[i][itC->second.cellVec[j]].coordPtr->x() = _forceCellGraphVec[i][vd].coordPtr->x() + rand()%20-10.0;
+                lsubg[i][itC->second.cellVec[j]].coordPtr->y() = _forceCellGraphVec[i][vd].coordPtr->y() + rand()%20-10.0;
+            }
+        }
+    }
 }
 
 //

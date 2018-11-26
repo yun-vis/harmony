@@ -32,6 +32,7 @@ class Force {
 
   private:
 
+    unsigned int    _id;
     Polygon2        _contour;
     Coord2          _boxCenter;             // bounding box center of the contour
     double			_width, _height;        // bounding box of the contour
@@ -94,6 +95,9 @@ class Force {
 //------------------------------------------------------------------------------
 //	Referencing to members
 //------------------------------------------------------------------------------
+    const unsigned int &    id( void )      const   { return _id; }
+    unsigned int &          id( void )              { return _id; }
+
     const Polygon2 &	    contour ( void )const	{ return _contour; }
     Polygon2 &	    	    contour ( void )	    { return _contour; }
     const double &		    width ( void )	const	{ return _width; }

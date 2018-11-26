@@ -312,6 +312,7 @@ void Force::_centroidGeometry( void )
     _initSeed();
     //_voronoi.init( _seedVec, _contour );
     //_voronoi.createWeightedVoronoiDiagram();
+    _voronoi.id() = _id;
     _voronoi.createVoronoiDiagram();
 
     // const char theName[] = "Net::centroid : ";

@@ -83,6 +83,7 @@ public:
 //      Initialization functions
 //------------------------------------------------------------------------------
     void prepare( Boundary * __boundary, double __half_width, double __half_height ) {
+
         _init( __boundary, __half_width, __half_height );
     }
 

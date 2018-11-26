@@ -283,8 +283,8 @@ void GraphicsView::_item_cellPolygons( void )
     vector< Force >      &cellFVec    = _cellPtr->forceCellVec();
     vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
 
-    for( unsigned int k = 1; k < 2; k++ ){
-    //for( unsigned int k = 0; k < cellFVec.size(); k++ ){
+    //for( unsigned int k = 1; k < 2; k++ ){
+    for( unsigned int k = 0; k < cellFVec.size(); k++ ){
 
         vector< Seed > &seedVec = *cellFVec[k].voronoi().seedVec();
 

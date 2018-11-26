@@ -81,6 +81,7 @@ class Voronoi
 
 private:
 
+    unsigned                        _id;
     // contour
     Polygon2                       *_contourPtr;        // contour of the voronoi diagram
 
@@ -95,13 +96,16 @@ protected:
 
 public:
 
-    Voronoi();                     // default constructor
+    Voronoi();                      // default constructor
     Voronoi( const Voronoi & obj ); // Copy constructor
-    virtual ~Voronoi();            // Destructor
+    virtual ~Voronoi();             // Destructor
 
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
+    const unsigned int &        id( void )              const   { return _id; }
+    unsigned int &              id( void )                      { return _id; }
+
     const vector< Seed > *      seedVec( void )         const   { return _seedVecPtr; }
     vector< Seed > *            seedVec( void )                 { return _seedVecPtr; }
 

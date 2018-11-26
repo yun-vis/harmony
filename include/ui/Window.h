@@ -36,7 +36,7 @@ class Window : public QMainWindow, public PathwayData
     Q_OBJECT
 private:
 
-    QBasicTimer	    *_timer;
+    vector< QBasicTimer	* > _timer;
 
     // rendering
     GraphicsView    *_gv;
@@ -45,11 +45,12 @@ private:
     Boundary        *_boundary;
     Boundary        *_simplifiedBoundary;
 
+
     // cells of subgraphs
     Cell            _cell;
 
-    Smooth          *_smoothPtr;
-    Octilinear      *_octilinearPtr;
+    Smooth          _smooth;
+    Octilinear      _octilinear;
 
     // display
     int             _content_width;
@@ -86,8 +87,7 @@ private:
     void simulateKey( Qt::Key key );
     void redrawAllScene( void );
 
-    void _init( Boundary * __boundary, Boundary * __simBoundary,
-                Smooth * __smoothPtr, Octilinear * __octilinearPtr );
+    void _init( Boundary * __boundary, Boundary * __simBoundary );
 
     void _timerBoundaryStart( void );
     void _timerBoundaryStop( void );
@@ -129,9 +129,8 @@ public:
     explicit Window( QWidget *parent = 0 );
     ~Window();
 
-    void init( Boundary * __boundary, Boundary * __simBoundary,
-               Smooth * __smoothPtr, Octilinear * __octilinearPtr ){
-        _init( __boundary, __simBoundary, _smoothPtr, _octilinearPtr );
+    void init( Boundary * __boundary, Boundary * __simBoundary ){
+        _init( __boundary, __simBoundary );
     }
 
 protected:

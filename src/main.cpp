@@ -17,8 +17,6 @@ int main( int argc, char **argv )
 //----------------------------------------------------------
     Pathway pathway;
     Boundary simplifiedBoundary, boundary;
-    Smooth smooth;
-    Octilinear octilinear;
 
 //----------------------------------------------------------
 // view
@@ -28,7 +26,7 @@ int main( int argc, char **argv )
     window.setGeometry( 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT );
     window.setWindowTitle( "qtBorder" );
     window.setPathwayData( &pathway );
-    window.init( &boundary, &simplifiedBoundary, &smooth, &octilinear );
+    window.init( &boundary, &simplifiedBoundary );
     window.show();
 
     cerr << "Use: i -> c -> m -> s ->o" << endl;

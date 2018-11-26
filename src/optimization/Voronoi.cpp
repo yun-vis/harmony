@@ -212,11 +212,11 @@ void Voronoi::createVoronoiDiagram( void )
     wpoints.clear();
 
     // copy points
-    //cerr << "points:" << endl;
+    cerr << "id = " << _id << " size = " << _seedVecPtr->size() << " points:" << endl;
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
         wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(), (*_seedVecPtr)[i].coord.y() ), 0 ) );
-        cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
+        // cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
     }
 
     //Find the bounding box of the points. This will be used to crop the Voronoi
@@ -237,7 +237,7 @@ void Voronoi::createVoronoiDiagram( void )
     //these objects into segments. If the object would have resolved into a ray,
     //that ray is intersected with the bounding box defined above and returned as
     //a segment.
-    const auto ConvertToSeg = [&](const CGAL::Object seg_obj, bool outgoing) -> K::Segment_2 {
+    const auto ConvertToSeg = [&](const CGAL::Object seg_obj, bool outgoing, bool &isLine ) -> K::Segment_2 {
 
         //One of these will succeed and one will have a NULL pointer
         const K::Segment_2 *dseg = CGAL::object_cast< K::Segment_2 >( &seg_obj );
@@ -260,6 +260,8 @@ void Voronoi::createVoronoiDiagram( void )
                 return K::Segment_2( tpoint, dray->source() );
         }
         else if ( line != NULL ) {    //Must be a line
+            isLine = true;
+            return  K::Segment_2( K::Point_2( 0.0, 0.0 ), K::Point_2( 0.0, 0.0 ) );
         }
         else{
             cerr << "Something is wong here at " << __LINE__ << " in " << __FILE__ << endl;
@@ -283,6 +285,7 @@ void Voronoi::createVoronoiDiagram( void )
         //Current location of the edge circulator
         VD::Face::Ccb_halfedge_circulator ec = ec_start;
 
+        bool isLine = false;
         do {
             //A half edge circulator representing a ray doesn't carry direction
             //information. To get it, we take the dual of the dual of the half-edge.
@@ -294,7 +297,7 @@ void Voronoi::createVoronoiDiagram( void )
             // cerr << "seg_dual = " << vd << endl;
 
             //Convert the segment/ray into a segment
-            const auto this_seg = ConvertToSeg( seg_dual, ec->has_target() );
+            const auto this_seg = ConvertToSeg( seg_dual, ec->has_target(), isLine );
 
             pgon.push_back( this_seg.source() );
 
@@ -303,20 +306,33 @@ void Voronoi::createVoronoiDiagram( void )
             //segment. The following accomplishes this.
             if(!ec->has_target()){
                 const CGAL::Object nseg_dual = vd.dual().dual( ec->next()->dual() );
-                const auto next_seg = ConvertToSeg( nseg_dual, ec->next()->has_target() );
+                const auto next_seg = ConvertToSeg( nseg_dual, ec->next()->has_target(), isLine );
                 pgon.push_back(next_seg.target());
             }
 
         } while ( ++ec != ec_start ); //Loop until we get back to the beginning
+
+        if( isLine ) return;
 
         //In order to crop the Voronoi diagram, we need to convert the bounding box
         //into a polygon. You'd think there'd be an easy way to do this. But there
         //isn't (or I haven't found it).
         CGAL::Polygon_2< K > bpoly;
         vector< Coord2 > &eleVec = _contourPtr->elements();
-        for( unsigned int i = 0; i < eleVec.size(); i++ ){
-            bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
-            //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
+
+        if( _id == 2 ){
+            return;
+            int size = eleVec.size();
+            for( unsigned int i = 0; i < eleVec.size(); i++ ){
+                bpoly.push_back( K::Point_2( eleVec[size-1-i].x(), eleVec[size-1-i].y() ));
+                //cerr << size-1-i << ": eleVec[size-1-i] = " << eleVec[size-1-i] << endl;
+            }
+        }
+        else{
+            for( unsigned int i = 0; i < eleVec.size(); i++ ){
+                bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
+                //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
+            }
         }
 
         //Perform the intersection. Since CGAL is very general, it believes the

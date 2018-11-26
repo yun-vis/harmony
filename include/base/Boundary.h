@@ -151,6 +151,7 @@ public:
     void buildSkeleton( void );
     void decomposeSkeleton( void );
     void createPolygonComplex( void );
+    void updatePolygonComplex( void );
     void readPolygonComplex( void );
     void writePolygonComplex( void );
     bool findVertexInComplex( Coord2 &coord, ForceGraph &complex,

@@ -15,15 +15,18 @@ Window::Window( QWidget *parent )
     createActions();
     createMenus();
 
-    _timer = new QBasicTimer();
+    //_smoothPtr = NULL;
+    //_octilinearPtr = NULL;
+
+    _timer.resize( 1 );
+    _timer[0] = new QBasicTimer();
 }
 
 Window::~Window()
 {
 }
 
-void Window::_init( Boundary * __boundary, Boundary * __simBoundary,
-                    Smooth * __smooth, Octilinear * __octilinear )
+void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
 {
     _content_width = DEFAULT_WIDTH - LEFTRIGHT_MARGIN;
     _content_height = DEFAULT_HEIGHT - TOPBOTTOM_MARGIN;
@@ -33,8 +36,11 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary,
 
     _cell.setPathwayData( _pathway );
 
-    _smoothPtr = __smooth;
-    _octilinearPtr = __octilinear;
+    //_smoothPtr = __smoothPtr;
+    //_octilinearPtr = __octilinearPtr;
+
+    //if( _smoothPtr == NULL ) assert( _smoothPtr );
+    //if( _octilinearPtr == NULL ) assert( _octilinearPtr );
 
     _gv->setPathwayData( _pathway );
     _gv->init( _boundary, _simplifiedBoundary, &_cell );
@@ -177,9 +183,9 @@ void Window::selectSmoothSmallCG( void )
     clock_t start_time = clock();
     double err = 0.0;
     unsigned int nLabels = _simplifiedBoundary->nLabels();
-    _smoothPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundary->nVertices() );
-    _smoothPtr->retrieve();
+    _smooth.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+    err = _smooth.ConjugateGradient( 3 * _simplifiedBoundary->nVertices() );
+    _smooth.retrieve();
 
     cerr << "simNStation = " << _simplifiedBoundary->nVertices() << endl;
     cerr << "nStation = " << _boundary->nVertices() << endl;
@@ -206,21 +212,21 @@ void Window::selectSmoothSmallCG( void )
             }
         }
 
-        _smoothPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+        _smooth.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
         if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
             iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
         else{
             iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
-        err = _smoothPtr->ConjugateGradient( iter );
-        _smoothPtr->retrieve();
+        err = _smooth.ConjugateGradient( iter );
+        _smooth.retrieve();
 
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
     //_simplifiedBoundary->adjustsize( width(), height() );
-    _smoothPtr->clear();
+    _smooth.clear();
     _boundary->cloneSmooth( *_simplifiedBoundary );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
@@ -232,25 +238,25 @@ void Window::selectSmoothSmallCG( void )
 void Window::selectSmooth( OPTTYPE opttype )
 {
     // run smooth optimization
-    _smoothPtr->prepare( _boundary, _content_width/2, _content_height/2 );
+    _smooth.prepare( _boundary, _content_width/2, _content_height/2 );
     switch( opttype ){
         case LEAST_SQUARE:
         {
             int iter = _boundary->nVertices();
-            _smoothPtr->LeastSquare( iter );
+            _smooth.LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
             int iter = _boundary->nVertices();
-            _smoothPtr->ConjugateGradient( iter );
+            _smooth.ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _smoothPtr->retrieve();
-    _smoothPtr->clear();
+    _smooth.retrieve();
+    _smooth.clear();
 
     redrawAllScene();
 }
@@ -273,9 +279,9 @@ void Window::selectOctilinearSmallCG( void )
     double err = 0.0;
     unsigned int nLabels = _simplifiedBoundary->nLabels();
 
-    _octilinearPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedBoundary->nVertices() );
-    _octilinearPtr->retrieve();
+    _octilinear.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+    err = _octilinear.ConjugateGradient( 5 * _simplifiedBoundary->nVertices() );
+    _octilinear.retrieve();
     //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundary->nVertices() << endl;
 
     // run octilinear optimization
@@ -294,20 +300,20 @@ void Window::selectOctilinearSmallCG( void )
             }
         }
 
-        _octilinearPtr->prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
+        _octilinear.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
         if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
             iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
         else{
             iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
         }
-        err = _octilinearPtr->ConjugateGradient( iter );
-        _octilinearPtr->retrieve();
+        err = _octilinear.ConjugateGradient( iter );
+        _octilinear.retrieve();
 
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
 
-    _octilinearPtr->clear();
+    _octilinear.clear();
     _boundary->cloneOctilinear( *_simplifiedBoundary );
 
     redrawAllScene();
@@ -316,26 +322,26 @@ void Window::selectOctilinearSmallCG( void )
 void Window::selectOctilinear( OPTTYPE opttype )
 {
     // run octilinear optimization
-    _octilinearPtr->prepare( _boundary, _content_width/2, _content_height/2 );
+    _octilinear.prepare( _boundary, _content_width/2, _content_height/2 );
 
     switch( opttype ) {
         case LEAST_SQUARE:
         {
             int iter = _boundary->nVertices();
-            _octilinearPtr->LeastSquare( iter );
+            _octilinear.LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
             int iter = _boundary->nVertices();
-            _octilinearPtr->ConjugateGradient( iter );
+            _octilinear.ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _octilinearPtr->retrieve();
-    _octilinearPtr->clear();
+    _octilinear.retrieve();
+    _octilinear.clear();
 
     redrawAllScene();
 }
@@ -407,7 +413,7 @@ void Window::timerBoundary( void )
             err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
-                _timer->stop();
+                _timer[0]->stop();
                 _timerBoundaryStop();
                 cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -421,7 +427,7 @@ void Window::timerBoundary( void )
             err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
-                _timer->stop();
+                _timer[0]->stop();
                 _timerBoundaryStop();
                 cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -434,7 +440,7 @@ void Window::timerBoundary( void )
             err = _boundary->forceBoundary().gap();
             cerr << "err = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
-                _timer->stop();
+                _timer[0]->stop();
                 _timerBoundaryStop();
                 cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -461,7 +467,7 @@ void Window::timerPathwayCell( void )
 
     for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
 
-        cerr << "i = " << i << " mode = " << _cell.forceCellVec()[i].mode() << endl;
+        // cerr << "i = " << i << " mode = " << _cell.forceCellVec()[i].mode() << endl;
         switch ( _cell.forceCellVec()[i].mode() ) {
             case TYPE_FORCE:
             {
@@ -469,7 +475,7 @@ void Window::timerPathwayCell( void )
                 err = _cell.forceCellVec()[i].gap();
                 cerr << "err = " << err << endl;
                 if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
-                    _timer->stop();
+                    _timer[i]->stop();
                     _timerPathwayCellStop();
                     cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     cerr << "[Force-Directed] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
@@ -482,7 +488,7 @@ void Window::timerPathwayCell( void )
                 _cell.forceCellVec()[i].centroidGeometry();
                 err = _cell.forceCellVec()[i].gap();
                 if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
-                    _timer->stop();
+                    _timer[i]->stop();
                     _timerPathwayCellStop();
                     cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     cerr << "[Centroidal] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
@@ -490,11 +496,11 @@ void Window::timerPathwayCell( void )
             }
             case TYPE_HYBRID:
             {
-                //_cell.forceCellVec()[i].force();
+                _cell.forceCellVec()[i].force();
                 _cell.forceCellVec()[i].centroidGeometry();
                 err = _cell.forceCellVec()[i].gap();
                 if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
-                    _timer->stop();
+                    _timer[i]->stop();
                     _timerPathwayCellStop();
                     cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
@@ -533,13 +539,13 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            _timer->start( 30, this );
+            _timer[0]->start( 30, this );
             break;
         }
         case Qt::Key_2:
         {
             cerr << "stop timer event" << endl;
-            _timer->stop();
+            _timer[0]->stop();
             _timerBoundaryStop();
             break;
         }
@@ -550,14 +556,23 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            _timer->start( 30, this );
+
+            _timer.resize( _cell.forceCellVec().size() );
+            for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
+                _timer[i] = new QBasicTimer();
+                _timer[i]->start( 30, this );
+            }
             break;
         }
         case Qt::Key_4:
         {
             cerr << "stop timer event" << endl;
-            _timer->stop();
+            for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
+                _timer[i]->stop();
+            }
             _timerPathwayCellStop();
+            _gv->isPathwayFlag() = !_gv->isPathwayFlag();
+            redrawAllScene();
             break;
         }
 /*
@@ -620,8 +635,15 @@ void Window::keyPressEvent( QKeyEvent *event )
             _cell.clear();
             _cell.init( &_boundary->polygonComplex() );
 
+            simulateKey( Qt::Key_5 );
+            simulateKey( Qt::Key_9 );
             _gv->isCellFlag() = true;
             redrawAllScene();
+            break;
+        }
+        case Qt::Key_P:
+        {
+            _cell.updatePathwayCoords();
             break;
         }
         case Qt::Key_I:
@@ -658,6 +680,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             selectCloneGraph();
             selectOctilinearCG();
+            _boundary->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
             break;
         }
@@ -666,7 +689,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             selectBuildBoundary();
             break;
         }
-        case Qt::Key_P:
+        //case Qt::Key_P:
         case Qt::Key_F:
         case Qt::Key_U:
         {

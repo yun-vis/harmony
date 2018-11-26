@@ -1132,7 +1132,6 @@ void Boundary::buildBoundaryGraph( void )
                     double y = polygon.elements()[k].y();
                     _boundary[ curVD ].geoPtr       = new Coord2( x, y );
                     _boundary[ curVD ].smoothPtr    = new Coord2( x, y );
-
                     _boundary[ curVD ].coordPtr     = new Coord2( x, y );
 
                     _boundary[ curVD ].id = _boundary[ curVD ].initID = _nVertices;
@@ -1692,12 +1691,29 @@ void Boundary::createPolygonComplex( void )
             vdC = vdT;
         }
         // add the first point
-        // polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
+        //polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
         polygon.updateCentroid();
 
         //cerr << "p[" << i << "] = " << polygon << endl;
 
         _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, polygon ) );
+    }
+
+}
+
+//
+//  Boundary::updatePolygonComplex --    update the ploygon complex
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::updatePolygonComplex( void )
+{
+    for( unsigned int i = 0; i < _polygonComplex.size(); i++ ){
+        _polygonComplex[i];
     }
 
 }
