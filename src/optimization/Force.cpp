@@ -41,7 +41,7 @@ using namespace std;
 //  Outputs
 //	none
 //
-void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour )
+void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour, string __configFilePath )
 {
     // srand48( time( NULL ) );
     srand48( 3 );
@@ -59,8 +59,8 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour )
     _voronoi.init( _seedVec, _contour );
 
     //read config file
-    string configFilePath = "../configs/force.conf";
-    Base::Config conf( configFilePath );
+    _configFilePath = __configFilePath;
+    Base::Config conf( _configFilePath );
 
     if ( conf.has( "ka" ) ){
         string paramKa = conf.gets( "ka" );
@@ -137,7 +137,7 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour )
         }
     }
 
-    cerr << "filepath: " << configFilePath << endl;
+    cerr << "filepath: " << _configFilePath << endl;
     cerr << "ka: " << _paramKa << endl;
     cerr << "kr: " << _paramKr << endl;
     cerr << "transformation_step: " << _paramTransformationStep << endl;
@@ -229,16 +229,25 @@ void Force::_force( void )
     ForceGraph & g = *_forceGraphPtr;
 
     // cerr << "force: _width = " << _width << " _height = " << _height << endl;
-    double side = 0.5 * _width * _height ;
+    double side = 0.2 * _width * _height;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( g ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
+    //cerr << "L = " << L << endl;
 
-    // cerr << "nV = " << num_vertices(g) << " nE = " << num_edges(g) << endl;
+    if( num_vertices( g ) == 1 ){
+
+        BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+            g[ vd ].coordPtr->x() = _contour.centroid().x();
+            g[ vd ].coordPtr->y() = _contour.centroid().y();
+            g[ vd ].forcePtr->zero();
+        }
+        return;
+    }
+
     BGL_FORALL_VERTICES( vdi, g, ForceGraph ) {
 
         // initialization
-        g[ vdi ].forcePtr->x() = 0.0;
-        g[ vdi ].forcePtr->y() = 0.0;
+        g[ vdi ].forcePtr->zero();
 
         BGL_FORALL_VERTICES( vdj, g, ForceGraph ) {
 
@@ -252,7 +261,8 @@ void Force::_force( void )
                 
                 diff = *g[ vdj ].coordPtr - *g[ vdi ].coordPtr;
                 dist = diff.norm();
-                unit = diff.unit();
+                if( dist == 0 ) unit.zero();
+                else unit = diff.unit();
                 
                 ForceGraph::edge_descriptor	ed;
                 bool isExisted;
@@ -266,13 +276,18 @@ void Force::_force( void )
                 if( dist > 0 ){
                     *g[ vdi ].forcePtr -= ( _paramKr/SQUARE( dist ) ) * unit;
                 }
+#ifdef DEBUG
+                cerr << "idi = " << g[vdi].id << " idj = " <<  g[vdj].id
+                     << " dist = " << dist << " dist > 0 = " << (dist > 0) << endl
+                     << " diff = " << diff << " *g[ vdi ].forcePtr = " << *g[ vdi ].forcePtr;
+#endif // DEBUG
             }
         }
     }
 
 #ifdef DEBUG
-    BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
-        cerr << "id[" << s[vd].id << "] = " << s[ vd ].force;
+    BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+        cerr << "id[" << g[vd].id << "] = " << *g[ vd ].forcePtr;
     }
 #endif // DEBUG
 }
@@ -318,6 +333,16 @@ void Force::_centroidGeometry( void )
     // const char theName[] = "Net::centroid : ";
     ForceGraph & g = *_forceGraphPtr;
 
+    if( num_vertices( g ) == 1 ){
+
+        BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+            g[ vd ].coordPtr->x() = _contour.centroid().x();
+            g[ vd ].coordPtr->y() = _contour.centroid().y();
+            g[ vd ].placePtr->zero();
+        }
+        return;
+    }
+
     // initialization
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
         g[ vd ].placePtr->zero();
@@ -362,11 +387,21 @@ void Force::_BarnesHut( void )
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( g ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 
+
+    if( num_vertices( g ) == 1 ){
+
+        BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+            g[ vd ].coordPtr->x() = _contour.centroid().x();
+            g[ vd ].coordPtr->y() = _contour.centroid().y();
+            g[ vd ].forcePtr->zero();
+        }
+        return;
+    }
+
     // cerr << "nV = " << num_vertices(s) << " nE = " << num_edges(s) << endl;
     // initialization
     BGL_FORALL_VERTICES( vdi, g, ForceGraph ) {
-        g[vdi].forcePtr->x() = 0.0;
-        g[vdi].forcePtr->y() = 0.0;
+        g[vdi].forcePtr->zero();
     }
 
     // attractive force
@@ -380,7 +415,9 @@ void Force::_BarnesHut( void )
 
         diff = *g[ vdT ].coordPtr - *g[ vdS ].coordPtr;
         dist = diff.norm();
-        unit = diff.unit();
+        if( dist == 0 ) unit.zero();
+        else unit = diff.unit();
+
         strength = 1.0/ out_degree( vdS, g );
 
         *g[ vdS ].forcePtr += _paramKa * strength * ( dist - L ) * unit;
@@ -459,6 +496,8 @@ double Force::_gap( void )
     const double	scale		= (double)_paramTransformationStep*(double)MIN2( 1.0, 100.0/( double )num_vertices( g ) );
     const double	cell		= _paramCellRatio;
 
+    if( num_vertices( g ) == 1 ) return 0;
+
     // initialization
     displace.clear();
 
@@ -469,19 +508,31 @@ double Force::_gap( void )
         switch ( _paramMode ) {
             case TYPE_FORCE:            // force-directed
             case TYPE_BARNES_HUT:
+            {
                 val = *g[vd].forcePtr;
                 break;
+            }
             case TYPE_CENTROID:
+            {
                 val = *g[vd].placePtr;
                 break;
+            }
             case TYPE_HYBRID:
+            {
                 val = _paramRatioForce * *g[vd].forcePtr + cell * _paramRatioVoronoi * *g[vd].placePtr;
                 break;
+            }
             default:
                 break;
         }
         assert( g[vd].id == displace.size() );
         displace.push_back( val );
+#ifdef DEBUG
+        cerr << "id = " << g[vd].id
+             << " *g[vd].forcePtr = " << *g[vd].forcePtr
+             << " *g[vd].placePtr = " << *g[vd].placePtr
+             << " val = " << val << endl;
+#endif // DEBUG
     }
 
     // Scale the displacement of a node at each scale
@@ -519,11 +570,11 @@ double Force::_gap( void )
 #ifdef DEBUG
         cerr << "id = " << g[vd].id << endl
              << "coord = " << *g[ vd ].coordPtr
-             << "shift = " << *g[ vd ].shiftPtr;
+             << "shift = " << *g[ vd ].shiftPtr
+             << "coordNew = " << coordNew;
 #endif // DEBUG
         if( !_inContour( coordNew ) ){
-            g[ vd ].shiftPtr->x() = 0.0;
-            g[ vd ].shiftPtr->y() = 0.0;
+            g[ vd ].shiftPtr->zero();
         }
     }
 

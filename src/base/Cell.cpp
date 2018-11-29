@@ -64,7 +64,7 @@ void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
         map< unsigned int, Polygon2 >::iterator itP = _polygonComplexPtr->begin();
         advance( itP, i );
-        _forceCellVec[i].init( &_forceCellGraphVec[i], itP->second );
+        _forceCellVec[i].init( &_forceCellGraphVec[i], itP->second, "../configs/cell.conf" );
         _forceCellVec[i].id() = i;
     }
 
@@ -481,7 +481,7 @@ void Cell::createPolygonComplex( void )
                 c.contour = (*f.voronoi().seedVec())[id].cellPolygon;
             }
 
-            c.detail.init( &c.detailGraph, c.contour );
+            c.detail.init( &c.detailGraph, c.contour, "../configs/pathway.conf" );
             c.detail.mode() = TYPE_BARNES_HUT;
             c.detail.id() = idC;
             idC++;
@@ -520,6 +520,8 @@ void Cell::updatePathwayCoords( void )
                 //ForceGraph::vertex_descriptor vdC = vertex( itC->second.cellVec[j], lsubg[i] );
                 lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%20-10.0;
                 lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%20-10.0;
+                //lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%100-50.0;
+                //lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%100-50.0;
             }
         }
     }

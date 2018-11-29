@@ -67,6 +67,7 @@ protected:
     void _item_skeleton( void );
     void _item_composite( void );
     void _item_pathways( void );
+    void _item_subpathways( void );
     void _item_cells( void );
     void _item_seeds( void );
     void _item_polygonComplex( void );

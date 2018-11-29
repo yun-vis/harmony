@@ -196,6 +196,53 @@ void GraphicsView::_item_boundary( void )
     }
 }
 
+void GraphicsView::_item_subpathways( void )
+{
+    vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+
+    for( unsigned int k = 0; k < cellCVec.size(); k++ ){
+
+        multimap< int, CellComponent > &componentMap = cellCVec[k];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+        for( ; itC != componentMap.end(); itC++ ){
+
+            ForceGraph &g = itC->second.detailGraph;
+
+            // draw edges
+            BGL_FORALL_EDGES( ed, g, ForceGraph ) {
+
+                ForceGraph::vertex_descriptor vdS = source( ed, g );
+                ForceGraph::vertex_descriptor vdT = target( ed, g );
+
+                QPainterPath path;
+                path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
+                path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
+
+                // add path
+                GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
+                //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+                itemptr->setPath( path );
+                _scene->addItem( itemptr );
+            }
+
+            // draw vertices
+            BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
+                itemptr->id() = g[vd].id;
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
+        }
+    }
+}
+
 void GraphicsView::_item_pathways( void )
 {
     vector< ForceGraph > &lsubg    = _pathway->lsubG();
@@ -365,7 +412,8 @@ void GraphicsView::initSceneItems ( void )
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
     if( _is_boundaryFlag == true ) _item_boundary();
-    if( _is_pathwayFlag == true ) _item_pathways();
+    //if( _is_pathwayFlag == true ) _item_pathways();
+    if( _is_pathwayFlag == true ) _item_subpathways();
     if( _is_cellFlag == true ) _item_cells();
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();

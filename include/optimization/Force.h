@@ -33,6 +33,7 @@ class Force {
   private:
 
     unsigned int    _id;
+    string          _configFilePath;        // config file path
     Polygon2        _contour;
     Coord2          _boxCenter;             // bounding box center of the contour
     double			_width, _height;        // bounding box of the contour
@@ -63,7 +64,8 @@ class Force {
 
   protected:
 
-    void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 &__contour );
+    void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 &__contour,
+                              string __configFilePath );
     void            _clear  ( void );
     void		    _random	( void );
 
@@ -126,8 +128,9 @@ class Force {
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
-    void init( ForceGraph * __forceGraphPtr, Polygon2 &__contour ) {
-        _init( __forceGraphPtr, __contour );
+    void init( ForceGraph * __forceGraphPtr, Polygon2 &__contour,
+               string __configFilePath ) {
+        _init( __forceGraphPtr, __contour, __configFilePath );
     }
     void clear( void )				{ _clear(); }
     void random( void )				{ _random(); }

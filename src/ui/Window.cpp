@@ -375,7 +375,7 @@ void Window::_timerBoundaryStart( void )
     contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
     contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
 
-    _boundary->forceBoundary().init( &_boundary->composite(), contour );
+    _boundary->forceBoundary().init( &_boundary->composite(), contour, "../configs/boundary.conf" );
 #ifdef SKIP
     void *ptr = &_boundary->boundary();
             ForceGraph *fgPtr = (ForceGraph*) (ptr);
@@ -568,9 +568,9 @@ void Window::_timerPathwayStop( void )
 
     for( unsigned int i = 0; i < _timer.size(); i++ ){
         isActive = isActive || _timer[i]->isActive();
-        cerr << _timer[i]->isActive() << " ";
+        //cerr << _timer[i]->isActive() << " ";
     }
-    cerr << endl;
+    //cerr << endl;
 
     cerr << "isActive = " << isActive << endl;
     if( !isActive ) {
@@ -668,8 +668,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             _timerStop();
             simulateKey( Qt::Key_P );
             _timerPathwayCellStop();
-            redrawAllScene();
             assert( _timer.size() == 0 );
+            simulateKey( Qt::Key_9 );
+            redrawAllScene();
             break;
         }
         case Qt::Key_A:
