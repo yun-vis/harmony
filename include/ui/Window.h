@@ -57,7 +57,7 @@ private:
     int             _content_height;
 
     // force target flag
-    bool            _forceTargetFlag;   // 0: boundary, 1:pathwayCell
+    TIMERTYPE       _timerType;   // 0:TIMER_BOUNDARY, 1:TIMER_PATHWAY_CELL, 2:TIMER_PATHWAY
 
     // menu
     // load
@@ -89,10 +89,13 @@ private:
 
     void _init( Boundary * __boundary, Boundary * __simBoundary );
 
+    void _timerStop( void );
     void _timerBoundaryStart( void );
     void _timerBoundaryStop( void );
     void _timerPathwayCellStart( void );
     void _timerPathwayCellStop( void );
+    void _timerPathwayStart( void );
+    void _timerPathwayStop( void );
 
 public Q_SLOTS:
 
@@ -124,6 +127,7 @@ public Q_SLOTS:
     // timer
     void timerBoundary( void );
     void timerPathwayCell( void );
+    void timerPathway( void );
 
 public:
     explicit Window( QWidget *parent = 0 );

@@ -43,6 +43,7 @@ using namespace std;
 
 //Used to convert otherwise infinite rays into long line segments
 const int RAY_LENGTH = 1000;
+const int LINE_LENGTH = 1e8;
 
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel K;

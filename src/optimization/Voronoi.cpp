@@ -212,7 +212,7 @@ void Voronoi::createVoronoiDiagram( void )
     wpoints.clear();
 
     // copy points
-    cerr << "id = " << _id << " size = " << _seedVecPtr->size() << " points:" << endl;
+    // cerr << "id = " << _id << " size = " << _seedVecPtr->size() << " points:" << endl;
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
         wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(), (*_seedVecPtr)[i].coord.y() ), 0 ) );
@@ -237,7 +237,8 @@ void Voronoi::createVoronoiDiagram( void )
     //these objects into segments. If the object would have resolved into a ray,
     //that ray is intersected with the bounding box defined above and returned as
     //a segment.
-    const auto ConvertToSeg = [&](const CGAL::Object seg_obj, bool outgoing, bool &isLine ) -> K::Segment_2 {
+    const auto ConvertToSeg = [&](const CGAL::Object seg_obj, bool outgoing,
+                                  bool &isLine, double &slope ) -> K::Segment_2 {
 
         //One of these will succeed and one will have a NULL pointer
         const K::Segment_2 *dseg = CGAL::object_cast< K::Segment_2 >( &seg_obj );
@@ -254,14 +255,40 @@ void Voronoi::createVoronoiDiagram( void )
             const auto dsy     = source.y();
             const auto &dir    = dray->direction();
             const auto tpoint  = K::Point_2(dsx+RAY_LENGTH*dir.dx(),dsy+RAY_LENGTH*dir.dy());
-            if( outgoing )
+            if( outgoing ){
+                // cerr << "source = " << dray->source() << ", " << tpoint << endl;
                 return K::Segment_2( dray->source(), tpoint );
-            else
+            }
+            else {
                 return K::Segment_2( tpoint, dray->source() );
+            }
         }
         else if ( line != NULL ) {    //Must be a line
+
             isLine = true;
-            return  K::Segment_2( K::Point_2( 0.0, 0.0 ), K::Point_2( 0.0, 0.0 ) );
+            double m = -1.0 * CGAL::to_double( line->a()/line->b() );
+            //cerr << "a = " << line->a() << " b = " << line->b() << " c = " << line->c() << endl;
+
+            if( line->b() == 0.0 ){
+                //cerr << "1st: m = " << m << endl;
+                slope = INFINITY;
+                K::Point_2 source( -1.0*CGAL::to_double( line->c()/line->a() ), LINE_LENGTH ),
+                           target( -1.0*CGAL::to_double( line->c()/line->a() ), -LINE_LENGTH );
+            }
+            else if( m >= -1.0 && m <= 1.0 ){
+                //cerr << "2nd: m = " << m << endl;
+                slope = m;
+                K::Point_2 source( LINE_LENGTH, line->y_at_x( LINE_LENGTH ) ),
+                        target( -LINE_LENGTH, line->y_at_x( -LINE_LENGTH ) );
+                return  K::Segment_2( source, target );
+            }
+            else { // m > 1.0 or m < -1.0
+                //cerr << "3rd: m = " << m << endl;
+                slope = m;
+                K::Point_2 source( LINE_LENGTH, line->y_at_x( LINE_LENGTH ) ),
+                           target( -LINE_LENGTH, line->y_at_x( -LINE_LENGTH ) );
+                return  K::Segment_2( source, target );
+            }
         }
         else{
             cerr << "Something is wong here at " << __LINE__ << " in " << __FILE__ << endl;
@@ -286,6 +313,7 @@ void Voronoi::createVoronoiDiagram( void )
         VD::Face::Ccb_halfedge_circulator ec = ec_start;
 
         bool isLine = false;
+        double slope = 0.0;
         do {
             //A half edge circulator representing a ray doesn't carry direction
             //information. To get it, we take the dual of the dual of the half-edge.
@@ -297,22 +325,64 @@ void Voronoi::createVoronoiDiagram( void )
             // cerr << "seg_dual = " << vd << endl;
 
             //Convert the segment/ray into a segment
-            const auto this_seg = ConvertToSeg( seg_dual, ec->has_target(), isLine );
-
+            const auto this_seg = ConvertToSeg( seg_dual, ec->has_target(), isLine, slope );
             pgon.push_back( this_seg.source() );
 
             //If the segment has no target, it's a ray. This means that the next
             //segment will also be a ray. We need to connect those two rays with a
             //segment. The following accomplishes this.
-            if(!ec->has_target()){
+            if( !ec->has_target() ){
                 const CGAL::Object nseg_dual = vd.dual().dual( ec->next()->dual() );
-                const auto next_seg = ConvertToSeg( nseg_dual, ec->next()->has_target(), isLine );
-                pgon.push_back(next_seg.target());
+                const auto next_seg = ConvertToSeg( nseg_dual, ec->next()->has_target(), isLine, slope );
+                pgon.push_back( next_seg.target() );
             }
 
         } while ( ++ec != ec_start ); //Loop until we get back to the beginning
 
-        if( isLine ) return;
+        if( isLine ) {
+
+            // cerr << "fnum = " << fnum << endl;
+            auto end = pgon.vertices_end();
+            end--;
+            K::Point_2 source( pgon.vertices_begin()->x(), pgon.vertices_begin()->y() ),
+                       target( end->x(), end->y());
+            pgon.clear();
+            if( fnum == 0 ){
+
+                if( slope >= -1.0 && slope <= 1.0 ) {
+                    pgon.push_back( K::Point_2( source.x(), source.y() ) );
+                    pgon.push_back( K::Point_2( source.x(), source.y()+LINE_LENGTH ) );
+                    pgon.push_back( K::Point_2( target.x(), target.y()+LINE_LENGTH ) );
+                    pgon.push_back( K::Point_2( target.x(), target.y() ) );
+                }
+                else{
+                    pgon.push_back( K::Point_2( source.x(), source.y() ) );
+                    pgon.push_back( K::Point_2( source.x()+LINE_LENGTH, source.y() ) );
+                    pgon.push_back( K::Point_2( target.x()+LINE_LENGTH, target.y() ) );
+                    pgon.push_back( K::Point_2( target.x(), target.y() ) );
+                }
+            }
+            else{
+                if( slope >= -1.0 && slope <= 1.0 ) {
+                    pgon.push_back( K::Point_2( source.x(), source.y() ) );
+                    pgon.push_back( K::Point_2( target.x(), target.y() ) );
+                    pgon.push_back( K::Point_2( target.x(), target.y()-LINE_LENGTH ) );
+                    pgon.push_back( K::Point_2( source.x(), source.y()-LINE_LENGTH ) );
+                }
+                else{
+                    pgon.push_back( K::Point_2( source.x(), source.y() ) );
+                    pgon.push_back( K::Point_2( target.x(), target.y() ) );
+                    pgon.push_back( K::Point_2( target.x()-LINE_LENGTH, target.y() ) );
+                    pgon.push_back( K::Point_2( source.x()-LINE_LENGTH, source.y() ) );
+                }
+            }
+#ifdef DEBUG
+            for( auto v=pgon.vertices_begin(); v!=pgon.vertices_end(); v++ ) {
+                cerr << "pgon = " << v->x() << " " << v->y() << endl;
+            }
+            cerr << endl << endl;
+#endif // DEBUG
+        }
 
         //In order to crop the Voronoi diagram, we need to convert the bounding box
         //into a polygon. You'd think there'd be an easy way to do this. But there
@@ -320,19 +390,22 @@ void Voronoi::createVoronoiDiagram( void )
         CGAL::Polygon_2< K > bpoly;
         vector< Coord2 > &eleVec = _contourPtr->elements();
 
-        if( _id == 2 ){
-            return;
-            int size = eleVec.size();
-            for( unsigned int i = 0; i < eleVec.size(); i++ ){
-                bpoly.push_back( K::Point_2( eleVec[size-1-i].x(), eleVec[size-1-i].y() ));
-                //cerr << size-1-i << ": eleVec[size-1-i] = " << eleVec[size-1-i] << endl;
-            }
+        for( unsigned int i = 0; i < eleVec.size(); i++ ){
+            bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
+            //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
         }
-        else{
-            for( unsigned int i = 0; i < eleVec.size(); i++ ){
-                bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
-                //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
-            }
+
+
+#ifdef DEBUG
+        cerr << "bpoly_orientation: " << bpoly.orientation() << endl;
+        cerr << "pgon_orientation: " << pgon.orientation() << endl;
+#endif // DEBUG
+        // check the polygon orientation
+        if( bpoly.orientation() == -1 ){
+            bpoly.reverse_orientation();
+        }
+        if( pgon.orientation() == -1 ){
+            pgon.reverse_orientation();
         }
 
         //Perform the intersection. Since CGAL is very general, it believes the

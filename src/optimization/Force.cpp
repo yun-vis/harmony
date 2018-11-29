@@ -228,7 +228,7 @@ void Force::_force( void )
 {
     ForceGraph & g = *_forceGraphPtr;
 
-    cerr << "force: _width = " << _width << " _height = " << _height << endl;
+    // cerr << "force: _width = " << _width << " _height = " << _height << endl;
     double side = 0.5 * _width * _height ;
     double L = sqrt( side / ( double )max( 1.0, ( double )num_vertices( g ) ) );
     //double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
@@ -536,13 +536,14 @@ double Force::_gap( void )
     }
     BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
         cerr << "force[" << s[vd].id << "] = " << s[ vd ].force;
-        cerr << "shift[" << s[vd].id << "] = " << s[ vd ].shift;
+        cerr << "shift[" << g[vd].id << "] = " << *g[ vd ].shiftPtr;
     }
 #endif // DEBUG
 
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
         *g[ vd ].coordPtr += *g[ vd ].shiftPtr; //vertexCoord[ vd ] renew;
         err += g[ vd ].shiftPtr->squaredNorm();
+        //cerr << "shift[" << g[vd].id << "] = " << *g[ vd ].shiftPtr;
     }
 
     return err/( double )num_vertices( g );

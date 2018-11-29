@@ -367,7 +367,7 @@ void Window::selectBuildBoundary( void )
 
 void Window::_timerBoundaryStart( void )
 {
-    _forceTargetFlag = false;
+    _timerType = TIMER_BOUNDARY;
 
     Polygon2 contour;
     contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
@@ -376,7 +376,6 @@ void Window::_timerBoundaryStart( void )
     contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
 
     _boundary->forceBoundary().init( &_boundary->composite(), contour );
-
 #ifdef SKIP
     void *ptr = &_boundary->boundary();
             ForceGraph *fgPtr = (ForceGraph*) (ptr);
@@ -385,10 +384,26 @@ void Window::_timerBoundaryStart( void )
 #endif // SKIP
 
     _gv->isPolygonFlag() = true;
+
+    _timer.resize(1);
+    _timer[0]->start( 30, this );
+}
+
+void Window::_timerStop( void )
+{
+    for( unsigned int i = 0; i < _timer.size(); i++ ) {
+        _timer[i]->stop();
+        delete _timer[i];
+    }
+    _timer.clear();
 }
 
 void Window::_timerBoundaryStop( void )
 {
+    for( unsigned int i = 0; i < _timer.size(); i++ ){
+        //if( _timer[i]->isActive() == false ) delete _timer[i];
+    }
+
     simulateKey( Qt::Key_E );
     _boundary->createPolygonComplex();
     simulateKey( Qt::Key_B );
@@ -398,8 +413,6 @@ void Window::_timerBoundaryStop( void )
     _gv->isPolygonComplexFlag() = true;
     _gv->isBoundaryFlag() = true;
     _gv->isCompositeFlag() = true;
-
-    redrawAllScene();
 }
 
 void Window::timerBoundary( void )
@@ -411,7 +424,7 @@ void Window::timerBoundary( void )
         {
             _boundary->forceBoundary().force();
             err = _boundary->forceBoundary().gap();
-            cerr << "err = " << err << endl;
+            cerr << "err (force) = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer[0]->stop();
                 _timerBoundaryStop();
@@ -425,7 +438,7 @@ void Window::timerBoundary( void )
         {
             _boundary->forceBoundary().centroidGeometry();
             err = _boundary->forceBoundary().gap();
-            cerr << "err = " << err << endl;
+            cerr << "err (centroid) = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer[0]->stop();
                 _timerBoundaryStop();
@@ -438,7 +451,7 @@ void Window::timerBoundary( void )
             _boundary->forceBoundary().force();
             _boundary->forceBoundary().centroidGeometry();
             err = _boundary->forceBoundary().gap();
-            cerr << "err = " << err << endl;
+            cerr << "err (hybrid) = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
                 _timer[0]->stop();
                 _timerBoundaryStop();
@@ -453,61 +466,144 @@ void Window::timerBoundary( void )
 
 void Window::_timerPathwayCellStart( void )
 {
-    _forceTargetFlag = true;
+    _timerType = TIMER_PATHWAY_CELL;
+
+   _timer.resize( _cell.forceCellVec().size() );
+    for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
+        _timer[i] = new QBasicTimer();
+        _timer[i]->start( 30, this );
+    }
 }
 
 void Window::_timerPathwayCellStop( void )
 {
-    redrawAllScene();
+    bool isActive = false;
+    for( unsigned int i = 0; i < _timer.size(); i++ ){
+        isActive = isActive || _timer[i]->isActive();
+    }
+    if( !isActive ) {
+/*
+        for( unsigned int i = 0; i < _timer.size(); i++ ){
+            if( _timer[i] != NULL ) delete _timer[i];
+        }
+*/
+        simulateKey( Qt::Key_P );
+    }
 }
 
 void Window::timerPathwayCell( void )
 {
     double err = 0.0;
 
+    assert( _timer.size() == _cell.forceCellVec().size() );
+
     for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
 
-        // cerr << "i = " << i << " mode = " << _cell.forceCellVec()[i].mode() << endl;
-        switch ( _cell.forceCellVec()[i].mode() ) {
-            case TYPE_FORCE:
-            {
-                _cell.forceCellVec()[i].force();
-                err = _cell.forceCellVec()[i].gap();
-                cerr << "err = " << err << endl;
-                if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
-                    _timer[i]->stop();
-                    _timerPathwayCellStop();
-                    cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
-                    cerr << "[Force-Directed] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
-                    //cerr << "FINAL widget_count" << widget_count << endl;
+        // cerr << "i = " << i << " active = " << _timer[i]->isActive() << endl;
+        if( _timer[i]->isActive() == true ){
+            switch ( _cell.forceCellVec()[i].mode() ) {
+                case TYPE_FORCE:
+                {
+                    _cell.forceCellVec()[i].force();
+                    err = _cell.forceCellVec()[i].gap();
+                    cerr << "err (force) = " << err << endl;
+                    if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
+                        _timer[i]->stop();
+                        _timerPathwayCellStop();
+                        cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
+                        cerr << "[Force-Directed] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
+                        //cerr << "FINAL widget_count" << widget_count << endl;
+                    }
+                    break;
                 }
-                break;
-            }
-            case TYPE_CENTROID:
-            {
-                _cell.forceCellVec()[i].centroidGeometry();
-                err = _cell.forceCellVec()[i].gap();
-                if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
-                    _timer[i]->stop();
-                    _timerPathwayCellStop();
-                    cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
-                    cerr << "[Centroidal] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
+                case TYPE_CENTROID:
+                {
+                    _cell.forceCellVec()[i].centroidGeometry();
+                    err = _cell.forceCellVec()[i].gap();
+                    cerr << "err (centroid) = " << err << endl;
+                    if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
+                        _timer[i]->stop();
+                        _timerPathwayCellStop();
+                        cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
+                        cerr << "[Centroidal] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
+                    }
                 }
-            }
-            case TYPE_HYBRID:
-            {
-                _cell.forceCellVec()[i].force();
-                _cell.forceCellVec()[i].centroidGeometry();
-                err = _cell.forceCellVec()[i].gap();
-                if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
-                    _timer[i]->stop();
-                    _timerPathwayCellStop();
-                    cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
-                    cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
+                case TYPE_HYBRID:
+                {
+                    _cell.forceCellVec()[i].force();
+                    _cell.forceCellVec()[i].centroidGeometry();
+                    err = _cell.forceCellVec()[i].gap();
+                    cerr << "err (hybrid) = " << err << endl;
+                    if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
+                        _timer[i]->stop();
+                        _timerPathwayCellStop();
+                        cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
+                        cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
+                    }
                 }
+                default:
+                    break;
             }
-            default:
-                break;
+        }
+
+    }
+}
+
+void Window::_timerPathwayStart( void )
+{
+    _timerType = TIMER_PATHWAY;
+    unsigned int nComponent = _cell.nComponent();
+
+    _timer.resize( nComponent );
+    for( unsigned int i = 0; i < nComponent; i++ ){
+        // cerr << "i = " << i << endl;
+        _timer[i] = new QBasicTimer();
+        _timer[i]->start( 30, this );
+    }
+}
+
+void Window::_timerPathwayStop( void )
+{
+    bool isActive = false;
+
+    for( unsigned int i = 0; i < _timer.size(); i++ ){
+        isActive = isActive || _timer[i]->isActive();
+        cerr << _timer[i]->isActive() << " ";
+    }
+    cerr << endl;
+
+    cerr << "isActive = " << isActive << endl;
+    if( !isActive ) {
+        for( unsigned int i = 0; i < _timer.size(); i++ ){
+            //if( _timer[i]->isActive() == false ) delete _timer[i];
+        }
+    }
+}
+
+void Window::timerPathway( void )
+{
+    double err = 0.0;
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cell.cellComponentVec();
+
+    assert( _timer.size() == _cell.nComponent() );
+
+    unsigned int idC = 0;
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
+        multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+        for( ; itC != cellComponentMap.end(); itC++ ){
+
+            itC->second.detail.force();
+            err = itC->second.detail.gap();
+            cerr << idC << ": err (pathway force) = " << err << endl;
+            if ( err < itC->second.detail.finalEpsilon() ) {
+                _timer[idC]->stop();
+                _timerPathwayStop();
+                cerr << "[Force-Directed] Finished Execution Time [" << idC << "] = " << checkOutETime() << endl;
+                cerr << "[Force-Directed] Finished CPU Time [" << idC << "] = " << checkOutCPUTime() << endl;
+            }
+            idC++;
         }
     }
 }
@@ -517,11 +613,18 @@ void Window::timerEvent( QTimerEvent *event )
     // cerr << "timer event..." << endl;
     Q_UNUSED( event );
 
-    if( _forceTargetFlag ){
+    if( _timerType == TIMER_BOUNDARY ){
+        timerBoundary();
+    }
+    else if( _timerType == TIMER_PATHWAY_CELL ){
         timerPathwayCell();
     }
+    else if( _timerType == TIMER_PATHWAY ){
+        cerr << "timerType = TIMER_PATHWAY" << endl;
+        timerPathway();
+    }
     else{
-        timerBoundary();
+        cerr << "Something is wrong here... at" << __LINE__ << " in " << __FILE__ << endl;
     }
 
     redrawAllScene();
@@ -534,48 +637,59 @@ void Window::keyPressEvent( QKeyEvent *event )
 
         case Qt::Key_1:
         {
-            _timerBoundaryStart();
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            _timer[0]->start( 30, this );
+            _timerBoundaryStart();
             break;
         }
         case Qt::Key_2:
         {
             cerr << "stop timer event" << endl;
-            _timer[0]->stop();
+            _timerStop();
             _timerBoundaryStop();
+            redrawAllScene();
+            assert( _timer.size() == 0 );
             break;
         }
-        case Qt::Key_3:
+        case Qt::Key_Q:
         {
-            _timerPathwayCellStart();
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-
-            _timer.resize( _cell.forceCellVec().size() );
-            for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
-                _timer[i] = new QBasicTimer();
-                _timer[i]->start( 30, this );
-            }
+            _timerPathwayCellStart();
             break;
         }
-        case Qt::Key_4:
+        case Qt::Key_W:
         {
             cerr << "stop timer event" << endl;
-            for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
-                _timer[i]->stop();
-            }
+            _timerStop();
+            simulateKey( Qt::Key_P );
             _timerPathwayCellStop();
-            _gv->isPathwayFlag() = !_gv->isPathwayFlag();
             redrawAllScene();
+            assert( _timer.size() == 0 );
             break;
         }
-/*
+        case Qt::Key_A:
+        {
+            checkInETime();
+            cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
+            checkInCPUTime();
+            cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
+            _timerPathwayStart();
+            break;
+        }
+        case Qt::Key_S:
+        {
+            cerr << "stop timer event" << endl;
+            _timerStop();
+            _timerPathwayStop();
+            redrawAllScene();
+            assert( _timer.size() == 0 );
+            break;
+        }
         case Qt::Key_3:
         {
             _gv->isSimplifiedFlag() = !_gv->isSimplifiedFlag();
@@ -588,7 +702,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             break;
         }
-*/
         case Qt::Key_5:
         {
             _gv->isCompositeFlag() = !_gv->isCompositeFlag();
@@ -616,6 +729,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_9:
         {
             _gv->isCellPolygonFlag() = !_gv->isCellPolygonFlag();
+            _gv->isCellFlag() = !_gv->isCellFlag();
             redrawAllScene();
             break;
         }
@@ -626,10 +740,6 @@ void Window::keyPressEvent( QKeyEvent *event )
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             _pathway->generate();
             _pathway->initLayout( _boundary->polygonComplex() );
-
-            // set widget and graphicsview
-            //_pathway->normalization();
-            //_gv->isPathwayFlag() = true;
 
             // initialize cell
             _cell.clear();
@@ -643,7 +753,11 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_P:
         {
+            _cell.createPolygonComplex();
             _cell.updatePathwayCoords();
+            _gv->isCellPolygonComplexFlag() = true;
+            _gv->isPathwayFlag() = true;
+            redrawAllScene();
             break;
         }
         case Qt::Key_I:
@@ -669,6 +783,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             break;
         }
+/*
         case Qt::Key_S:
         {
             selectCloneGraph();
@@ -676,23 +791,19 @@ void Window::keyPressEvent( QKeyEvent *event )
             //selectSmoothSmallCboundary();
             break;
         }
+*/
         case Qt::Key_O:
         {
             selectCloneGraph();
             selectOctilinearCG();
             _boundary->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
+            redrawAllScene();
             break;
         }
         case Qt::Key_B:
         {
             selectBuildBoundary();
-            break;
-        }
-        //case Qt::Key_P:
-        case Qt::Key_F:
-        case Qt::Key_U:
-        {
             break;
         }
         case Qt::Key_V:
@@ -712,7 +823,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
             break;
         }
-        case Qt::Key_Q:
         case Qt::Key_Escape:
             close();
             break;

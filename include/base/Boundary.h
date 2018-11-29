@@ -50,7 +50,7 @@ private:
     map< unsigned int, Polygon2 >           _polygonComplex;    // for skeleton graph
     map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
 
-    vector< vector< BoundaryGraph::vertex_descriptor > >        _shortestPathM;
+    vector< vector< BoundaryGraph::vertex_descriptor > >            _shortestPathM;
     
 protected:
     

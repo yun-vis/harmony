@@ -56,7 +56,7 @@ private:
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
                         _is_boundaryFlag, _is_pathwayFlag,
-                        _is_cellFlag, _is_cellPolygonFlag;
+                        _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
     Cell                *_cellPtr;
@@ -72,6 +72,7 @@ protected:
     void _item_polygonComplex( void );
     void _item_polygons( void );
     void _item_cellPolygons( void );
+    void _item_cellPolygonComplex( void );
 
 public:
     explicit GraphicsView( QWidget *parent = 0 );
@@ -99,6 +100,8 @@ public:
     const bool &    isCellFlag( void ) const        { return _is_cellFlag; }
     bool &          isCellPolygonFlag( void )       { return _is_cellPolygonFlag; }
     const bool &    isCellPolygonFlag( void ) const { return _is_cellPolygonFlag; }
+    bool &          isCellPolygonComplexFlag( void )       { return _is_cellPolygonComplexFlag; }
+    const bool &    isCellPolygonComplexFlag( void ) const { return _is_cellPolygonComplexFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

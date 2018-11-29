@@ -315,6 +315,42 @@ void GraphicsView::_item_cellPolygons( void )
     }
 }
 
+
+void GraphicsView::_item_cellPolygonComplex( void )
+{
+    vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
+    vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+
+    for( unsigned int k = 0; k < cellCVec.size(); k++ ){
+
+        multimap< int, CellComponent > &componentMap = cellCVec[k];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+        for( ; itC != componentMap.end(); itC++ ){
+
+            Polygon2 &c = itC->second.contour;
+            QPolygonF polygon;
+
+            for( unsigned int j = 0; j < c.elements().size(); j++ ){
+                polygon.append( QPointF( c.elements()[j].x(), -c.elements()[j].y() ) );
+            }
+
+            GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+            vector< double > rgb;
+            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, cellGVec[k] );
+
+            unsigned int gid = cellGVec[k][vd].groupID;
+            pickBrewerColor( gid, rgb );
+            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 0 ), Qt::SolidPattern ) );
+            itemptr->setPolygon( polygon );
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+}
+
 //------------------------------------------------------------------------------
 //	Public functions
 //------------------------------------------------------------------------------
@@ -332,6 +368,8 @@ void GraphicsView::initSceneItems ( void )
     if( _is_pathwayFlag == true ) _item_pathways();
     if( _is_cellFlag == true ) _item_cells();
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
+    if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
+
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -382,6 +420,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_pathwayFlag = false;
     _is_cellFlag = false;
     _is_cellPolygonFlag = false;
+    _is_cellPolygonComplexFlag = false;
     this->setScene( _scene );
 }
 

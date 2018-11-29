@@ -1091,33 +1091,32 @@ void Boundary::buildBoundaryGraph( void )
         Polygon2 &polygon = _polygonComplex[i];
         vector< ForceGraph::vertex_descriptor > vdVec;
 
-        //cerr << endl << "i = " << i << endl;
-        //cerr << endl;
-        for( unsigned int j = 1; j < polygon.elements().size(); j++ ){
+        unsigned int size = polygon.elements().size();
+        for( unsigned int j = 1; j < size+1; j++ ){
 
-            Coord2 &coordS = polygon.elements()[j-1];
-            Coord2 &coordT = polygon.elements()[j];
+            //Coord2 &coordS = polygon.elements()[j-1];
+            //Coord2 &coordT = polygon.elements()[j%polygon.elements().size()];
 
             // Check if the station exists or not
             BoundaryGraph::vertex_descriptor curVDS = NULL;
             BoundaryGraph::vertex_descriptor curVDT = NULL;
 
             // add vertices
-            for( unsigned int k = j-1; k < j+1; k++ ){
+            for( unsigned int k = 0; k < 2; k++ ){
 
                 BoundaryGraph::vertex_descriptor curVD = NULL;
 
                 // Check if the station exists or not
-                BGL_FORALL_VERTICES( vertex, _boundary, BoundaryGraph )
+                BGL_FORALL_VERTICES( vd, _boundary, BoundaryGraph )
                 {
-                    Coord2 &c = *_boundary[ vertex ].coordPtr;
-                    if( fabs( (polygon.elements()[k]-c).norm() ) < 1e-2 ){
+                    Coord2 &c = *_boundary[ vd ].coordPtr;
+                    if( fabs( ( polygon.elements()[ (j-1+k)%size]-c ).norm() ) < 1e-2 ){
 
 #ifdef DEBUG
                         cerr << "The node has been in the database." << endl;
 #endif  // DEBUG
-                        if( k == j-1 ) curVD = curVDS = vertex;
-                        if( k == j ) curVD = curVDT = vertex;
+                        if( k == 0 ) curVD = curVDS = vd;
+                        if( k == 1 ) curVD = curVDT = vd;
                         break;
                     }
                 }
@@ -1128,8 +1127,8 @@ void Boundary::buildBoundaryGraph( void )
                     vector< unsigned int > lineID = _boundary[ curVD ].lineID;
                     lineID.push_back( _nLines );
 
-                    double x = polygon.elements()[k].x();
-                    double y = polygon.elements()[k].y();
+                    double x = polygon.elements()[j-1+k].x();
+                    double y = polygon.elements()[j-1+k].y();
                     _boundary[ curVD ].geoPtr       = new Coord2( x, y );
                     _boundary[ curVD ].smoothPtr    = new Coord2( x, y );
                     _boundary[ curVD ].coordPtr     = new Coord2( x, y );
@@ -1139,8 +1138,8 @@ void Boundary::buildBoundaryGraph( void )
                     _boundary[ curVD ].weight = 1.0;
                     _boundary[ curVD ].lineID.push_back( _nLines );
 
-                    if( k == j-1 ) curVDS = curVD;
-                    if( k == j ) curVDT = curVD;
+                    if( k == 0 ) curVDS = curVD;
+                    if( k == 1 ) curVDT = curVD;
                     _nVertices++;
                 }
                 else{
@@ -1712,10 +1711,18 @@ void Boundary::createPolygonComplex( void )
 //
 void Boundary::updatePolygonComplex( void )
 {
-    for( unsigned int i = 0; i < _polygonComplex.size(); i++ ){
-        _polygonComplex[i];
-    }
+    cerr << "updating polygonComplex..." << endl;
 
+    map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
+    map< unsigned int, Polygon2 >::iterator itC = _polygonComplex.begin();
+    for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
+        vector< ForceGraph::vertex_descriptor > &p = itP->second;
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            itC->second.elements()[i].x() = _boundary[ p[i] ].coordPtr->x();
+            itC->second.elements()[i].y() = _boundary[ p[i] ].coordPtr->y();
+        }
+        itC++;
+    }
 }
 
 //

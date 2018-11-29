@@ -28,22 +28,29 @@ using namespace std;
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
-class CellGroup
+
+class CellComponent
 {
 public:
-    unsigned int                            id;
-    double                                  multiple;  // multiple of cell unit
-    vector< ForceGraph::vertex_descriptor > cellVec;
+    unsigned int                            id;         // group id
+    Polygon2                                contour;    // contour of the cell component
+    double                                  multiple;   // multiple of cell unit
+    vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
+    vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
+    Force                                   detail;
+    ForceGraph                              detailGraph;
 };
 
 class Cell : public PathwayData
 {
 private:
 
-    vector< Force >                         _forceCellVec;
-    vector< ForceGraph >                    _forceCellGraphVec;
-    vector< multimap< int, CellGroup > >    _cellGroupVec;
-    map< unsigned int, Polygon2 >          *_polygonComplexPtr;
+    vector< Force >                                 _forceCellVec;
+    vector< ForceGraph >                            _forceCellGraphVec;
+    vector< multimap< int, CellComponent > >        _cellComponentVec;      // int: number of nodes in lsubg
+    map< unsigned int, Polygon2 >                  *_polygonComplexPtr;
+
+    unsigned int    _nComponent;            // number of connected component
 
     // configuration parameter
     double          _paramUnit;             // cell unit
@@ -68,14 +75,20 @@ public:
 //	Reference to members
 //------------------------------------------------------------------------------
 
-    vector< Force > &          forceCellVec( void )        { return _forceCellVec; }
-    const vector< Force > &    forceCellVec( void ) const  { return _forceCellVec; }
+    unsigned int &              nComponent( void )          { return _nComponent; }
+    const unsigned int &        nComponent( void ) const    { return _nComponent; }
+
+    vector< Force > &           forceCellVec( void )        { return _forceCellVec; }
+    const vector< Force > &     forceCellVec( void ) const  { return _forceCellVec; }
 
     vector< ForceGraph > &          forceCellGraphVec( void )        { return _forceCellGraphVec; }
     const vector< ForceGraph > &    forceCellGraphVec( void ) const  { return _forceCellGraphVec; }
 
-    map< unsigned int, Polygon2 > * polygonComplex( void )        { return _polygonComplexPtr; }
-    map< unsigned int, Polygon2 > * polygonComplex( void ) const  { return _polygonComplexPtr; }
+    map< unsigned int, Polygon2 > * polygonComplex( void )              { return _polygonComplexPtr; }
+    const map< unsigned int, Polygon2 > * polygonComplex( void ) const  { return _polygonComplexPtr; }
+
+    vector< multimap< int, CellComponent > > &  cellComponentVec( void )                { return _cellComponentVec; }
+    const vector< multimap< int, CellComponent > > &  cellComponentVec( void ) const    { return _cellComponentVec; }
 
 //------------------------------------------------------------------------------
 //  Find conflicts
@@ -85,6 +98,9 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
     void updatePathwayCoords( void );
+    void createPolygonComplex( void );
+    bool findVertexInComplex( Coord2 &coord, ForceGraph &complex,
+                              ForceGraph::vertex_descriptor &target );
 
 //------------------------------------------------------------------------------
 //  File I/O
