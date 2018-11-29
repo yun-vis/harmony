@@ -150,6 +150,17 @@ Polygon2 & Polygon2::operator = ( const Polygon2 & p )
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
+//
+//  Polygon2::updateCentroid --    update centroid of the polygon
+//
+//  Inputs
+//  center: center of the bounding box
+//  width: width of the bounding box
+//  height: height of the bounding box
+//
+//  Outputs
+//  none
+//
 void Polygon2::boundingBox( Coord2 &center, double &width, double &height )
 {
     double minX = INFINITY, maxX = -INFINITY, minY = INFINITY, maxY = -INFINITY;
@@ -166,6 +177,16 @@ void Polygon2::boundingBox( Coord2 &center, double &width, double &height )
     height = maxY - minY;
 }
 
+
+//
+//  Polygon2::updateCentroid --    update centroid of the polygon
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
 void Polygon2::updateCentroid( void )
 {
     CGAL::Polygon_2< K > polygon;
@@ -200,6 +221,34 @@ void Polygon2::updateCentroid( void )
     double y = CGAL::to_double( (ORIGIN + center).y() );
     _centroid.x() = x;
     _centroid.y() = y;
+}
+
+
+//
+//  Polygon2::updateOrientation --    update polygon elements if they are not counterclockwise
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Polygon2::updateOrientation( void )
+{
+    CGAL::Polygon_2< K > p;
+
+    for( unsigned int i = 0; i < _elements.size(); i++ ){
+        p.push_back( K::Point_2( _elements[i].x(), _elements[i].y() ) );
+    }
+
+    if( p.orientation() == -1 ){
+        p.reverse_orientation();
+
+        _elements.clear();
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            _elements.push_back( Coord2( CGAL::to_double( p[i].x() ), CGAL::to_double( p[i].y() ) ) );
+        }
+    }
 }
 
 //------------------------------------------------------------------------------

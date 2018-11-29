@@ -18,7 +18,7 @@
 using namespace std;
 
 #include "base/Grid2.h"
-#include "base/Polygon2.h"
+#include "base/Contour2.h"
 #include "graph/BoundaryGraph.h"
 #include "optimization/Force.h"
 

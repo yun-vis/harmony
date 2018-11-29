@@ -78,6 +78,7 @@ set(HEADERS
         include/base/Config.h
         include/base/Coord2.h
         include/base/Polygon2.h
+        include/base/Contour2.h
         include/base/Grid2.h
         include/base/QuardTree.h
         include/base/Timer.h
@@ -127,6 +128,7 @@ set(SOURCES
         src/base/Config.cpp
         src/base/Coord2.cpp
         src/base/Polygon2.cpp
+        src/base/Contour2.cpp
         src/base/Grid2.cpp
         src/base/Line2.cpp
         src/base/QuardTree.cpp

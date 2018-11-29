@@ -90,6 +90,9 @@ private:
     vector< Seed >                 *_seedVecPtr;
     vector< vector< K::Point_2 > >  _polyVec2D;         // map seed points and cell polygon
 
+    K::Segment_2 _convertToSeg( const CGAL::Object seg_obj, bool outgoing,
+                                bool &isLine, double &slope );
+
 protected:
 
     void    _init ( vector< Seed > & __seedVec, Polygon2 &__contour );
@@ -116,8 +119,7 @@ public:
     void init( vector< Seed > & __seedVec, Polygon2 &__contour ){
         _init( __seedVec, __contour );
     }
-    void createVoronoiDiagram( void );
-    void createWeightedVoronoiDiagram( void );
+    void createVoronoiDiagram( bool isWeighted );
     void mapSeedsandPolygons( void );
 
 //------------------------------------------------------------------------------

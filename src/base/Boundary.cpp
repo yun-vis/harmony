@@ -1225,8 +1225,10 @@ void Boundary::buildBoundaryGraph( void )
     }
     _nLines = _polygonComplexVD.size();
 
+#ifdef DEBUG
     cerr << "nV = " << _nVertices << " nE = " << _nEdges
          << " nL = " << _nLines << endl;
+#endif // DEBUG
 }
 
 
@@ -1341,11 +1343,12 @@ void Boundary::decomposeSkeleton( void )
         _composite[ vdNew ].id = _skeleton[vd].id;
         _composite[ vdNew ].initID = _skeleton[vd].initID;
 
-        _composite[ vdNew ].coordPtr = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
+        _composite[ vdNew ].coordPtr     = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
         _composite[ vdNew ].prevCoordPtr = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
         _composite[ vdNew ].forcePtr     = new Coord2( 0, 0 );
         _composite[ vdNew ].placePtr     = new Coord2( 0, 0 );
         _composite[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
+        _composite[ vdNew ].weight       = 0.0;
 
         _composite[ vdNew ].widthPtr = new double( *_skeleton[vd].widthPtr );
         _composite[ vdNew ].heightPtr = new double( *_skeleton[vd].heightPtr );
@@ -1429,6 +1432,7 @@ void Boundary::decomposeSkeleton( void )
                     _composite[ vdNew ].forcePtr     = new Coord2( 0, 0 );
                     _composite[ vdNew ].placePtr     = new Coord2( 0, 0 );
                     _composite[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
+                    _composite[ vdNew ].weight       = 0.0;
 
                     _composite[ vdNew ].widthPtr    = new double( sqrt( unit ) );
                     _composite[ vdNew ].heightPtr   = new double( sqrt( unit ) );
@@ -1567,137 +1571,36 @@ void Boundary::createPolygonComplex( void )
 
     for( unsigned int i = 0; i < _polygonMat.size(); i++ ){
 
-        // copy cells to a graph
-        ForceGraph complex;
-        unsigned int id = 0;
-        for( unsigned int j = 0; j < _polygonMat[i].size(); j++ ){
+        int cSize = _polygonMat[i].size();
+        if( cSize > 1 ){
 
-            Polygon2 &p = _polygonMat[i][j];
-            vector< ForceGraph::vertex_descriptor > vdVec;
-
-            // add vertices
-            for( unsigned int k = 0; k < p.elements().size(); k++ ) {
-
-                ForceGraph::vertex_descriptor vd = NULL;
-                //cerr << "p[" << k << "] = " << p.elements()[k];
-                bool isFound = findVertexInComplex( p.elements()[k], complex, vd );
-                if( isFound == true ){
-                    vdVec.push_back( vd );
-                }
-                else{
-                    vd = add_vertex( complex );
-                    complex[ vd ].id = id;
-                    complex[ vd ].initID = i;
-                    complex[ vd ].coordPtr = new Coord2( p.elements()[k].x(), p.elements()[k].y() );
-                    complex[ vd ].widthPtr = new double( 0.0 );
-                    complex[ vd ].heightPtr = new double( 0.0 );
-                    complex[ vd ].areaPtr = new double( 0.0 );
-                    vdVec.push_back( vd );
-                    id++;
-                }
-                //cerr << complex[ vd ].id << " ";
+            Contour2 contour;
+            vector< Polygon2 > pVec;
+            for( unsigned int j = 0; j < _polygonMat[i].size(); j++ ) {
+                Polygon2 &p = _polygonMat[i][j];
+                pVec.push_back( p );
             }
-            //cerr << endl;
-
-            // add edges
-            unsigned int eid = 0;
-            for( unsigned int k = 1; k < vdVec.size(); k++ ){
-
-                ForceGraph::vertex_descriptor vdS = vdVec[ k-1 ];
-                ForceGraph::vertex_descriptor vdT = vdVec[ k%vdVec.size() ];
-
-                bool isFound = false;
-                ForceGraph::edge_descriptor oldED;
-                tie( oldED, isFound ) = edge( vdS, vdT, complex );
-                if( isFound == true ){
-
-                    complex[ oldED ].weight += 1;
-                }
-                else{
-
-                    pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, complex );
-                    ForceGraph::edge_descriptor foreED = foreE.first;
-                    complex[ foreED ].id = eid;
-                    complex[ foreED ].weight = 0;
-                    eid++;
-                }
-            }
+            contour.init( i, pVec );
+            contour.createContour();
+            _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, contour.contour() ) );
         }
-
-        // remove inner edges
-        vector< ForceGraph::edge_descriptor > edVec;
-        BGL_FORALL_EDGES( ed, complex, ForceGraph )
-        {
-            if( complex[ed].weight > 0 ){
-                edVec.push_back( ed );
-                //cerr << "w = " << complex[ed].weight << endl;
-            }
+        else{
+            Polygon2 &p = _polygonMat[i][0];
+            p.updateOrientation();
+            _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, p ) );
         }
-        //cerr << "bnV = " << num_vertices( complex ) << " ";
-        //cerr << "bnE = " << num_edges( complex ) << endl;
-        for( unsigned int j = 0; j < edVec.size(); j++ ){
-            remove_edge( edVec[j], complex );
-        }
-        // reorder edge id
-        unsigned int eid = 0;
-        BGL_FORALL_EDGES( ed, complex, ForceGraph )
-        {
-            complex[ed].id = eid;
-            complex[ed].visit = false;
-            eid++;
-        }
-
-        // find the vertex with degree > 0
-        //cerr << "nV = " << num_vertices( complex ) << " ";
-        //cerr << "nE = " << num_edges( complex ) << endl;
-        ForceGraph::vertex_descriptor vdS;
-        BGL_FORALL_VERTICES( vd, complex, ForceGraph )
-        {
-#ifdef DEBUG
-            if ( true ){
-                cerr << " degree = " << out_degree( vd, complex );
-            }
-#endif // DEBUG
-            if( out_degree( vd, complex ) > 0 ) {
-                vdS = vd;
-                break;
-            }
-        }
-
-        // find the contour
-        ForceGraph::out_edge_iterator eo, eo_end;
-        ForceGraph::vertex_descriptor vdC = vdS;
-        //cerr << "idC = " << complex[vdC].id << " ";
-        Polygon2 polygon;
-        polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
-        while( true ){
-
-            ForceGraph::vertex_descriptor vdT = NULL;
-            for( tie( eo, eo_end ) = out_edges( vdC, complex ); eo != eo_end; eo++ ){
-
-                ForceGraph::edge_descriptor ed = *eo;
-                if( complex[ed].visit == false ) {
-                    vdT = target( ed, complex );
-                    complex[ed].visit = true;
-                    break;
-                }
-                //cerr << "(" << complex[source( ed, complex )].id << "," << complex[target( ed, complex )].id << ")" << endl;
-            }
-            if( vdS == vdT ) break;
-            else assert( vdT != NULL );
-            //cerr << complex[vdT].id << " ";
-            polygon.elements().push_back( Coord2( complex[vdT].coordPtr->x(), complex[vdT].coordPtr->y() ) );
-            vdC = vdT;
-        }
-        // add the first point
-        //polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
-        polygon.updateCentroid();
-
-        //cerr << "p[" << i << "] = " << polygon << endl;
-
-        _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, polygon ) );
     }
 
+#ifdef DEBUG
+    map< unsigned int, Polygon2 >::iterator itC = _polygonComplex.begin();
+    for( ; itC != _polygonComplex.end(); itC++ ){
+        Polygon2 &p = itC->second;
+        for( unsigned int i = 0; i < p.elements().size(); i++ ){
+            cerr << p.elements()[i] << " ";
+        }
+    }
+    cerr << endl;
+#endif // DEBUG
 }
 
 //

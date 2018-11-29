@@ -400,9 +400,7 @@ void Window::_timerStop( void )
 
 void Window::_timerBoundaryStop( void )
 {
-    for( unsigned int i = 0; i < _timer.size(); i++ ){
-        //if( _timer[i]->isActive() == false ) delete _timer[i];
-    }
+    _timerStop();
 
     simulateKey( Qt::Key_E );
     _boundary->createPolygonComplex();
@@ -423,10 +421,9 @@ void Window::timerBoundary( void )
         case TYPE_FORCE:
         {
             _boundary->forceBoundary().force();
-            err = _boundary->forceBoundary().gap();
+            err = _boundary->forceBoundary().verletIntegreation();
             cerr << "err (force) = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
-                _timer[0]->stop();
                 _timerBoundaryStop();
                 cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -440,7 +437,6 @@ void Window::timerBoundary( void )
             err = _boundary->forceBoundary().gap();
             cerr << "err (centroid) = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
-                _timer[0]->stop();
                 _timerBoundaryStop();
                 cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -450,10 +446,9 @@ void Window::timerBoundary( void )
         {
             _boundary->forceBoundary().force();
             _boundary->forceBoundary().centroidGeometry();
-            err = _boundary->forceBoundary().gap();
+            err = _boundary->forceBoundary().verletIntegreation();
             cerr << "err (hybrid) = " << err << endl;
             if ( err < _boundary->forceBoundary().finalEpsilon() ) {
-                _timer[0]->stop();
                 _timerBoundaryStop();
                 cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -482,11 +477,7 @@ void Window::_timerPathwayCellStop( void )
         isActive = isActive || _timer[i]->isActive();
     }
     if( !isActive ) {
-/*
-        for( unsigned int i = 0; i < _timer.size(); i++ ){
-            if( _timer[i] != NULL ) delete _timer[i];
-        }
-*/
+        _timerStop();
         simulateKey( Qt::Key_P );
     }
 }
@@ -505,7 +496,7 @@ void Window::timerPathwayCell( void )
                 case TYPE_FORCE:
                 {
                     _cell.forceCellVec()[i].force();
-                    err = _cell.forceCellVec()[i].gap();
+                    err = _cell.forceCellVec()[i].verletIntegreation();
                     cerr << "err (force) = " << err << endl;
                     if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                         _timer[i]->stop();
@@ -532,7 +523,7 @@ void Window::timerPathwayCell( void )
                 {
                     _cell.forceCellVec()[i].force();
                     _cell.forceCellVec()[i].centroidGeometry();
-                    err = _cell.forceCellVec()[i].gap();
+                    err = _cell.forceCellVec()[i].verletIntegreation();
                     cerr << "err (hybrid) = " << err << endl;
                     if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
                         _timer[i]->stop();
@@ -556,7 +547,6 @@ void Window::_timerPathwayStart( void )
 
     _timer.resize( nComponent );
     for( unsigned int i = 0; i < nComponent; i++ ){
-        // cerr << "i = " << i << endl;
         _timer[i] = new QBasicTimer();
         _timer[i]->start( 30, this );
     }
@@ -568,15 +558,10 @@ void Window::_timerPathwayStop( void )
 
     for( unsigned int i = 0; i < _timer.size(); i++ ){
         isActive = isActive || _timer[i]->isActive();
-        //cerr << _timer[i]->isActive() << " ";
     }
-    //cerr << endl;
 
-    cerr << "isActive = " << isActive << endl;
     if( !isActive ) {
-        for( unsigned int i = 0; i < _timer.size(); i++ ){
-            //if( _timer[i]->isActive() == false ) delete _timer[i];
-        }
+        _timerStop();
     }
 }
 
@@ -595,7 +580,7 @@ void Window::timerPathway( void )
         for( ; itC != cellComponentMap.end(); itC++ ){
 
             itC->second.detail.force();
-            err = itC->second.detail.gap();
+            err = itC->second.detail.verletIntegreation();
             cerr << idC << ": err (pathway force) = " << err << endl;
             if ( err < itC->second.detail.finalEpsilon() ) {
                 _timer[idC]->stop();

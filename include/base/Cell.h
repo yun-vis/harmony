@@ -19,6 +19,7 @@ using namespace std;
 
 #include "base/Config.h"
 #include "base/PathwayData.h"
+#include "base/Contour2.h"
 #include "optimization/Force.h"
 
 //------------------------------------------------------------------------------
@@ -99,8 +100,6 @@ public:
 //------------------------------------------------------------------------------
     void updatePathwayCoords( void );
     void createPolygonComplex( void );
-    bool findVertexInComplex( Coord2 &coord, ForceGraph &complex,
-                              ForceGraph::vertex_descriptor &target );
 
 //------------------------------------------------------------------------------
 //  File I/O
