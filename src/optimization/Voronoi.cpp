@@ -134,10 +134,10 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
         if( isWeighted ){
-            cerr << "w = " << (*_seedVecPtr)[i].weight << endl;
+            //if ( _seedVecPtr->size() == 2 ) cerr << "w = " << ((*_seedVecPtr)[i].weight ) << endl;
             wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(),
                                                                 (*_seedVecPtr)[i].coord.y() ),
-                                                    10*sqrt((*_seedVecPtr)[i].weight )) );
+                                                    ((*_seedVecPtr)[i].weight )) );
         }
         else{
             wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(),

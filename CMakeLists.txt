@@ -116,6 +116,7 @@ set(HEADERS
         include/optimization/Voronoi.h
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
+        include/optimization/Similarity.h
         include/ui/GraphicsBallItem.h
         include/ui/GraphicsEdgeItem.h
         include/ui/GraphicsPolygonItem.h
@@ -167,6 +168,7 @@ set(SOURCES
         src/optimization/Voronoi.cpp
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
+        src/optimization/Similarity.cpp
         src/ui/GraphicsBallItem.cpp
         src/ui/GraphicsEdgeItem.cpp
         src/ui/GraphicsPolygonItem.cpp

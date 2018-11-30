@@ -313,9 +313,11 @@ void GraphicsView::_item_cells( void )
         // draw vertices
         BGL_FORALL_VERTICES( vd, cellGVec[i], ForceGraph ) {
 
+            ForceGraph::degree_size_type degrees = out_degree( vd, cellGVec[i] );
+
             GraphicsBallItem *itemptr = new GraphicsBallItem;
             itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( cellGVec[i][vd].coordPtr->x(), -cellGVec[i][vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = cellGVec[i][vd].id;
 

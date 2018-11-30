@@ -21,6 +21,7 @@ using namespace std;
 #include "base/PathwayData.h"
 #include "base/Contour2.h"
 #include "optimization/Force.h"
+#include "optimization/Similarity.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -48,8 +49,9 @@ private:
 
     vector< Force >                                 _forceCellVec;
     vector< ForceGraph >                            _forceCellGraphVec;
-    vector< multimap< int, CellComponent > >        _cellComponentVec;      // int: number of nodes in lsubg
+    vector< multimap< int, CellComponent > >        _cellComponentVec;          // int: number of nodes in lsubg
     map< unsigned int, Polygon2 >                  *_polygonComplexPtr;
+    vector< vector< vector< double > > >            _cellComponentSimilarityVec;   // cell component similarity
 
     unsigned int    _nComponent;            // number of connected component
 
@@ -59,8 +61,9 @@ private:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void _buildCellGraphs( void );
     void _buildConnectedComponent( void );
+    void _computeCellComponentSimilarity( void );
+    void _buildCellGraphs( void );
     void _init( map< unsigned int, Polygon2 > * __polygonComplexPtr );
     void _clear( void );
 
