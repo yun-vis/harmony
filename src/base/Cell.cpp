@@ -21,6 +21,9 @@
 
 using namespace std;
 
+
+#include <boost/graph/max_cardinality_matching.hpp>
+
 #include "base/Cell.h"
 
 //------------------------------------------------------------------------------
@@ -46,8 +49,18 @@ void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
     vector< ForceGraph > &lsubg         = _pathway->lsubG();
 
     //read config file
-    string configFilePath = "../configs/cell.conf";
+    string configFilePath = "../configs/addition.conf";
     Base::Config conf( configFilePath );
+
+    if ( conf.has( "ka" ) ){
+        string paramAddKa = conf.gets( "ka" );
+        _paramAddKa = stringToDouble( paramAddKa );
+    }
+
+    if ( conf.has( "kr" ) ){
+        string paramAddKr = conf.gets( "kr" );
+        _paramAddKr = stringToDouble( paramAddKr );
+    }
 
     if ( conf.has( "unit" ) ){
         string paramUnit = conf.gets( "unit" );
@@ -71,6 +84,8 @@ void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
     }
 
     cerr << "filepath: " << configFilePath << endl;
+    cerr << "addKa: " << _paramAddKa << endl;
+    cerr << "addKr: " << _paramAddKr << endl;
     cerr << "unit: " << _paramUnit << endl;
 }
 
@@ -199,10 +214,12 @@ void Cell::_buildConnectedComponent( void )
             _nComponent++;
         }
 
+#ifdef DEBUG
         cerr << "lg:" << endl;
         printGraph( lg );
-
         cerr << "component:" << endl;
+#endif // DEBUG
+
         // update component id
         multimap< int, CellComponent >::iterator itC;
         unsigned int idC = 0;
@@ -324,12 +341,12 @@ void Cell::_buildCellGraphs( void )
                 }
             }
 
-//#ifdef DEBUG
+#ifdef DEBUG
             cerr << " id = " << itC->second.id
                  << " multiple = " << itC->second.multiple
                  << " first = " << itC->first
                  << " size = " << itC->second.cellgVec.size() << endl;
-//#endif // DEBUG
+#endif // DEBUG
         }
 
 #ifdef DEBUG
@@ -375,7 +392,7 @@ void Cell::_buildCellGraphs( void )
         for( itM = setMap.begin(); itM != setMap.end(); itM++ ){
 
             vector< unsigned int > &idVec = itM->second;
-            for( unsigned int m = 0; m < idVec.size(); m++ ){
+            for( unsigned int m = 0; m < idVec.size()-1; m++ ){
 
                 ForceGraph::vertex_descriptor vdS = vertex( idVec[m], _forceCellGraphVec[i] );
                 ForceGraph::vertex_descriptor vdT = vertex( idVec[(m+1)%idVec.size()], _forceCellGraphVec[i] );
@@ -667,6 +684,9 @@ void Cell::_buildInterCellComponents( void )
     ForceGraph                  &lg     = _pathway->lg();
     SkeletonGraph               &s      = _pathway->skeletonG();
 
+    // initialization
+    _interCellComponentMap.clear();
+    _reducedInterCellComponentMap.clear();
 
     BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
 
@@ -674,7 +694,7 @@ void Cell::_buildInterCellComponents( void )
             if( ( g[ vd ].metaPtr != NULL ) ){
                 if( g[ vd ].metaPtr->subsystems.size() > 1 ){
 
-                    cerr << "HERE" << endl;
+                    // cerr << "HERE" << endl;
                     ForceGraph::vertex_descriptor vdL = vertex( g[vd].id, lg );
 
                     // out edges
@@ -692,9 +712,18 @@ void Cell::_buildInterCellComponents( void )
                             ForceGraph::vertex_descriptor vdBS = source( edB, lg );
                             ForceGraph::vertex_descriptor vdBT = target( edB, lg );
 
-                            unsigned idSA = g[ vertex( lg[ vdAT ].id, g ) ].reactPtr->subsystem->id;
-                            unsigned idSB = g[ vertex( lg[ vdBT ].id, g ) ].reactPtr->subsystem->id;
+                            unsigned int idSA = g[ vertex( lg[ vdAT ].id, g ) ].reactPtr->subsystem->id;
+                            unsigned int idSB = g[ vertex( lg[ vdBT ].id, g ) ].reactPtr->subsystem->id;
                             if( ( vdAT != vdBT ) && ( idSA != idSB ) ){
+
+                                if( idSA > idSB ){
+                                    unsigned int temp = idSA;
+                                    idSA = idSB;
+                                    idSB = temp;
+                                    ForceGraph::vertex_descriptor tempVD = vdAT;
+                                    vdAT = vdBT;
+                                    vdBT = tempVD;
+                                }
 
                                 Grid2 grid( idSA, idSB );
                                 unsigned idA = lg[ vdAT ].componentID;
@@ -705,6 +734,7 @@ void Cell::_buildInterCellComponents( void )
                                 advance( itB, idB );
                                 CellComponent &cca = itA->second;
                                 CellComponent &ccb = itB->second;
+
 #ifdef DEBUG
                                 cerr << "idSA = " << idSA << " idSB = " << idSB << endl;
                                 cerr << "lg[ vdAT ].id = " << lg[ vdAT ].id << " lg[ vdBT ].id = " << lg[ vdBT ].id << endl;
@@ -719,9 +749,22 @@ void Cell::_buildInterCellComponents( void )
                                 tie( oldED, found ) = edge( vdSS, vdST, s );
                                 if( found ){
                                 //if( true ){
-                                    _interCellComponentMap.insert( pair< Grid2,
-                                            pair< CellComponent, CellComponent > >( grid,
-                                                                                    pair< CellComponent, CellComponent >( cca, ccb ) ) );
+
+                                    multimap< Grid2, pair< CellComponent, CellComponent > >::iterator it;
+                                    bool exist = false;
+                                    for( it = _interCellComponentMap.begin(); it != _interCellComponentMap.end(); it++  ){
+
+                                        if( ( idSA == it->first.p() ) && ( idSB == it->first.q() ) &&
+                                            ( cca.id == it->second.first.id ) && ( ccb.id == it->second.second.id ) ){
+                                            exist = true;
+                                        }
+                                    }
+
+                                    if( !exist ){
+                                        _interCellComponentMap.insert( pair< Grid2,
+                                                                       pair< CellComponent, CellComponent > >( grid,
+                                                        pair< CellComponent, CellComponent >( cca, ccb ) ) );
+                                    }
                                 }
                             }
                         }
@@ -730,6 +773,109 @@ void Cell::_buildInterCellComponents( void )
             }
         }
     }
+
+    // find a maximal matching
+    multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itC;
+    UndirectedPropertyGraph reduce;
+    VertexIndexMap      vertexIndex     = get( vertex_index, reduce );
+    VertexXMap          vertexX         = get( vertex_myx, reduce );
+    VertexYMap          vertexY         = get( vertex_myy, reduce );
+
+    for( itC = _interCellComponentMap.begin(); itC != _interCellComponentMap.end(); itC++  ){
+
+        UndirectedPropertyGraph::vertex_descriptor vdS = NULL;
+        UndirectedPropertyGraph::vertex_descriptor vdT = NULL;
+        bool existedS = false,
+             existedT = false;
+
+        BGL_FORALL_VERTICES( vd, reduce, UndirectedPropertyGraph ) {
+            if( ( vertexX[ vd ] == itC->first.p() ) && ( vertexY[ vd ] == itC->second.first.id ) ){
+                vdS = vd;
+                existedS = true;
+            }
+            if( ( vertexX[ vd ] == itC->first.q() ) && ( vertexY[ vd ] == itC->second.second.id ) ){
+                vdT = vd;
+                existedT = true;
+            }
+        }
+
+        if( !existedS ){
+            vdS = add_vertex( reduce );
+            vertexX[ vdS ] = itC->first.p();
+            vertexY[ vdS ] = itC->second.first.id;
+        }
+        if( !existedT ){
+            vdT = add_vertex( reduce );
+            vertexX[ vdT ] = itC->first.q();
+            vertexY[ vdT ] = itC->second.second.id;
+        }
+
+        bool found = false;
+        UndirectedPropertyGraph::edge_descriptor oldED;
+        tie( oldED, found ) = edge( vdS, vdT, reduce );
+        if( found == false ){
+
+            pair< UndirectedPropertyGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, reduce );
+            // UndirectedPropertyGraph::edge_descriptor edL = foreE.first;
+        }
+    }
+
+    // compute maximal matching
+    vector< graph_traits< UndirectedPropertyGraph >::vertex_descriptor > mate( num_vertices( reduce ) );
+    bool success = checked_edmonds_maximum_cardinality_matching( reduce, &mate[0] );
+    assert( success );
+
+    graph_traits< UndirectedPropertyGraph >::vertex_iterator vi, vi_end;
+    for( boost::tie( vi, vi_end ) = vertices( reduce ); vi != vi_end; ++vi ){
+        if( mate[*vi] != graph_traits< UndirectedPropertyGraph >::null_vertex() && *vi < mate[*vi] ){
+            // cout << "{" << *vi << ", " << mate[*vi] << "}" << std::endl;
+
+            UndirectedPropertyGraph::vertex_descriptor vdS = vertex( *vi, reduce );
+            UndirectedPropertyGraph::vertex_descriptor vdT = vertex( mate[*vi], reduce );
+
+            unsigned int idS = vertexX[ vdS ];
+            unsigned int idT = vertexX[ vdT ];
+            unsigned int idCS = vertexY[ vdS ];
+            unsigned int idCT = vertexY[ vdT ];
+            if( idS > idT ){
+                unsigned int tmp = idS;
+                idS = idT;
+                idT = tmp;
+                unsigned int tmpC = idCS;
+                idCS = idCT;
+                idCT = tmpC;
+            }
+
+            Grid2 grid( idS, idT );
+            multimap< int, CellComponent >::iterator itS = _cellComponentVec[idS].begin();
+            multimap< int, CellComponent >::iterator itT = _cellComponentVec[idT].begin();
+            advance( itS, idCS );
+            advance( itT, idCT );
+            CellComponent &ccS = itS->second;
+            CellComponent &ccT = itT->second;
+            _reducedInterCellComponentMap.insert( pair< Grid2,
+                    pair< CellComponent, CellComponent > >( grid,
+                    pair< CellComponent, CellComponent >( ccS, ccT ) ) );
+
+            //cerr << "" << vertexX[ vdS ] << " ( " << vertexY[ vdS ] << " ) x ";
+            //cerr << "" << vertexX[ vdT ] << " ( " << vertexY[ vdT ] << " )" << endl;
+        }
+    }
+
+#ifdef DEBUG
+    //multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itC;
+    cerr << "_interCellComponentMap.size() = " << _interCellComponentMap.size() << endl;
+    for( itC = _interCellComponentMap.begin(); itC != _interCellComponentMap.end(); itC++  ){
+        cerr << "" << itC->first.p() << " ( " << itC->second.first.id << " ) x ";
+        cerr << "" << itC->first.q() << " ( " << itC->second.second.id << " )" << endl;
+    }
+
+    cerr << "_reducedInterCellComponentMap.size() = " << _reducedInterCellComponentMap.size() << endl;
+    for( itC = _reducedInterCellComponentMap.begin(); itC != _reducedInterCellComponentMap.end(); itC++  ){
+        cerr << "" << itC->first.p() << " ( " << itC->second.first.id << " ) x ";
+        cerr << "" << itC->first.q() << " ( " << itC->second.second.id << " )" << endl;
+    }
+#endif // DEBUG
 }
 
 //
@@ -743,10 +889,12 @@ void Cell::_buildInterCellComponents( void )
 //
 void Cell::additionalForces( void )
 {
-    multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itA = _interCellComponentMap.begin();
+    //multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itA = _interCellComponentMap.begin();
+    multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itA = _reducedInterCellComponentMap.begin();
 
-    cerr << "HERE" << endl;
-    for( ; itA != _interCellComponentMap.end(); itA++ ){
+    //for( ; itA != _interCellComponentMap.end(); itA++ ){
+    for( ; itA != _reducedInterCellComponentMap.end(); itA++ ){
+
 
         unsigned int idS = itA->first.p();
         unsigned int idT = itA->first.q();
@@ -758,6 +906,12 @@ void Cell::additionalForces( void )
         ForceGraph::vertex_descriptor vdS = vertex( ccS.id, fgS );
         ForceGraph::vertex_descriptor vdT = vertex( ccT.id, fgT );
 
+        double side = 0.25*( _forceCellVec[ idS ].width() + _forceCellVec[ idS ].width() +
+                             _forceCellVec[ idT ].width() + _forceCellVec[ idT ].width() );
+        double LA = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgS ) ) );
+        double LB = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgT ) ) );
+        double L = 0.5*( LA+LB );
+
         Coord2 diff, unit;
         double dist;
 
@@ -766,8 +920,8 @@ void Cell::additionalForces( void )
         if( dist == 0 ) unit.zero();
         else unit = diff.unit();
 
-        *fgS[ vdS ].forcePtr -= 0.01 * ( dist - 200 ) * unit;
-        *fgT[ vdT ].forcePtr += 0.01 * ( dist - 200 ) * unit;
+        *fgS[ vdS ].forcePtr -= _paramAddKa * ( dist - L ) * unit;
+        *fgT[ vdT ].forcePtr += _paramAddKa * ( dist - L ) * unit;
     }
 }
 

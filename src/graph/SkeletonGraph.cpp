@@ -114,12 +114,12 @@ void geodesicAssignment( SkeletonGraph & graph )
 																						   get( vertex_index, propG ) ) ) );
 
 				BGL_FORALL_VERTICES( vdI, graph, SkeletonGraph ) {
-						//unsigned int idI = vertexID[ vdI ];
-						double oldV = graph[ vdI ].geodesicDist;
-						if( out_degree( vdI, graph ) == 0 ) distance[ graph[ vdI ].id ] = 0.0;
-						double newV = oldV + distance[ graph[ vdI ].id ];
-						graph[ vdI ].geodesicDist = newV;
-					}
+					//unsigned int idI = vertexID[ vdI ];
+					double oldV = graph[ vdI ].geodesicDist;
+					if( out_degree( vdI, graph ) == 0 ) distance[ graph[ vdI ].id ] = 0.0;
+					double newV = oldV + distance[ graph[ vdI ].id ];
+					graph[ vdI ].geodesicDist = newV;
+				}
 
 #ifdef DEBUG
 				cerr << " ***  Handling Vertex ID " << vertexIndex[ vdO ] << endl;

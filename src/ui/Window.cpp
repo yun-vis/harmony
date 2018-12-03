@@ -419,8 +419,6 @@ void Window::timerBoundary( void )
 
     switch ( _boundary->forceBoundary().mode() ) {
 
-        //_boundary->forceBoundary().initForce();
-
         case TYPE_FORCE:
         {
             _boundary->forceBoundary().force();
@@ -491,10 +489,6 @@ void Window::timerPathwayCell( void )
 
     assert( _timer.size() == _cell.forceCellVec().size() );
 
-    for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
-
-        _cell.forceCellVec()[i].initForce();
-    }
     for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
 
         // cerr << "i = " << i << " active = " << _timer[i]->isActive() << endl;
@@ -590,7 +584,6 @@ void Window::timerPathway( void )
 
         for( ; itC != cellComponentMap.end(); itC++ ){
 
-            //itC->second.detail.initForce();
             itC->second.detail.force();
             err = itC->second.detail.verletIntegreation();
             cerr << idC << ": err (pathway force) = " << err << endl;

@@ -332,7 +332,8 @@ void GraphicsView::_item_interCellComponents( void )
     vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
     // vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
-    multimap< Grid2, pair< CellComponent, CellComponent > > & interCCMap = _cellPtr->interCellComponentMap();
+    //multimap< Grid2, pair< CellComponent, CellComponent > > & interCCMap = _cellPtr->interCellComponentMap();
+    multimap< Grid2, pair< CellComponent, CellComponent > > & interCCMap = _cellPtr->reducedInterCellComponentMap();
     multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itC;
 
     for( itC = interCCMap.begin(); itC != interCCMap.end(); itC++ ){
@@ -342,9 +343,11 @@ void GraphicsView::_item_interCellComponents( void )
         CellComponent &ccS = itC->second.first;
         CellComponent &ccT = itC->second.second;
 
+#ifdef DEBUG
         cerr << "idS = " << idS << " idT = " << idT << endl;
         cerr << "ccS = " << ccS.id << " ccT = " << ccT.id << endl;
         cerr << "ccS.size() = " << ccS.cellgVec.size() << " ccT.size() = " << ccT.cellgVec.size() << endl;
+#endif // DEBUG
 
         QPainterPath path;
         path.moveTo( cellGVec[idS][ccS.cellgVec[0]].coordPtr->x(), -cellGVec[idS][ccS.cellgVec[0]].coordPtr->y() );
