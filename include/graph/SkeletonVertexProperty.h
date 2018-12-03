@@ -19,6 +19,7 @@
 
 using namespace std;
 
+#include "base/CommonClass.h"
 #include "base/Coord2.h"
 #include "base/Common.h"
 #include "graph/BaseVertexProperty.h"
@@ -55,12 +56,16 @@ class SkeletonVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    //unsigned int                initID;
-    double *                    areaPtr;
 
-    Coord2                      shift;       // displacement
-    Coord2                      force;       // displacement of the force-directed algorithm
-    Coord2                      place;       // displacement of the voronoi cells
+    Subdomain                   * domainPtr;
+    //unsigned int                initID;
+
+    string                      name;
+    //int                        initID;        // -1 represent non-metabolites
+    double                      geodesicDist;   // geodesic distance
+    int                         zone;           // geodesic zone
+    int                         ezone;          // euclidean zone
+    double                      angle;          // angle for node position
 
 //------------------------------------------------------------------------------
 //	Special functions

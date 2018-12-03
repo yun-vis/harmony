@@ -38,13 +38,14 @@ void printGraph( ForceGraph & graph )
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print vertex information
     BGL_FORALL_VERTICES( vd, graph, ForceGraph ) {
 
         ForceGraph::degree_size_type      degrees         = out_degree( vd, graph );
+        cerr << "initID = " << graph[vd].initID << endl;
     }
-#endif  // DEBUG
+//#endif  // DEBUG
 
 #ifdef  DEBUG
     // print edge information

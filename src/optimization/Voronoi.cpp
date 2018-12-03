@@ -80,25 +80,31 @@ K::Segment_2 Voronoi::_convertToSeg( const CGAL::Object seg_obj, bool outgoing,
     else if ( line != NULL ) {    //Must be a line
 
         isLine = true;
-        double m = -1.0 * CGAL::to_double( line->a()/line->b() );
+
         //cerr << "a = " << line->a() << " b = " << line->b() << " c = " << line->c() << endl;
+        double m;
+        if( line->b() == 0.0 )
+            m = INFINITY;
+        else
+            m = -1.0 * CGAL::to_double( line->a()/line->b() );
 
         if( line->b() == 0.0 ){
             //cerr << "1st: m = " << m << endl;
-            slope = INFINITY;
-            K::Point_2 source( -1.0*CGAL::to_double( line->c()/line->a() ), LINE_LENGTH ),
-                    target( -1.0*CGAL::to_double( line->c()/line->a() ), -LINE_LENGTH );
+            slope = m;
+            K::Point_2 source( -1.0*CGAL::to_double( line->c()/line->a() ), -LINE_LENGTH ),
+                       target( -1.0*CGAL::to_double( line->c()/line->a() ),  LINE_LENGTH );
+            return  K::Segment_2( source, target );
         }
         else if( m >= -1.0 && m <= 1.0 ){
             //cerr << "2nd: m = " << m << endl;
-            slope = m;
+            slope = -1.0 * CGAL::to_double( line->a()/line->b() );
             K::Point_2 source( LINE_LENGTH, line->y_at_x( LINE_LENGTH ) ),
                     target( -LINE_LENGTH, line->y_at_x( -LINE_LENGTH ) );
             return  K::Segment_2( source, target );
         }
         else { // m > 1.0 or m < -1.0
             //cerr << "3rd: m = " << m << endl;
-            slope = m;
+            slope = -1.0 * CGAL::to_double( line->a()/line->b() );
             K::Point_2 source( LINE_LENGTH, line->y_at_x( LINE_LENGTH ) ),
                     target( -LINE_LENGTH, line->y_at_x( -LINE_LENGTH ) );
             return  K::Segment_2( source, target );
@@ -173,7 +179,6 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
 
         //Find a bounded edge to start on
         //for(;ec_start->is_unbounded();ec_start++){}
-
 
         //Current location of the edge circulator
         VD::Face::Ccb_halfedge_circulator ec = ec_start;
@@ -261,6 +266,18 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
         for( unsigned int i = 0; i < eleVec.size(); i++ ){
             bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));
             //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
+        }
+
+        if( pgon.orientation() == -1 ){     // special case of Line_2
+
+            pgon.reverse_orientation();
+#ifdef DEBUG
+            cerr << "slope = " << slope << endl;
+            for( auto v=pgon.vertices_begin(); v!=pgon.vertices_end(); v++ ) {
+                cerr << "pgon = " << v->x() << " " << v->y() << endl;
+            }
+            cerr << endl << endl;
+#endif // DEBUG
         }
 
 #ifdef DEBUG

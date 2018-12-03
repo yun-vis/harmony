@@ -286,7 +286,7 @@ void GraphicsView::_item_pathways( void )
 
 void GraphicsView::_item_cells( void )
 {
-    vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
+    vector< ForceGraph > &cellGVec   = _cellPtr->forceCellGraphVec();
 
     // create edge object from the spanning tree and add it to the scene
     for( unsigned int i = 0; i < cellGVec.size(); i++ ){
@@ -304,7 +304,7 @@ void GraphicsView::_item_cells( void )
             // add path
             GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
+            itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
             //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
             itemptr->setPath( path );
             _scene->addItem( itemptr );
@@ -316,7 +316,7 @@ void GraphicsView::_item_cells( void )
             ForceGraph::degree_size_type degrees = out_degree( vd, cellGVec[i] );
 
             GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( cellGVec[i][vd].coordPtr->x(), -cellGVec[i][vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = cellGVec[i][vd].id;
@@ -327,10 +327,42 @@ void GraphicsView::_item_cells( void )
     }
 }
 
+void GraphicsView::_item_interCellComponents( void )
+{
+    vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
+    // vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+
+    multimap< Grid2, pair< CellComponent, CellComponent > > & interCCMap = _cellPtr->interCellComponentMap();
+    multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itC;
+
+    for( itC = interCCMap.begin(); itC != interCCMap.end(); itC++ ){
+
+        unsigned int idS = itC->first.p();      // subsystem ID
+        unsigned int idT = itC->first.q();      // subsystem ID
+        CellComponent &ccS = itC->second.first;
+        CellComponent &ccT = itC->second.second;
+
+        cerr << "idS = " << idS << " idT = " << idT << endl;
+        cerr << "ccS = " << ccS.id << " ccT = " << ccT.id << endl;
+        cerr << "ccS.size() = " << ccS.cellgVec.size() << " ccT.size() = " << ccT.cellgVec.size() << endl;
+
+        QPainterPath path;
+        path.moveTo( cellGVec[idS][ccS.cellgVec[0]].coordPtr->x(), -cellGVec[idS][ccS.cellgVec[0]].coordPtr->y() );
+        path.lineTo( cellGVec[idT][ccT.cellgVec[0]].coordPtr->x(), -cellGVec[idT][ccT.cellgVec[0]].coordPtr->y() );
+
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+        itemptr->setPen( QPen( QColor( 255, 0, 0, 100 ), 3 ) );
+        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setPath( path );
+
+        _scene->addItem( itemptr );
+    }
+}
+
 void GraphicsView::_item_cellPolygons( void )
 {
-    vector< Force >      &cellFVec    = _cellPtr->forceCellVec();
-    vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
+    vector< Force >      & cellFVec    = _cellPtr->forceCellVec();
+    vector< ForceGraph > & cellGVec    = _cellPtr->forceCellGraphVec();
 
     //for( unsigned int k = 1; k < 2; k++ ){
     for( unsigned int k = 0; k < cellFVec.size(); k++ ){
@@ -416,10 +448,12 @@ void GraphicsView::initSceneItems ( void )
     if( _is_boundaryFlag == true ) _item_boundary();
     //if( _is_pathwayFlag == true ) _item_pathways();
     if( _is_pathwayFlag == true ) _item_subpathways();
-    if( _is_cellFlag == true ) _item_cells();
+    if( _is_cellFlag == true ) {
+        _item_cells();
+        _item_interCellComponents();
+    }
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
-
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }

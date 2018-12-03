@@ -57,6 +57,7 @@ class BaseVertexProperty {
     unsigned int                id;
     unsigned int                initID;                 // initial id
     unsigned int                groupID;                // group id
+    unsigned int                componentID;            // component id
 
     string *                    namePtr;
     double *                    namePixelWidthPtr;      // pixel width of the name
@@ -70,6 +71,7 @@ class BaseVertexProperty {
     double *                    areaPtr;                // vertex area
 
     int                         color;                  // color type
+    bool                        flag;                   // flag
 
 //------------------------------------------------------------------------------
 //	Special functions

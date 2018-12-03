@@ -141,6 +141,7 @@ class Force {
     void force	            ( void )        { _force(); }
     void centroidGeometry   ( void )	    { _centroidGeometry(); }
     void BarnesHut          ( void )        { _BarnesHut(); }
+    void initForce          ( void );
 
 //------------------------------------------------------------------------------
 //	Specific functions

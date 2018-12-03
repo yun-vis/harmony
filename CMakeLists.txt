@@ -117,12 +117,14 @@ set(HEADERS
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
         include/optimization/Similarity.h
+        include/optimization/Layout.h
         include/ui/GraphicsBallItem.h
         include/ui/GraphicsEdgeItem.h
         include/ui/GraphicsPolygonItem.h
         include/ui/GraphicsView.h
         include/ui/Window.h
         include/ui/Window.ui
+        include/boost/create_dual_graph.hpp
     )
 set(SOURCES
         src/base/Common.cpp
@@ -169,6 +171,7 @@ set(SOURCES
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
         src/optimization/Similarity.cpp
+        src/optimization/Layout.cpp
         src/ui/GraphicsBallItem.cpp
         src/ui/GraphicsEdgeItem.cpp
         src/ui/GraphicsPolygonItem.cpp

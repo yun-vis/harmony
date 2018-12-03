@@ -99,6 +99,7 @@ void Pathway::init( string pathIn, string pathOut, string fileFreq, string fileT
 	_outputpath = pathOut;
     _fileFreq = fileFreq;
     _fileType = fileType;
+    _isCloneByThreshold = false;
 	_nHyperEtoE = 0;
 }
 
@@ -285,8 +286,9 @@ void Pathway::generate( void )
     loadPathway();
     initSubdomain();
     genGraph();
+	genDependencyGraph();
     genSubGraphs();
-    randomGraphLayout( (DirectedBaseGraph &) _graph );
+    //randomGraphLayout( (DirectedBaseGraph &) _graph );
     //fruchtermanGraphLayout( (DirectedBaseGraph &) _graph );
     // normalization();
     //initLayout();
@@ -515,6 +517,7 @@ void Pathway::genGraph( void )
 
 		_graph[ reactVD ].id 			= nVertices;
 		_graph[ reactVD ].groupID		= nVertices;
+		_graph[ reactVD ].componentID	= nVertices;
         _graph[ reactVD ].initID		= nVertices;
         //_graph[ reactVD ].isSelected	= false;
         //_graph[ reactVD ].isNeighbor	= false;
@@ -575,6 +578,7 @@ void Pathway::genGraph( void )
 				metaVD 	= add_vertex( _graph );
 				_graph[ metaVD ].id 			= nVertices;
                 _graph[ metaVD ].groupID	    = nVertices;
+				_graph[ metaVD ].componentID    = nVertices;
 				_graph[ metaVD ].initID			= nVertices;
                 _graph[ metaVD ].stoichiometry  = stoichiometry;
 				//_graph[ metaVD ].isSelected		= false;
@@ -669,6 +673,7 @@ void Pathway::genGraph( void )
 
 				_graph[ metaVD ].id 			= nVertices;
                 _graph[ metaVD ].groupID	    = nVertices;
+				_graph[ metaVD ].componentID    = nVertices;
 				_graph[ metaVD ].initID			= nVertices;
                 _graph[ metaVD ].stoichiometry  = stoichiometry;
 				//_graph[ metaVD ].isSelected		= false;
@@ -774,7 +779,9 @@ void Pathway::genLayoutGraph( void )
 
         ForceGraph::vertex_descriptor vdL = add_vertex( _layoutGraph );
         _layoutGraph[ vdL ].id              = _graph[ vd ].id;
+		_layoutGraph[ vdL ].initID          = _graph[ vd ].initID;
         _layoutGraph[ vdL ].groupID		    = _graph[ vd ].groupID;
+		_layoutGraph[ vdL ].componentID   	= _graph[ vd ].componentID;
 
 		_layoutGraph[ vdL ].coordPtr        = _graph[ vd ].coordPtr;
         _layoutGraph[ vdL ].prevCoordPtr 	= new Coord2( _graph[ vd ].coordPtr->x(), _graph[ vd ].coordPtr->y() );
@@ -1273,6 +1280,9 @@ void Pathway::genLayoutSubGraphs( void )
 
             ForceGraph::vertex_descriptor vdL = add_vertex( _layoutSubGraph[i] );
 			_layoutSubGraph[i][ vdL ].id            = nv;
+			_layoutSubGraph[i][ vdL ].initID        = _subGraph[i][ vd ].initID;
+			_layoutSubGraph[i][ vdL ].groupID       = _subGraph[i][ vd ].groupID;
+			_layoutSubGraph[i][ vdL ].componentID   = _subGraph[i][ vd ].componentID;
 			_layoutSubGraph[i][ vdL ].namePtr 		= _subGraph[i][ vd ].namePtr;
             _layoutSubGraph[i][ vdL ].namePixelWidthPtr     = _subGraph[i][ vd ].namePixelWidthPtr;
             _layoutSubGraph[i][ vdL ].namePixelHeightPtr    = _subGraph[i][ vd ].namePixelHeightPtr;
@@ -1322,6 +1332,688 @@ void Pathway::genLayoutSubGraphs( void )
 		printGraph( _layoutSubGraph[i] );
 #endif // DEBUG
 	}
+}
+
+//
+//  Pathway::computeZone --    compute zone
+//
+//  Inputs
+//  node
+//
+//  Outputs
+//  none
+//
+void Pathway::computeZone( void )
+{
+	unsigned int nEdges = 0;
+
+	BGL_FORALL_EDGES( ed, _skeletonGraph, SkeletonGraph ) {
+		_skeletonGraph[ ed ].id = nEdges;
+		nEdges++;
+	}
+
+	if( nEdges == 0 ){
+		BGL_FORALL_VERTICES( vd, _skeletonGraph, SkeletonGraph ) {
+			if( _skeletonGraph[vd].id == 0 )
+				_skeletonGraph[vd].zone = 0;
+			else
+				_skeletonGraph[vd].zone = 1;
+		}
+	}
+	else{
+		geodesicAssignment( _skeletonGraph );
+		_nZoneDiff = zoneAssignment( _skeletonGraph );
+	}
+}
+
+//
+//  Pathway::planar_graph_embedding --    retrieve graph embedding
+//
+//  Inputs
+//  newE: SkeletonGraphVVPair
+//
+//  Outputs
+//  isPlanar: bool
+//
+void Pathway::planar_graph_embedding( vector< SkeletonGraphVVPair > &addedED )
+{
+	// create the planar graph
+	UndirectedPropertyGraph propG;//( num_vertices( _skeletonGraph ) );
+	VertexIndexMap vertexIndex = get( vertex_index, propG );
+	EdgeIndexMap edgeIndex = get( edge_index, propG );
+
+#ifdef  DEBUG
+	BGL_FORALL_VERTICES( vd, propG, UndirectedPropertyGraph ) {
+		cerr << "id = " << vertexIndex[ vd ] << endl;
+	}
+#endif  // DEBUG
+	for( unsigned int i = 0; i < addedED.size(); i++ ){
+		pair< UndirectedPropertyGraph::edge_descriptor, int > foreE = add_edge( _skeletonGraph[ addedED[ i ].first ].id, _skeletonGraph[ addedED[ i ].second ].id, propG );
+		UndirectedPropertyGraph::edge_descriptor ed = foreE.first;
+		edgeIndex[ ed ] = i;
+	}
+
+	// create the planar embedding
+	embedding_storage_t embedding_storage( num_vertices( propG ) );
+	embedding_t embedding( embedding_storage.begin(), get( vertex_index, propG ) );
+
+	// (1)
+	// repeat until the format becomes correct
+	// find the planar embedding
+	boyer_myrvold_planarity_test( boyer_myrvold_params::graph = propG,
+								  boyer_myrvold_params::embedding = embedding );
+
+	BGL_FORALL_VERTICES( vd, propG, UndirectedPropertyGraph ) {
+
+			//cerr << "id = " << vertexIndex[ vd ] << endl;
+
+			vector< SkeletonGraph::vertex_descriptor > vdVec;
+			boost::property_traits< embedding_t >::value_type::const_iterator itE = embedding[ vd ].begin();
+			for( ; itE != embedding[ vd ].end(); itE++ ){
+				graph_traits< UndirectedPropertyGraph >::edge_descriptor vdE = *itE;
+				graph_traits< UndirectedPropertyGraph >::vertex_descriptor vdS = source( vdE, propG );
+				graph_traits< UndirectedPropertyGraph >::vertex_descriptor vdT = target( vdE, propG );
+
+				if( vertexIndex[ vd ] == vertexIndex[ vdS ] ) vdVec.push_back( vertex( vertexIndex[ vdT ], _skeletonGraph ) );
+				else vdVec.push_back( vertex( vertexIndex[ vdS ], _skeletonGraph ) );
+				//cerr << vertexIndex[ vdS ] << " == " << vertexIndex[ vdT ] << ", " << endl;
+			}
+			//cerr << endl;
+			_embeddingVec.push_back( vdVec );
+		}
+
+
+#ifdef  SKIP
+	for( unsigned int i = 0; i < _embeddingVec.size(); i++ ){
+        cerr << i << ": ";
+        for( unsigned int j = 0; j < _embeddingVec[i].size(); j++ ){
+            SkeletonGraph::vertex_descriptor vd = _embeddingVec[ i ][ j ];
+            cerr << _skeletonGraph[ vd ].id << " ";
+        }
+        cerr << endl;
+    }
+#endif  //SKIP
+
+#ifdef  STRAIGHT_LINE_DRAWING
+	make_biconnected_planar( propG, &embedding[0] ); 		// Make biconnected planar (2/3)
+
+	// (2)
+	// repeat until the format becomes correct
+	// reorder the edge id
+	int index = 0;
+	BGL_FORALL_EDGES( ed, propG, UndirectedPropertyGraph ) {
+		edgeIndex[ ed ] = index;
+		index++;
+	}
+
+	// find the planar embedding again
+    boyer_myrvold_planarity_test( boyer_myrvold_params::graph = propG,
+                                  boyer_myrvold_params::embedding = embedding );
+
+	make_maximal_planar( propG, &embedding[0] ); 			// Make maximal planar (3/3)
+
+	// (3)
+	// repeat until the format becomes correct
+	// reorder the edge id
+	index = 0;
+	BGL_FORALL_EDGES( ed, propG, UndirectedPropertyGraph ) {
+		edgeIndex[ ed ] = index;
+		index++;
+	}
+
+	// find the planar embedding again
+    boyer_myrvold_planarity_test( boyer_myrvold_params::graph = propG,
+                                  boyer_myrvold_params::embedding = embedding );
+
+
+    // find a canonical ordering
+    vector< graph_traits < UndirectedPropertyGraph >::vertex_descriptor > ordering;
+	planar_canonical_ordering( propG, embedding, std::back_inserter( ordering ) );
+
+	// set up a property map to hold the mapping from vertices to coord_t's
+	typedef vector< coord_t > straight_line_drawing_storage_t;
+	typedef boost::iterator_property_map< straight_line_drawing_storage_t::iterator,
+										  property_map< UndirectedPropertyGraph, vertex_index_t >::type > straight_line_drawing_t;
+
+	straight_line_drawing_storage_t straight_line_drawing_storage( num_vertices( propG ) );
+	straight_line_drawing_t straight_line_drawing( straight_line_drawing_storage.begin(), get( vertex_index, propG ) );
+
+	// compute the straight line drawing
+	// cerr << "ordering size = " << ordering.size() << endl;
+	chrobak_payne_straight_line_drawing( propG, embedding, ordering.begin(), ordering.end(),
+	                                     straight_line_drawing );
+
+	cout << "The straight line drawing is: " << endl;
+	graph_traits< UndirectedPropertyGraph >::vertex_iterator vi, vi_end;
+	graph_traits< SkeletonGraph >::vertex_iterator di, di_end;
+	tie( di, di_end ) = vertices( _skeletonGraph );
+	for( tie( vi, vi_end ) = vertices( propG ); vi != vi_end; ++vi ){
+
+		coord_t coord( get( straight_line_drawing, *vi ) );
+		// cout << *vi << " -> (" << coord.x << ", " << coord.y << ")" << endl;
+		_skeletonGraph[ *di ].coordPtr->x() = coord.x * 50;
+		_skeletonGraph[ *di ].coordPtr->y() = coord.y * 50;
+		di++;
+	}
+
+	// verify that the drawing is actually a plane drawing
+  	if( is_straight_line_drawing( propG, straight_line_drawing ) )
+    	cout << "Is a plane drawing." << endl;
+  	else
+    	cout << "Is not a plane drawing." << endl;
+
+	normalization();
+#endif  //STRAIGHT_LINE_DRAWING
+}
+
+
+bool Pathway::has_cycle_dfs( const UndirectedPropertyGraph & g, UndirectedPropertyGraph::vertex_descriptor u,
+					default_color_type * color )
+{
+	color[u] = gray_color;
+	graph_traits < UndirectedPropertyGraph >::adjacency_iterator vi, vi_end;
+	for (boost::tie(vi, vi_end) = adjacent_vertices(u, g); vi != vi_end; ++vi)
+		if (color[*vi] == white_color) {
+			if (has_cycle_dfs(g, *vi, color))
+				return true;            // cycle detected, return immediately
+		} else if (color[*vi] == gray_color)        // *vi is an ancestor!
+			return true;
+	color[u] = black_color;
+	return false;
+}
+
+bool Pathway::has_cycle( const UndirectedPropertyGraph & g )
+{
+	vector< default_color_type > color( num_vertices(g), white_color );
+	graph_traits< UndirectedPropertyGraph >::vertex_iterator vi, vi_end;
+	for( boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi ) {
+		if( color[*vi] == white_color) {
+			if( has_cycle_dfs(g, *vi, &color[0])) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+//
+//  Pathway::loop_in_dual_graph_test --    test if a loop existed in the dual graph
+//
+//  Inputs
+//  g: UndirectedPropertyGraph
+//
+//  Outputs
+//  none
+//
+bool Pathway::loop_in_dual_graph_test( UndirectedPropertyGraph & propG )
+{
+	UndirectedPropertyGraph dualG;
+	VertexIndexMap 	vertexIndex 	= get( vertex_index, propG );
+	EdgeIndexMap 	edgeIndex 		= get( edge_index, propG );
+	VertexIndexMap 	dualVertexIndex = get( vertex_index, dualG );
+	EdgeIndexMap 	dualEdgeIndex 	= get( edge_index, dualG );
+
+	// create the planar embedding
+	embedding_storage_t embedding_storage( num_vertices( propG ) );
+	embedding_t embedding( embedding_storage.begin(), get( vertex_index, propG ) );
+	// initialize edge index
+	unsigned int nEdges = 0;
+	BGL_FORALL_EDGES( ed, propG, UndirectedPropertyGraph ){
+			edgeIndex[ ed ] = nEdges;
+			nEdges++;
+			//cerr << " idE = " << edgeIndex[ed] << endl;
+		}
+
+	// Compute the planar embedding - we know the input graph is planar,
+	boyer_myrvold_planarity_test( boyer_myrvold_params::graph = propG,
+								  boyer_myrvold_params::embedding = embedding );
+
+	create_dual_graph( propG, dualG, embedding );
+
+	nEdges = 0;
+	map< UndirectedPropertyGraph::edge_descriptor, UndirectedPropertyGraph::edge_descriptor > delEDVec;
+	// initialize edge index of the dual graph
+	BGL_FORALL_EDGES( ed, dualG, UndirectedPropertyGraph ){
+
+			UndirectedPropertyGraph::vertex_descriptor vdS = source( ed, dualG );
+			UndirectedPropertyGraph::vertex_descriptor vdT = target( ed, dualG );
+
+			dualEdgeIndex[ ed ] = nEdges;
+			if( dualVertexIndex[ vdS ] == 0 || dualVertexIndex[ vdT ] == 0 ) {
+				delEDVec.insert( pair< UndirectedPropertyGraph::edge_descriptor, UndirectedPropertyGraph::edge_descriptor > ( ed, ed ) );
+			}
+			if( vdS == vdT )
+				delEDVec.insert( pair< UndirectedPropertyGraph::edge_descriptor, UndirectedPropertyGraph::edge_descriptor >( ed, ed ) );
+
+			nEdges++;
+			//cerr << " didE = " << dualEdgeIndex[ed] << endl;
+		}
+
+#ifdef  DEBUG
+	cerr << "nV = " << num_vertices( dualG ) << ", nE = " << num_edges( dualG )
+         << ", " << ( num_vertices( dualG ) == 0 || num_edges( dualG ) == 0 ) << endl;
+    BGL_FORALL_VERTICES( vd, dualG, UndirectedPropertyGraph ){
+            cerr << "vertexIndex = " << vertexIndex[ vd ] << endl;
+        }
+    BGL_FORALL_EDGES( ed, dualG, UndirectedPropertyGraph ){
+
+            UndirectedPropertyGraph::vertex_descriptor vdS = source( ed, dualG );
+            UndirectedPropertyGraph::vertex_descriptor vdT = target( ed, dualG );
+            cerr << "edgeIndex = " << edgeIndex[ ed ] << ": ( "
+                 << vertexIndex[ vdS ] << " ," << vertexIndex[ vdT ] << " ) "<< endl;
+        }
+#endif  // DEBUG
+
+	// remove the representative vertex of the outer face and edges connected to it
+	// self-loop
+	map< UndirectedPropertyGraph::edge_descriptor, UndirectedPropertyGraph::edge_descriptor >::iterator itE = delEDVec.begin();
+	for( ; itE != delEDVec.end(); itE++ ){
+		remove_edge( itE->first, dualG );
+	}
+	UndirectedPropertyGraph::vertex_descriptor vdO = vertex( 0, dualG );
+	remove_vertex( vdO, dualG );
+
+	return has_cycle( dualG );
+}
+
+//
+//  Pathway::constrained_planarity_test --    test planarity after adding a new edge but vertex degree < k
+//
+//  Inputs
+//  addedED: vector< SkeletonGraphVVPair >
+//  newE: SkeletonGraphVVPair
+//
+//  Outputs
+//  isPlanar: bool
+//
+bool Pathway::constrained_planarity_test( vector< SkeletonGraphVVPair > &addedED,
+										  SkeletonGraphVVPair & newE, unsigned int maxDegree )
+{
+	UndirectedPropertyGraph propG( num_vertices( _skeletonGraph ) );
+	for( unsigned int i = 0; i < addedED.size(); i++ ){
+		add_edge( _skeletonGraph[ addedED[ i ].first ].id, _skeletonGraph[ addedED[ i ].second ].id, propG );
+	}
+	pair< UndirectedPropertyGraph::edge_descriptor, unsigned int > foreE = add_edge( _skeletonGraph[ newE.first ].id, _skeletonGraph[ newE.second ].id, propG );
+	UndirectedPropertyGraph::edge_descriptor foreED = foreE.first;
+	UndirectedPropertyGraph::vertex_descriptor vdS = source( foreE.first, propG );
+	UndirectedPropertyGraph::vertex_descriptor vdT = target( foreE.first, propG );
+
+#ifdef SKIP
+	// check if generate K3 graphs
+	bool isWithK3 = false;
+	UndirectedPropertyGraph::out_edge_iterator e3, e3_end;
+	for( tie( e3, e3_end ) = out_edges( vdS, propG ); e3 != e3_end; ++e3 ) {
+		UndirectedPropertyGraph::edge_descriptor ed = *e3;
+		UndirectedPropertyGraph::vertex_descriptor vdTarget = target( ed, propG );
+
+		if( vdT != vdTarget ){
+
+			bool found = false;
+			UndirectedPropertyGraph::edge_descriptor edC;
+			tie( edC, found ) = edge( vdT, vdTarget, propG );
+
+			if( found == true ) isWithK3 = true;
+		}
+	}
+
+	// check if generate K4 graphs
+	bool isWithK4 = false;
+	UndirectedPropertyGraph::out_edge_iterator eo, eo_end;
+	vector< UndirectedPropertyGraph::vertex_descriptor > vdVec;
+	for( tie( eo, eo_end ) = out_edges( vdS, propG ); eo != eo_end; ++eo ) {
+		UndirectedPropertyGraph::edge_descriptor ed = *eo;
+		UndirectedPropertyGraph::vertex_descriptor vdTarget = target( ed, propG );
+
+		if( vdT != vdTarget ){
+
+			bool found = false;
+			UndirectedPropertyGraph::edge_descriptor edC;
+			tie( edC, found ) = edge( vdT, vdTarget, propG );
+
+			if( found == true ) vdVec.push_back( vdTarget );
+		}
+	}
+	for( unsigned int i = 0; i < vdVec.size(); i++ ){
+		for( unsigned int j = i+1; j < vdVec.size(); j++ ) {
+
+			bool found = false;
+			UndirectedPropertyGraph::edge_descriptor edC;
+			tie( edC, found ) = edge( vdVec[ i ], vdVec[ j ], propG );
+
+			if( found == true ) isWithK4 = true;
+		}
+	}
+#endif // SKIP
+
+	// find the planar embedding
+	bool isPlanar = true;
+	bool isDualLoop = false;
+	bool isPlanarity = boyer_myrvold_planarity_test( boyer_myrvold_params::graph = propG );
+
+	if( isPlanarity == true ) {
+		isDualLoop = loop_in_dual_graph_test( propG );
+	}
+
+	//cerr << "isPlanarity = " << isPlanarity << " isDualLoop = " << isDualLoop << endl;
+
+	if( ( isPlanarity == true ) && ( isDualLoop == false ) &&
+		( out_degree( vdS, propG ) <= maxDegree ) &&
+		( out_degree( vdT, propG ) <= maxDegree ) ) {
+//        ( isWithK4 == false ) ){
+//        ( isWithK3 == false && isWithK4 == false ) ){
+		isPlanar = true;
+		//cout << "The graph is planar." << endl;
+	}
+	else{
+		isPlanar = false;
+		//cout << "The graph is not planar." << endl;
+	}
+
+	return isPlanar;
+}
+
+//
+//  Pathway::planarity_test --    test planarity after adding a new edge
+//
+//  Inputs
+//  addedED: vector< SkeletonGraphVVPair >
+//  newE: SkeletonGraphVVPair
+//
+//  Outputs
+//  isPlanar: bool
+//
+bool Pathway::planarity_test( vector< SkeletonGraphVVPair > &addedED, SkeletonGraphVVPair & newE )
+{
+	bool isPlanar = true;
+//    typedef adjacency_list< vecS, vecS, undirectedS, property< vertex_index_t, int > > UndirectedPropertyGraph;
+
+	UndirectedPropertyGraph propG( num_vertices( _skeletonGraph ) );
+	for( unsigned int i = 0; i < addedED.size(); i++ ){
+		add_edge( _skeletonGraph[ addedED[ i ].first ].id, _skeletonGraph[ addedED[ i ].second ].id, propG );
+	}
+	add_edge( _skeletonGraph[ newE.first ].id, _skeletonGraph[ newE.second ].id, propG );
+
+
+	if( boyer_myrvold_planarity_test( propG ) ){
+		isPlanar = true;
+		//cout << "The graph is planar." << endl;
+	}
+	else{
+		isPlanar = false;
+		//cout << "The graph is not planar." << endl;
+	}
+
+	return isPlanar;
+}
+
+
+//
+//  Pathway::planar_max_filtered_graph --    generate the planar maximally filtered graph
+//
+//  Inputs
+//  node
+//
+//  Outputs
+//  isPlanar: bool
+//
+void Pathway::planar_max_filtered_graph( void )
+{
+	vector< pair< double, SkeletonGraphVVPair > > orderedED;
+	vector< SkeletonGraphVVPair > addedED;
+	//vector< pair< double, SkeletonGraph::edge_descriptor > > orderedED;
+
+	// collect edges with vertex-pairs
+	BGL_FORALL_EDGES( ed, _skeletonGraph, SkeletonGraph ) {
+
+			SkeletonGraph::vertex_descriptor vdS = source( ed, _skeletonGraph );
+			SkeletonGraph::vertex_descriptor vdT =  target( ed, _skeletonGraph );
+			double newW = MAXIMUM_INTEGER - _skeletonGraph[ ed ].weight;
+			SkeletonGraphVVPair vvpair( vdS, vdT );
+			orderedED.push_back( pair< double, SkeletonGraphVVPair >( newW, vvpair ) );
+		}
+
+	// sort edge by weight attributes
+	sort( orderedED.begin(), orderedED.end() );
+
+	// clear all edges
+	SkeletonGraph::edge_iterator ei, ei_end, e_next;
+	tie( ei, ei_end ) = edges( _skeletonGraph );
+	for ( e_next = ei; ei != ei_end; ei = e_next ) {
+		e_next++;
+		remove_edge( *ei, _skeletonGraph );
+	}
+
+	// add edge if the graph is still planar
+	for( unsigned i = 0; i < orderedED.size(); i++ ){
+
+		//bool isPlanar = planarity_test( addedED, orderedED[ i ].second );
+		bool isPlanar = constrained_planarity_test( addedED, orderedED[ i ].second, MAX_DEGREE_ALLOWED );
+
+#ifdef DEBUG
+		cerr << endl << "i = " << i << endl;
+		cerr << "isPlanar = " << isPlanar << ": " << _skeletonGraph[ orderedED[ i ].second.first ].id
+			 << " x " << _skeletonGraph[ orderedED[ i ].second.second ].id << endl;
+#endif // DEBUG
+
+		if( isPlanar == true ){
+			addedED.push_back( orderedED[ i ].second );
+			add_edge( orderedED[ i ].second.first, orderedED[ i ].second.second, _skeletonGraph );
+		}
+	}
+
+	planar_graph_embedding( addedED );   // must be planar
+
+#ifdef  DEBUG
+	for( unsigned i = 0; i < orderedED.size(); i++ ){
+
+		SkeletonGraphVVPair vvpair = orderedED[ i ].second;
+		SkeletonGraph::vertex_descriptor vdS = vvpair.first;
+		SkeletonGraph::vertex_descriptor vdT = vvpair.second;
+		cerr << MAXIMUM_INTEGER - orderedED[ i ].first << ", " << _skeletonGraph[ vdS ].id << " == " << _skeletonGraph[ vdT ].id << endl;
+	}
+	cerr << endl;
+#endif  // DEBUG
+}
+
+//
+//  Pathway::genDependencyGraph --    generate the spanning tree of sbusystem relationship
+//
+//  Inputs
+//  node
+//
+//  Outputs
+//  none
+//
+void Pathway::genDependencyGraph( void )
+{
+	// add vertices
+	unsigned int idV = 0, idE = 0;
+	_skeletonGraph[ graph_bundle ].centerPtr	= new Coord2( 0.0, 0.0 );
+	_skeletonGraph[ graph_bundle ].widthPtr	= new double( DEFAULT_WIDTH );
+	_skeletonGraph[ graph_bundle ].heightPtr	= new double( DEFAULT_HEIGHT );
+	//map< pair< double, unsigned int >, SkeletonGraph::vertex_descriptor > vdMap;
+	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ){
+
+		SkeletonGraph::vertex_descriptor vd 	= add_vertex( _skeletonGraph );
+		_skeletonGraph[ vd ].id 			= idV;// + num_vertices( _graph );
+		_skeletonGraph[ vd ].name         = it->second->name;
+		_skeletonGraph[ vd ].coordPtr 	= &it->second->center;
+		_skeletonGraph[ vd ].domainPtr 	= it->second;
+		_skeletonGraph[ vd ].initID 		= -1;	// not exit in the original graph
+		_skeletonGraph[ vd ].widthPtr		= &it->second->width;
+		_skeletonGraph[ vd ].heightPtr	= &it->second->height;
+		_skeletonGraph[ vd ].areaPtr		= &it->second->area;
+		//_skeletonGraph[ vd ].isSelected	= false;
+
+		_skeletonGraph[ vd ].geodesicDist = 0.0;	// geodesic distance
+		_skeletonGraph[ vd ].zone			= 0;    // geodesic zone
+		_skeletonGraph[ vd ].ezone		= 0;    // euclidean zone
+		//_skeletonGraph[ vd ].computeType  = TYPE_FREE;
+		//_skeletonGraph[ vd ].childWidth	= 0.0;  	// maximum width among children, including the current one
+		//_skeletonGraph[ vd ].childHeight	= 0.0;    	// maximum height among children, including the current one
+		_skeletonGraph[ vd ].flag			= false;	// flag for algorithms, needed to be initialized eveytime before computation
+		//_skeletonGraph[ vd ].refCoord     = it->second->center; 	// reference coord for relative position in floorplan
+		//_skeletonGraph[ vd ].initCoord 	= it->second->center;  	// reference coord for relative position in floorplan
+		//_skeletonGraph[ vd ].debugDummy 	= TYPE_RIGHT;     		// mode for debugging
+
+		//_skeletonGraph[ vd ].angle 		= 0.0;          		// angle for initial layout
+		//_skeletonGraph[ vd ].force 		= Coord2( 0.0, 0.0 );   // force value for force optimization
+		//_skeletonGraph[ vd ].shift 		= Coord2( 0.0, 0.0 );   // shift value for force optimization
+
+		idV++;
+		//cerr << " Depend_skeletonGraph[ " << it->first << " ] = " << it->second.width << ", " << it->second.height << endl;
+		//vdMap.insert( pair< pair< double, unsigned int >, SkeletonGraph::vertex_descriptor >( pair< double, unsigned int >(it->second.width*it->second.height, idV), vd ) );
+	}
+
+
+	// add edges
+	unsigned int nEdges = 0;
+	BGL_FORALL_VERTICES( vd, _graph, MetaboliteGraph ) {
+
+			map< unsigned int, unsigned int > domainFreq;
+			//if( _graph[ vd ].type == "metabolite" && isCloneMetaType( vd ) == false ) {
+			//cerr << "isCloneMetaType( vd ) = " << isCloneMetaType( vd ) << endl;
+
+			bool isProceed = false;
+			if( _isCloneByThreshold == true ){
+				isProceed = ( _graph[ vd ].type == "metabolite" ) && ( _graph[ vd ].metaPtr->freq <= _threshold );
+			}
+			else
+			{
+				isProceed = ( _graph[ vd ].type == "metabolite" ) && isCloneMetaType( vd ) == false;
+			}
+			if( isProceed ) {
+
+				//assert( _graph[ vd ].metaPtr->metaType != "7_WATER" );
+
+				// out edges
+				MetaboliteGraph::out_edge_iterator eo, eo_end;
+				for( tie( eo, eo_end ) = out_edges( vd, _graph ); eo != eo_end; ++eo ){
+
+					MetaboliteGraph::edge_descriptor ed = *eo;
+					MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
+					if( _graph[ vdT ].type == "reaction" ) {
+						map< unsigned int, unsigned int >::iterator dIter;
+						dIter = domainFreq.find( _graph[ vdT ].reactPtr->subsystem->id );
+						if( dIter != domainFreq.end() ){
+							//cerr << "id = " << _graph[ vdT ].reactPtr->subsystem->id << endl;
+							dIter->second += 1;
+						}
+						else{
+							domainFreq.insert( pair< unsigned int, unsigned int >( _graph[ vdT ].reactPtr->subsystem->id, 1 ) );
+						}
+					}
+				}
+
+				// in edges
+				MetaboliteGraph::in_edge_iterator ei, ei_end;
+				for( tie( ei, ei_end ) = in_edges( vd, _graph ); ei != ei_end; ++ei ){
+
+					MetaboliteGraph::edge_descriptor ed = *ei;
+					MetaboliteGraph::vertex_descriptor vdS = source( ed, _graph );
+					if( _graph[ vdS ].type == "reaction" ) {
+						map< unsigned int, unsigned int >::iterator dIter;
+						dIter = domainFreq.find( _graph[ vdS ].reactPtr->subsystem->id );
+						if( dIter != domainFreq.end() ){
+							//cerr << "id = " << _graph[ vdS ].reactPtr->subsystem->id << endl;
+							dIter->second += 1;
+						}
+						else{
+							domainFreq.insert( pair< unsigned int, unsigned int >( _graph[ vdS ].reactPtr->subsystem->id, 1 ) );
+						}
+					}
+				}
+
+				for( map< unsigned int, unsigned int >::iterator oIter = domainFreq.begin();
+					 oIter != domainFreq.end(); oIter++ ){
+
+					map< unsigned int, unsigned int >::iterator iIter = oIter;
+					iIter++;
+					for( ; iIter != domainFreq.end(); iIter++ ){
+
+						unsigned int sysIDS = oIter->first;
+						unsigned int sysIDT = iIter->first;
+						unsigned int freq = oIter->second * iIter->second;
+
+						SkeletonGraph::vertex_descriptor vdS = vertex( sysIDS, _skeletonGraph );
+						SkeletonGraph::vertex_descriptor vdT = vertex( sysIDT, _skeletonGraph );
+
+						bool found = false;
+						SkeletonGraph::edge_descriptor oldED;
+						tie( oldED, found ) = edge( vdS, vdT, _skeletonGraph );
+
+						if( found == true ){
+							_skeletonGraph[ oldED ].weight 	+= freq;
+						}
+						else{
+							pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _skeletonGraph );
+							SkeletonGraph::edge_descriptor foreED = foreE.first;
+							_skeletonGraph[ foreED ].id 			= nEdges;
+							_skeletonGraph[ foreED ].weight 		= freq;
+
+							nEdges++;
+							//cerr << "nEdges = " << nEdges << endl;
+						}
+					}
+				}
+			}
+		}
+
+#ifdef  DEBUG
+	double avg = 0;
+    BGL_FORALL_VERTICES( vd, _skeletonGraph, SkeletonGraph ) {
+        cerr << "vid = " << _skeletonGraph[ vd ].id << " degrees = " << out_degree( vd, _skeletonGraph ) << endl;;
+        avg += out_degree( vd, _skeletonGraph );
+    }
+    cerr << "avg = " << avg/num_vertices( _skeletonGraph ) << endl;
+#endif  // DEBUG
+
+	//max_spaning_tree();
+	planar_max_filtered_graph();
+
+	// reset edge id
+	nEdges = 0;
+	BGL_FORALL_EDGES( ed, _skeletonGraph, SkeletonGraph ) {
+        _skeletonGraph[ ed ].id = nEdges;
+        nEdges++;
+        //cerr << "id = " << _skeletonGraph[ ed ].id << " w= " << _skeletonGraph[ed].weight << endl;
+    }
+
+	computeZone();
+
+#ifdef  DEBUG
+	cout << "Print the edges in the MST:" << endl;
+	for( unsigned int i = 0; i < mst.size(); i++ ) {
+		cout << _skeletonGraph[ source( mst[i], _skeletonGraph ) ].id << " <--> "
+			 << _skeletonGraph[ target( mst[i], _skeletonGraph ) ].id
+			 << " with weight of " << get( &RelationEdgeProperty::weight, _skeletonGraph )[ mst[i] ] << endl;
+	}
+	BGL_FORALL_VERTICES( vd, _skeletonGraph, SkeletonGraph ) {
+		cerr << "w = " << _skeletonGraph[ vd ].width << " h = " << _skeletonGraph[ vd ].height << endl;;
+	}
+    BaseGraph test = (BaseGraph &) _skeletonGraph;
+    BGL_FORALL_VERTICES( vd, test, BaseGraph ) {
+		cerr << "w = " << test[ vd ].width << " h = " << test[ vd ].height << endl;;
+	}
+#endif  // DEBUG
+
+#ifdef DEBUG
+	map< pair< double, unsigned int >, SkeletonGraph::vertex_descriptor >::iterator itM;
+	for( itM = vdMap.begin(); itM != vdMap.end(); itM++ ){
+		cerr << _skeletonGraph[ itM->second ].id
+			 << " w = " << _skeletonGraph[ itM->second ].width << " h = " << _skeletonGraph[ itM->second ].height << endl;
+
+		SkeletonGraph::out_edge_iterator eo, eo_end;
+		for( tie( eo, eo_end ) = out_edges( itM->second, _skeletonGraph ); eo != eo_end; ++eo ) {
+			cerr << " ( " << _skeletonGraph[ itM->second ].id << " vdT = " << _skeletonGraph[ target( *eo, _skeletonGraph ) ].id << " ), ";
+		}
+		cerr << endl;
+	}
+#endif // DEBUG
+
+	//genSubsysWeight();
+    radialPlacement( _skeletonGraph );
+	printGraph( _skeletonGraph );
 }
 
 

@@ -25,24 +25,34 @@ using namespace std;
 #include <boost/graph/topology.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 
 using namespace boost;
 
+//#include "base/Common.h"
 #include "base/Coord2.h"
 #include "graph/SkeletonGraphProperty.h"
 #include "graph/SkeletonVertexProperty.h"
 #include "graph/SkeletonEdgeProperty.h"
 
+//#include "graph/UndirectedBaseGraph.h"
+#include "graph/UndirectedPropertyGraph.h"
 
-typedef adjacency_list< listS, listS, undirectedS,
+
+typedef adjacency_list< vecS, listS, undirectedS,
 		SkeletonVertexProperty, SkeletonEdgeProperty,
 		SkeletonGraphProperty >  SkeletonGraph;
+
+typedef pair< SkeletonGraph::vertex_descriptor, SkeletonGraph::vertex_descriptor >	SkeletonGraphVVPair;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
+void geodesicAssignment( SkeletonGraph & graph );
+unsigned int zoneAssignment( SkeletonGraph & graph );
+void radialPlacement( SkeletonGraph & graph );
 
-void printGraph( SkeletonGraph & g );
-void clearGraph( SkeletonGraph & g );
+void printGraph( SkeletonGraph & graph );
+void clearGraph( SkeletonGraph & graph );
 
 #endif  // _SkeletonGraph_H

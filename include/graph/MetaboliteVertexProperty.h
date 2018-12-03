@@ -54,7 +54,7 @@ class MetaboliteVertexProperty : public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-	unsigned int	initID;
+	// unsigned int	initID;
     unsigned int    degree;
 	bool			activate;
 	int 			stoichiometry;

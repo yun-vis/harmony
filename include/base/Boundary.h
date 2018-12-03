@@ -20,6 +20,7 @@ using namespace std;
 #include "base/Grid2.h"
 #include "base/Contour2.h"
 #include "graph/BoundaryGraph.h"
+#include "graph/SkeletonGraph.h"
 #include "optimization/Force.h"
 
 //------------------------------------------------------------------------------
@@ -78,6 +79,7 @@ protected:
     vector< double >                            _ratioR;        // ratio of vertices projected on the edge, r*v1 + (r-1)*v2
 
     double                      _stringToDouble( string str );
+    void                        _init( SkeletonGraph & skeletonGraph );
 
 public:
     
@@ -145,6 +147,7 @@ public:
 //------------------------------------------------------------------------------
     void adjustsize( const int & width, const int & height );   // normalize the Boundary size
     void normalizeSkeleton( const int & width, const int & height );   // normalize the Boundary size
+    void normalizeComposite( const int & width, const int & height );   // normalize the Boundary size
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
     void buildBoundaryGraph( void );
@@ -167,6 +170,7 @@ public:
     void reorderID( void );                                     // reorder Boundary vertex and edge id
     void load( const char * filename );
     void loadLabel( const char * filename );
+    void init( SkeletonGraph &__skeletonGraph ) { _init( __skeletonGraph ); }
     void clear( void );
 
 //------------------------------------------------------------------------------

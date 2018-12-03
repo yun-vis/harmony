@@ -214,6 +214,16 @@ bool Force::_inContour( Coord2 &coord )
     return isIn;
 }
 
+void Force::initForce( void )
+{
+    ForceGraph & g = *_forceGraphPtr;
+
+    BGL_FORALL_VERTICES( vdi, g, ForceGraph ) {
+
+        // initialization
+        g[ vdi ].forcePtr->zero();
+    }
+}
 
 //
 //  Force::force --	compute the displacements exerted by the force-directed model

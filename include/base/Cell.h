@@ -19,6 +19,7 @@ using namespace std;
 
 #include "base/Config.h"
 #include "base/PathwayData.h"
+#include "base/Grid2.h"
 #include "base/Contour2.h"
 #include "optimization/Force.h"
 #include "optimization/Similarity.h"
@@ -52,6 +53,7 @@ private:
     vector< multimap< int, CellComponent > >        _cellComponentVec;          // int: number of nodes in lsubg
     map< unsigned int, Polygon2 >                  *_polygonComplexPtr;
     vector< vector< vector< double > > >            _cellComponentSimilarityVec;   // cell component similarity
+    multimap< Grid2, pair< CellComponent, CellComponent > > _interCellComponentMap;     // pair of inter cell component
 
     unsigned int    _nComponent;            // number of connected component
 
@@ -63,6 +65,7 @@ private:
 //------------------------------------------------------------------------------
     void _buildConnectedComponent( void );
     void _computeCellComponentSimilarity( void );
+    void _buildInterCellComponents( void );
     void _buildCellGraphs( void );
     void _init( map< unsigned int, Polygon2 > * __polygonComplexPtr );
     void _clear( void );
@@ -94,6 +97,10 @@ public:
     vector< multimap< int, CellComponent > > &  cellComponentVec( void )                { return _cellComponentVec; }
     const vector< multimap< int, CellComponent > > &  cellComponentVec( void ) const    { return _cellComponentVec; }
 
+    multimap< Grid2, pair< CellComponent, CellComponent > > & interCellComponentMap( void )                { return _interCellComponentMap; }
+    const multimap< Grid2, pair< CellComponent, CellComponent > > & interCellComponentMap( void ) const    { return _interCellComponentMap; }
+
+
 //------------------------------------------------------------------------------
 //  Find conflicts
 //------------------------------------------------------------------------------
@@ -103,6 +110,7 @@ public:
 //------------------------------------------------------------------------------
     void updatePathwayCoords( void );
     void createPolygonComplex( void );
+    void additionalForces( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

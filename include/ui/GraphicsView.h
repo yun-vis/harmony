@@ -74,6 +74,7 @@ protected:
     void _item_polygons( void );
     void _item_cellPolygons( void );
     void _item_cellPolygonComplex( void );
+    void _item_interCellComponents( void );
 
 public:
     explicit GraphicsView( QWidget *parent = 0 );

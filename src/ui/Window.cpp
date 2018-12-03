@@ -418,6 +418,9 @@ void Window::timerBoundary( void )
     double err = 0.0;
 
     switch ( _boundary->forceBoundary().mode() ) {
+
+        //_boundary->forceBoundary().initForce();
+
         case TYPE_FORCE:
         {
             _boundary->forceBoundary().force();
@@ -490,12 +493,17 @@ void Window::timerPathwayCell( void )
 
     for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
 
+        _cell.forceCellVec()[i].initForce();
+    }
+    for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
+
         // cerr << "i = " << i << " active = " << _timer[i]->isActive() << endl;
         if( _timer[i]->isActive() == true ){
             switch ( _cell.forceCellVec()[i].mode() ) {
                 case TYPE_FORCE:
                 {
                     _cell.forceCellVec()[i].force();
+                    _cell.additionalForces();
                     err = _cell.forceCellVec()[i].verletIntegreation();
                     cerr << "err (force) = " << err << endl;
                     if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
@@ -510,6 +518,7 @@ void Window::timerPathwayCell( void )
                 case TYPE_CENTROID:
                 {
                     _cell.forceCellVec()[i].centroidGeometry();
+                    _cell.additionalForces();
                     err = _cell.forceCellVec()[i].gap();
                     cerr << "err (centroid) = " << err << endl;
                     if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
@@ -522,6 +531,7 @@ void Window::timerPathwayCell( void )
                 case TYPE_HYBRID:
                 {
                     _cell.forceCellVec()[i].force();
+                    _cell.additionalForces();
                     _cell.forceCellVec()[i].centroidGeometry();
                     err = _cell.forceCellVec()[i].verletIntegreation();
                     cerr << "err (hybrid) = " << err << endl;
@@ -577,8 +587,10 @@ void Window::timerPathway( void )
 
         multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
         multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+
         for( ; itC != cellComponentMap.end(); itC++ ){
 
+            //itC->second.detail.initForce();
             itC->second.detail.force();
             err = itC->second.detail.verletIntegreation();
             cerr << idC << ": err (pathway force) = " << err << endl;
@@ -722,9 +734,6 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_L:
         {
             // load setting
-            _pathway->init( "../xml/A/", "../xml/tmp/",
-                            "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
-            _pathway->generate();
             _pathway->initLayout( _boundary->polygonComplex() );
 
             // initialize cell
@@ -794,9 +803,15 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_V:
         {
-            _boundary->buildSkeleton();
-            _boundary->decomposeSkeleton();
+            _pathway->init( "../xml/A/", "../xml/tmp/",
+                            "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
+            _pathway->generate();
+
+            _boundary->init( _pathway->skeletonG() );
+            //_boundary->buildSkeleton();
             _boundary->normalizeSkeleton( _content_width, _content_height );
+            _boundary->decomposeSkeleton();
+            _boundary->normalizeComposite( _content_width, _content_height );
 
             _gv->isCompositeFlag() = true;
 

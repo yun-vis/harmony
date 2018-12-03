@@ -154,6 +154,8 @@ using namespace::std;
 //#define DOI_MAX         (5.0)
 //#define DOI_MAX         (8.0)
 
+#define MAX_DEGREE_ALLOWED		(3)
+
 #define TIMER_STEP      (100)
 #define MAX_COLOR_TYPE   (12)
 #define DEFAULT_FONT_SIZE   (10)

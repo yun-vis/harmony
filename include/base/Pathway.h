@@ -33,11 +33,13 @@ using namespace std;
 #include <boost/graph/make_maximal_planar.hpp>
 #include <boost/graph/planar_face_traversal.hpp>
 
+#include "boost/create_dual_graph.hpp"
 #include "base/Polygon2.h"
 #include "graph/MetaboliteGraph.h"
 #include "graph/UndirectedPropertyGraph.h"
 #include "graph/DirectedBaseGraph.h"
 #include "graph/ForceGraph.h"
+#include "graph/SkeletonGraph.h"
 
 #define DUPL_THRESHOLD	(8)  // <-- Ecoli_Palsson2011_iJO1366
 //#define DUPL_THRESHOLD	(1000) // > 1
@@ -56,6 +58,9 @@ private:
     vector< MetaboliteGraph	>	_subGraph;
     vector< ForceGraph	>		_layoutSubGraph;
 
+	SkeletonGraph				_skeletonGraph;   // dependGraph
+	vector< vector< SkeletonGraph::vertex_descriptor > > _embeddingVec;
+
     map< string, unsigned int > _metaFreq;		// map for recording the frequency of all metabolites
 	map< string, string > 		_metaType;		// map for recording the types of all metabolites
 	map< string, int > 			_dupliMap;		// map for recording the duplication of metabolites
@@ -63,6 +68,11 @@ private:
     vector< BioNetMetabolite >  _meta;			// metablite vector
     vector< BioNetReaction >    _react;			// reaction vector
 	vector< vector < double > > _edgeW;			// edheWeight vector for dependGraph
+
+    // ui
+    bool                        _isCloneByThreshold;
+    double                      _threshold;
+	unsigned int 				_nZoneDiff;		// total different zone value
 
 protected:
 
@@ -84,6 +94,18 @@ protected:
 
     void clearPathway( void );
 
+	bool has_cycle_dfs( const UndirectedPropertyGraph & g, UndirectedPropertyGraph::vertex_descriptor u,
+						default_color_type * color );
+	bool has_cycle( const UndirectedPropertyGraph & g );
+	bool loop_in_dual_graph_test( UndirectedPropertyGraph & propG );
+	// void max_spaning_tree( void );
+	bool planarity_test( vector< SkeletonGraphVVPair > &addedED, SkeletonGraphVVPair & newE );
+	bool constrained_planarity_test( vector< SkeletonGraphVVPair > &addedED,
+									 SkeletonGraphVVPair & newE, unsigned int maxDegree );
+	void planar_graph_embedding( vector< SkeletonGraphVVPair > &addedED );
+	void planar_max_filtered_graph( void );
+	void computeZone( void );
+
 public:
 
     Pathway();                      // default constructor
@@ -95,12 +117,14 @@ public:
 //------------------------------------------------------------------------------
     const MetaboliteGraph &           g( void ) const 	 { return _graph; }
     MetaboliteGraph &                 g( void )          { return _graph; }
-    const ForceGraph &       lg( void ) const 	 { return _layoutGraph; }
-    ForceGraph &             lg( void )         { return _layoutGraph; }
+    const ForceGraph &              lg( void ) const 	 { return _layoutGraph; }
+    ForceGraph &                    lg( void )           { return _layoutGraph; }
+    const SkeletonGraph &           skeletonG( void ) const { return _skeletonGraph; }
+    SkeletonGraph &                 skeletonG( void )       { return _skeletonGraph; }
 
-	const vector< MetaboliteGraph > & subG( void ) const { return _subGraph; }
-    vector< MetaboliteGraph > &       subG( void )       { return _subGraph; }
-    const vector< ForceGraph > & 		lsubG( void ) const { return _layoutSubGraph; }
+	const vector< MetaboliteGraph >   & subG( void ) const  { return _subGraph; }
+    vector< MetaboliteGraph > &         subG( void )        { return _subGraph; }
+    const vector< ForceGraph > & 	    lsubG( void ) const { return _layoutSubGraph; }
     vector< ForceGraph > &           	lsubG( void )       { return _layoutSubGraph; }
 
 	const map< string, unsigned int > &           metafreq( void ) const { return _metaFreq; }
@@ -108,10 +132,10 @@ public:
 	const map< string, Subdomain * > &         	  subsys( void ) const 	 { return _sub; }
     map< string, Subdomain * > &                  subsys( void )       	 { return _sub; }
 
-	const string &           	  inpath( void ) const 	 { return _inputpath; }
-	string &                 	  inpath( void )         { return _inputpath; }
-	const string &           	  outpath( void ) const  { return _outputpath; }
-	string &                 	  outpath( void )        { return _outputpath; }
+	const string &          inpath( void ) const   { return _inputpath; }
+	string &                inpath( void )         { return _inputpath; }
+	const string &          outpath( void ) const  { return _outputpath; }
+	string &                outpath( void )        { return _outputpath; }
 
 	const unsigned int		nVertices( void ) 	{ return num_vertices( _graph ); }
 	const unsigned int		nEdges( void ) 		{ return num_edges( _graph ); }
@@ -130,6 +154,7 @@ public:
     void genLayoutGraph( void );
     void genSubGraphs( void );
     void genLayoutSubGraphs( void );
+	void genDependencyGraph( void );
 
 	void normalization( void );
 

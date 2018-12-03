@@ -25,6 +25,55 @@ using namespace std;
 #include "graph/UndirectedPropertyGraph.h"
 
 //------------------------------------------------------------------------------
+//	Private functions
+//------------------------------------------------------------------------------
+//  Boundary::_init -- initialization
+//
+//  Inputs
+//      string
+//
+//  Outputs
+//  double
+//
+void Boundary::_init( SkeletonGraph & skeletonGraph )
+{
+    clearGraph( _skeleton );
+
+    // copy skeleton to composite
+    BGL_FORALL_VERTICES( vd, skeletonGraph, SkeletonGraph )
+    {
+        ForceGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
+        _skeleton[ vdNew ].id          = skeletonGraph[vd].id;
+        _skeleton[ vdNew ].groupID     = skeletonGraph[vd].id;
+        _skeleton[ vdNew ].initID      = skeletonGraph[vd].id;
+
+        _skeleton[ vdNew ].coordPtr     = new Coord2( skeletonGraph[vd].coordPtr->x(), skeletonGraph[vd].coordPtr->y() );
+        _skeleton[ vdNew ].prevCoordPtr = new Coord2( skeletonGraph[vd].coordPtr->x(), skeletonGraph[vd].coordPtr->y() );
+        _skeleton[ vdNew ].forcePtr     = new Coord2( 0, 0 );
+        _skeleton[ vdNew ].placePtr     = new Coord2( 0, 0 );
+        _skeleton[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
+        _skeleton[ vdNew ].weight       = 0.0;
+
+        _skeleton[ vdNew ].widthPtr    = new double( *skeletonGraph[vd].widthPtr );
+        _skeleton[ vdNew ].heightPtr   = new double( *skeletonGraph[vd].heightPtr );
+        _skeleton[ vdNew ].areaPtr     = new double( *skeletonGraph[vd].areaPtr );
+    }
+
+    BGL_FORALL_EDGES( ed, skeletonGraph, SkeletonGraph )
+    {
+        SkeletonGraph::vertex_descriptor vdS = source( ed, skeletonGraph );
+        SkeletonGraph::vertex_descriptor vdT = target( ed, skeletonGraph );
+        ForceGraph::vertex_descriptor vdCompoS = vertex( skeletonGraph[vdS].id, _skeleton );
+        ForceGraph::vertex_descriptor vdCompoT = vertex( skeletonGraph[vdT].id, _skeleton );
+
+        // add edge
+        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, _skeleton );
+        BoundaryGraph::edge_descriptor foreED = foreE.first;
+        _skeleton[ foreED ].id = _skeleton[ed].id;
+    }
+}
+
+//------------------------------------------------------------------------------
 //	Protected functions
 //------------------------------------------------------------------------------
 //  Boundary::_stringToDouble -- convert string to double
@@ -1340,8 +1389,8 @@ void Boundary::decomposeSkeleton( void )
     BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
     {
         ForceGraph::vertex_descriptor vdNew = add_vertex( _composite );
-        _composite[ vdNew ].id = _skeleton[vd].id;
-        _composite[ vdNew ].initID = _skeleton[vd].initID;
+        _composite[ vdNew ].id           = _skeleton[vd].id;
+        _composite[ vdNew ].initID       = _skeleton[vd].initID;
 
         _composite[ vdNew ].coordPtr     = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
         _composite[ vdNew ].prevCoordPtr = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
@@ -1424,8 +1473,8 @@ void Boundary::decomposeSkeleton( void )
 
                     // add vertex
                     ForceGraph::vertex_descriptor vdNew = add_vertex( _composite );
-                    _composite[ vdNew ].id = index;
-                    _composite[ vdNew ].initID = _composite[vd].initID;
+                    _composite[ vdNew ].id           = index;
+                    _composite[ vdNew ].initID       = _composite[vd].initID;
 
                     _composite[ vdNew ].coordPtr     = new Coord2( x, y );
                     _composite[ vdNew ].prevCoordPtr = new Coord2( x, y);
@@ -1502,6 +1551,45 @@ void Boundary::decomposeSkeleton( void )
 //  none
 //
 void Boundary::normalizeSkeleton( const int & width, const int & height )
+{
+    // initialization
+    double xMin =  INFINITY;
+    double xMax = -INFINITY;
+    double yMin =  INFINITY;
+    double yMax = -INFINITY;
+
+    // Scan all the vertex coordinates first
+    BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
+    {
+        Coord2 coord = *_skeleton[ vd ].coordPtr;
+        if ( coord.x() < xMin ) xMin = coord.x();
+        if ( coord.x() > xMax ) xMax = coord.x();
+        if ( coord.y() < yMin ) yMin = coord.y();
+        if ( coord.y() > yMax ) yMax = coord.y();
+    }
+
+    // Normalize the coordinates
+    BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
+    {
+        Coord2 coord;
+        coord.x() = 0.8* (double)width * ( _skeleton[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.4*(double)width;
+        coord.y() = 0.8* (double)height * ( _skeleton[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.4*(double)height;
+        _skeleton[ vd ].coordPtr->x() = coord.x();
+        _skeleton[ vd ].coordPtr->y() = coord.y();
+        // cerr << coord;
+    }
+}
+
+//
+//  Boundary::normalizeSComposite --    normalize the composite
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Boundary::normalizeComposite( const int & width, const int & height )
 {
     // initialization
     double xMin =  INFINITY;
