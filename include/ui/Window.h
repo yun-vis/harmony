@@ -19,6 +19,7 @@ using namespace std;
 #include "optimization/Octilinear.h"
 #include "ui/GraphicsView.h"
 #include "base/Timer.h"
+#include "base/Road.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
@@ -48,6 +49,7 @@ private:
 
     // cells of subgraphs
     Cell            _cell;
+    Road            _road;
 
     Smooth          _smooth;
     Octilinear      _octilinear;

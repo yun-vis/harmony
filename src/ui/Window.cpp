@@ -43,7 +43,7 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
     //if( _octilinearPtr == NULL ) assert( _octilinearPtr );
 
     _gv->setPathwayData( _pathway );
-    _gv->init( _boundary, _simplifiedBoundary, &_cell );
+    _gv->init( _boundary, _simplifiedBoundary, &_cell, &_road );
 }
 
 void Window::createActions( void )
@@ -420,6 +420,7 @@ void Window::timerBoundary( void )
     switch ( _boundary->forceBoundary().mode() ) {
 
         case TYPE_FORCE:
+        case TYPE_BARNES_HUT:
         {
             _boundary->forceBoundary().force();
             err = _boundary->forceBoundary().verletIntegreation();
@@ -442,6 +443,7 @@ void Window::timerBoundary( void )
                 cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
+            break;
         }
         case TYPE_HYBRID:
         {
@@ -454,6 +456,7 @@ void Window::timerBoundary( void )
                 cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
+            break;
         }
         default:
             break;
@@ -495,6 +498,7 @@ void Window::timerPathwayCell( void )
         if( _timer[i]->isActive() == true ){
             switch ( _cell.forceCellVec()[i].mode() ) {
                 case TYPE_FORCE:
+                case TYPE_BARNES_HUT:
                 {
                     _cell.forceCellVec()[i].force();
                     _cell.additionalForces();
@@ -521,6 +525,7 @@ void Window::timerPathwayCell( void )
                         cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                         cerr << "[Centroidal] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
                     }
+                    break;
                 }
                 case TYPE_HYBRID:
                 {
@@ -535,6 +540,7 @@ void Window::timerPathwayCell( void )
                         cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                         cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
                     }
+                    break;
                 }
                 default:
                     break;
@@ -566,6 +572,9 @@ void Window::_timerPathwayStop( void )
 
     if( !isActive ) {
         _timerStop();
+        _road.init( _cell.cellComponentVec() );
+        _road.buildRoad();
+        _gv->isRoadFlag() = true;
     }
 }
 
@@ -584,14 +593,52 @@ void Window::timerPathway( void )
 
         for( ; itC != cellComponentMap.end(); itC++ ){
 
-            itC->second.detail.force();
-            err = itC->second.detail.verletIntegreation();
-            cerr << idC << ": err (pathway force) = " << err << endl;
-            if ( err < itC->second.detail.finalEpsilon() ) {
-                _timer[idC]->stop();
-                _timerPathwayStop();
-                cerr << "[Force-Directed] Finished Execution Time [" << idC << "] = " << checkOutETime() << endl;
-                cerr << "[Force-Directed] Finished CPU Time [" << idC << "] = " << checkOutCPUTime() << endl;
+            cerr << "mode = " << itC->second.detail.mode() << endl;
+            switch ( itC->second.detail.mode() ) {
+
+                case TYPE_FORCE:
+                case TYPE_BARNES_HUT:
+                {
+                    itC->second.detail.force();
+                    err = itC->second.detail.verletIntegreation();
+                    cerr << idC << ": err (pathway force) = " << err << endl;
+                    if (err < itC->second.detail.finalEpsilon()) {
+                        _timer[idC]->stop();
+                        _timerPathwayStop();
+                        cerr << "[Force-Directed] Finished Execution Time [" << idC << "] = " << checkOutETime() << endl;
+                        cerr << "[Force-Directed] Finished CPU Time [" << idC << "] = " << checkOutCPUTime() << endl;
+                    }
+                    break;
+                }
+                case TYPE_CENTROID:
+                {
+                    itC->second.detail.centroidGeometry();
+                    err = itC->second.detail.gap();
+                    cerr << idC << ": err (pathway force) = " << err << endl;
+                    if (err < itC->second.detail.finalEpsilon()) {
+                        _timer[idC]->stop();
+                        _timerPathwayStop();
+                        cerr << "[Force-Directed] Finished Execution Time [" << idC << "] = " << checkOutETime() << endl;
+                        cerr << "[Force-Directed] Finished CPU Time [" << idC << "] = " << checkOutCPUTime() << endl;
+                    }
+                    break;
+                }
+                case TYPE_HYBRID:
+                {
+                    itC->second.detail.force();
+                    itC->second.detail.centroidGeometry();
+                    err = itC->second.detail.verletIntegreation();
+                    cerr << idC << ": err (pathway force) = " << err << endl;
+                    if (err < itC->second.detail.finalEpsilon()) {
+                        _timer[idC]->stop();
+                        _timerPathwayStop();
+                        cerr << "[Force-Directed] Finished Execution Time [" << idC << "] = " << checkOutETime() << endl;
+                        cerr << "[Force-Directed] Finished CPU Time [" << idC << "] = " << checkOutCPUTime() << endl;
+                    }
+                    break;
+                }
+                default:
+                    break;
             }
             idC++;
         }

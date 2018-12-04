@@ -53,4 +53,7 @@ typedef property_map< UndirectedPropertyGraph, vertex_index_t >::type           
 typedef property_map< UndirectedPropertyGraph, edge_weight_t >::type            EdgeWeightMap;
 typedef property_map< UndirectedPropertyGraph, edge_index_t >::type             EdgeIndexMap;
 
+void printGraph( UndirectedPropertyGraph & graph );
+void clearGraph( UndirectedPropertyGraph & graph );
+
 #endif  // _UndirectedPropertyGraph_H

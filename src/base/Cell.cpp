@@ -556,7 +556,7 @@ void Cell::createPolygonComplex( void )
             }
 
             c.detail.init( &c.detailGraph, c.contour, "../configs/pathway.conf" );
-            c.detail.mode() = TYPE_BARNES_HUT;
+            //c.detail.mode() = TYPE_BARNES_HUT;
             c.detail.id() = idC;
             idC++;
         }

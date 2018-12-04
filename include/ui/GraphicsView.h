@@ -24,6 +24,7 @@ using namespace std;
 #include "base/Color.h"
 #include "base/Boundary.h"
 #include "base/Cell.h"
+#include "base/Road.h"
 #include "base/Pathway.h"
 #include "base/PathwayData.h"
 #endif // Q_MOC_RUN
@@ -56,10 +57,12 @@ private:
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
                         _is_boundaryFlag, _is_pathwayFlag,
-                        _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag;
+                        _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
+                        _is_roadFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
     Cell                *_cellPtr;
+    Road                *_roadPtr;
 
 protected:
 
@@ -75,6 +78,7 @@ protected:
     void _item_cellPolygons( void );
     void _item_cellPolygonComplex( void );
     void _item_interCellComponents( void );
+    void _item_road( void );
 
 public:
     explicit GraphicsView( QWidget *parent = 0 );
@@ -105,14 +109,18 @@ public:
     bool &          isCellPolygonComplexFlag( void )       { return _is_cellPolygonComplexFlag; }
     const bool &    isCellPolygonComplexFlag( void ) const { return _is_cellPolygonComplexFlag; }
 
+    bool &          isRoadFlag( void )              { return _is_roadFlag; }
+    const bool &    isRoadFlag( void ) const        { return _is_roadFlag; }
+
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
     void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary,
-                                  Cell * __cellPtr ){
+                                  Cell * __cellPtr, Road * __roadPtr ){
         _boundary = __boundary;
         _simplifiedBoundary = __simplifiedBoundary;
         _cellPtr = __cellPtr;
+        _roadPtr = __roadPtr;
     }
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );

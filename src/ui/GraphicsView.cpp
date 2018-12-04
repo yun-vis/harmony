@@ -255,9 +255,9 @@ void GraphicsView::_item_subpathways( void )
 
                 if( *g[ initVD ].isClonedPtr == true )
                 //if( g[ initVD ].type == "reaction" )
-                    itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
+                    itemptr->setBrush( QBrush( QColor( 0, 255, 255, 255 ), Qt::SolidPattern ) );
                 else if( subg[itC->second.groupID][vdF].isAlias == true )
-                    itemptr->setBrush( QBrush( QColor( 0, 255, 255 ), Qt::SolidPattern ) );
+                    itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
                 else
                     itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
                 itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
@@ -462,6 +462,44 @@ void GraphicsView::_item_cellPolygonComplex( void )
     }
 }
 
+void GraphicsView::_item_road( void )
+{
+    UndirectedBaseGraph &road    = _roadPtr->road();
+
+    // draw edges
+    BGL_FORALL_EDGES( ed, road, UndirectedBaseGraph ) {
+
+        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, road );
+        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, road );
+
+        QPainterPath path;
+        path.moveTo( road[ vdS ].coordPtr->x(), -road[ vdS ].coordPtr->y() );
+        path.lineTo( road[ vdT ].coordPtr->x(), -road[ vdT ].coordPtr->y() );
+
+        // add path
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+        //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 3 ) );
+        itemptr->setPath( path );
+        _scene->addItem( itemptr );
+    }
+
+    // draw vertices
+    BGL_FORALL_VERTICES( vd, road, UndirectedBaseGraph ) {
+
+        GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setRect( QRectF( road[vd].coordPtr->x(), -road[vd].coordPtr->y(), 10, 10 ) );
+        itemptr->id() = road[ vd ].id;
+
+        //cerr << vertexCoord[vd];
+        _scene->addItem( itemptr );
+    }
+}
+
+
 //------------------------------------------------------------------------------
 //	Public functions
 //------------------------------------------------------------------------------
@@ -484,6 +522,7 @@ void GraphicsView::initSceneItems ( void )
     }
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
+    if( _is_roadFlag == true ) _item_road();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -535,6 +574,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_cellFlag = false;
     _is_cellPolygonFlag = false;
     _is_cellPolygonComplexFlag = false;
+    _is_roadFlag = false;
     this->setScene( _scene );
 }
 

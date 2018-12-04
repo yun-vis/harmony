@@ -84,6 +84,7 @@ set(HEADERS
         include/base/Timer.h
         include/base/Color.h
         include/base/Cell.h
+        include/base/Road.h
         include/base/Pathway.h
         include/base/PathwayData.h.h
         include/graph/TreeEdgeProperty.h
@@ -139,6 +140,7 @@ set(SOURCES
         src/base/Color.cpp
         src/base/Boundary.cpp
         src/base/Cell.cpp
+        src/base/Road.cpp
         src/base/Pathway.cpp
         src/base/PathwayData.cpp
         src/graph/TreeEdgeProperty.cpp
@@ -163,6 +165,7 @@ set(SOURCES
         src/graph/SkeletonVertexProperty.cpp
         src/graph/DirectedBaseGraph.cpp
         src/graph/UndirectedBaseGraph.cpp
+        src/graph/UndirectedPropertyGraph.cpp
         src/graph/BaseEdgeProperty.cpp
         src/graph/BaseGraphProperty.cpp
         src/graph/BaseVertexProperty.cpp
