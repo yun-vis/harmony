@@ -38,7 +38,13 @@ void printGraph( MetaboliteGraph & graph )
     BGL_FORALL_VERTICES( vd, graph, MetaboliteGraph ) {
 
         cerr << " vid = " << graph[vd].id
+             << " ( " << *graph[vd].namePtr << " ) "
+             << " isAlias = " << graph[vd].isAlias << endl;
+
+/*
+        cerr << " vid = " << graph[vd].id
              << " gID = " << graph[vd].groupID
+             << " initID = " << graph[vd].initID
              << " x = " << graph[vd].coordPtr->x()
              << " y = " << graph[vd].coordPtr->y()
              << " w = " << *graph[vd].widthPtr
@@ -46,25 +52,28 @@ void printGraph( MetaboliteGraph & graph )
              << " namePixelWidth = " << *graph[vd].namePixelWidthPtr
              << " namePixelHeight = " << *graph[vd].namePixelHeightPtr
              << endl;
+*/
     }
     cerr << endl;
 //#endif  // DEBUG
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print edge information
-    BGL_FORALL_EDGES( ed, graph, UndirectedBaseGraph ) {
+    BGL_FORALL_EDGES( ed, graph, MetaboliteGraph ) {
 
-        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, graph );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, graph );
+        MetaboliteGraph::vertex_descriptor vdS = source( ed, graph );
+        MetaboliteGraph::vertex_descriptor vdT = target( ed, graph );
 
         cerr << " eid = " << graph[ed].id
              << " ( " << graph[vdS].id
              << ", " << graph[vdT].id << " )"
+             << " ( " << *graph[vdS].namePtr
+             << ", " << *graph[vdT].namePtr << " )"
              << " w = " << graph[ed].weight
              << endl;
     }
     cerr << endl;
-#endif  // DEBUG
+//#endif  // DEBUG
 }
 
 //

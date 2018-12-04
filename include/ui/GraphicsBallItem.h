@@ -37,6 +37,7 @@ class GraphicsBallItem : public  QGraphicsRectItem
 private:
 
     unsigned int _id;
+    string _name;
 
 protected:
 
@@ -72,6 +73,8 @@ public:
     unsigned int &	        id( void ) 	        { return _id; }
     const unsigned int &	id( void ) const	{ return _id; }
 
+    string &	            name( void )        { return _name; }
+    const string &	        name( void ) const	{ return _name; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

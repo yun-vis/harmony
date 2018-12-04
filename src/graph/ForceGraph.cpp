@@ -43,20 +43,27 @@ void printGraph( ForceGraph & graph )
     BGL_FORALL_VERTICES( vd, graph, ForceGraph ) {
 
         ForceGraph::degree_size_type      degrees         = out_degree( vd, graph );
-        cerr << "initID = " << graph[vd].initID << endl;
+		cerr << " vid = " << graph[vd].id
+			 << " ( " << *graph[vd].namePtr << " ) " << endl;
     }
 //#endif  // DEBUG
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print edge information
     BGL_FORALL_EDGES( ed, graph, ForceGraph ) {
 
         ForceGraph::vertex_descriptor vdS = source( ed, graph );
         ForceGraph::vertex_descriptor vdT = target( ed, graph );
 
-        cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) " << endl;
-    }
-#endif  // DEBUG
+		cerr << " eid = " << graph[ed].id
+			 << " ( " << graph[vdS].id
+			 << ", " << graph[vdT].id << " )"
+			 << " ( " << *graph[vdS].namePtr
+			 << ", " << *graph[vdT].namePtr << " )"
+			 << " w = " << graph[ed].weight
+			 << endl;
+	}
+//#endif  // DEBUG
 }
 
 //

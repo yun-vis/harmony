@@ -796,6 +796,8 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_V:
         {
+            //_pathway->init( "../xml/tiny/", "../xml/tmp/",
+            //                "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             _pathway->init( "../xml/A/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             _pathway->generate();

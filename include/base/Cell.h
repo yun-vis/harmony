@@ -35,7 +35,9 @@ using namespace std;
 class CellComponent
 {
 public:
-    unsigned int                            id;         // group id
+    unsigned int                            id;         // component id
+    unsigned int                            groupID;    // subsystem id
+    //unsigned int                            subgID;     // sub graph id
     Polygon2                                contour;    // contour of the cell component
     double                                  multiple;   // multiple of cell unit
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg

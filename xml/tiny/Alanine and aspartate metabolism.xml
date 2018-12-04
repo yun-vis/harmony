@@ -1,0 +1,51 @@
+<metabolites>
+    <metabolite>
+        <name>h2o[r]</name>
+        <formula>H2O</formula>
+        <description>Water</description>
+    </metabolite>
+    <metabolite>
+        <name>glx[m]</name>
+        <formula>C2H1O3</formula>
+        <description>glyoxylate</description>
+    </metabolite>
+    <metabolite>
+        <name>glx[x]</name>
+        <formula>C2H1O3</formula>
+        <description>glyoxylate</description>
+    </metabolite>
+    <metabolite>
+        <name>gly[m]</name>
+        <formula>C2H5NO2</formula>
+        <description>Glycine</description>
+    </metabolite>
+    <metabolite>
+        <name>gly[x]</name>
+        <formula>C2H5NO2</formula>
+        <description>Glycine</description>
+    </metabolite>
+    <metabolite>
+        <name>egme[r]</name>
+        <formula>C10H17NO3</formula>
+        <description>ecgoninium methyl ester(1+)</description>
+    </metabolite>
+</metabolites>
+<reactions>
+    <reaction>
+        <id>AGTim</id>
+        <name>alanine-glyoxylate transaminase (irreversible), mitochondrial</name>
+        <reactant>h2o[r]</reactant>
+        <reactant>gly[x]</reactant>
+        <product>gly[m]</product>
+        <reversible>false</reversible>
+        <subsystem>Alanine and aspartate metabolism</subsystem>
+    </reaction>
+    <reaction>
+        <id>AGTix</id>
+        <name>alanine-glyoxylate transaminase (irreversible), (peroxisomal)</name>
+        <reactant>egme[r]</reactant>
+        <reactant>glx[m]</reactant>
+        <reversible>false</reversible>
+        <subsystem>Alanine and aspartate metabolism</subsystem>
+    </reaction>
+</reactions>

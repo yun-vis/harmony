@@ -198,25 +198,38 @@ void GraphicsView::_item_boundary( void )
 
 void GraphicsView::_item_subpathways( void )
 {
+    MetaboliteGraph             &g         = _pathway->g();
+    vector< MetaboliteGraph >   &subg      = _pathway->subG();
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+
+#ifdef DEBUG
+    if(  _is_pathwayFlag ){
+        for( unsigned int i = 0; i < subg.size(); i++ ){
+            printGraph( subg[ i ] );
+        }
+    }
+#endif // DEBUG
 
     for( unsigned int k = 0; k < cellCVec.size(); k++ ){
 
+
         multimap< int, CellComponent > &componentMap = cellCVec[k];
         multimap< int, CellComponent >::iterator itC = componentMap.begin();
+
+
         for( ; itC != componentMap.end(); itC++ ){
 
-            ForceGraph &g = itC->second.detailGraph;
+            ForceGraph &dg = itC->second.detailGraph;
 
             // draw edges
-            BGL_FORALL_EDGES( ed, g, ForceGraph ) {
+            BGL_FORALL_EDGES( ed, dg, ForceGraph ) {
 
-                ForceGraph::vertex_descriptor vdS = source( ed, g );
-                ForceGraph::vertex_descriptor vdT = target( ed, g );
+                ForceGraph::vertex_descriptor vdS = source( ed, dg );
+                ForceGraph::vertex_descriptor vdT = target( ed, dg );
 
                 QPainterPath path;
-                path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
-                path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
+                path.moveTo( dg[vdS].coordPtr->x(), -dg[vdS].coordPtr->y() );
+                path.lineTo( dg[vdT].coordPtr->x(), -dg[vdT].coordPtr->y() );
 
                 // add path
                 GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
@@ -228,13 +241,28 @@ void GraphicsView::_item_subpathways( void )
             }
 
             // draw vertices
-            BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+            BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
+                MetaboliteGraph::vertex_descriptor vdF = vertex( dg[vd].initID, subg[itC->second.groupID] );
+
+                MetaboliteGraph::vertex_descriptor initVD = vertex( subg[itC->second.groupID][vdF].initID, g );
+#ifdef DEBUG
+                cerr << " itC->second.groupID = " << itC->second.groupID << " dg[vd].initID = " << dg[vd].initID
+                     << " subg[itC->second.groupID][vdF].initID = " << subg[itC->second.groupID][vdF].initID << endl;
+#endif // DEBUG
                 GraphicsBallItem *itemptr = new GraphicsBallItem;
                 itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-                itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-                itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
-                itemptr->id() = g[vd].id;
+
+                if( *g[ initVD ].isClonedPtr == true )
+                //if( g[ initVD ].type == "reaction" )
+                    itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
+                else if( subg[itC->second.groupID][vdF].isAlias == true )
+                    itemptr->setBrush( QBrush( QColor( 0, 255, 255 ), Qt::SolidPattern ) );
+                else
+                    itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
+                itemptr->id() = dg[vd].id;
+                itemptr->name() = *g[ initVD ].namePtr;
 
                 //cerr << vertexCoord[vd];
                 _scene->addItem( itemptr );
@@ -245,7 +273,7 @@ void GraphicsView::_item_subpathways( void )
 
 void GraphicsView::_item_pathways( void )
 {
-    vector< ForceGraph > &lsubg    = _pathway->lsubG();
+    vector< ForceGraph > &lsubg     = _pathway->lsubG();
 
     // create edge object from the spanning tree and add it to the scene
     for( unsigned int i = 0; i < lsubg.size(); i++ ){
@@ -278,7 +306,6 @@ void GraphicsView::_item_pathways( void )
             itemptr->setRect( QRectF( lsubg[i][vd].coordPtr->x(), -lsubg[i][vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = lsubg[i][vd].id;
 
-            //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
         }
     }

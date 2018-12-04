@@ -138,10 +138,10 @@ void Cell::_buildConnectedComponent( void )
                                                                     get( &ForceVertexProperty::id, lsubg[ i ] )),
                                         boost::color_map( get( &ForceVertexProperty::color, lsubg[ i ] ) ));
 
-#ifdef DEBUG
+//#ifdef DEBUG
         cerr << "nV = " << nV << endl;
         cout << "subID = " << i << " total number of components: " << num << endl;
-#endif // DEBUG
+//#endif // DEBUG
 
         vector< CellComponent > cc;
         cc.resize( num );
@@ -150,6 +150,8 @@ void Cell::_buildConnectedComponent( void )
             ForceGraph::vertex_descriptor vd = vertex( j, lsubg[i] );
             cc[ component[ j ] ].lsubgVec.push_back( vd );
             cc[ component[ j ] ].id = component[ j ];
+            cc[ component[ j ] ].groupID = i;
+            //cc[ component[ j ] ].subgID = j;
             // cerr << component[ j ] << endl;
         }
         // cerr << endl << endl;
@@ -169,6 +171,7 @@ void Cell::_buildConnectedComponent( void )
 
                 fg[ vdNew ].id          = k;
                 fg[ vdNew ].groupID     = i;
+                //fg[ vdNew ].componentID = lsubg[i][ cc[j].lsubgVec[k] ].id;
                 fg[ vdNew ].initID      = lsubg[i][ cc[j].lsubgVec[k] ].id;
 
                 fg[ vdNew ].coordPtr     = lsubg[i][ cc[j].lsubgVec[k] ].coordPtr;
@@ -783,8 +786,7 @@ void Cell::_buildInterCellComponents( void )
 
     for( itC = _interCellComponentMap.begin(); itC != _interCellComponentMap.end(); itC++  ){
 
-        UndirectedPropertyGraph::vertex_descriptor vdS = NULL;
-        UndirectedPropertyGraph::vertex_descriptor vdT = NULL;
+        UndirectedPropertyGraph::vertex_descriptor vdS, vdT;
         bool existedS = false,
              existedT = false;
 

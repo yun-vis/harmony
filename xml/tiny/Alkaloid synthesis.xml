@@ -1,0 +1,52 @@
+<metabolites>
+    <metabolite>
+        <name>coke[r]</name>
+        <formula>C17H21NO4</formula>
+        <description>cocaine(1+)</description>
+    </metabolite>
+    <metabolite>
+        <name>ecgon[r]</name>
+        <formula>C9H14NO3</formula>
+        <description>ecgonine</description>
+    </metabolite>
+    <metabolite>
+        <name>egme[r]</name>
+        <formula>C10H17NO3</formula>
+        <description>ecgoninium methyl ester(1+)</description>
+    </metabolite>
+    <metabolite>
+        <name>h2o[r]</name>
+        <formula>H2O</formula>
+        <description>Water</description>
+    </metabolite>
+    <metabolite>
+        <name>h[r]</name>
+        <formula>H</formula>
+        <description>proton</description>
+    </metabolite>
+    <metabolite>
+        <name>pecgon[r]</name>
+        <formula>C9H14NO3</formula>
+        <description>pseudoecgonine</description>
+    </metabolite>
+</metabolites>
+<reactions>
+<reaction>
+    <id>LALA</id>
+    <name>LALACarboxylesterase (cocaine) (er)</name>
+    <reactant>h2o[r]</reactant>
+    <product>h[r]</product>
+    <reversible>true</reversible>
+    <subsystem>Alkaloid synthesis</subsystem>
+</reaction>
+    <reaction>
+        <id>COKECBESr</id>
+        <name>Carboxylesterase (cocaine) (er)</name>
+        <reactant>h2o[r]</reactant>
+        <reactant>coke[r]</reactant>
+        <product>h[r]</product>
+        <product>egme[r]</product>
+        <reversible>true</reversible>
+        <subsystem>Alkaloid synthesis</subsystem>
+    </reaction>
+</reactions>

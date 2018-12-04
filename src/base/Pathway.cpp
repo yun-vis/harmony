@@ -104,6 +104,24 @@ void Pathway::init( string pathIn, string pathOut, string fileFreq, string fileT
 }
 
 //
+//  Pathway::findVertex --    find a vertex
+//
+//  Inputs
+//  node
+//
+//  Outputs
+//  node
+//
+MetaboliteGraph::vertex_descriptor Pathway::findVertex( unsigned int id, MetaboliteGraph &g )
+{
+	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph )
+	{
+		//cerr << g[vd].id << " == " << id << endl;
+		if( g[vd].id == id ) return vd;
+	}
+}
+
+//
 //  Pathway::initLayout --    initialization of the layout
 //
 //  Inputs
@@ -521,8 +539,9 @@ void Pathway::genGraph( void )
         _graph[ reactVD ].initID		= nVertices;
         //_graph[ reactVD ].isSelected	= false;
         //_graph[ reactVD ].isNeighbor	= false;
-        _graph[ reactVD ].isClonedPtr   = NULL;
-		_graph[ reactVD ].type 			= "reaction";
+        _graph[ reactVD ].isClonedPtr   = new bool( false );
+        _graph[ reactVD ].isAlias       = false;
+        _graph[ reactVD ].type 			= "reaction";
 		_graph[ reactVD ].coordPtr		= new Coord2;
 		_graph[ reactVD ].coordPtr->x() = rand() % DEFAULT_WIDTH - DEFAULT_WIDTH/2.0;
 		_graph[ reactVD ].coordPtr->y() = rand() % DEFAULT_HEIGHT - DEFAULT_HEIGHT/2.0;
@@ -584,6 +603,7 @@ void Pathway::genGraph( void )
 				//_graph[ metaVD ].isSelected		= false;
                 //_graph[ metaVD ].isNeighbor	    = false;
                 _graph[ metaVD ].isClonedPtr    = &_meta[ index ].isCloned;
+                _graph[ metaVD ].isAlias        = false;
 				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr		= new Coord2;
 				_graph[ metaVD ].coordPtr->x() 	= rand() % DEFAULT_WIDTH - DEFAULT_WIDTH/2.0;
@@ -679,6 +699,7 @@ void Pathway::genGraph( void )
 				//_graph[ metaVD ].isSelected		= false;
                 //_graph[ metaVD ].isNeighbor		= false;
 				_graph[ metaVD ].isClonedPtr    = &_meta[ index ].isCloned;
+                _graph[ metaVD ].isAlias        = false;
   				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr 		= new Coord2;
 				_graph[ metaVD ].coordPtr->x() 	= rand() % DEFAULT_WIDTH - DEFAULT_WIDTH/2.0;
@@ -760,8 +781,9 @@ void Pathway::genGraph( void )
 	cerr << "num of edges = " << num_edges( _graph ) << endl;
 	cerr << "num of 1_METABOLITE = " << numMeta << endl;
 
-    // printGraph( _graph );
-	genLayoutGraph();
+    printGraph( _graph );
+
+    genLayoutGraph();
 }
 
 //
@@ -1076,12 +1098,14 @@ void Pathway::genSubGraphs( void )
 	}
 #endif  // DEBUG
 
+	unsigned int totalV = num_vertices( _graph );
+
 	map< string, Subdomain * >::iterator iter;
 	for( iter = _sub.begin(); iter != _sub.end(); iter++ ){
 
 		MetaboliteGraph g;
 		map< unsigned int, unsigned int > idMap;
-		unsigned int nVertices = 0, nEdges = 0;
+		unsigned int nVertices = 0, nEdges = 0, nDummies = 0;
 
 		g[ graph_bundle ].centerPtr	= &iter->second->center;
 		g[ graph_bundle ].widthPtr	= &iter->second->width;
@@ -1093,13 +1117,16 @@ void Pathway::genSubGraphs( void )
 			MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
 			MetaboliteGraph::vertex_descriptor newSVD = NULL, newTVD = NULL;
 
+			// cerr << "e( " << *_graph[vdS].namePtr << ", " << *_graph[vdT].namePtr << " )" << endl;
+			// cerr << "e( " << _graph[vdS].type << ", " << _graph[vdT].type << " )" << endl;
 			if( _graph[ vdS ].type == "metabolite" ){
 				if( ( _graph[ vdS ].metaPtr != NULL ) && ( _graph[ vdS ].subsystems.size() == 1 ) &&
 					( _graph[ vdS ].subsystems.begin()->first == iter->first ) ){
 
 					map< unsigned int, unsigned int >::iterator iter = idMap.find( _graph[ vdS ].id );
 					if( iter != idMap.end() ){
-						newSVD = vertex( iter->second, g );
+						newSVD = findVertex( iter->second, g );
+						//newSVD = vertex( iter->second, g );
 					}
 					else{
 						newSVD = add_vertex( g );
@@ -1109,6 +1136,8 @@ void Pathway::genSubGraphs( void )
                         g[ newSVD ].namePixelWidthPtr  	= &_graph[ vdS ].metaPtr->namePixelWidth;
                         g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].metaPtr->namePixelHeight;
 						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
+                        g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
+                        g[ newSVD ].isAlias    	    = false;
 						g[ newSVD ].type        	= _graph[ vdS ].type;
                         g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
                         g[ newSVD ].widthPtr       	= _graph[ vdS ].widthPtr;
@@ -1116,7 +1145,43 @@ void Pathway::genSubGraphs( void )
                         idMap.insert( pair< unsigned int, unsigned int >( _graph[ vdS ].id, nVertices ) );
 						nVertices++;
 					}
+
+					//cerr << *g[ newSVD ].namePtr << ", ";
 				}
+                else if( ( _graph[ vdS ].metaPtr != NULL ) && ( _graph[ vdS ].subsystems.size() > 1 ) ){
+
+					map< string, Subdomain * >::iterator itS;
+					for( itS = _graph[ vdS ].subsystems.begin(); itS != _graph[ vdS ].subsystems.end(); itS++ ){
+						if( ( itS->first == iter->first ) ){
+
+							map< unsigned int, unsigned int >::iterator iter = idMap.find( _graph[ vdS ].id );
+							if( iter != idMap.end() ){
+								//cerr << "HERE1 " << iter->second << endl;
+								newSVD = findVertex( iter->second, g );
+							}
+							else{
+								newSVD = add_vertex( g );
+								g[ newSVD ].id              = totalV + nDummies;
+								//g[ newSVD ].id              = nVertices;
+								g[ newSVD ].initID          = _graph[ vdS ].id;
+								g[ newSVD ].namePtr  		= &_graph[ vdS ].metaPtr->name;
+								g[ newSVD ].namePixelWidthPtr  	= &_graph[ vdS ].metaPtr->namePixelWidth;
+								g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].metaPtr->namePixelHeight;
+								g[ newSVD ].groupID         = _graph[ vdS ].groupID;
+								g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
+								g[ newSVD ].isAlias    	    = true;
+								g[ newSVD ].type        	= _graph[ vdS ].type;
+								g[ newSVD ].coordPtr    	= new Coord2( _graph[ vdS ].coordPtr->x(), _graph[ vdS ].coordPtr->x() );
+								g[ newSVD ].widthPtr       	= _graph[ vdS ].widthPtr;
+								g[ newSVD ].heightPtr      	= _graph[ vdS ].heightPtr;
+								idMap.insert( pair< unsigned int, unsigned int >( _graph[ vdS ].id, g[ newSVD ].id ) );
+								//nVertices++;
+								nDummies++;
+								//cerr << *g[ newSVD ].namePtr << ", ";
+							}
+						}
+					}
+                }
 			}
 			else if( _graph[ vdS ].type == "reaction" ){
 
@@ -1124,7 +1189,8 @@ void Pathway::genSubGraphs( void )
 
 					map< unsigned int, unsigned int >::iterator iter = idMap.find( _graph[ vdS ].id );
 					if( iter != idMap.end() ){
-						newSVD = vertex( iter->second, g );
+						newSVD = findVertex( iter->second, g );
+						//newSVD = vertex( iter->second, g );
 					}
 					else{
 						newSVD = add_vertex( g );
@@ -1134,6 +1200,8 @@ void Pathway::genSubGraphs( void )
                         g[ newSVD ].namePixelWidthPtr  	= &_graph[ vdS ].reactPtr->namePixelWidth;
                         g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].reactPtr->namePixelHeight;
 						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
+                        g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
+                        g[ newSVD ].isAlias    	    = false;
                         g[ newSVD ].type        	= _graph[ vdS ].type;
 						g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
                         g[ newSVD ].widthPtr       	= _graph[ vdS ].widthPtr;
@@ -1141,6 +1209,7 @@ void Pathway::genSubGraphs( void )
                         idMap.insert( pair< unsigned int, unsigned int >( _graph[ vdS ].id, nVertices ) );
 						nVertices++;
 					}
+					//cerr << *g[ newSVD ].namePtr;
 				}
 			}
 
@@ -1150,7 +1219,8 @@ void Pathway::genSubGraphs( void )
 
   				    map< unsigned int, unsigned int >::iterator iter = idMap.find( _graph[ vdT ].id );
 					if( iter != idMap.end() ){
-						newTVD = vertex( iter->second, g );
+						newTVD = findVertex( iter->second, g );
+						//newTVD = vertex( iter->second, g );
 					}
 					else{
 						newTVD = add_vertex( g );
@@ -1160,6 +1230,8 @@ void Pathway::genSubGraphs( void )
                         g[ newTVD ].namePixelWidthPtr  	= &_graph[ vdT ].metaPtr->namePixelWidth;
                         g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].metaPtr->namePixelHeight;
 						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
+                        g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
+                        g[ newTVD ].isAlias    	    = false;
 						g[ newTVD ].type       		= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
                         g[ newTVD ].widthPtr       	= _graph[ vdT ].widthPtr;
@@ -1168,14 +1240,49 @@ void Pathway::genSubGraphs( void )
 						nVertices++;
 					}
 				}
+                else if( ( _graph[ vdT ].metaPtr != NULL ) && ( _graph[ vdT ].subsystems.size() > 1 ) ){
+
+					map< string, Subdomain * >::iterator itT;
+					for( itT = _graph[ vdT ].subsystems.begin(); itT != _graph[ vdT ].subsystems.end(); itT++ ){
+						if( ( itT->first == iter->first ) ){
+							// cerr << "HERE2" << endl;
+							map< unsigned int, unsigned int >::iterator iter = idMap.find( _graph[ vdT ].id );
+							if( iter != idMap.end() ){
+								newTVD = findVertex( iter->second, g );
+							}
+							else{
+								newTVD = add_vertex( g );
+								g[ newTVD ].id              = totalV + nDummies;
+								//g[ newTVD ].id              = nVertices;
+								g[ newTVD ].initID          = _graph[ vdT ].id;
+								g[ newTVD ].namePtr  		= &_graph[ vdT ].metaPtr->name;
+								g[ newTVD ].namePixelWidthPtr  	= &_graph[ vdT ].metaPtr->namePixelWidth;
+								g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].metaPtr->namePixelHeight;
+								g[ newTVD ].groupID         = _graph[ vdT ].groupID;
+								g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
+								g[ newTVD ].isAlias    	    = true;
+								g[ newTVD ].type       		= _graph[ vdT ].type;
+								g[ newTVD ].coordPtr    	= new Coord2( _graph[ vdT ].coordPtr->x(), _graph[ vdT ].coordPtr->y() );
+								g[ newTVD ].widthPtr       	= _graph[ vdT ].widthPtr;
+								g[ newTVD ].heightPtr      	= _graph[ vdT ].heightPtr;
+								idMap.insert( pair< unsigned int, unsigned int >( _graph[ vdT ].id, g[ newTVD ].id ) );
+								//nVertices++;
+								nDummies++;
+								//cerr << *g[ newTVD ].namePtr << ", ";
+							}
+						}
+					}
+                }
 			}
 			else if( _graph[ vdT ].type == "reaction" ){
 
 				if( _graph[ vdT ].reactPtr->subsystem->name == iter->first ){
 
+					//cerr << "idT = " << _graph[ vdT ].id << endl;
 					map< unsigned int, unsigned int >::iterator iter = idMap.find( _graph[ vdT ].id );
 					if( iter != idMap.end() ){
-						newTVD = vertex( iter->second, g );
+						newTVD = findVertex( iter->second, g );
+						//newTVD = vertex( iter->second, g );
 					}
 					else{
 						newTVD = add_vertex( g );
@@ -1185,6 +1292,8 @@ void Pathway::genSubGraphs( void )
                         g[ newTVD ].namePixelWidthPtr  	= &_graph[ vdT ].reactPtr->namePixelWidth;
                         g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].reactPtr->namePixelHeight;
 						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
+                        g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
+                        g[ newTVD ].isAlias    	    = false;
                         g[ newTVD ].type          	= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
                         g[ newTVD ].widthPtr       	= _graph[ vdT ].widthPtr;
@@ -1192,28 +1301,46 @@ void Pathway::genSubGraphs( void )
                         idMap.insert( pair< unsigned int, unsigned int >( _graph[ vdT ].id, nVertices ) );
 						nVertices++;
 					}
+					//cerr << *g[ newTVD ].namePtr;
 				}
 			}
 
 			if( newSVD != NULL && newTVD != NULL ){
 
-				//cerr << "name =" << iter->first << endl;
+				// cerr << "name = " << *g[ newSVD ].namePtr << ", " << *g[ newTVD ].namePtr << endl;
 
 				pair< MetaboliteGraph::edge_descriptor, unsigned int > foreE = add_edge( newSVD, newTVD, g );
 				MetaboliteGraph::edge_descriptor foreED = foreE.first;
 
-				//g[ foreED ].id = nEdges;
-				g[ foreED ].id = _graph[ ed ].id;
+				g[ foreED ].id = nEdges;
+				//g[ foreED ].id = _graph[ ed ].id;
 				//put( edge_myid, g, foreED, nEdges );
 				nEdges++;
 			}
-
 		}
-		//cerr << "_sub: " << iter->first << iter->second->name << endl;
-		//printGraph( g );
+
+		// reorder the id
+		unsigned int vid = 0, eid = 0;
+		BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
+			g[ vd ].id = vid;
+			vid++;
+		}
+		BGL_FORALL_EDGES( ed, g, MetaboliteGraph ) {
+			g[ ed ].id = eid;
+			eid++;
+		}
 		_subGraph.push_back( g );
 
 #ifdef  DEBUG
+		//cerr << "_sub: " << iter->first << iter->second->name << endl;
+		printGraph( g );
+		cerr << "****" << endl << endl << endl;
+
+		map< unsigned int, unsigned int >::iterator itM = idMap.begin();
+		for( itM = idMap.begin(); itM != idMap.end(); itM++ ){
+			cerr << "map = " << itM->first << ", " << itM->second << endl;
+		}
+
 		cerr << "center = " << *g[ graph_bundle ].centerPtr
 			 << " w = " << g[ graph_bundle ].width
 			 << " h = " << g[ graph_bundle ].height << endl;
@@ -1224,7 +1351,7 @@ void Pathway::genSubGraphs( void )
 	for( iter = _sub.begin(); iter != _sub.end(); iter++ ){
 
 		_subGraph[ index ][ graph_bundle ].centerPtr = &iter->second->center;
-		_subGraph[ index ][ graph_bundle ].widthPtr = &iter->second->width;
+		_subGraph[ index ][ graph_bundle ].widthPtr  = &iter->second->width;
 		_subGraph[ index ][ graph_bundle ].heightPtr = &iter->second->height;
 		index++;
 	}
@@ -1276,10 +1403,11 @@ void Pathway::genLayoutSubGraphs( void )
 	for( unsigned int i = 0; i < _subGraph.size(); i++ ){
 
 		unsigned int nv = 0;
+		cerr << "node size = " << num_vertices( _subGraph[i] ) << " edge size = " << num_edges( _subGraph[i] ) << endl;
 		BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ){
 
             ForceGraph::vertex_descriptor vdL = add_vertex( _layoutSubGraph[i] );
-			_layoutSubGraph[i][ vdL ].id            = nv;
+			_layoutSubGraph[i][ vdL ].id            = _subGraph[i][ vd ].id;
 			_layoutSubGraph[i][ vdL ].initID        = _subGraph[i][ vd ].initID;
 			_layoutSubGraph[i][ vdL ].groupID       = _subGraph[i][ vd ].groupID;
 			_layoutSubGraph[i][ vdL ].componentID   = _subGraph[i][ vd ].componentID;
@@ -1297,6 +1425,7 @@ void Pathway::genLayoutSubGraphs( void )
 			_layoutSubGraph[i][ vdL ].widthPtr      = _subGraph[i][ vd ].widthPtr;
 			_layoutSubGraph[i][ vdL ].heightPtr     = _subGraph[i][ vd ].heightPtr;
 			indexMap.insert( pair< unsigned int, unsigned int >( _subGraph[i][ vd ].groupID, nv ) );
+			cerr << " gid = " << _subGraph[i][ vd ].groupID << " nv = " << nv << ", " << *_layoutSubGraph[i][ vdL ].namePtr << endl;
 			nv++;
 		}
 
@@ -1306,8 +1435,10 @@ void Pathway::genLayoutSubGraphs( void )
 			MetaboliteGraph::vertex_descriptor vdT = target( ed, _subGraph[i] );
 			unsigned int idS = indexMap.find( _subGraph[i][ vdS ].groupID )->second;
 			unsigned int idT = indexMap.find( _subGraph[i][ vdT ].groupID )->second;
-            ForceGraph::vertex_descriptor vdSL = vertex( idS, _layoutSubGraph[i] );
-            ForceGraph::vertex_descriptor vdTL = vertex( idT, _layoutSubGraph[i] );
+            ForceGraph::vertex_descriptor vdSL = vertex( _subGraph[i][ vdS ].id, _layoutSubGraph[i] );
+            ForceGraph::vertex_descriptor vdTL = vertex( _subGraph[i][ vdT ].id, _layoutSubGraph[i] );
+			//ForceGraph::vertex_descriptor vdSL = vertex( idS, _layoutSubGraph[i] );
+			//ForceGraph::vertex_descriptor vdTL = vertex( idT, _layoutSubGraph[i] );
 
 			//cerr << "idS = " << idS << " idT = " << idT << endl;
 	 		bool found = false;
@@ -1328,9 +1459,9 @@ void Pathway::genLayoutSubGraphs( void )
             }
 		}
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
 		printGraph( _layoutSubGraph[i] );
-#endif // DEBUG
+//#endif // DEBUG
 	}
 }
 

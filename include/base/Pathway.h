@@ -85,6 +85,7 @@ protected:
 
 
 	// graph
+    MetaboliteGraph::vertex_descriptor findVertex( unsigned int id, MetaboliteGraph &g );
 	bool findMetaboliteInGraph( string name, MetaboliteGraph::vertex_descriptor &existedVD );
     bool findMetaboliteInVec( string name, int &index );
 	unsigned int retrieveFreq( string name );
