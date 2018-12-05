@@ -17,6 +17,7 @@
 
 using namespace std;
 
+#include "base/PathwayData.h"
 #include "base/Cell.h"
 #include "optimization/Force.h"
 #include "graph/UndirectedBaseGraph.h"
@@ -24,20 +25,31 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Defining data types
 //------------------------------------------------------------------------------
+class Highway
+{
+public:
+    unsigned int count;
+    Coord2  center;
+    UndirectedBaseGraph::vertex_descriptor routerVD;
+    vector< UndirectedBaseGraph::vertex_descriptor > path;
+};
 
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
-class Road
+class Road : public PathwayData
 {
 private:
 
-    UndirectedBaseGraph        _road;
+    UndirectedBaseGraph             _road;
+    vector< vector < Highway > >    _highwayMat;
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
+    void _findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     bool _findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
+    void _findShortestPaths( void );
     void _init( vector< multimap< int, CellComponent > > & cellComponentVec );
     void _clear( void );
 
@@ -55,6 +67,10 @@ public:
 
     UndirectedBaseGraph &          road( void )        { return _road; }
     const UndirectedBaseGraph &    road( void ) const  { return _road; }
+
+    vector< vector < Highway > > &          hightwayMat( void )        { return _highwayMat; }
+    const vector< vector < Highway > > &    hightwayMat( void ) const  { return _highwayMat; }
+
 
 //------------------------------------------------------------------------------
 //  Find conflicts

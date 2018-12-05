@@ -35,6 +35,7 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
     _simplifiedBoundary = __simBoundary;
 
     _cell.setPathwayData( _pathway );
+    _road.setPathwayData( _pathway );
 
     //_smoothPtr = __smoothPtr;
     //_octilinearPtr = __octilinearPtr;
@@ -845,7 +846,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             //_pathway->init( "../xml/tiny/", "../xml/tmp/",
             //                "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
-            _pathway->init( "../xml/A/", "../xml/tmp/",
+            _pathway->init( "../xml/small/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             _pathway->generate();
 

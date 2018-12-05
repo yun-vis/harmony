@@ -114,11 +114,15 @@ void Pathway::init( string pathIn, string pathOut, string fileFreq, string fileT
 //
 MetaboliteGraph::vertex_descriptor Pathway::findVertex( unsigned int id, MetaboliteGraph &g )
 {
+    MetaboliteGraph::vertex_descriptor vdNull = NULL;
+
 	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph )
 	{
 		//cerr << g[vd].id << " == " << id << endl;
 		if( g[vd].id == id ) return vd;
 	}
+
+	return vdNull;
 }
 
 //
@@ -1459,9 +1463,9 @@ void Pathway::genLayoutSubGraphs( void )
             }
 		}
 
-//#ifdef  DEBUG
+#ifdef  DEBUG
 		printGraph( _layoutSubGraph[i] );
-//#endif // DEBUG
+#endif // DEBUG
 	}
 }
 
