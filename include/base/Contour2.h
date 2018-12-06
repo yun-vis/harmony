@@ -47,7 +47,7 @@ class Contour2 {
   public:
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
     Contour2();				// constructor (default)
     Contour2( vector< Polygon2 > __polygons );
@@ -82,9 +82,10 @@ class Contour2 {
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-    bool findVertexInComplex( Coord2 &coord, UndirectedBaseGraph &complex,
+    bool findVertexInComplex( const Coord2 &coord, UndirectedBaseGraph &complex,
                               UndirectedBaseGraph::vertex_descriptor &target );
     void createContour( void );
+    bool inContour( Coord2 &coord );
 
 //------------------------------------------------------------------------------
 //	Intersection check

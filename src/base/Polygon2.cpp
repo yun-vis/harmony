@@ -21,14 +21,6 @@ using namespace std;
 
 #include "base/Polygon2.h"
 
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Polygon_2.h>
-
-typedef CGAL::Exact_predicates_exact_constructions_kernel K;
-typedef CGAL::Polygon_2< K >::Vertex_circulator           Vertex_circulator;
-
-using CGAL::ORIGIN;
-
 //------------------------------------------------------------------------------
 //	Macro Definitions
 //------------------------------------------------------------------------------
@@ -249,6 +241,33 @@ void Polygon2::updateOrientation( void )
             _elements.push_back( Coord2( CGAL::to_double( p[i].x() ), CGAL::to_double( p[i].y() ) ) );
         }
     }
+}
+
+//
+//  Polygon2::updateOrientation --    update polygon elements if they are not counterclockwise
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+bool Polygon2::inPolygon( const Coord2 &coord )
+{
+    K::Point_2 *points = new K::Point_2[ _elements.size() ];
+    CGAL::Point_2< K > pt( coord.x(), coord.y() );
+
+    for( unsigned int i = 0; i < _elements.size(); i++ ){
+        points[i] = K::Point_2( _elements[i].x(), _elements[i].y() );
+    }
+
+    CGAL::Bounded_side bside = CGAL::bounded_side_2( points, points+_elements.size(), pt );
+
+    if( bside == CGAL::ON_BOUNDED_SIDE ) {
+        return true;
+    }
+
+    return false;
 }
 
 //------------------------------------------------------------------------------

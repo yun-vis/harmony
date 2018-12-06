@@ -592,8 +592,13 @@ void Cell::updatePathwayCoords( void )
             for( unsigned int j = 0; j < lsubgSize; j++ ){
 
                 //ForceGraph::vertex_descriptor vdC = vertex( itC->second.cellVec[j], lsubg[i] );
-                lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%20-10.0;
-                lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%20-10.0;
+                double x = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%20-10.0;
+                double y = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%20-10.0;
+
+                while( !itC->second.contour.inPolygon( Coord2( x, y ) ) ){
+                    x = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%40-10.0;
+                    y = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%40-10.0;
+                }
                 //lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%100-50.0;
                 //lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%100-50.0;
             }
@@ -912,7 +917,9 @@ void Cell::additionalForces( void )
                              _forceCellVec[ idT ].width() + _forceCellVec[ idT ].width() );
         double LA = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgS ) ) );
         double LB = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgT ) ) );
-        double L = 0.5*( LA+LB );
+        double L = 0.01*( LA+LB );
+
+        //cerr << "L = " << L << endl;
 
         Coord2 diff, unit;
         double dist;
@@ -922,7 +929,7 @@ void Cell::additionalForces( void )
         if( dist == 0 ) unit.zero();
         else unit = diff.unit();
 
-        *fgS[ vdS ].forcePtr -= _paramAddKa * ( dist - L ) * unit;
+        *fgS[ vdS ].forcePtr += _paramAddKa * ( dist - L ) * unit;
         *fgT[ vdT ].forcePtr += _paramAddKa * ( dist - L ) * unit;
     }
 }

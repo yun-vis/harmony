@@ -38,13 +38,15 @@ void printGraph( UndirectedBaseGraph & graph )
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print vertex information
     BGL_FORALL_VERTICES( vd, graph, UndirectedBaseGraph ) {
 
-        UndirectedBaseGraph::degree_size_type      degrees         = out_degree( vd, graph );
+        //UndirectedBaseGraph::degree_size_type      degrees         = out_degree( vd, graph );
+		cerr << " id = " << graph[vd].id
+			 << endl;
     }
-#endif  // DEBUG
+//#endif  // DEBUG
 
 #ifdef  DEBUG
     // print edge information

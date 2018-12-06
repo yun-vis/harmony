@@ -44,7 +44,7 @@ bool Road::_findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descrip
     return isFound;
 }
 
-void Road::_findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target )
+bool Road::_findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target )
 {
     double dist = INFINITY;
     BGL_FORALL_VERTICES( vd, _road, UndirectedBaseGraph )
@@ -56,7 +56,14 @@ void Road::_findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_
         }
     }
 
-    _road[target].flag = true;
+    if( dist == INFINITY ){
+        return false;
+    }
+    else{
+
+        _road[target].flag = true;
+        return true;
+    }
 }
 
 void Road::_findShortestPaths( void )
@@ -66,15 +73,42 @@ void Road::_findShortestPaths( void )
 
     for( unsigned int i = 0; i < nSystems; i++ ) {
         for( unsigned int j = 0; j < nSystems; j++ ){
-            if( ( i != j ) && ( _highwayMat[i][j].count > 0 ) ) {
+            if( ( i < j ) && ( _highwayMat[i][j].common.size() > 0 ) && ( _highwayMat[j][i].common.size() > 0 ) ) {
 
                 //UndirectedBaseGraph::vertex_descriptor vd = vertex( 0, _road );
-                vector<double> distances( num_vertices( _road ) );
-                dijkstra_shortest_paths( _road, _highwayMat[i][j].routerVD,
-                                         vertex_index_map( get( &BaseVertexProperty::id, _road ) )
-                                        .weight_map( get( &BaseEdgeProperty::weight, _road ) )
-                                        .distance_map( make_iterator_property_map( distances.begin(),
-                                                                                   get( &BaseVertexProperty::id, _road ))));
+                vector< double > distances( num_vertices( _road ) );
+                vector< UndirectedBaseGraph::vertex_descriptor > predecessor( num_vertices( _road ) );
+                dijkstra_shortest_paths( _road, _highwayMat[j][i].routerVD,
+                                         vertex_index_map( get( &BaseVertexProperty::id, _road ) )                                                              
+                                         .predecessor_map( make_iterator_property_map( predecessor.begin(),
+                                                                                   get( &BaseVertexProperty::id, _road )))
+                                         .distance_map( make_iterator_property_map( distances.begin(),
+                                                                                    get( &BaseVertexProperty::id, _road )))
+                                         .weight_map( get( &BaseEdgeProperty::weight, _road ) )
+                                                                                   );
+                
+                UndirectedBaseGraph::vertex_descriptor vdTarget = _highwayMat[i][j].routerVD;
+                while( true ){
+
+                    if( vdTarget == _highwayMat[j][i].routerVD ){
+                        break;
+                    }
+                    else{
+                        _highwayMat[i][j].path.push_back( vdTarget );
+                        vdTarget = predecessor[ _road[ vdTarget ].id ];
+                    }
+                }
+                _highwayMat[i][j].path.push_back( vdTarget );
+
+//#ifdef DEBUG
+
+                cerr << "( " << _road[_highwayMat[i][j].routerVD].id
+                     << ", " << _road[_highwayMat[j][i].routerVD].id << " ): ";
+                for( unsigned int k = 0; k < _highwayMat[i][j].path.size(); k++ ){
+                    cerr << _road[ _highwayMat[i][j].path[k] ].id << " ";
+                }
+                cerr << endl;
+//#endif // DEBUG
             }
         }
     }
@@ -149,6 +183,8 @@ void Road::_init( vector< multimap< int, CellComponent > > & cellComponentVec )
             }
         }
     }
+
+    printGraph( _road );
 }
 
 
@@ -193,59 +229,123 @@ void Road::buildRoad( void )
     // compute highway
     for( unsigned int i = 0; i < nSystems; i++ ){
 
-        MetaboliteGraph & mg = subg[i];
         map< string, int >  count;
 
-        BGL_FORALL_VERTICES( vd, mg, MetaboliteGraph ) {
-
-            if( mg[vd].isAlias == true ){
-
-                map< string, int >::iterator itA = count.find( *mg[ vd ].namePtr );
-                if( itA != count.end() ){
-                    itA->second++;
-                }
-                else{
-                    count.insert( pair< string, int >( *mg[ vd ].namePtr, 1 ) );
-                }
+        // aliases in the subsystem
+        map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor > aliasVDMapO;
+        BGL_FORALL_VERTICES( vd, subg[i], MetaboliteGraph ) {
+            if( subg[i][vd].isAlias == true ){
+                aliasVDMapO.insert( pair< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >( vd, vd ) );
             }
         }
 
-        map< string, int >::iterator itC = count.begin();
-        for( itC = count.begin(); itC != count.end(); itC++ ){
-            cerr << itC->first << " = " << itC->second << endl;
+#ifdef DEBUG
+        cerr << i << ": mapO: " << endl;
+        map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >::iterator itO;
+        for( itO = aliasVDMapO.begin(); itO != aliasVDMapO.end(); itO++ ){
+            cerr << *subg[i][ itO->first ].namePtr << ", ";
         }
-        cerr << endl;
+        cerr << endl << endl;
+#endif // DEBUG
 
-        for( unsigned int j = 0; j < nSystems; j++ ){
+        for( unsigned int j = i+1; j < nSystems; j++ ){
 
+            // aliases in the subsystem
+            map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor > aliasVDMapI;
             BGL_FORALL_VERTICES( vd, subg[j], MetaboliteGraph ) {
 
                 if( subg[j][vd].isAlias == true ){
+                    aliasVDMapI.insert( pair< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >( vd, vd ) );
+                }
+            }
 
-                    map< string, int >::iterator itC = count.begin();
-                    for( itC = count.begin(); itC != count.end(); itC++ ){
+#ifdef DEBUG
+            cerr << j << ": mapI: " << endl;
+            map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >::iterator itI;
+            for( itI = aliasVDMapI.begin(); itI != aliasVDMapI.end(); itI++ ){
+                cerr << *subg[j][ itI->first ].namePtr << ", ";
+            }
+            cerr << endl << endl;
+#endif // DEBUG
 
-                        if( *subg[j][vd].namePtr == itC->first ){
-                            _highwayMat[i][j].count += itC->second;
-                            _highwayMat[i][j].center += *subg[j][vd].coordPtr;
-                        }
+            map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor > commonIJMap;
+            map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor > commonJIMap;
+            map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >::iterator itO;
+            for( itO = aliasVDMapO.begin(); itO != aliasVDMapO.end(); itO++ ){
+
+                map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >::iterator itI;
+                for( itI = aliasVDMapI.begin(); itI != aliasVDMapI.end(); itI++ ){
+
+#ifdef DEBUG
+                    cerr << *subg[i][ itO->first ].namePtr << " ?= " << *subg[j][ itI->first ].namePtr;
+                    cerr << " eq = " << subg[i][ itO->first ].namePtr->compare( *subg[j][ itI->first ].namePtr );
+                    cerr << " eq2 = " << ( *subg[i][ itO->first ].namePtr == *subg[j][ itI->first ].namePtr ) << endl;
+#endif // DEBUG
+                    if ( *subg[i][ itO->first ].namePtr == *subg[j][ itI->first ].namePtr ) {
+                        commonIJMap.insert( pair< MetaboliteGraph::vertex_descriptor,
+                                                  MetaboliteGraph::vertex_descriptor >( itO->first,
+                                                                                        itO->first ) );
+                        commonJIMap.insert( pair< MetaboliteGraph::vertex_descriptor,
+                                            MetaboliteGraph::vertex_descriptor >( itI->first,
+                                                                                  itI->first ) );
                     }
                 }
             }
+
+            map< UndirectedBaseGraph::vertex_descriptor,
+                 UndirectedBaseGraph::vertex_descriptor >::iterator itC;
+            Coord2 centerIJ( 0.0, 0.0 );
+            Coord2 centerJI( 0.0, 0.0 );
+            for( itC = commonIJMap.begin(); itC != commonIJMap.end(); itC++ ){
+                centerIJ += *subg[i][ itC->first ].coordPtr;
+                //cerr << *mg[ itC->first ].coordPtr << ", ";
+            }
+            for( itC = commonJIMap.begin(); itC != commonJIMap.end(); itC++ ){
+                centerJI += *subg[j][ itC->first ].coordPtr;
+                //cerr << *mg[ itC->first ].coordPtr << ", ";
+            }
+
+            _highwayMat[i][j].common = commonIJMap;
+            _highwayMat[j][i].common = commonJIMap;
+            _highwayMat[i][j].center = centerIJ/(double)commonIJMap.size();
+            _highwayMat[j][i].center = centerJI/(double)commonJIMap.size();
+
+#ifdef DEBUG
+            cerr << "**********************" << endl << endl;
+            cerr << "common( " << i << ", " << j << " ): ";
+            for( itC = commonIJMap.begin(); itC != commonIJMap.end(); itC++ ){
+                cerr << *subg[i][ itC->first ].namePtr << ", ";
+            }
+            cerr << endl;
+            cerr << "common( " << j << ", " << i << " ): ";
+            for( itC = commonJIMap.begin(); itC != commonJIMap.end(); itC++ ){
+                cerr << *subg[j][ itC->first ].namePtr << ", ";
+            }
+            cerr << endl;
+            cerr << "**********************" << endl << endl;
+#endif // DEBUG
         }
     }
 
+    // find routers
     for( unsigned int i = 0; i < nSystems; i++ ) {
         for( unsigned int j = 0; j < nSystems; j++ ){
-            if( ( i != j ) && ( _highwayMat[i][j].count > 0 ) ){
+            if( ( i != j ) && ( _highwayMat[i][j].common.size() > 0 ) ){
 
                 UndirectedBaseGraph::vertex_descriptor vd;
-                Coord2 c = _highwayMat[i][j].center / _highwayMat[i][j].count;
-                _findClosestVertexInRoad( c, vd );
+                //Coord2 c = _highwayMat[i][j].center / (double)_highwayMat[i][j].common.size();
+                bool found = _findClosestVertexInRoad( _highwayMat[i][j].center, vd );
+                assert( found );
                 _highwayMat[i][j].routerVD = vd;
+#ifdef DEBUG
+                cerr << "_highwayMat[" << i << "][" << j << "].center = " << _highwayMat[i][j].center;
+                cerr << " routerVD = " << _road[vd].id << endl;
+#endif // DEBUG
             }
         }
     }
+
+    _findShortestPaths();
 
 #ifdef DEBUG
     for( unsigned int i = 0; i < nSystems; i++ ) {

@@ -136,7 +136,7 @@ Contour2 & Contour2::operator = ( const Contour2 & p )
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-bool Contour2::findVertexInComplex( Coord2 &coord, UndirectedBaseGraph &complex,
+bool Contour2::findVertexInComplex( const Coord2 &coord, UndirectedBaseGraph &complex,
                                     UndirectedBaseGraph::vertex_descriptor &target )
 {
     bool isFound = false;
@@ -256,7 +256,9 @@ void Contour2::createContour( void )
     UndirectedBaseGraph::out_edge_iterator eo, eo_end;
     UndirectedBaseGraph::vertex_descriptor vdC = vdS;
     //cerr << "idC = " << complex[vdC].id << " ";
-    _contour.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
+
+    Polygon2 polygon;
+    polygon.elements().push_back( Coord2( complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y() ) );
     while( true ){
 
         UndirectedBaseGraph::vertex_descriptor vdT = NULL;
@@ -274,13 +276,51 @@ void Contour2::createContour( void )
         if( vdS == vdT ) break;
         else assert( vdT != NULL );
         //cerr << complex[vdT].id << " ";
-        _contour.elements().push_back( Coord2( complex[vdT].coordPtr->x(), complex[vdT].coordPtr->y() ) );
+        polygon.elements().push_back( Coord2( complex[vdT].coordPtr->x(), complex[vdT].coordPtr->y() ) );
         vdC = vdT;
     }
+
+    // simplify polygon
+    cerr << "size = " << polygon.elements().size() << endl;
+    for( unsigned int i = 0; i < polygon.elements().size(); i++ ){
+
+        Coord2 prev;
+        if( i == 0 ) prev = polygon.elements()[polygon.elements().size()-1];
+        else prev = polygon.elements()[i-1];
+
+        Coord2 curr = polygon.elements()[i];
+        Coord2 next = polygon.elements()[(i+1)%polygon.elements().size()];
+        Coord2 vecA = prev-curr;
+        Coord2 vecB = next-curr;
+
+#ifdef DEBUG
+        cerr << i << ": " << (i-1)%polygon.elements().size() << endl;
+        cerr << "prev = " << prev;
+        cerr << "next = " << next;
+        cerr << "curr = " << curr;
+        cerr << "vecA = " << vecA;
+        cerr << "vecB = " << vecB;
+#endif // DEBUG
+
+        double cosTheta = vecA*vecB/(vecA.norm()*vecB.norm());
+        if( fabs( M_PI-acos( cosTheta ) ) > 0.1 ){
+            //cerr << "acos = " << acos( cosTheta ) << endl;
+            _contour.elements().push_back( polygon.elements()[i] );
+        }
+    }
+
     _contour.updateCentroid();
     _contour.updateOrientation();
-    //cerr << "centroid = " << polygon.centroid() << endl;
-    //cerr << "p[" << i << "] = " << polygon << endl;
+#ifdef DEBUG
+    cerr << "centroid = " << polygon.centroid() << endl;
+    cerr << "p[" << i << "] = " << polygon << endl;
+    cerr << "contour = " << _contour << endl;
+#endif // DEBUGs
+}
+
+bool Contour2::inContour( Coord2 &coord )
+{
+    return _contour.inPolygon( coord );
 }
 
 //------------------------------------------------------------------------------

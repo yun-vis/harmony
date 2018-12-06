@@ -29,6 +29,11 @@
         <formula>C10H17NO3</formula>
         <description>ecgoninium methyl ester(1+)</description>
     </metabolite>
+    <metabolite>
+        <name>coke[r]</name>
+        <formula>C17H21NO4</formula>
+        <description>cocaine(1+)</description>
+    </metabolite>
 </metabolites>
 <reactions>
     <reaction>
@@ -36,6 +41,7 @@
         <name>alanine-glyoxylate transaminase (irreversible), mitochondrial</name>
         <reactant>h2o[r]</reactant>
         <reactant>gly[x]</reactant>
+        <reactant>coke[r]</reactant>
         <product>gly[m]</product>
         <reversible>false</reversible>
         <subsystem>Alanine and aspartate metabolism</subsystem>

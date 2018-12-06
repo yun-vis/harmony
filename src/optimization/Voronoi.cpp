@@ -261,7 +261,7 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
         //into a polygon. You'd think there'd be an easy way to do this. But there
         //isn't (or I haven't found it).
         CGAL::Polygon_2< K > bpoly;
-        vector< Coord2 > &eleVec = _contourPtr->elements();
+        const vector< Coord2 > &eleVec = _contourPtr->elements();
 
         for( unsigned int i = 0; i < eleVec.size(); i++ ){
             bpoly.push_back( K::Point_2( eleVec[i].x(), eleVec[i].y() ));

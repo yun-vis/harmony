@@ -29,6 +29,11 @@
         <formula>C9H14NO3</formula>
         <description>pseudoecgonine</description>
     </metabolite>
+    <metabolite>
+        <name>glx[m]</name>
+        <formula>C2H1O3</formula>
+        <description>glyoxylate</description>
+    </metabolite>
 </metabolites>
 <reactions>
 <reaction>
@@ -44,6 +49,7 @@
         <name>Carboxylesterase (cocaine) (er)</name>
         <reactant>h2o[r]</reactant>
         <reactant>coke[r]</reactant>
+        <reactant>glx[m]</reactant>
         <product>h[r]</product>
         <product>egme[r]</product>
         <reversible>true</reversible>

@@ -28,9 +28,12 @@ using namespace std;
 class Highway
 {
 public:
-    unsigned int count;
-    Coord2  center;
-    UndirectedBaseGraph::vertex_descriptor routerVD;
+    unsigned int id;
+    // unsigned int count;
+    map< MetaboliteGraph::vertex_descriptor,
+         MetaboliteGraph::vertex_descriptor > common;
+    Coord2  center;                                   // average position of alias metabolites
+    UndirectedBaseGraph::vertex_descriptor routerVD;  // closest vd from center
     vector< UndirectedBaseGraph::vertex_descriptor > path;
 };
 
@@ -47,7 +50,7 @@ private:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void _findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
+    bool _findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     bool _findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     void _findShortestPaths( void );
     void _init( vector< multimap< int, CellComponent > > & cellComponentVec );
@@ -68,8 +71,8 @@ public:
     UndirectedBaseGraph &          road( void )        { return _road; }
     const UndirectedBaseGraph &    road( void ) const  { return _road; }
 
-    vector< vector < Highway > > &          hightwayMat( void )        { return _highwayMat; }
-    const vector< vector < Highway > > &    hightwayMat( void ) const  { return _highwayMat; }
+    vector< vector < Highway > > &          highwayMat( void )        { return _highwayMat; }
+    const vector< vector < Highway > > &    highwayMat( void ) const  { return _highwayMat; }
 
 
 //------------------------------------------------------------------------------

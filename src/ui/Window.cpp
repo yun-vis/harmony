@@ -594,7 +594,7 @@ void Window::timerPathway( void )
 
         for( ; itC != cellComponentMap.end(); itC++ ){
 
-            cerr << "mode = " << itC->second.detail.mode() << endl;
+            // cerr << "mode = " << itC->second.detail.mode() << endl;
             switch ( itC->second.detail.mode() ) {
 
                 case TYPE_FORCE:
@@ -704,7 +704,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             cerr << "stop timer event" << endl;
             _timerStop();
-            simulateKey( Qt::Key_P );
+            //simulateKey( Qt::Key_P );
             _timerPathwayCellStop();
             assert( _timer.size() == 0 );
             simulateKey( Qt::Key_9 );
@@ -844,10 +844,10 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_V:
         {
-            //_pathway->init( "../xml/tiny/", "../xml/tmp/",
-            //                "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
-            _pathway->init( "../xml/small/", "../xml/tmp/",
+            _pathway->init( "../xml/tiny/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
+            //_pathway->init( "../xml/small/", "../xml/tmp/",
+            //                "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             _pathway->generate();
 
             _boundary->init( _pathway->skeletonG() );

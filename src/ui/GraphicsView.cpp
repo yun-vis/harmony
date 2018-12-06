@@ -458,13 +458,29 @@ void GraphicsView::_item_cellPolygonComplex( void )
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
+
+#ifdef DEBUG
+            for( unsigned int j = 0; j < c.elements().size(); j++ ){
+
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( c.elements()[j].x(), -c.elements()[j].y(), 10, 10 ) );
+                itemptr->id() = 0;
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
+#endif // DEBUG
         }
     }
 }
 
 void GraphicsView::_item_road( void )
 {
+    vector< MetaboliteGraph >   &subg      = _pathway->subG();
     UndirectedBaseGraph &road    = _roadPtr->road();
+    vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
 
     // draw edges
     BGL_FORALL_EDGES( ed, road, UndirectedBaseGraph ) {
@@ -497,6 +513,114 @@ void GraphicsView::_item_road( void )
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
     }
+
+    // draw paths
+    for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
+        for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
+
+            if( i != j && ( highwayMat[i][j].common.size() > 0 ) && ( highwayMat[j][i].common.size() > 0 ) ){
+                vector< UndirectedBaseGraph::vertex_descriptor > &vdVec = highwayMat[i][j].path;
+
+                QPainterPath path;
+                for( unsigned int k = 0; k < vdVec.size(); k++ ){
+
+                    if( k == 0 )
+                        path.moveTo( road[ vdVec[k] ].coordPtr->x(), -road[ vdVec[k] ].coordPtr->y() );
+                    else
+                        path.lineTo( road[ vdVec[k] ].coordPtr->x(), -road[ vdVec[k] ].coordPtr->y() );
+                }
+
+                // add path
+                GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+                //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+                itemptr->setPen( QPen( QColor( 0, 255, 0, 150 ), 3 ) );
+                itemptr->setPath( path );
+                _scene->addItem( itemptr );
+            }
+        }
+    }
+
+    // draw routers
+    for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
+        for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
+            if( i != j && ( highwayMat[i][j].common.size() > 0 ) && ( highwayMat[j][i].common.size() > 0 ) ){
+
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 10 ) );
+                itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF(  road[ highwayMat[i][j].routerVD ].coordPtr->x(),
+                                          -road[ highwayMat[i][j].routerVD ].coordPtr->y(), 10, 10 ) );
+                itemptr->id() = highwayMat[i][j].id;
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
+        }
+    }
+
+    // draw local edges
+    for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
+        for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
+
+            if( i != j && ( highwayMat[i][j].common.size() > 0 ) && ( highwayMat[j][i].common.size() > 0 ) ) {
+
+                map< MetaboliteGraph::vertex_descriptor,
+                     MetaboliteGraph::vertex_descriptor > &commonMap = highwayMat[i][j].common;
+                map< MetaboliteGraph::vertex_descriptor,
+                     MetaboliteGraph::vertex_descriptor >::iterator itC;
+
+                for( itC = commonMap.begin(); itC != commonMap.end(); itC++ ){
+
+                    QPainterPath path;
+                    path.moveTo( subg[i][ itC->first ].coordPtr->x(), -subg[i][ itC->first ].coordPtr->y() );
+                    path.lineTo( road[ highwayMat[i][j].routerVD ].coordPtr->x(),
+                                 -road[ highwayMat[i][j].routerVD ].coordPtr->y() );
+#ifdef DEBUG
+                    cerr << "local = " << *subg[i][ itC->first ].coordPtr;
+                    cerr << "router = " << *road[ highwayMat[i][j].routerVD ].coordPtr << endl;
+#endif // DEBUG
+                    // add path
+                    GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+                    //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+                    itemptr->setPen( QPen( QColor( 0, 255, 0, 150 ), 3 ) );
+                    itemptr->setPath( path );
+                    _scene->addItem( itemptr );
+                }
+            }
+        }
+    }
+
+/*
+    for( unsigned int i = 0; i < subg.size(); i++ ){
+
+        BGL_FORALL_VERTICES( vd, subg[i], MetaboliteGraph ) {
+
+            if( subg[i][vd].isAlias == true ){
+
+                for( unsigned int j = 0; j < highwayMat[i].size(); j++ ){
+
+                    if( i != j && ( highwayMat[j][i].common.size() > 0 ) && ( highwayMat[i][j].common.size() > 0 ) ){
+                        QPainterPath path;
+                        path.moveTo( subg[i][vd].coordPtr->x(), -subg[i][vd].coordPtr->y() );
+
+                        path.lineTo( road[ highwayMat[i][j].routerVD ].coordPtr->x(),
+                                     -road[ highwayMat[i][j].routerVD ].coordPtr->y() );
+
+                        // add path
+                        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+                        //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+                        itemptr->setPen( QPen( QColor( 0, 255, 0, 150 ), 3 ) );
+                        itemptr->setPath( path );
+                        _scene->addItem( itemptr );
+                    }
+                }
+            }
+        }
+    }
+*/
 }
 
 
