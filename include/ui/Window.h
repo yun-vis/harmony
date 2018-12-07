@@ -50,6 +50,7 @@ private:
     // cells of subgraphs
     Cell            _cell;
     Road            _road;
+    vector< Road >  _lane;
 
     Smooth          _smooth;
     Octilinear      _octilinear;

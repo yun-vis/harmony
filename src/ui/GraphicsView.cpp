@@ -203,7 +203,7 @@ void GraphicsView::_item_subpathways( void )
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
 #ifdef DEBUG
-    if(  _is_pathwayFlag ){
+    if( _is_subPathwayFlag ){
         for( unsigned int i = 0; i < subg.size(); i++ ){
             printGraph( subg[ i ] );
         }
@@ -476,6 +476,50 @@ void GraphicsView::_item_cellPolygonComplex( void )
     }
 }
 
+void GraphicsView::_item_pathwayPolygons( void )
+{
+    vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+
+    for( unsigned int k = 0; k < cellCVec.size(); k++ ){
+
+
+        multimap< int, CellComponent > &componentMap = cellCVec[k];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+
+
+        for( ; itC != componentMap.end(); itC++ ){
+
+            Force &f = itC->second.detail;
+
+            // draw polygons
+            vector< Seed > &seedVec = *f.voronoi().seedVec();
+
+            for( unsigned int i = 0; i < seedVec.size(); i++ ) {
+
+                Polygon2 &p = seedVec[i].cellPolygon;
+
+                QPolygonF polygon;
+                for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                    polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                    // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+                }
+
+                GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+                vector< double > rgb;
+
+                pickBrewerColor( k, rgb );
+                QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+                itemptr->setPolygon( polygon );
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
+        }
+    }
+}
+
 void GraphicsView::_item_road( void )
 {
     vector< MetaboliteGraph >   &subg      = _pathway->subG();
@@ -541,6 +585,7 @@ void GraphicsView::_item_road( void )
         }
     }
 
+/*
     // draw routers
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
@@ -558,6 +603,7 @@ void GraphicsView::_item_road( void )
             }
         }
     }
+*/
 
     // draw local edges
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
@@ -623,6 +669,107 @@ void GraphicsView::_item_road( void )
 */
 }
 
+void GraphicsView::_item_lane( void )
+{
+    vector< Road > &lane = *_lanePtr;
+
+    for( unsigned int i = 0; i < 1; i++ ){
+    //for( unsigned int i = 0; i < lane.size(); i++ ){
+
+        UndirectedBaseGraph &road = lane[i].road();
+        //vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
+
+        // draw edges
+        BGL_FORALL_EDGES( ed, road, UndirectedBaseGraph ) {
+
+            UndirectedBaseGraph::vertex_descriptor vdS = source( ed, road );
+            UndirectedBaseGraph::vertex_descriptor vdT = target( ed, road );
+
+            QPainterPath path;
+            path.moveTo( road[ vdS ].coordPtr->x(), -road[ vdS ].coordPtr->y() );
+            path.lineTo( road[ vdT ].coordPtr->x(), -road[ vdT ].coordPtr->y() );
+
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+            //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 5 ) );
+            itemptr->setPath( path );
+            _scene->addItem( itemptr );
+        }
+
+        // draw vertices
+        BGL_FORALL_VERTICES( vd, road, UndirectedBaseGraph ) {
+
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( road[vd].coordPtr->x(), -road[vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = road[ vd ].id;
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+
+    // draw routers
+    for( unsigned int i = 0; i < 1; i++ ){
+    //for( unsigned int i = 0; i < lane.size(); i++ ){
+
+        UndirectedBaseGraph &road = lane[i].road();
+        vector < Terminal > &terminalVec = lane[i].terminalVec();
+
+        for( unsigned int j = 0; j < terminalVec.size(); j++ ){
+
+            if( i != j ){
+                Coord2 &coord = *road[ terminalVec[j].routerVD ].coordPtr;
+
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 10 ) );
+                itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( coord.x(), -coord.y(), 10, 10 ) );
+                itemptr->id() = road[ terminalVec[j].routerVD ].id;
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
+        }
+    }
+
+    // draw steiner tree
+    //for( unsigned int i = 0; i < 1; i++ ){
+    for( unsigned int i = 0; i < lane.size(); i++ ){
+
+        UndirectedBaseGraph &road = lane[i].road();
+        vector < Terminal > &terminalVec = lane[i].terminalVec();
+
+        for( unsigned int j = 0; j < terminalVec.size(); j++ ){
+
+            if( i != j ){
+
+                for( unsigned int k = 0; k < terminalVec[j].treeEdges.size(); k++ ){
+
+                    QPainterPath path;
+                    Coord2 &coordS = *road[ terminalVec[j].treeEdges[k].first ].coordPtr;
+                    Coord2 &coordT = *road[ terminalVec[j].treeEdges[k].second ].coordPtr;
+                    path.moveTo( coordS.x(), -coordS.y() );
+                    path.lineTo( coordT.x(), -coordT.y() );
+
+                    // add path
+                    GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+                    //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+                    itemptr->setPen( QPen( QColor( 255, 0, 0, 200 ), 5 ) );
+                    itemptr->setPath( path );
+                    _scene->addItem( itemptr );
+
+                }
+            }
+        }
+    }
+
+
+}
 
 //------------------------------------------------------------------------------
 //	Public functions
@@ -638,15 +785,17 @@ void GraphicsView::initSceneItems ( void )
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
     if( _is_boundaryFlag == true ) _item_boundary();
-    //if( _is_pathwayFlag == true ) _item_pathways();
-    if( _is_pathwayFlag == true ) _item_subpathways();
+    //if( _is_subPathwayFlag == true ) _item_pathways();
+    if( _is_subPathwayFlag == true ) _item_subpathways();
     if( _is_cellFlag == true ) {
         _item_cells();
         _item_interCellComponents();
     }
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
+    if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
+    if( _is_laneFlag == true ) _item_lane();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -694,7 +843,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_skeletonFlag = false;
     _is_compositeFlag = false;
     _is_boundaryFlag = false;
-    _is_pathwayFlag = false;
+    _is_subPathwayFlag = false;
     _is_cellFlag = false;
     _is_cellPolygonFlag = false;
     _is_cellPolygonComplexFlag = false;

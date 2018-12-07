@@ -119,6 +119,7 @@ set(HEADERS
         include/optimization/Smooth.h
         include/optimization/Similarity.h
         include/optimization/Layout.h
+        inlcude/steinertree/include.h
         include/ui/GraphicsBallItem.h
         include/ui/GraphicsEdgeItem.h
         include/ui/GraphicsPolygonItem.h
@@ -175,6 +176,8 @@ set(SOURCES
         src/optimization/Smooth.cpp
         src/optimization/Similarity.cpp
         src/optimization/Layout.cpp
+        src/steinertree/dijkstra.cpp
+        src/steinertree/spanningtree.cpp
         src/ui/GraphicsBallItem.cpp
         src/ui/GraphicsEdgeItem.cpp
         src/ui/GraphicsPolygonItem.cpp

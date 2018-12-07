@@ -34,7 +34,27 @@ public:
          MetaboliteGraph::vertex_descriptor > common;
     Coord2  center;                                   // average position of alias metabolites
     UndirectedBaseGraph::vertex_descriptor routerVD;  // closest vd from center
+    Coord2 routerCoord;
     vector< UndirectedBaseGraph::vertex_descriptor > path;
+};
+
+class Terminal
+{
+public:
+
+    map< MetaboliteGraph::vertex_descriptor,
+         MetaboliteGraph::vertex_descriptor > common;
+
+    map< MetaboliteGraph::vertex_descriptor,
+         UndirectedBaseGraph::vertex_descriptor > commonGates; // in lane
+
+    UndirectedBaseGraph::vertex_descriptor routerVD;        // in lane
+
+    map< UndirectedBaseGraph::vertex_descriptor,
+         UndirectedBaseGraph::vertex_descriptor > terminals; // gates + router
+
+    vector< pair< UndirectedBaseGraph::vertex_descriptor,
+            UndirectedBaseGraph::vertex_descriptor > > treeEdges;
 };
 
 //----------------------------------------------------------------------
@@ -47,13 +67,19 @@ private:
     UndirectedBaseGraph             _road;
     vector< vector < Highway > >    _highwayMat;
 
+    unsigned int                    _gid;
+    vector < Terminal >             _terminalVec;
+    //vector < Highway >            * _highwayRoadPtr;
+
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
     bool _findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
+    bool _findClosestVertexInLane( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     bool _findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     void _findShortestPaths( void );
-    void _init( vector< multimap< int, CellComponent > > & cellComponentVec );
+    void _initRoad( vector< multimap< int, CellComponent > > & cellComponentVec );
+    void _initLane( unsigned int gid,  multimap< int, CellComponent > & cellComponent, vector < Highway > * highwayRoadPtr );
     void _clear( void );
 
 protected:
@@ -74,6 +100,8 @@ public:
     vector< vector < Highway > > &          highwayMat( void )        { return _highwayMat; }
     const vector< vector < Highway > > &    highwayMat( void ) const  { return _highwayMat; }
 
+    vector< Terminal > &          terminalVec( void )        { return _terminalVec; }
+    const vector< Terminal > &    terminalVec( void ) const  { return _terminalVec; }
 
 //------------------------------------------------------------------------------
 //  Find conflicts
@@ -83,12 +111,16 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
     void buildRoad( void );
+    void steinerTree( void );
 
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( vector< multimap< int, CellComponent > > & __cellComponentVec ) {
-        _init( __cellComponentVec );
+    void initRoad( vector< multimap< int, CellComponent > > & __cellComponentVec ) {
+        _initRoad( __cellComponentVec );
+    }
+    void initLane( unsigned int gid, multimap< int, CellComponent > & __cellComponent, vector < Highway > *__highwayRoadPtr ) {
+        _initLane( gid, __cellComponent, __highwayRoadPtr );
     }
     void clear( void ) { _clear(); }
 

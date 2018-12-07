@@ -785,7 +785,9 @@ void Pathway::genGraph( void )
 	cerr << "num of edges = " << num_edges( _graph ) << endl;
 	cerr << "num of 1_METABOLITE = " << numMeta << endl;
 
+#ifdef DEBUG
     printGraph( _graph );
+#endif // DEBUG
 
     genLayoutGraph();
 }
@@ -1403,11 +1405,11 @@ void Pathway::genLayoutSubGraphs( void )
 	_layoutSubGraph.resize( _subGraph.size() );
 	map< unsigned int, unsigned int > indexMap;
 
-	cerr << "subG size = " << _subGraph.size() << endl;
+	//cerr << "subG size = " << _subGraph.size() << endl;
 	for( unsigned int i = 0; i < _subGraph.size(); i++ ){
 
 		unsigned int nv = 0;
-		cerr << "node size = " << num_vertices( _subGraph[i] ) << " edge size = " << num_edges( _subGraph[i] ) << endl;
+		//cerr << "node size = " << num_vertices( _subGraph[i] ) << " edge size = " << num_edges( _subGraph[i] ) << endl;
 		BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ){
 
             ForceGraph::vertex_descriptor vdL = add_vertex( _layoutSubGraph[i] );
@@ -1429,7 +1431,7 @@ void Pathway::genLayoutSubGraphs( void )
 			_layoutSubGraph[i][ vdL ].widthPtr      = _subGraph[i][ vd ].widthPtr;
 			_layoutSubGraph[i][ vdL ].heightPtr     = _subGraph[i][ vd ].heightPtr;
 			indexMap.insert( pair< unsigned int, unsigned int >( _subGraph[i][ vd ].groupID, nv ) );
-			cerr << " gid = " << _subGraph[i][ vd ].groupID << " nv = " << nv << ", " << *_layoutSubGraph[i][ vdL ].namePtr << endl;
+			//cerr << " gid = " << _subGraph[i][ vd ].groupID << " nv = " << nv << ", " << *_layoutSubGraph[i][ vdL ].namePtr << endl;
 			nv++;
 		}
 
@@ -2148,7 +2150,7 @@ void Pathway::genDependencyGraph( void )
 
 	//genSubsysWeight();
     radialPlacement( _skeletonGraph );
-	printGraph( _skeletonGraph );
+	//printGraph( _skeletonGraph );
 }
 
 

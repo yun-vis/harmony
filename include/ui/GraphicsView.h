@@ -56,13 +56,14 @@ private:
     bool                _is_simplifiedFlag;
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
-                        _is_boundaryFlag, _is_pathwayFlag,
+                        _is_boundaryFlag, _is_subPathwayFlag,
                         _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
-                        _is_roadFlag;
+                        _is_roadFlag, _is_laneFlag, _is_pathwayPolygonFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
     Cell                *_cellPtr;
     Road                *_roadPtr;
+    vector< Road >      *_lanePtr;
 
 protected:
 
@@ -78,7 +79,9 @@ protected:
     void _item_cellPolygons( void );
     void _item_cellPolygonComplex( void );
     void _item_interCellComponents( void );
+    void _item_pathwayPolygons( void );
     void _item_road( void );
+    void _item_lane( void );
 
 public:
     explicit GraphicsView( QWidget *parent = 0 );
@@ -100,8 +103,10 @@ public:
     const bool &    isPolygonComplexFlag( void ) const     { return _is_polygonComplexFlag; }
     bool &          isBoundaryFlag( void )          { return _is_boundaryFlag; }
     const bool &    isBoundaryFlag( void ) const    { return _is_boundaryFlag; }
-    bool &          isPathwayFlag( void )           { return _is_pathwayFlag; }
-    const bool &    isPathwayFlag( void ) const     { return _is_pathwayFlag; }
+    bool &          isSubPathwayFlag( void )        { return _is_subPathwayFlag; }
+    const bool &    isSubPathwayFlag( void ) const  { return _is_subPathwayFlag; }
+    bool &          isPathwayPolygonFlag( void )        { return _is_pathwayPolygonFlag; }
+    const bool &    isPathwayPolygonFlag( void ) const  { return _is_pathwayPolygonFlag; }
     bool &          isCellFlag( void )              { return _is_cellFlag; }
     const bool &    isCellFlag( void ) const        { return _is_cellFlag; }
     bool &          isCellPolygonFlag( void )       { return _is_cellPolygonFlag; }
@@ -111,16 +116,20 @@ public:
 
     bool &          isRoadFlag( void )              { return _is_roadFlag; }
     const bool &    isRoadFlag( void ) const        { return _is_roadFlag; }
+    bool &          isLaneFlag( void )              { return _is_laneFlag; }
+    const bool &    isLaneFlag( void ) const        { return _is_laneFlag; }
 
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
     void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary,
-                                  Cell * __cellPtr, Road * __roadPtr ){
+                                  Cell * __cellPtr,
+                                  Road * __roadPtr, vector< Road > * __lanePtr ){
         _boundary = __boundary;
         _simplifiedBoundary = __simplifiedBoundary;
         _cellPtr = __cellPtr;
         _roadPtr = __roadPtr;
+        _lanePtr = __lanePtr;
     }
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );

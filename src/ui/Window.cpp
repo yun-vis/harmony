@@ -44,7 +44,7 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
     //if( _octilinearPtr == NULL ) assert( _octilinearPtr );
 
     _gv->setPathwayData( _pathway );
-    _gv->init( _boundary, _simplifiedBoundary, &_cell, &_road );
+    _gv->init( _boundary, _simplifiedBoundary, &_cell, &_road, &_lane );
 }
 
 void Window::createActions( void )
@@ -572,10 +572,27 @@ void Window::_timerPathwayStop( void )
     }
 
     if( !isActive ) {
+
         _timerStop();
-        _road.init( _cell.cellComponentVec() );
+        _road.initRoad( _cell.cellComponentVec() );
         _road.buildRoad();
         _gv->isRoadFlag() = true;
+
+        for( unsigned int i = 0; i < _road.highwayMat().size(); i++ ){
+            for( unsigned int j = 0; j < _road.highwayMat().size(); j++ ){
+                map< MetaboliteGraph::vertex_descriptor,
+                MetaboliteGraph::vertex_descriptor > common = _road.highwayMat()[i][j].common;
+            }
+        }
+
+        _lane.clear();
+        _lane.resize( _pathway->nSubsys() );
+        for( unsigned int i = 0; i < _lane.size(); i++ ){
+            //cerr << "**************" << endl;
+            _lane[i].initLane( i, _cell.cellComponentVec()[i], &(_road.highwayMat()[i]) );
+            _lane[i].steinerTree();
+        }
+        _gv->isLaneFlag() = true;
     }
 }
 
@@ -718,6 +735,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
             _timerPathwayStart();
+            _gv->isPathwayPolygonFlag() = true;
             break;
         }
         case Qt::Key_S:
@@ -792,7 +810,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _cell.createPolygonComplex();
             _cell.updatePathwayCoords();
             _gv->isCellPolygonComplexFlag() = true;
-            _gv->isPathwayFlag() = true;
+            _gv->isSubPathwayFlag() = true;
             redrawAllScene();
             break;
         }
@@ -845,9 +863,10 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_V:
         {
             _pathway->init( "../xml/tiny/", "../xml/tmp/",
-                            "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             //_pathway->init( "../xml/small/", "../xml/tmp/",
-            //                "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
+            //_pathway->init( "../xml/A/", "../xml/tmp/",
+                            "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
+
             _pathway->generate();
 
             _boundary->init( _pathway->skeletonG() );

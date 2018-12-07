@@ -281,7 +281,7 @@ void Contour2::createContour( void )
     }
 
     // simplify polygon
-    cerr << "size = " << polygon.elements().size() << endl;
+    //cerr << "size = " << polygon.elements().size() << endl;
     for( unsigned int i = 0; i < polygon.elements().size(); i++ ){
 
         Coord2 prev;
@@ -315,7 +315,7 @@ void Contour2::createContour( void )
     cerr << "centroid = " << polygon.centroid() << endl;
     cerr << "p[" << i << "] = " << polygon << endl;
     cerr << "contour = " << _contour << endl;
-#endif // DEBUGs
+#endif // DEBUG
 }
 
 bool Contour2::inContour( Coord2 &coord )
