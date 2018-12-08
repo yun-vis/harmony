@@ -55,8 +55,8 @@ private:
     vector< multimap< int, CellComponent > >        _cellComponentVec;          // int: number of nodes in lsubg
     map< unsigned int, Polygon2 >                  *_polygonComplexPtr;
     vector< vector< vector< double > > >            _cellComponentSimilarityVec;   // cell component similarity
-    multimap< Grid2, pair< CellComponent, CellComponent > > _interCellComponentMap;            // pair of inter cell component
-    multimap< Grid2, pair< CellComponent, CellComponent > > _reducedInterCellComponentMap;     // pair of inter cell component
+    multimap< Grid2, pair< CellComponent*, CellComponent* > > _interCellComponentMap;            // pair of inter cell component
+    multimap< Grid2, pair< CellComponent*, CellComponent* > > _reducedInterCellComponentMap;     // pair of inter cell component
 
     unsigned int    _nComponent;            // number of connected component
 
@@ -102,11 +102,11 @@ public:
     vector< multimap< int, CellComponent > > &  cellComponentVec( void )                { return _cellComponentVec; }
     const vector< multimap< int, CellComponent > > &  cellComponentVec( void ) const    { return _cellComponentVec; }
 
-    multimap< Grid2, pair< CellComponent, CellComponent > > & interCellComponentMap( void )                { return _interCellComponentMap; }
-    const multimap< Grid2, pair< CellComponent, CellComponent > > & interCellComponentMap( void ) const    { return _interCellComponentMap; }
+    multimap< Grid2, pair< CellComponent*, CellComponent* > > & interCellComponentMap( void )                { return _interCellComponentMap; }
+    const multimap< Grid2, pair< CellComponent*, CellComponent* > > & interCellComponentMap( void ) const    { return _interCellComponentMap; }
 
-    multimap< Grid2, pair< CellComponent, CellComponent > > & reducedInterCellComponentMap( void )                { return _reducedInterCellComponentMap; }
-    const multimap< Grid2, pair< CellComponent, CellComponent > > & reducedInterCellComponentMap( void ) const    { return _reducedInterCellComponentMap; }
+    multimap< Grid2, pair< CellComponent*, CellComponent* > > & reducedInterCellComponentMap( void )                { return _reducedInterCellComponentMap; }
+    const multimap< Grid2, pair< CellComponent*, CellComponent* > > & reducedInterCellComponentMap( void ) const    { return _reducedInterCellComponentMap; }
 
 //------------------------------------------------------------------------------
 //  Find conflicts

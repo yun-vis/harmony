@@ -161,6 +161,8 @@ void Road::_initLane( unsigned int gid,
 
         _terminalVec[i].common = (*highwayRoadPtr)[i].common;
 
+        cerr << "size = " << _terminalVec[i].common.size() << endl;
+
         map< UndirectedBaseGraph::vertex_descriptor,
                 UndirectedBaseGraph::vertex_descriptor >::iterator it;
         for( it = _terminalVec[i].common.begin();
@@ -525,6 +527,7 @@ void Road::buildRoad( void )
 
                 UndirectedBaseGraph::vertex_descriptor vd;
                 //Coord2 c = _highwayMat[i][j].center / (double)_highwayMat[i][j].common.size();
+                //cerr << "center = " << _highwayMat[i][j].center << endl;
                 bool found = _findClosestVertexInRoad( _highwayMat[i][j].center, vd );
                 assert( found );
                 _highwayMat[i][j].routerVD = vd;

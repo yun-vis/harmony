@@ -250,7 +250,7 @@ void GraphicsView::_item_subpathways( void )
                 cerr << " itC->second.groupID = " << itC->second.groupID << " dg[vd].initID = " << dg[vd].initID
                      << " subg[itC->second.groupID][vdF].initID = " << subg[itC->second.groupID][vdF].initID << endl;
 #endif // DEBUG
-                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                GraphicsVertexItem *itemptr = new GraphicsVertexItem;
                 itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
 
                 if( *g[ initVD ].isClonedPtr == true )
@@ -262,7 +262,7 @@ void GraphicsView::_item_subpathways( void )
                     itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
                 itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
                 itemptr->id() = dg[vd].id;
-                itemptr->name() = *g[ initVD ].namePtr;
+                itemptr->name() = QString::fromStdString( *g[ initVD ].namePtr );
 
                 //cerr << vertexCoord[vd];
                 _scene->addItem( itemptr );
@@ -359,16 +359,16 @@ void GraphicsView::_item_interCellComponents( void )
     vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
     // vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
-    //multimap< Grid2, pair< CellComponent, CellComponent > > & interCCMap = _cellPtr->interCellComponentMap();
-    multimap< Grid2, pair< CellComponent, CellComponent > > & interCCMap = _cellPtr->reducedInterCellComponentMap();
-    multimap< Grid2, pair< CellComponent, CellComponent > >::iterator itC;
+    //multimap< Grid2, pair< CellComponent*, CellComponent* > > & interCCMap = _cellPtr->interCellComponentMap();
+    multimap< Grid2, pair< CellComponent*, CellComponent* > > & interCCMap = _cellPtr->reducedInterCellComponentMap();
+    multimap< Grid2, pair< CellComponent*, CellComponent* > >::iterator itC;
 
     for( itC = interCCMap.begin(); itC != interCCMap.end(); itC++ ){
 
         unsigned int idS = itC->first.p();      // subsystem ID
         unsigned int idT = itC->first.q();      // subsystem ID
-        CellComponent &ccS = itC->second.first;
-        CellComponent &ccT = itC->second.second;
+        CellComponent &ccS = *itC->second.first;
+        CellComponent &ccT = *itC->second.second;
 
 #ifdef DEBUG
         cerr << "idS = " << idS << " idT = " << idT << endl;
@@ -386,6 +386,7 @@ void GraphicsView::_item_interCellComponents( void )
         itemptr->setPath( path );
 
         _scene->addItem( itemptr );
+
     }
 }
 
@@ -585,7 +586,7 @@ void GraphicsView::_item_road( void )
         }
     }
 
-/*
+//#ifdef SKIP
     // draw routers
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
@@ -603,8 +604,9 @@ void GraphicsView::_item_road( void )
             }
         }
     }
-*/
+//#endif // SKIP
 
+#ifdef SKIP
     // draw local edges
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
@@ -637,8 +639,9 @@ void GraphicsView::_item_road( void )
             }
         }
     }
+#endif // SKIP
 
-/*
+#ifdef SKIP
     for( unsigned int i = 0; i < subg.size(); i++ ){
 
         BGL_FORALL_VERTICES( vd, subg[i], MetaboliteGraph ) {
@@ -666,7 +669,7 @@ void GraphicsView::_item_road( void )
             }
         }
     }
-*/
+#endif // SKIP
 }
 
 void GraphicsView::_item_lane( void )
@@ -795,7 +798,7 @@ void GraphicsView::initSceneItems ( void )
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
-    if( _is_laneFlag == true ) _item_lane();
+    // if( _is_laneFlag == true ) _item_lane();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
@@ -838,16 +841,19 @@ GraphicsView::GraphicsView( QWidget *parent )
     _scene->setSceneRect( -DEFAULT_WIDTH/2.0, -DEFAULT_HEIGHT/2.0, DEFAULT_WIDTH, DEFAULT_HEIGHT );  // x, y, w, h
 
     _is_simplifiedFlag = false;
-    _is_polygonFlag = false;
-    _is_polygonComplexFlag = false;
     _is_skeletonFlag = false;
     _is_compositeFlag = false;
+    _is_polygonFlag = false;
+    _is_polygonComplexFlag = false;
     _is_boundaryFlag = false;
     _is_subPathwayFlag = false;
     _is_cellFlag = false;
     _is_cellPolygonFlag = false;
     _is_cellPolygonComplexFlag = false;
     _is_roadFlag = false;
+    _is_laneFlag = false;
+    _is_pathwayPolygonFlag = false;
+
     this->setScene( _scene );
 }
 

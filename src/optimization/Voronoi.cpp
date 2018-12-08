@@ -41,6 +41,11 @@ void Voronoi::_init( vector< Seed > & __seedVec, Polygon2 &__contour )
 //
 void Voronoi::_clear( void )
 {
+    _contourPtr = NULL;        // contour of the voronoi diagram
+
+    // seeds
+    _seedVecPtr = NULL;
+    _polyVec2D.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -402,6 +407,7 @@ Voronoi::Voronoi( void )
 //
 Voronoi::Voronoi( const Voronoi & obj )
 {
+    _clear();
 }
 
 

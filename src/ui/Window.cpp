@@ -576,23 +576,37 @@ void Window::_timerPathwayStop( void )
         _timerStop();
         _road.initRoad( _cell.cellComponentVec() );
         _road.buildRoad();
+        cerr << "road built..." << endl;
         _gv->isRoadFlag() = true;
 
+        cerr << "**************" << endl;
+        cerr << "Steriner tree" << endl;
+
         for( unsigned int i = 0; i < _road.highwayMat().size(); i++ ){
-            for( unsigned int j = 0; j < _road.highwayMat().size(); j++ ){
+            for( unsigned int j = 0; j < _road.highwayMat()[i].size(); j++ ){
+
                 map< MetaboliteGraph::vertex_descriptor,
-                MetaboliteGraph::vertex_descriptor > common = _road.highwayMat()[i][j].common;
+                MetaboliteGraph::vertex_descriptor > &common = _road.highwayMat()[i][j].common;
+
+                map< MetaboliteGraph::vertex_descriptor,
+                MetaboliteGraph::vertex_descriptor >::iterator it;
+                for( it = common.begin(); it != common.end(); it++ ){
+                    cerr << _pathway->subG()[i][ it->first ].id << endl;
+                }
+                cerr << endl;
             }
         }
 
         _lane.clear();
         _lane.resize( _pathway->nSubsys() );
         for( unsigned int i = 0; i < _lane.size(); i++ ){
-            //cerr << "**************" << endl;
-            _lane[i].initLane( i, _cell.cellComponentVec()[i], &(_road.highwayMat()[i]) );
+            vector < Highway > &highwayVec = _road.highwayMat()[i];
+            _lane[i].setPathwayData( _pathway );
+            _lane[i].initLane( i, _cell.cellComponentVec()[i], &highwayVec );
             _lane[i].steinerTree();
         }
         _gv->isLaneFlag() = true;
+
     }
 }
 
@@ -809,6 +823,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             _cell.createPolygonComplex();
             _cell.updatePathwayCoords();
+
             _gv->isCellPolygonComplexFlag() = true;
             _gv->isSubPathwayFlag() = true;
             redrawAllScene();
@@ -862,9 +877,9 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_V:
         {
-            _pathway->init( "../xml/tiny/", "../xml/tmp/",
+            //_pathway->init( "../xml/tiny/", "../xml/tmp/",
             //_pathway->init( "../xml/small/", "../xml/tmp/",
-            //_pathway->init( "../xml/A/", "../xml/tmp/",
+            _pathway->init( "../xml/A/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
 
             _pathway->generate();

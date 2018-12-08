@@ -18,6 +18,7 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "ui/GraphicsBallItem.h"
+#include "ui/GraphicsVertexItem.h"
 #include "ui/GraphicsEdgeItem.h"
 #include "ui/GraphicsPolygonItem.h"
 #include "optimization/Force.h"

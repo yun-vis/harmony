@@ -121,6 +121,7 @@ set(HEADERS
         include/optimization/Layout.h
         inlcude/steinertree/include.h
         include/ui/GraphicsBallItem.h
+        include/ui/GraphicsVertexItem.h
         include/ui/GraphicsEdgeItem.h
         include/ui/GraphicsPolygonItem.h
         include/ui/GraphicsView.h
@@ -179,6 +180,7 @@ set(SOURCES
         src/steinertree/dijkstra.cpp
         src/steinertree/spanningtree.cpp
         src/ui/GraphicsBallItem.cpp
+        src/ui/GraphicsVertexItem.cpp
         src/ui/GraphicsEdgeItem.cpp
         src/ui/GraphicsPolygonItem.cpp
         src/ui/GraphicsView.cpp

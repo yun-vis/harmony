@@ -1,5 +1,5 @@
-#ifndef GraphicsBallItem_H
-#define GraphicsBallItem_H
+#ifndef GraphicsVertexItem_H
+#define GraphicsVertexItem_H
 
 #include <iostream>
 #include <iomanip>
@@ -16,6 +16,7 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "base/Coord2.h"
+#include "base/Common.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -32,21 +33,25 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsBallItem : public  QGraphicsRectItem
+class GraphicsVertexItem : public  QGraphicsRectItem
 {
 private:
 
     unsigned int _id;
+
     QString _name;
+    QFont   _font;
+    QPen    _textpen;
+    double  _radius;
 
 protected:
 
 
 public:
-    explicit GraphicsBallItem( QGraphicsItem *parent = Q_NULLPTR );
-    explicit GraphicsBallItem( const QRectF &rect, QGraphicsItem *parent = Q_NULLPTR );
-    explicit GraphicsBallItem( qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent = Q_NULLPTR );
-    ~GraphicsBallItem();
+    explicit GraphicsVertexItem( QGraphicsItem *parent = Q_NULLPTR );
+    explicit GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent = Q_NULLPTR );
+    explicit GraphicsVertexItem( qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent = Q_NULLPTR );
+    ~GraphicsVertexItem();
 
     // source from the qt library
     //QRectF rect() const;
@@ -85,4 +90,4 @@ private:
 
 };
 
-#endif // GraphicsBallItem_H
+#endif // GraphicsVertexItem_H
