@@ -37,11 +37,14 @@ void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsIte
 	painter->setPen( pen() );
 	painter->setBrush( brush() );
     painter->drawRect( fineRect );
+    painter->setFont( _font );
 
 	//cerr << "id = " << _id << endl;
 	//painter->drawText( rect().x()+10, rect().y()-10, QString::fromStdString( to_string( _id ) ) );
-    painter->drawText( fineRect.x()+0.5*( fineRect.width()-sx ) - 0.5*MIN_NEIGHBOR_DISTANCE,
+    painter->drawText( fineRect.x()+0.5*( fineRect.width()-sx ),
                        fineRect.y()+0.5*( fineRect.height()+0.5*sy ) + MIN_NEIGHBOR_DISTANCE, _name ); // (x ,y) must be left-upper corner
+    //painter->drawText( fineRect.x()+0.5*( fineRect.width()-sx ) - 0.5*MIN_NEIGHBOR_DISTANCE,
+    //                   fineRect.y()+0.5*( fineRect.height()+0.5*sy ) + MIN_NEIGHBOR_DISTANCE, _name );
 
     //cerr << "paint x = " << pos().x() << " y = " << pos().y() << endl;
 
@@ -62,7 +65,7 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent )
 	//setAcceptDrops( true );
 
     _radius = 10;
-    _font = QFont( "Arial", 12, QFont::Normal, false );
+    _font = QFont( "Arial", font_size, QFont::Normal, false );
 }
 
 GraphicsVertexItem::GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent )

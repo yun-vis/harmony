@@ -36,6 +36,8 @@ void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
 	painter->setRenderHints( QPainter::Antialiasing );
 	painter->setPen( pen() );
 	painter->setBrush( brush() );
+	painter->setFont( _font );
+
 	painter->drawEllipse( fineRect );
 
 	//cerr << "id = " << _id << endl;
@@ -59,6 +61,9 @@ GraphicsBallItem::GraphicsBallItem( QGraphicsItem *parent )
     //setFlag( QGraphicsItem::ItemIsMovable );
 	//setFlag( QGraphicsItem::ItemSendsGeometryChanges );
 	//setAcceptDrops( true );
+
+	_radius = 10;
+	_font = QFont( "Arial", font_size, QFont::Normal, false );
 }
 
 GraphicsBallItem::GraphicsBallItem( const QRectF &rect, QGraphicsItem *parent )

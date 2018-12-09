@@ -23,8 +23,13 @@ using namespace std;
 
 
 #include <boost/graph/max_cardinality_matching.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/foreach.hpp>
 
 #include "base/Cell.h"
+
+typedef std::vector< std::string > Tokens;
 
 //------------------------------------------------------------------------------
 //	Protected functions
@@ -126,7 +131,6 @@ void Cell::_buildConnectedComponent( void )
     // initialization
     _nComponent = 0;
     _cellComponentVec.resize( lsubg.size() );
-
     for( unsigned int i = 0; i < lsubg.size(); i++ ){
 
         vector< int > component;
@@ -174,6 +178,7 @@ void Cell::_buildConnectedComponent( void )
                 //fg[ vdNew ].componentID = lsubg[i][ cc[j].lsubgVec[k] ].id;
                 fg[ vdNew ].initID      = lsubg[i][ cc[j].lsubgVec[k] ].id;
 
+                fg[ vdNew ].namePtr      = lsubg[i][ cc[j].lsubgVec[k] ].namePtr;
                 fg[ vdNew ].coordPtr     = lsubg[i][ cc[j].lsubgVec[k] ].coordPtr;
                 fg[ vdNew ].prevCoordPtr = new Coord2( lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->x(),
                                                        lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->y() );
@@ -726,7 +731,89 @@ void Cell::createPolygonComplex( void )
     assert( idC == _nComponent );
 }
 
-void Cell::updatePathwayCoords( void )
+int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_descriptor > & cluster )
+{
+    string inputfilename = "../micans/input.txt";
+    string outputfilename = "../micans/output.txt";
+
+    // write the graph
+    ofstream ofs( inputfilename.c_str() );
+    if ( !ofs ) {
+        cerr << "Cannot open the target file : " << inputfilename << endl;
+        return -1;
+    }
+
+    string cm;
+    BGL_FORALL_EDGES( ed, dg, ForceGraph ){
+
+        ForceGraph::vertex_descriptor vdS = source( ed, dg );
+        ForceGraph::vertex_descriptor vdT = target( ed, dg );
+
+        ofs << dg[ vdS ].id << "\t" << dg[vdT].id << "\t" << dg[ed].weight << endl;
+    }
+
+#ifdef __linux__
+    //cm = string( "/home/yun/Desktop/gitroot/tools/qtborder/micans/bin/mcl" ) + inputfilename + outputfilename;
+    //cerr << "cm = " << cm << endl;
+#endif	// __linux__
+#ifdef __APPLE__
+    cm = string( "/Users/yun/Desktop/gitroot/tools/qtborder/micans/bin/./mcl " ) + inputfilename + string( " --abc -o " ) + outputfilename;
+    cerr << "cm = " << cm << endl;
+#endif	// __MAC__
+
+    system( cm.c_str() );
+
+    // read the clustering info
+    ifstream ifs( outputfilename.c_str() );
+    if ( !ifs ) {
+        cerr << "Cannot open the target file : " << outputfilename << endl;
+        // assert( false );
+        return -1;
+    }
+    else if ( ifs.peek() == std::ifstream::traits_type::eof() ){
+        cerr << "The file is empty : " << outputfilename << endl;
+        return -1;
+    }
+
+    unsigned int cID = 0;
+    string str;
+    while ( std::getline( ifs, str ) ) {
+
+        if( str.size() > 0 ){
+
+            Tokens tokens;
+            boost::split( tokens, str, boost::is_any_of( "\t" ) );
+
+            // cerr << "cID = " << cID << ": ";
+            BOOST_FOREACH( const std::string& i, tokens ) {
+
+                int id = stoi( i );
+                // cerr << id << ", ";
+                ForceGraph::vertex_descriptor vd = vertex( id, dg );
+                dg[ vd ].label = cID;
+            }
+            cID++;
+            // cerr << endl;
+
+#ifdef DEBUG
+            cout << tokens.size() << " tokens" << endl;
+            BOOST_FOREACH( const std::string& i, tokens ) {
+                cout << "'" << i << "'" << ", ";
+            }
+#endif // DEBUG
+        }
+    }
+    ifs.close();
+
+
+#ifdef DEBUG
+    printGraph( dg );
+#endif // DEBUG
+
+    return cID;
+}
+
+void Cell::updateMCLCoords( void )
 {
     vector< ForceGraph >            &lsubg  = _pathway->lsubG();
 
@@ -735,9 +822,9 @@ void Cell::updatePathwayCoords( void )
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
         for( ; itC != _cellComponentVec[i].end(); itC++ ){
 
-            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _forceCellGraphVec[i] );
-
+            // ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _forceCellGraphVec[i] );
             Coord2 &avg = itC->second.contour.centroid();
+
 #ifdef SKIP
             cerr << "avg = " << avg;
             Coord2 avg( 0.0, 0.0 );
@@ -750,21 +837,145 @@ void Cell::updatePathwayCoords( void )
             avg /= (double)cellSize;
 #endif // SKIP
 
+            vector< MetaboliteGraph::vertex_descriptor > cluster;
+            int nClusters = _computeClusters( itC->second.detailGraph, cluster );
+            assert( nClusters != -1 );
 
+            itC->second.nMCL = nClusters;
+
+            // build mcl graph
+            if( nClusters > 1 ){
+
+                ForceGraph &fg = itC->second.detailGraph;
+                ForceGraph &mclg = itC->second.mclGraph;
+
+                unsigned int nVertices = 0, nEdges = 0;
+                // add vertices
+                for( unsigned int j = 0; j < nClusters; j++ ){
+
+                    ForceGraph::vertex_descriptor vdNew = add_vertex( mclg );
+                    double x = avg.x() + rand() % 20 - 10;
+                    double y = avg.y() + rand() % 20 - 10;
+
+                    _forceCellGraphVec[i][vdNew].id = nVertices;
+                    _forceCellGraphVec[i][vdNew].groupID = nVertices;
+                    _forceCellGraphVec[i][vdNew].componentID = itC->second.id;
+                    _forceCellGraphVec[i][vdNew].initID = nVertices;
+
+                    _forceCellGraphVec[i][vdNew].namePtr = new string( "mcl" );
+                    _forceCellGraphVec[i][vdNew].coordPtr = new Coord2(x, y);
+                    _forceCellGraphVec[i][vdNew].prevCoordPtr = new Coord2(x, y);
+                    //_forceCellGraphVec[i][ vdNew ].coordPtr     = new Coord2( 0.0, 0.0 );
+                    //_forceCellGraphVec[i][ vdNew ].prevCoordPtr = new Coord2( 0.0, 0.0 );
+                    _forceCellGraphVec[i][vdNew].forcePtr = new Coord2(0.0, 0.0);
+                    _forceCellGraphVec[i][vdNew].placePtr = new Coord2(0.0, 0.0);
+                    _forceCellGraphVec[i][vdNew].shiftPtr = new Coord2(0.0, 0.0);
+                    _forceCellGraphVec[i][vdNew].weight = 1.0;
+
+                    _forceCellGraphVec[i][vdNew].widthPtr = new double(sqrt(_paramUnit));
+                    _forceCellGraphVec[i][vdNew].heightPtr = new double(sqrt(_paramUnit));
+                    _forceCellGraphVec[i][vdNew].areaPtr = new double(_paramUnit);
+
+                    nVertices++;
+                }
+
+                // add edges
+                BGL_FORALL_EDGES( ed, fg, ForceGraph ) {
+
+                    ForceGraph::vertex_descriptor vdS = source( ed, fg );
+                    ForceGraph::vertex_descriptor vdT = target( ed, fg );
+                    unsigned int labelS = fg[vdS].label;
+                    unsigned int labelT = fg[vdT].label;
+
+                    ForceGraph::vertex_descriptor vdMCLS = vertex( labelS, mclg );
+                    ForceGraph::vertex_descriptor vdMCLT = vertex( labelT, mclg );
+
+                    bool isFound = false;
+                    ForceGraph::edge_descriptor oldED;
+                    tie( oldED, isFound ) = edge( vdMCLS, vdMCLT, mclg );
+                    if( isFound == false ){
+                        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdMCLS, vdMCLT, mclg );
+                        ForceGraph::edge_descriptor foreED = foreE.first;
+                        mclg[ foreED ].id = nEdges;
+
+                        nEdges++;
+                    }
+                }
+
+                // create mcl force
+                itC->second.mcl.init( &itC->second.mclGraph, itC->second.contour, "../configs/mcl.conf" );
+                //c.detail.mode() = TYPE_BARNES_HUT;
+                itC->second.mcl.id() = 0;
+
+// #ifdef DEBUG
+                printGraph( mclg );
+// #endif // DEBUG
+            }
+        }
+    }
+}
+
+void Cell::updatePathwayCoords( void )
+{
+    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+
+    for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
+        for( ; itC != _cellComponentVec[i].end(); itC++ ){
+
+            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _forceCellGraphVec[i] );
+            Coord2 &avg = itC->second.contour.centroid();
+
+            if( itC->second.nMCL > 1 ){
+
+                ForceGraph &dg = itC->second.detailGraph;
+                ForceGraph &mcl = itC->second.mclGraph;
+                BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
+
+                    unsigned int mclID = dg[ vd ].label;
+                    ForceGraph::vertex_descriptor vdM = vertex( mclID, mcl );
+                    dg[ vd ].coordPtr->x() = mcl[ vdM ].coordPtr->x() + rand()%10-5.0;
+                    dg[ vd ].coordPtr->y() = mcl[ vdM ].coordPtr->y() + rand()%10-5.0;
+                }
+            }
+            else{
+
+                ForceGraph &dg = itC->second.detailGraph;
+                BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
+
+                    dg[ vd ].coordPtr->x() = avg.x() + rand()%10-5.0;
+                    dg[ vd ].coordPtr->y() = avg.y() + rand()%10-5.0;
+                }
+            }
+
+#ifdef SKIP
+            cerr << "avg = " << avg;
+            Coord2 avg( 0.0, 0.0 );
+            unsigned int cellSize = itC->second.cellgVec.size();
+            for( unsigned int j = 0; j < cellSize; j++ ){
+                //cerr << "id = " << itC->second.id << " j = " << j << endl;
+                //cerr << "coord = " << *_forceCellGraphVec[ i ][ itC->second.cellgVec[j] ].coordPtr << endl;
+                avg = avg + *_forceCellGraphVec[ i ][ itC->second.cellgVec[j] ].coordPtr;
+            }
+            avg /= (double)cellSize;
+#endif // SKIP
+/*
             unsigned int lsubgSize = itC->second.lsubgVec.size();
             for( unsigned int j = 0; j < lsubgSize; j++ ){
 
                 //ForceGraph::vertex_descriptor vdC = vertex( itC->second.cellVec[j], lsubg[i] );
-                double x = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%20-10.0;
-                double y = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%20-10.0;
+                double x = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%10-5.0;
+                double y = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%10-5.0;
 
                 while( !itC->second.contour.inPolygon( Coord2( x, y ) ) ){
-                    x = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%40-10.0;
-                    y = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%40-10.0;
+                    x = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%20-10.0;
+                    y = lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%20-10.0;
                 }
                 //lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->x() = avg.x() + rand()%100-50.0;
                 //lsubg[i][ itC->second.lsubgVec[j] ].coordPtr->y() = avg.y() + rand()%100-50.0;
             }
+*/
         }
     }
 }

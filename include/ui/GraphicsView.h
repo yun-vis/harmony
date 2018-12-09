@@ -59,7 +59,8 @@ private:
                         _is_polygonFlag, _is_polygonComplexFlag,
                         _is_boundaryFlag, _is_subPathwayFlag,
                         _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
-                        _is_roadFlag, _is_laneFlag, _is_pathwayPolygonFlag;
+                        _is_roadFlag, _is_laneFlag,
+                        _is_mclPolygonFlag, _is_pathwayPolygonFlag;
     QGraphicsScene      *_scene;
     Boundary            *_boundary, *_simplifiedBoundary;
     Cell                *_cellPtr;
@@ -80,6 +81,7 @@ protected:
     void _item_cellPolygons( void );
     void _item_cellPolygonComplex( void );
     void _item_interCellComponents( void );
+    void _item_mclPolygons( void );
     void _item_pathwayPolygons( void );
     void _item_road( void );
     void _item_lane( void );
@@ -106,6 +108,8 @@ public:
     const bool &    isBoundaryFlag( void ) const    { return _is_boundaryFlag; }
     bool &          isSubPathwayFlag( void )        { return _is_subPathwayFlag; }
     const bool &    isSubPathwayFlag( void ) const  { return _is_subPathwayFlag; }
+    bool &          isMCLPolygonFlag( void )        { return _is_mclPolygonFlag; }
+    const bool &    isMCLPolygonFlag( void ) const  { return _is_mclPolygonFlag; }
     bool &          isPathwayPolygonFlag( void )        { return _is_pathwayPolygonFlag; }
     const bool &    isPathwayPolygonFlag( void ) const  { return _is_pathwayPolygonFlag; }
     bool &          isCellFlag( void )              { return _is_cellFlag; }

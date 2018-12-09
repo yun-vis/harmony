@@ -477,6 +477,53 @@ void GraphicsView::_item_cellPolygonComplex( void )
     }
 }
 
+
+void GraphicsView::_item_mclPolygons( void )
+{
+    vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+
+    for( unsigned int k = 0; k < cellCVec.size(); k++ ){
+
+
+        multimap< int, CellComponent > &componentMap = cellCVec[k];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+
+
+        for( ; itC != componentMap.end(); itC++ ){
+
+            // draw polygons
+            if( itC->second.nMCL > 1 ){
+
+                Force &f = itC->second.mcl;
+                vector< Seed > &seedVec = *f.voronoi().seedVec();
+
+                for( unsigned int i = 0; i < seedVec.size(); i++ ) {
+
+                    Polygon2 &p = seedVec[i].cellPolygon;
+
+                    QPolygonF polygon;
+                    for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                        polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                        // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+                    }
+
+                    GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+                    vector< double > rgb;
+
+                    pickBrewerColor( k, rgb );
+                    QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                    itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+                    itemptr->setPolygon( polygon );
+
+                    //cerr << vertexCoord[vd];
+                    _scene->addItem( itemptr );
+                }
+            }
+        }
+    }
+}
+
 void GraphicsView::_item_pathwayPolygons( void )
 {
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
@@ -796,6 +843,7 @@ void GraphicsView::initSceneItems ( void )
     }
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
+    if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
     // if( _is_laneFlag == true ) _item_lane();
@@ -852,6 +900,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_cellPolygonComplexFlag = false;
     _is_roadFlag = false;
     _is_laneFlag = false;
+    _is_mclPolygonFlag = false;
     _is_pathwayPolygonFlag = false;
 
     this->setScene( _scene );

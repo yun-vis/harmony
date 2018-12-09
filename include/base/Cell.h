@@ -38,10 +38,14 @@ public:
     unsigned int                            id;         // component id
     unsigned int                            groupID;    // subsystem id
     //unsigned int                            subgID;     // sub graph id
+    unsigned int                            nMCL;       // number of mcl clustering
+
     Polygon2                                contour;    // contour of the cell component
     double                                  multiple;   // multiple of cell unit
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
     vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
+    Force                                   mcl;
+    ForceGraph                              mclGraph;
     Force                                   detail;
     ForceGraph                              detailGraph;
 };
@@ -72,6 +76,8 @@ private:
     void _computeCellComponentSimilarity( void );
     void _buildInterCellComponents( void );
     void _buildCellGraphs( void );
+    int _computeClusters( ForceGraph &dg,
+                          vector< MetaboliteGraph::vertex_descriptor > & cluster );
     void _init( map< unsigned int, Polygon2 > * __polygonComplexPtr );
     void _clear( void );
 
@@ -115,6 +121,7 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
+    void updateMCLCoords( void );
     void updatePathwayCoords( void );
     void createPolygonComplex( void );
     void additionalForces( void );

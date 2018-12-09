@@ -16,6 +16,7 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "base/Coord2.h"
+#include "base/Common.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -38,6 +39,10 @@ private:
 
     unsigned int _id;
     QString _name;
+
+    QFont   _font;
+    QPen    _textpen;
+    double  _radius;
 
 protected:
 

@@ -56,7 +56,8 @@ class ForceVertexProperty: public BaseVertexProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
 
-    unsigned int                leafID;
+    unsigned int                leafID;         // quadtree id
+    unsigned int                label;          // mcl clustering id
 
     Coord2 *                    prevCoordPtr;   // previous position
     Coord2 *                    forcePtr;       // spring force

@@ -37,7 +37,7 @@ class Window : public QMainWindow, public PathwayData
     Q_OBJECT
 private:
 
-    vector< QBasicTimer	* > _timer;
+    vector< QBasicTimer	* > *_timerPtr;
 
     // rendering
     GraphicsView    *_gv;
@@ -97,8 +97,12 @@ private:
     void _timerBoundaryStop( void );
     void _timerPathwayCellStart( void );
     void _timerPathwayCellStop( void );
+    void _timerMCLStart( void );
+    void _timerMCLStop( void );
     void _timerPathwayStart( void );
     void _timerPathwayStop( void );
+
+    bool _callTimerPathway( unsigned int id, unsigned int i, unsigned int j );
 
 public Q_SLOTS:
 
@@ -130,10 +134,12 @@ public Q_SLOTS:
     // timer
     void timerBoundary( void );
     void timerPathwayCell( void );
+    void timerMCL( void );
     void timerPathway( void );
 
 public:
     explicit Window( QWidget *parent = 0 );
+    explicit Window( const Window & obj );
     ~Window();
 
     void init( Boundary * __boundary, Boundary * __simBoundary ){
