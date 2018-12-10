@@ -592,7 +592,7 @@ void GraphicsView::_item_road( void )
         itemptr->setPath( path );
         _scene->addItem( itemptr );
     }
-
+/*
     // draw vertices
     BGL_FORALL_VERTICES( vd, road, UndirectedBaseGraph ) {
 
@@ -605,7 +605,7 @@ void GraphicsView::_item_road( void )
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
     }
-
+*/
     // draw paths
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
@@ -626,7 +626,7 @@ void GraphicsView::_item_road( void )
                 GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
                 //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
-                itemptr->setPen( QPen( QColor( 0, 255, 0, 150 ), 3 ) );
+                itemptr->setPen( QPen( QColor( 255, 0, 0, 150 ), 4 ) );
                 itemptr->setPath( path );
                 _scene->addItem( itemptr );
             }
@@ -639,15 +639,32 @@ void GraphicsView::_item_road( void )
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
             if( i != j && ( highwayMat[i][j].common.size() > 0 ) && ( highwayMat[j][i].common.size() > 0 ) ){
 
-                GraphicsBallItem *itemptr = new GraphicsBallItem;
-                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 10 ) );
-                itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
-                itemptr->setRect( QRectF(  road[ highwayMat[i][j].routerVD ].coordPtr->x(),
-                                          -road[ highwayMat[i][j].routerVD ].coordPtr->y(), 10, 10 ) );
-                itemptr->id() = highwayMat[i][j].id;
+                // background
+                GraphicsBallItem *itemptrB = new GraphicsBallItem;
 
-                //cerr << vertexCoord[vd];
-                _scene->addItem( itemptr );
+                vector< double > rgb;
+                pickBrewerColor( i, rgb );
+                QColor colorB( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 );
+                itemptrB->setPen( QPen( QColor( colorB.red(), colorB.green(), colorB.blue(), 255 ), 10 ) );
+                itemptrB->setBrush( QBrush( QColor( colorB.red(), colorB.green(), colorB.blue(), 255 ), Qt::SolidPattern ) );
+                itemptrB->setRect( QRectF(  road[ highwayMat[i][j].routerVD ].coordPtr->x(),
+                                          -road[ highwayMat[i][j].routerVD ].coordPtr->y(), 10, 10 ) );
+                itemptrB->id() = highwayMat[i][j].id;
+
+                _scene->addItem( itemptrB );
+
+                // foreground
+                GraphicsBallItem *itemptrF = new GraphicsBallItem;
+
+                pickBrewerColor( j, rgb );
+                QColor colorF( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 );
+                itemptrF->setPen( QPen( QColor( colorF.red(), colorF.green(), colorF.blue(), 255 ), 3 ) );
+                itemptrF->setBrush( QBrush( QColor( colorF.red(), colorF.green(), colorF.blue(), 255 ), Qt::SolidPattern ) );
+                itemptrF->setRect( QRectF(  road[ highwayMat[i][j].routerVD ].coordPtr->x(),
+                                           -road[ highwayMat[i][j].routerVD ].coordPtr->y(), 10, 10 ) );
+                itemptrF->id() = highwayMat[j][i].id;
+
+                _scene->addItem( itemptrF );
             }
         }
     }
@@ -723,12 +740,12 @@ void GraphicsView::_item_lane( void )
 {
     vector< Road > &lane = *_lanePtr;
 
-    for( unsigned int i = 0; i < 1; i++ ){
-    //for( unsigned int i = 0; i < lane.size(); i++ ){
+    //for( unsigned int i = 0; i < 1; i++ ){
+    for( unsigned int i = 0; i < lane.size(); i++ ){
 
         UndirectedBaseGraph &road = lane[i].road();
         //vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
-
+/*
         // draw edges
         BGL_FORALL_EDGES( ed, road, UndirectedBaseGraph ) {
 
@@ -760,11 +777,14 @@ void GraphicsView::_item_lane( void )
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
         }
+*/
     }
 
+
+/*
     // draw routers
-    for( unsigned int i = 0; i < 1; i++ ){
-    //for( unsigned int i = 0; i < lane.size(); i++ ){
+    //for( unsigned int i = 0; i < 1; i++ ){
+    for( unsigned int i = 0; i < lane.size(); i++ ){
 
         UndirectedBaseGraph &road = lane[i].road();
         vector < Terminal > &terminalVec = lane[i].terminalVec();
@@ -785,7 +805,7 @@ void GraphicsView::_item_lane( void )
             }
         }
     }
-
+*/
     // draw steiner tree
     //for( unsigned int i = 0; i < 1; i++ ){
     for( unsigned int i = 0; i < lane.size(); i++ ){
@@ -809,7 +829,7 @@ void GraphicsView::_item_lane( void )
                     GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
                     //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
-                    itemptr->setPen( QPen( QColor( 255, 0, 0, 200 ), 5 ) );
+                    itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
                     itemptr->setPath( path );
                     _scene->addItem( itemptr );
 
@@ -835,8 +855,6 @@ void GraphicsView::initSceneItems ( void )
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
     if( _is_boundaryFlag == true ) _item_boundary();
-    //if( _is_subPathwayFlag == true ) _item_pathways();
-    if( _is_subPathwayFlag == true ) _item_subpathways();
     if( _is_cellFlag == true ) {
         _item_cells();
         _item_interCellComponents();
@@ -846,7 +864,9 @@ void GraphicsView::initSceneItems ( void )
     if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
-    // if( _is_laneFlag == true ) _item_lane();
+    if( _is_laneFlag == true ) _item_lane();
+    //if( _is_subPathwayFlag == true ) _item_pathways();
+    if( _is_subPathwayFlag == true ) _item_subpathways();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }

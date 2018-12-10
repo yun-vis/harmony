@@ -924,6 +924,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "stop timer event" << endl;
             _timerStop();
             _timerBoundaryStop();
+            _gv->isPolygonFlag() = true;
+            _gv->isBoundaryFlag() = false;
+            _gv->isPolygonComplexFlag() = false;
             redrawAllScene();
             assert( _timerPtr->size() == 0 );
             break;
@@ -935,6 +938,8 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
             _timerPathwayCellStart();
+            _gv->isCellPolygonFlag() = true;
+            _gv->isCellFlag() = true;
             break;
         }
         case Qt::Key_W:
@@ -945,6 +950,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _timerPathwayCellStop();
             assert( _timerPtr->size() == 0 );
             simulateKey( Qt::Key_9 );
+            _gv->isSubPathwayFlag() = false;
             redrawAllScene();
             break;
         }
@@ -965,7 +971,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _timerStop();
             _timerMCLStop();
             _cell.updatePathwayCoords();
-            _gv->isMCLPolygonFlag() = false;
+            //_gv->isMCLPolygonFlag() = false;
             redrawAllScene();
             break;
         }
@@ -977,6 +983,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
             _timerPathwayStart();
             _gv->isPathwayPolygonFlag() = true;
+            _gv->isMCLPolygonFlag() = false;
             break;
         }
         case Qt::Key_X:
@@ -1031,6 +1038,12 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             break;
         }
+        case Qt::Key_0:
+        {
+            _gv->isSubPathwayFlag() = !_gv->isSubPathwayFlag();
+            redrawAllScene();
+            break;
+        }
         case Qt::Key_L:
         {
             // load setting
@@ -1040,9 +1053,13 @@ void Window::keyPressEvent( QKeyEvent *event )
             _cell.clear();
             _cell.init( &_boundary->polygonComplex() );
 
-            simulateKey( Qt::Key_5 );
-            simulateKey( Qt::Key_9 );
+            //simulateKey( Qt::Key_5 );
+            //simulateKey( Qt::Key_9 );
             _gv->isCellFlag() = true;
+            _gv->isCompositeFlag() = false;
+            _gv->isPolygonFlag() = false;
+            _gv->isPolygonComplexFlag() = true;
+            _gv->isBoundaryFlag() = false;
             redrawAllScene();
             break;
         }
@@ -1095,6 +1112,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             selectOctilinearCG();
             _boundary->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
+            _gv->isPolygonFlag() = false;
+            _gv->isCompositeFlag() = false;
+            _gv->isPolygonComplexFlag() = true;
+            _gv->isBoundaryFlag() = true;
             redrawAllScene();
             break;
         }
@@ -1106,8 +1127,8 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_V:
         {
             //_pathway->init( "../xml/tiny/", "../xml/tmp/",
-            //_pathway->init( "../xml/small/", "../xml/tmp/",
-            _pathway->init( "../xml/A/", "../xml/tmp/",
+            _pathway->init( "../xml/small/", "../xml/tmp/",
+            //_pathway->init( "../xml/A/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
 
             _pathway->generate();

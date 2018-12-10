@@ -653,7 +653,7 @@ double Force::_verletIntegreation( void )
 
             // simulated annealing
             double decay = 1.0 - pow( _paramMinTemperature, 1.0/(double)_iteration );
-            *g[ vd ].shiftPtr = scale * ( decay*(*g[ vd ].coordPtr - *g[ vd ].prevCoordPtr ) + displace[ idV ] );
+            *g[ vd ].shiftPtr = scale * ( decay*( *g[ vd ].coordPtr - *g[ vd ].prevCoordPtr ) + displace[ idV ] );
 #ifdef DEBUG
             cerr << "decay = " << decay << " _iteration = " << _iteration
                  << " second = " << pow( _paramMinTemperature, 1.0/sqrt((double)_iteration )) << endl;

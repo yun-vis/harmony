@@ -41,7 +41,7 @@ void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
 	painter->drawEllipse( fineRect );
 
 	//cerr << "id = " << _id << endl;
-	painter->drawText( rect().x(), rect().y(), QString::fromStdString( to_string( _id ) ) );
+	//painter->drawText( rect().x(), rect().y(), QString::fromStdString( to_string( _id ) ) );
 	//painter->drawText( rect().x()+10, rect().y()-10, _name );
 
     //cerr << "paint x = " << pos().x() << " y = " << pos().y() << endl;
@@ -63,7 +63,7 @@ GraphicsBallItem::GraphicsBallItem( QGraphicsItem *parent )
 	//setAcceptDrops( true );
 
 	_radius = 10;
-	_font = QFont( "Arial", font_size, QFont::Normal, false );
+	_font = QFont( "Arial", font_size, QFont::Bold, false );
 }
 
 GraphicsBallItem::GraphicsBallItem( const QRectF &rect, QGraphicsItem *parent )

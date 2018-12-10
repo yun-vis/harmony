@@ -65,7 +65,7 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent )
 	//setAcceptDrops( true );
 
     _radius = 10;
-    _font = QFont( "Arial", font_size, QFont::Normal, false );
+    _font = QFont( "Arial", font_size, QFont::Bold, false );
 }
 
 GraphicsVertexItem::GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent )
