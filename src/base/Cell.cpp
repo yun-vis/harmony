@@ -753,8 +753,8 @@ int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_desc
     }
 
 #ifdef __linux__
-    //cm = string( "/home/yun/Desktop/gitroot/tools/qtborder/micans/bin/mcl" ) + inputfilename + outputfilename;
-    //cerr << "cm = " << cm << endl;
+    cm = string( "/home/yun/Desktop/gitroot/tools/qtborder/micans/bin/mcl " ) + inputfilename + string( " --abc -o " ) + outputfilename;
+    cerr << "cm = " << cm << endl;
 #endif	// __linux__
 #ifdef __APPLE__
     cm = string( "/Users/yun/Desktop/gitroot/tools/qtborder/micans/bin/./mcl " ) + inputfilename + string( " --abc -o " ) + outputfilename;
@@ -907,9 +907,9 @@ void Cell::updateMCLCoords( void )
                 //c.detail.mode() = TYPE_BARNES_HUT;
                 itC->second.mcl.id() = 0;
 
-// #ifdef DEBUG
+#ifdef DEBUG
                 printGraph( mclg );
-// #endif // DEBUG
+#endif // DEBUG
             }
         }
     }

@@ -41,9 +41,9 @@ using namespace std;
 //  Outputs
 //  none
 //
-void TreeGraphProperty::_init( void )
+void TreeGraphProperty::_init( double &width, double &height )
 {
-    BaseGraphProperty::_init();
+    BaseGraphProperty::_init( width, height );
 }
 
 //------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ void TreeGraphProperty::_init( void )
 //
 TreeGraphProperty::TreeGraphProperty()
 {
-    _init();
+    //BaseGraphProperty::init();
 }
 
 

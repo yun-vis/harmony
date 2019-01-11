@@ -41,9 +41,9 @@ using namespace std;
 //  Outputs
 //  none
 //
-void SkeletonGraphProperty::_init( void )
+void SkeletonGraphProperty::_init( double &width, double &height )
 {
-    BaseGraphProperty::_init();
+    BaseGraphProperty::_init( width, height );
 }
 
 //------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ void SkeletonGraphProperty::_init( void )
 //
 SkeletonGraphProperty::SkeletonGraphProperty()
 {
-    _init();
+    //BaseGraphProperty::init();
 }
 
 

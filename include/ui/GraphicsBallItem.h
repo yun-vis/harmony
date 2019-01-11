@@ -40,6 +40,7 @@ private:
     unsigned int _id;
     QString _name;
 
+    int     _font_size;
     QFont   _font;
     QPen    _textpen;
     double  _radius;
@@ -81,7 +82,10 @@ public:
     QString &	            name( void )        { return _name; }
     const QString &	        name( void ) const	{ return _name; }
 
-//------------------------------------------------------------------------------
+    int &	                fontSize( void ) 	    { return _font_size; }
+    const int &	            fontSize( void ) const	{ return _font_size; }
+
+    //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
     void    init      ( void );

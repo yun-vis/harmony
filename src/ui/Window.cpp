@@ -9,8 +9,9 @@ Window::Window( QWidget *parent )
     : QMainWindow( parent )
 {
     _gv = new GraphicsView( this );
-    _gv->setGeometry( 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT );
     setCentralWidget( _gv );
+
+    setGeometry( 0, 0, _gv->width(), _gv->height() );
 
     createActions();
     createMenus();
@@ -21,6 +22,8 @@ Window::Window( QWidget *parent )
     _timerPtr = new vector< QBasicTimer	* >;
     //_timerPtr->resize( 1 );
     //(*_timerPtr)[0] = new QBasicTimer();
+
+    _timerVideoStart();
 }
 
 Window::~Window()
@@ -50,8 +53,8 @@ Window::Window( const Window & obj )
 
 void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
 {
-    _content_width = DEFAULT_WIDTH - LEFTRIGHT_MARGIN;
-    _content_height = DEFAULT_HEIGHT - TOPBOTTOM_MARGIN;
+    _content_width = width() - LEFTRIGHT_MARGIN;
+    _content_height = height() - TOPBOTTOM_MARGIN;
 
     _boundary = __boundary;
     _simplifiedBoundary = __simBoundary;
@@ -71,10 +74,6 @@ void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
 
 void Window::createActions( void )
 {
-    // load
-    selDataAct = new QAction( tr("D&ata"), this );
-    connect( selDataAct, SIGNAL( triggered() ), this, SLOT( selectData() ) );
-
     // simplification
     selCloneGraphAct = new QAction( tr("C&loneGraph"), this );
     connect( selCloneGraphAct, SIGNAL( triggered() ), this, SLOT( selectCloneGraph() ) );
@@ -132,16 +131,6 @@ void Window::simulateKey( Qt::Key key )
     QApplication::sendEvent( this, &eventP );
     QKeyEvent eventR( QEvent::KeyRelease, key, Qt::NoModifier );
     QApplication::sendEvent( this, &eventR );
-}
-
-void Window::selectData( void )
-{
-    // load file
-    string datafilename = "../data/vienna-ubahn.txt";
-    //string datafilename = "../data/synthetic.txt";
-    _boundary->load( datafilename.c_str() );
-
-    postLoad();
 }
 
 void Window::postLoad( void )
@@ -388,6 +377,22 @@ void Window::selectBuildBoundary( void )
     redrawAllScene();
 }
 
+void Window::_timerVideoStart( void )
+{
+    _timerVideo.start( 1000, this );
+    _timerVideoID = _timerVideo.timerId();
+    cerr << "_timerVideo.timerId = " << _timerVideo.timerId() << endl;
+}
+
+void Window::_timerVideoStop( void )
+{
+    _timerVideo.stop();
+}
+void Window::timerVideo( void )
+{
+    simulateKey( Qt::Key_E );
+}
+
 void Window::_timerBoundaryStart( void )
 {
     _timerType = TIMER_BOUNDARY;
@@ -428,14 +433,13 @@ void Window::_timerBoundaryStop( void )
 {
     _timerStop();
 
-    simulateKey( Qt::Key_E );
     _boundary->createPolygonComplex();
     simulateKey( Qt::Key_B );
     _boundary->writePolygonComplex();
 
-    _gv->isPolygonFlag() = false;
-    _gv->isPolygonComplexFlag() = true;
-    _gv->isBoundaryFlag() = true;
+    _gv->isPolygonFlag() = true;
+    _gv->isPolygonComplexFlag() = false;
+    _gv->isBoundaryFlag() = false;
     _gv->isCompositeFlag() = true;
 }
 
@@ -492,14 +496,17 @@ void Window::timerBoundary( void )
 void Window::_timerPathwayCellStart( void )
 {
     _timerType = TIMER_PATHWAY_CELL;
+    _timerPtr->resize( _cell.forceCellVec().size() );
 
-   _timerPtr->resize( _cell.forceCellVec().size() );
-   cerr << "_cell.forceCellVec().size() = " << _cell.forceCellVec().size() << endl;
+    cerr << "_cell.forceCellVec().size() = " << _cell.forceCellVec().size() << endl;
     for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
         (*_timerPtr)[i] = new QBasicTimer();
         (*_timerPtr)[i]->start( 30, this );
         cerr << "Cell:_timerStart: " << " (*_timerPtr)[i].id = " << (*_timerPtr)[i]->timerId() << endl;
     }
+
+    _gv->isCellPolygonFlag() = true;
+    _gv->isCellFlag() = true;
 }
 
 void Window::_timerPathwayCellStop( void )
@@ -509,7 +516,12 @@ void Window::_timerPathwayCellStop( void )
         isActive = isActive || (*_timerPtr)[i]->isActive();
     }
     if( !isActive ) {
+
         _timerStop();
+        _gv->isCellPolygonFlag() = false;
+        _gv->isCellFlag() = false;
+        _gv->isCellPolygonComplexFlag() = true;
+
         simulateKey( Qt::Key_P );
     }
 }
@@ -616,6 +628,7 @@ void Window::_timerMCLStop( void )
     if( !isActive ) {
 
         _timerStop();
+        _gv->isSubPathwayFlag() = true;
         //_gv->isMCLFlag() = true;
     }
 }
@@ -881,25 +894,32 @@ void Window::timerEvent( QTimerEvent *event )
     // cerr << "timer event..." << endl;
     Q_UNUSED( event );
 
-    if( _timerType == TIMER_BOUNDARY ){
-        timerBoundary();
+    if( event->timerId() == _timerVideoID ){
+        // cerr << "event->timerId() = " << event->timerId() << endl;
+        timerVideo();
     }
-    else if( _timerType == TIMER_PATHWAY_CELL ){
-        timerPathwayCell();
-    }
-    else if( _timerType == TIMER_MCL ){
-        timerMCL();
-    }
-    else if( _timerType == TIMER_PATHWAY ){
-        timerPathway();
-    }
-    else if( _timerType == TIMER_IDLE ) {
-        ;
-    }
-    else {
-        cerr << "Something is wrong here... at" << __LINE__ << " in " << __FILE__ << endl;
-    }
+    else{
+        // cerr << "timerType = " << _timerType << " event->timerId() = " << event->timerId() << endl;
 
+        if( _timerType == TIMER_BOUNDARY ){
+            timerBoundary();
+        }
+        else if( _timerType == TIMER_PATHWAY_CELL ){
+            timerPathwayCell();
+        }
+        else if( _timerType == TIMER_MCL ){
+            timerMCL();
+        }
+        else if( _timerType == TIMER_PATHWAY ){
+            timerPathway();
+        }
+        else if( _timerType == TIMER_IDLE ) {
+            ;
+        }
+        else {
+            cerr << "Something is wrong here... at" << __LINE__ << " in " << __FILE__ << endl;
+        }
+    }
     //cerr << "tid = " << event->timerId() << endl;
     //cerr << "timerType = " << _timerType << " tid = " << event->timerId() << endl;
     redrawAllScene();
@@ -924,9 +944,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "stop timer event" << endl;
             _timerStop();
             _timerBoundaryStop();
-            _gv->isPolygonFlag() = true;
-            _gv->isBoundaryFlag() = false;
-            _gv->isPolygonComplexFlag() = false;
             redrawAllScene();
             assert( _timerPtr->size() == 0 );
             break;
@@ -938,8 +955,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
             _timerPathwayCellStart();
-            _gv->isCellPolygonFlag() = true;
-            _gv->isCellFlag() = true;
             break;
         }
         case Qt::Key_W:
@@ -949,8 +964,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             //simulateKey( Qt::Key_P );
             _timerPathwayCellStop();
             assert( _timerPtr->size() == 0 );
-            simulateKey( Qt::Key_9 );
-            _gv->isSubPathwayFlag() = false;
             redrawAllScene();
             break;
         }
@@ -1053,8 +1066,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             _cell.clear();
             _cell.init( &_boundary->polygonComplex() );
 
-            //simulateKey( Qt::Key_5 );
-            //simulateKey( Qt::Key_9 );
             _gv->isCellFlag() = true;
             _gv->isCompositeFlag() = false;
             _gv->isPolygonFlag() = false;
@@ -1069,14 +1080,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             _cell.updateMCLCoords();
             //_cell.updatePathwayCoords();
 
-            _gv->isCellPolygonComplexFlag() = true;
-            _gv->isSubPathwayFlag() = true;
+            // _gv->isCellPolygonComplexFlag() = true;
+            // _gv->isSubPathwayFlag() = true;
             redrawAllScene();
-            break;
-        }
-        case Qt::Key_I:
-        {
-            selectData();
             break;
         }
         case Qt::Key_C:
@@ -1130,24 +1136,56 @@ void Window::keyPressEvent( QKeyEvent *event )
             _pathway->init( "../xml/small/", "../xml/tmp/",
             //_pathway->init( "../xml/A/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
+            //_pathway->loadDot( "../dot/TradeLand.dot" );
 
             _pathway->generate();
 
             _boundary->init( _pathway->skeletonG() );
             //_boundary->buildSkeleton();
+
+            // update content width and height
+#ifdef DEBUG
+            cerr << "_content_width = " << _content_width
+                 << " _content_height = " << _content_height << endl;
+#endif // DEBUG
+            double sum = 0.0;
+            MetaboliteGraph             &g         = _pathway->g();
+            BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
+                QFontMetrics metrics( QFont( "Arial", _gv->fontSize(), QFont::Bold, false ) );
+                double sx = metrics.width( QString::fromStdString( *g[vd].namePtr ) );
+                double sy = metrics.height();
+                sum += sx*sy;
+            }
+
+            double ratio = 12.0;
+            double x = sqrt( sum * ratio / 12.0 );
+            _content_width = 4 * x;
+            _content_height = 3 * x;
+
+#ifdef DEBUG
+            cerr << "width x height = " << width() * height() << endl;
+            cerr << "label sum = " << sum << endl;
+            cerr << "ratio = " << width() * height() / sum << endl;
+            cerr << "new_content_width = " << _content_width
+                 << " new_content_height = " << _content_height << endl;
+#endif // DEBUG
+            _gv->setSceneRect( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
+                               _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
+
             _boundary->normalizeSkeleton( _content_width, _content_height );
             _boundary->decomposeSkeleton();
             _boundary->normalizeComposite( _content_width, _content_height );
 
             _gv->isCompositeFlag() = true;
 
-            //selectVoronoi();
             redrawAllScene();
             break;
         }
         case Qt::Key_E:
         {
-            _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
+            // _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
+            _gv->exportPNG( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
+                               _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
             break;
         }
         case Qt::Key_Escape:

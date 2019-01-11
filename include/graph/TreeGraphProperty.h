@@ -36,7 +36,7 @@ class TreeGraphProperty: public BaseGraphProperty {
 
   protected:
 
-      void		    _init( void );
+      void		    _init( double &width, double &height );
 
   public:
 
@@ -56,7 +56,9 @@ class TreeGraphProperty: public BaseGraphProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
 
-    void		                init( void )		{ _init(); }
+    void		                init( double &__width, double &__height ) {
+        _init( __width, __height );
+    }
 
 //------------------------------------------------------------------------------
 //	Special functions

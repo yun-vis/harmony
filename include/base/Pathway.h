@@ -32,6 +32,7 @@ using namespace std;
 #include <boost/graph/make_biconnected_planar.hpp>
 #include <boost/graph/make_maximal_planar.hpp>
 #include <boost/graph/planar_face_traversal.hpp>
+#include <boost/graph/graphviz.hpp>
 
 #include "boost/create_dual_graph.hpp"
 #include "base/Polygon2.h"
@@ -49,6 +50,7 @@ class Pathway
 {
 private:
 
+    int                        *_widthPtr, *_heightPtr;
 	unsigned int				_nHyperEtoE;
 	map< string, string >		_nV;
 
@@ -142,6 +144,17 @@ public:
 	const unsigned int		nEdges( void ) 		{ return num_edges( _graph ); }
     const unsigned int		nSubsys( void ) 	{ return _sub.size(); }
 
+
+    const int *             width( void ) const  { return _widthPtr; }
+    int *                   width( void )        { return _widthPtr; }
+    const int *             height( void ) const { return _heightPtr; }
+    int *                   height( void )       { return _heightPtr; }
+
+    void setWidthHeight( int &width, int &height ) {
+        _widthPtr = &width;
+        _heightPtr = &height;
+    }
+
 //------------------------------------------------------------------------------
 //  	Specific functions
 //------------------------------------------------------------------------------
@@ -156,6 +169,8 @@ public:
     void genSubGraphs( void );
     void genLayoutSubGraphs( void );
 	void genDependencyGraph( void );
+
+	void loadDot( string filename );
 
 	void normalization( void );
 

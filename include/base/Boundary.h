@@ -168,8 +168,6 @@ public:
     void cloneOctilinear( const Boundary & obj );
     void updateTempCoord( void );
     void reorderID( void );                                     // reorder Boundary vertex and edge id
-    void load( const char * filename );
-    void loadLabel( const char * filename );
     void init( SkeletonGraph &__skeletonGraph ) { _init( __skeletonGraph ); }
     void clear( void );
 

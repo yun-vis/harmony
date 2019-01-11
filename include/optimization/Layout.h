@@ -3,7 +3,7 @@
 //	: header file for constrained problems for Layout layouts
 //	(MIP -> Layout)
 //
-//	This class is for computing the Layout layout of the metro network.
+//	This class is for computing the Layout layout of the network.
 //
 //------------------------------------------------------------------------------
 //
@@ -36,13 +36,17 @@
 
 class Layout {
 
-  protected:
+private:
+    int _width;
+    int _height;
+
+protected:
 
     SkeletonGraph      *_skeletonGraph;
     double              _err;
     vector< vector< SkeletonGraph::vertex_descriptor > > _childSubGraph;
 
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
@@ -74,13 +78,15 @@ class Layout {
 //------------------------------------------------------------------------------
 //	Referring to members
 //------------------------------------------------------------------------------
-    const double err( void ) const { _err; }
+    const double err( void ) const { return _err; }
 
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-    void        		init( SkeletonGraph *__skeletonGraph ) {
+    void        		init( SkeletonGraph *__skeletonGraph, int __width, int __height ) {
         _init( __skeletonGraph );
+        _width = __width;
+        _height = __height;
     }
 
 //------------------------------------------------------------------------------

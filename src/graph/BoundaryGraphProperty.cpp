@@ -41,9 +41,9 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BoundaryGraphProperty::_init( void )
+void BoundaryGraphProperty::_init( double &width, double &height )
 {
-    BaseGraphProperty::_init();
+    BaseGraphProperty::_init( width, height );
 }
 
 //------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ void BoundaryGraphProperty::_init( void )
 //
 BoundaryGraphProperty::BoundaryGraphProperty()
 {
-    _init();
+    // BaseGraphProperty::_init( width, height );
 }
 
 

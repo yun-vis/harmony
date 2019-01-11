@@ -43,7 +43,7 @@ using namespace std;
 //
 void ForceGraphProperty::_init( void )
 {
-    BaseGraphProperty::init();
+    //BaseGraphProperty::init();
 }
 
 //------------------------------------------------------------------------------

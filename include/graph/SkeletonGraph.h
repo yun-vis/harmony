@@ -50,7 +50,7 @@ typedef pair< SkeletonGraph::vertex_descriptor, SkeletonGraph::vertex_descriptor
 //------------------------------------------------------------------------------
 void geodesicAssignment( SkeletonGraph & graph );
 unsigned int zoneAssignment( SkeletonGraph & graph );
-void radialPlacement( SkeletonGraph & graph );
+void radialPlacement( SkeletonGraph & graph, int width, int height );
 
 void printGraph( SkeletonGraph & graph );
 void clearGraph( SkeletonGraph & graph );

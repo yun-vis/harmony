@@ -23,6 +23,8 @@ QRectF GraphicsVertexItem::boundingRect( void ) const
 void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
                               QWidget *widget )
 {
+    _font = QFont( "Arial", _font_size, QFont::Bold, false );
+
     QFontMetrics metrics( _font );
     double sx = metrics.width( _name );
     double sy = 0.5*metrics.height();
@@ -65,7 +67,6 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent )
 	//setAcceptDrops( true );
 
     _radius = 10;
-    _font = QFont( "Arial", font_size, QFont::Bold, false );
 }
 
 GraphicsVertexItem::GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent )

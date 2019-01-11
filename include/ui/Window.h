@@ -31,12 +31,17 @@ using namespace std;
 #include <QtCore/QTimer>
 
 #define REMOVEBACKNUM   (15)
+#define RECORD_VIDEO
 
 class Window : public QMainWindow, public PathwayData
 {
     Q_OBJECT
 private:
 
+#ifdef RECORD_VIDEO
+    unsigned int             _timerVideoID;
+    QBasicTimer              _timerVideo;
+#endif // RECORD_VIDEO
     vector< QBasicTimer	* > *_timerPtr;
 
     // rendering
@@ -92,6 +97,11 @@ private:
 
     void _init( Boundary * __boundary, Boundary * __simBoundary );
 
+#ifdef RECORD_VIDEO
+    void _timerVideoStart( void );
+    void _timerVideoStop( void );
+#endif //RECORD_VIDEO
+
     void _timerStop( void );
     void _timerBoundaryStart( void );
     void _timerBoundaryStop( void );
@@ -105,9 +115,6 @@ private:
     bool _callTimerPathway( unsigned int id, unsigned int i, unsigned int j );
 
 public Q_SLOTS:
-
-    // load
-    void selectData( void );
 
     // simplification
     void selectCloneGraph( void );
@@ -132,6 +139,9 @@ public Q_SLOTS:
     void selectBuildBoundary( void );
 
     // timer
+#ifdef RECORD_VIDEO
+    void timerVideo( void );
+#endif //RECORD_VIDEO
     void timerBoundary( void );
     void timerPathwayCell( void );
     void timerMCL( void );

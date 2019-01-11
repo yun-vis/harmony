@@ -36,7 +36,7 @@ class SkeletonGraphProperty : public BaseGraphProperty{
 
   protected:
 
-      void		    _init( void );
+      void		    _init( double &width, double &height );
 
   public:
 

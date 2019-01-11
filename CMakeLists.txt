@@ -32,7 +32,7 @@ if (UNIX AND NOT APPLE)
   find_package(GLUT REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lCGAL -lgmp -lboost_thread -lboost_system -ldl -lpthread -lGL -lGLU -lglut")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lCGAL -lgmp -lboost_thread -lboost_system -lboost_graph -ldl -lpthread -lGL -lGLU -lglut")
 
 elseif(APPLE)
 
@@ -43,7 +43,7 @@ elseif(APPLE)
   find_package(OpenGL REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lboost-mt -lboost_thread-mt -lboost_system-mt -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
+  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lboost-mt -lboost_thread-mt -lboost_system-mt -lboost_graph -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
 
 endif()
 

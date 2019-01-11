@@ -639,6 +639,8 @@ double Force::_verletIntegreation( void )
             default:
                 break;
         }
+
+        cerr << "g[vd].id = " << g[vd].id << " displace.size() = " << displace.size() << endl;
         assert( g[vd].id == displace.size() );
         displace.push_back( val );
     }

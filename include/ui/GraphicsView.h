@@ -54,6 +54,7 @@ class GraphicsView : public QGraphicsView, public PathwayData
 
 private:
 
+    int                 _font_size;
     bool                _is_simplifiedFlag;
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
@@ -93,6 +94,9 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
+    int &           fontSize( void )                { return _font_size; }
+    const int &     fontSize( void ) const          { return _font_size; }
+
     bool &          isSimplifiedFlag( void )        { return _is_simplifiedFlag; }
     const bool &    isSimplifiedFlag( void ) const  { return _is_simplifiedFlag; }
 

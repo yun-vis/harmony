@@ -86,14 +86,14 @@ using namespace::std;
 //#define DEFAULT_HEIGHT        (768)
 //#define DEFAULT_WIDTH (1024)
 //#define DEFAULT_HEIGHT        (1024)
-#define DEFAULT_WIDTH (1280)
-#define DEFAULT_HEIGHT        (960)
+//#define DEFAULT_WIDTH (1280)
+//#define DEFAULT_HEIGHT        (960)
 //#define DEFAULT_WIDTH (1296)
 //#define DEFAULT_HEIGHT        (800)
 //#define DEFAULT_WIDTH (1440)
+//#define DEFAULT_HEIGHT        (1152) // <-
+//#define DEFAULT_WIDTH (1536) // <-
 
-// #define DEFAULT_HEIGHT        (1152) // <-
-// #define DEFAULT_WIDTH (1536) // <-
 #define DEFAULT_ASPECT		(1.0)
 #define DEFAULT_SIDE		(1.2)
 #define DEFAULT_GRIDSIZE	(32)
@@ -167,7 +167,7 @@ enum FORCETYPE{ TYPE_FORCE, TYPE_BARNES_HUT, TYPE_CENTROID, TYPE_HYBRID };
 enum COLORTYPE { COLOR_PREDEFINED, COLOR_MONOTONE, COLOR_PASTEL, COLOR_BREWER };
 enum TIMERTYPE { TIMER_BOUNDARY, TIMER_PATHWAY_CELL, TIMER_MCL, TIMER_PATHWAY, TIMER_IDLE };
 
-extern int font_size;
+// extern int font_size;
 
 double stringToDouble( string str );
 

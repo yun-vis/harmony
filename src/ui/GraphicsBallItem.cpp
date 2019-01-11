@@ -23,7 +23,7 @@ QRectF GraphicsBallItem::boundingRect( void ) const
 void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
                               QWidget *widget )
 {
-    int _radius = 10;
+	_font = QFont( "Arial", _font_size, QFont::Bold, false );
 
     // draw boundary
     //rect().setX( rect().x() - sx );
@@ -63,7 +63,6 @@ GraphicsBallItem::GraphicsBallItem( QGraphicsItem *parent )
 	//setAcceptDrops( true );
 
 	_radius = 10;
-	_font = QFont( "Arial", font_size, QFont::Bold, false );
 }
 
 GraphicsBallItem::GraphicsBallItem( const QRectF &rect, QGraphicsItem *parent )

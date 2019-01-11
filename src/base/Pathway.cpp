@@ -316,6 +316,45 @@ void Pathway::generate( void )
     //initLayout();
 }
 
+void Pathway::loadDot( string filename )
+{
+    UndirectedPropertyGraph graph;
+
+    VertexIndexMap              vertexIndex     = get( vertex_index, graph );
+	VertexLabelMap              vertexLabel     = get( vertex_mylabel, graph );
+	VertexColorMap              vertexColor     = get( vertex_mycolor, graph );
+    EdgeIndexMap                edgeIndex       = get( edge_index, graph );
+    EdgeWeightMap               edgeWeight      = get( edge_weight, graph );
+
+    dynamic_properties dp( boost::ignore_other_properties );
+
+    //dp.property( "fontsize" , vertexIndex );
+    dp.property( "label",  vertexLabel );
+	dp.property( "clustercolor",  vertexColor );
+    dp.property( "weight",edgeWeight );
+
+    ifstream ifs( filename );
+    read_graphviz( ifs, graph, dp );
+    boost::print_graph( graph );
+
+	BGL_FORALL_VERTICES( vd, graph, UndirectedPropertyGraph ) {
+		cerr << "id = " << vertexIndex[vd] << ", label = " << vertexLabel[vd]
+			 << ", color = " << vertexColor[vd] << endl;
+	}
+
+	map< string, unsigned int > colormap;
+	BGL_FORALL_VERTICES( vd, graph, UndirectedPropertyGraph ) {
+
+		map< string, unsigned int >::iterator it = colormap.find( vertexColor[vd] );
+		if( it == colormap.end() ){
+			colormap.insert( pair< string, unsigned int >( vertexColor[vd], 1 ) );
+		}
+		else{
+			it->second++;
+		}
+	}
+}
+
 //
 //  Pathway::loadXml --    loadxml file
 //
@@ -529,8 +568,8 @@ void Pathway::genGraph( void )
 	unsigned int nVertices = 0, nEdges = 0;
 
 	_graph[ graph_bundle ].centerPtr	= new Coord2( 0.0, 0.0 );
-	_graph[ graph_bundle ].widthPtr		= new double( DEFAULT_WIDTH );
-	_graph[ graph_bundle ].heightPtr    = new double( DEFAULT_HEIGHT );
+	_graph[ graph_bundle ].widthPtr		= new double( *_widthPtr );
+	_graph[ graph_bundle ].heightPtr    = new double( *_heightPtr );
 
 	for( unsigned int i = 0; i < _react.size(); i++ ){
 
@@ -547,8 +586,8 @@ void Pathway::genGraph( void )
         _graph[ reactVD ].isAlias       = false;
         _graph[ reactVD ].type 			= "reaction";
 		_graph[ reactVD ].coordPtr		= new Coord2;
-		_graph[ reactVD ].coordPtr->x() = rand() % DEFAULT_WIDTH - DEFAULT_WIDTH/2.0;
-		_graph[ reactVD ].coordPtr->y() = rand() % DEFAULT_HEIGHT - DEFAULT_HEIGHT/2.0;
+		_graph[ reactVD ].coordPtr->x() = rand() % *_widthPtr - *_widthPtr/2.0;
+		_graph[ reactVD ].coordPtr->y() = rand() % *_heightPtr - *_heightPtr/2.0;
         _graph[ reactVD ].widthPtr      = new double (10.0);
         _graph[ reactVD ].heightPtr		= new double (10.0);
         _graph[ reactVD ].metaPtr		= NULL;
@@ -610,8 +649,8 @@ void Pathway::genGraph( void )
                 _graph[ metaVD ].isAlias        = false;
 				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr		= new Coord2;
-				_graph[ metaVD ].coordPtr->x() 	= rand() % DEFAULT_WIDTH - DEFAULT_WIDTH/2.0;
-				_graph[ metaVD ].coordPtr->y() 	= rand() % DEFAULT_HEIGHT - DEFAULT_HEIGHT/2.0;
+				_graph[ metaVD ].coordPtr->x() 	= rand() % *_widthPtr - *_widthPtr/2.0;
+				_graph[ metaVD ].coordPtr->y() 	= rand() % *_heightPtr - *_heightPtr/2.0;
                 _graph[ metaVD ].widthPtr	    = new double (10.0);
                 _graph[ metaVD ].heightPtr		= new double (10.0);
 				_graph[ metaVD ].metaPtr		= &_meta[ index ];
@@ -706,8 +745,8 @@ void Pathway::genGraph( void )
                 _graph[ metaVD ].isAlias        = false;
   				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr 		= new Coord2;
-				_graph[ metaVD ].coordPtr->x() 	= rand() % DEFAULT_WIDTH - DEFAULT_WIDTH/2.0;
-				_graph[ metaVD ].coordPtr->y() 	= rand() % DEFAULT_HEIGHT - DEFAULT_HEIGHT/2.0;
+				_graph[ metaVD ].coordPtr->x() 	= rand() % *_widthPtr - *_widthPtr/2.0;
+				_graph[ metaVD ].coordPtr->y() 	= rand() % *_heightPtr - *_heightPtr/2.0;
                 _graph[ metaVD ].widthPtr	    = new double(10.0);
                 _graph[ metaVD ].heightPtr		= new double(10.0);
                 _graph[ metaVD ].metaPtr		= &_meta[ index ];
@@ -1012,12 +1051,12 @@ void Pathway::loadPathway( void )
 //  Inputs
 //  node
 //
-//  Outputs
+//  Output
 //  none
 //
 void Pathway::initSubdomain( void )
 {
-	double totalArea = DEFAULT_WIDTH * DEFAULT_HEIGHT;
+	double totalArea = *_widthPtr * *_heightPtr;
 	double totalNum = 0.0;
     double mag = 0.3;
 
@@ -1076,8 +1115,8 @@ void Pathway::initSubdomain( void )
 //
 void Pathway::layoutPathway( void )
 {
-	randomGraphLayout( (DirectedBaseGraph &) _graph );
-	fruchtermanGraphLayout( (DirectedBaseGraph &) _graph );
+	randomGraphLayout( (DirectedBaseGraph &) _graph, *_widthPtr, *_heightPtr );
+	fruchtermanGraphLayout( (DirectedBaseGraph &) _graph, *_widthPtr, *_heightPtr );
 }
 
 //
@@ -1966,8 +2005,8 @@ void Pathway::genDependencyGraph( void )
 	// add vertices
 	unsigned int idV = 0, idE = 0;
 	_skeletonGraph[ graph_bundle ].centerPtr	= new Coord2( 0.0, 0.0 );
-	_skeletonGraph[ graph_bundle ].widthPtr	= new double( DEFAULT_WIDTH );
-	_skeletonGraph[ graph_bundle ].heightPtr	= new double( DEFAULT_HEIGHT );
+	_skeletonGraph[ graph_bundle ].widthPtr	= new double( *_widthPtr );
+	_skeletonGraph[ graph_bundle ].heightPtr	= new double( *_heightPtr );
 	//map< pair< double, unsigned int >, SkeletonGraph::vertex_descriptor > vdMap;
 	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ){
 
@@ -2149,7 +2188,7 @@ void Pathway::genDependencyGraph( void )
 #endif // DEBUG
 
 	//genSubsysWeight();
-    radialPlacement( _skeletonGraph );
+    radialPlacement( _skeletonGraph, *_widthPtr, *_heightPtr );
 	//printGraph( _skeletonGraph );
 }
 

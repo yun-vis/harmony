@@ -35,7 +35,7 @@ class MetaboliteGraphProperty : public BaseGraphProperty {
 
   protected:
 
-	void _init( void );
+	void _init( double &width, double &height );
 
   public:
 

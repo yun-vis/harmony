@@ -389,14 +389,14 @@ void Layout::radialPlacement( void )
 
         BGL_FORALL_VERTICES( vd, dependG, SkeletonGraph ){
 
-            if( dependG[ vd ].angle == 0 && dependG[ vd ].zone == i ){
+            if( dependG[ vd ].angle == 0 && dependG[ vd ].zone == (int)i ){
 
                 SkeletonGraph::out_edge_iterator eo, eo_end;
                 double sum = 0.0;
                 int count = 0;
                 for( tie( eo, eo_end ) = out_edges( vd, dependG ); eo != eo_end; ++eo ) {
                     SkeletonGraph::vertex_descriptor vdT = target( *eo, dependG );
-                    if( dependG[ vdT ].zone == i+1 ) {
+                    if( dependG[ vdT ].zone == (int)(i+1) ) {
                         //cerr << "id = " << dependG[ vdT ].id << " z = " << dependG[ vdT ].zone
                         //     << " a = " << dependG[ vdT ].angle << endl;
                         sum += dependG[ vdT ].angle;
@@ -415,7 +415,7 @@ void Layout::radialPlacement( void )
 
     // update the coord of non-leaf vertices
     double mag = 1.0;
-    double radius = 0.5 * mag * (double)DEFAULT_HEIGHT/(double)(MAX2( maxZone, 2 ) -1.0);
+    double radius = 0.5 * mag * (double)_height/(double)(MAX2( maxZone, 2 ) -1.0);
     BGL_FORALL_VERTICES( vd, dependG, SkeletonGraph ){
 
         Coord2 &coord = *dependG[ vd ].coordPtr;

@@ -41,11 +41,11 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BaseGraphProperty::_init( void )
+void BaseGraphProperty::_init( double &width, double &height )
 {
     centerPtr   = NULL;
-    widthPtr    = new double ( DEFAULT_WIDTH );
-    heightPtr   = new double ( DEFAULT_HEIGHT );
+    widthPtr    = &width;
+    heightPtr   = &height;
 }
 
 //------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ void BaseGraphProperty::_init( void )
 //
 BaseGraphProperty::BaseGraphProperty()
 {
-    _init();
+    // _init();
 }
 
 

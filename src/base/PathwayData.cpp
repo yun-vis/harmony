@@ -28,8 +28,8 @@
 //
 PathwayData::PathwayData( void )
 {
-    _contentWidth   = DEFAULT_WIDTH;
-    _contentHeight  = DEFAULT_HEIGHT;
+    // _contentWidth   = DEFAULT_WIDTH;
+    // _contentHeight  = DEFAULT_HEIGHT;
     _scaleWidth     = 1.0;
     _scaleHeight    = 1.0;
 }
@@ -79,8 +79,8 @@ PathwayData::~PathwayData( void )
 void PathwayData::setPathwayData( Pathway *pathway )
 {
 	_pathway        = pathway;
-    _contentWidth   = DEFAULT_WIDTH;
-    _contentHeight  = DEFAULT_HEIGHT;
+    _contentWidth   = *_pathway->width();
+    _contentHeight  = *_pathway->height();
     _scaleWidth     = 1.0;
     _scaleHeight    = 1.0;
 }

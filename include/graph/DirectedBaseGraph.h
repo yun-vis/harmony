@@ -53,8 +53,8 @@ typedef vector< PointDifference > DifferenceVec;
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
-void randomGraphLayout( DirectedBaseGraph & graph );
-void fruchtermanGraphLayout( DirectedBaseGraph & graph );
+void randomGraphLayout( DirectedBaseGraph & graph, double width, double height );
+void fruchtermanGraphLayout( DirectedBaseGraph & graph, double width, double height );
 void printGraph( DirectedBaseGraph & g );
 void clearGraph( DirectedBaseGraph & g );
 

@@ -16,6 +16,7 @@ void GraphicsView::_item_seeds( void )
     BGL_FORALL_VERTICES( vd, c, ForceGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
         //itemptr->setPen( Qt::NoPen );
         itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
@@ -52,6 +53,7 @@ void GraphicsView::_item_skeleton( void )
     BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
@@ -86,6 +88,7 @@ void GraphicsView::_item_composite( void )
     BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
@@ -186,6 +189,7 @@ void GraphicsView::_item_boundary( void )
     BGL_FORALL_VERTICES( vd, *g, BoundaryGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( (*g)[vd].coordPtr->x(), -(*g)[vd].coordPtr->y(), 10, 10 ) );
@@ -251,6 +255,7 @@ void GraphicsView::_item_subpathways( void )
                      << " subg[itC->second.groupID][vdF].initID = " << subg[itC->second.groupID][vdF].initID << endl;
 #endif // DEBUG
                 GraphicsVertexItem *itemptr = new GraphicsVertexItem;
+                itemptr->fontSize() = _font_size;
                 itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
 
                 if( *g[ initVD ].isClonedPtr == true )
@@ -301,6 +306,7 @@ void GraphicsView::_item_pathways( void )
         BGL_FORALL_VERTICES( vd, lsubg[i], ForceGraph ) {
 
             GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
             itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( lsubg[i][vd].coordPtr->x(), -lsubg[i][vd].coordPtr->y(), 10, 10 ) );
@@ -343,6 +349,7 @@ void GraphicsView::_item_cells( void )
             ForceGraph::degree_size_type degrees = out_degree( vd, cellGVec[i] );
 
             GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
             itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( cellGVec[i][vd].coordPtr->x(), -cellGVec[i][vd].coordPtr->y(), 10, 10 ) );
@@ -464,6 +471,7 @@ void GraphicsView::_item_cellPolygonComplex( void )
             for( unsigned int j = 0; j < c.elements().size(); j++ ){
 
                 GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = _font_size;
                 itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
                 itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 255 ), Qt::SolidPattern ) );
                 itemptr->setRect( QRectF( c.elements()[j].x(), -c.elements()[j].y(), 10, 10 ) );
@@ -570,8 +578,8 @@ void GraphicsView::_item_pathwayPolygons( void )
 
 void GraphicsView::_item_road( void )
 {
-    vector< MetaboliteGraph >   &subg      = _pathway->subG();
-    UndirectedBaseGraph &road    = _roadPtr->road();
+    vector< MetaboliteGraph >   &subg       = _pathway->subG();
+    UndirectedBaseGraph &road               = _roadPtr->road();
     vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
 
     // draw edges
@@ -597,6 +605,7 @@ void GraphicsView::_item_road( void )
     BGL_FORALL_VERTICES( vd, road, UndirectedBaseGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( road[vd].coordPtr->x(), -road[vd].coordPtr->y(), 10, 10 ) );
@@ -645,6 +654,7 @@ void GraphicsView::_item_road( void )
                 vector< double > rgb;
                 pickBrewerColor( i, rgb );
                 QColor colorB( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 );
+                itemptrB->fontSize() = _font_size;
                 itemptrB->setPen( QPen( QColor( colorB.red(), colorB.green(), colorB.blue(), 255 ), 10 ) );
                 itemptrB->setBrush( QBrush( QColor( colorB.red(), colorB.green(), colorB.blue(), 255 ), Qt::SolidPattern ) );
                 itemptrB->setRect( QRectF(  road[ highwayMat[i][j].routerVD ].coordPtr->x(),
@@ -658,6 +668,7 @@ void GraphicsView::_item_road( void )
 
                 pickBrewerColor( j, rgb );
                 QColor colorF( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 );
+                itemptrF->fontSize() = _font_size;
                 itemptrF->setPen( QPen( QColor( colorF.red(), colorF.green(), colorF.blue(), 255 ), 3 ) );
                 itemptrF->setBrush( QBrush( QColor( colorF.red(), colorF.green(), colorF.blue(), 255 ), Qt::SolidPattern ) );
                 itemptrF->setRect( QRectF(  road[ highwayMat[i][j].routerVD ].coordPtr->x(),
@@ -769,6 +780,7 @@ void GraphicsView::_item_lane( void )
         BGL_FORALL_VERTICES( vd, road, UndirectedBaseGraph ) {
 
             GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
             itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( road[vd].coordPtr->x(), -road[vd].coordPtr->y(), 10, 10 ) );
@@ -795,6 +807,7 @@ void GraphicsView::_item_lane( void )
                 Coord2 &coord = *road[ terminalVec[j].routerVD ].coordPtr;
 
                 GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = _font_size;
                 itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 10 ) );
                 itemptr->setBrush( QBrush( QColor( 0, 0, 0, 255 ), Qt::SolidPattern ) );
                 itemptr->setRect( QRectF( coord.x(), -coord.y(), 10, 10 ) );
@@ -884,7 +897,13 @@ void GraphicsView::exportPNG ( double x, double y, double w, double h )
     // Take file path and name that will create
     //QString newPath = QFileDialog::getSaveFileName(this, trUtf8("Save SVG"),
     //                                               path, tr("SVG files (*.svg)"));
-    QString newPath = QString( QLatin1String( "../svg/pathway.png" ) );
+    static int id = 0;
+    ostringstream ss;
+    ss << setw(8) << std::setfill('0') << id;
+    string s2( ss.str() );
+    QString idStr = QString::fromStdString( s2 );
+    cerr << "s2 = " << s2 << endl;
+    QString newPath = QString( QLatin1String( "../svg/pathway-" ) ) + idStr + QString( QLatin1String( ".png" ) );
     _scene->setSceneRect( x, y, w, h );  // x, y, w, h
 
     if ( newPath.isEmpty() ) return;
@@ -896,17 +915,55 @@ void GraphicsView::exportPNG ( double x, double y, double w, double h )
     painter.fillRect( 0, 0, w, h, Qt::white );
     _scene->render( &painter );
     screenshot.save( newPath );
+
+    id++;
 }
 
 
 GraphicsView::GraphicsView( QWidget *parent )
     : QGraphicsView( parent )
 {
+//----------------------------------------------------------
+// clear stored images
+//----------------------------------------------------------
+    QString path = "../svg/";
+    QDir dir( path );
+    dir.setNameFilters( QStringList() << "*.*" );
+    dir.setFilter( QDir::Files );
+    for( const QString &dirFile: dir.entryList() ) {
+        dir.remove( dirFile );
+    }
+
+//----------------------------------------------------------
+// configuration file
+//----------------------------------------------------------
+    int default_width = 0, default_height = 0;
+    string configFilePath = "../configs/common.conf";
+    Base::Config conf( configFilePath );
+
+    if ( conf.has( "font_size" ) ){
+        string paramFont = conf.gets( "font_size" );
+        _font_size = stringToDouble( paramFont );
+
+        string paramWidth = conf.gets( "default_width" );
+        default_width = stoi( paramWidth );
+
+        string paramHeight = conf.gets( "default_height" );
+        default_height = stoi( paramHeight );
+        setGeometry( 0, 0, default_width, default_height );
+    }
+
+    cerr << "filepath: " << configFilePath << endl;
+    cerr << "font_size: " << _font_size << endl;
+    cerr << "default_width: " << default_width << endl;
+    cerr << "default_height: " << default_height << endl;
+
     setAutoFillBackground( true );
     setBackgroundBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
 
 	_scene = new QGraphicsScene( this );
-    _scene->setSceneRect( -DEFAULT_WIDTH/2.0, -DEFAULT_HEIGHT/2.0, DEFAULT_WIDTH, DEFAULT_HEIGHT );  // x, y, w, h
+    _scene->setSceneRect( -default_width/2.0, -default_height/2.0,
+                          default_width, default_height );  // x, y, w, h
 
     _is_simplifiedFlag = false;
     _is_skeletonFlag = false;
@@ -922,6 +979,10 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_laneFlag = false;
     _is_mclPolygonFlag = false;
     _is_pathwayPolygonFlag = false;
+
+    //setHorizontalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );
+    //setVerticalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );
+    //viewport()->scroll( 500, 500 );
 
     this->setScene( _scene );
 }

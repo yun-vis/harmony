@@ -20,10 +20,10 @@
 //------------------------------------------------------------------------------
 //	Customized Layout Functions
 //------------------------------------------------------------------------------
-void randomGraphLayout( DirectedBaseGraph & graph )
+void randomGraphLayout( DirectedBaseGraph & graph, double width, double height )
 {
     boost::random::minstd_rand gen;
-    topologyType topo( gen, -DEFAULT_WIDTH/2.0, -DEFAULT_HEIGHT/2.0, DEFAULT_WIDTH/2.0, DEFAULT_HEIGHT/2.0 );
+    topologyType topo( gen, -width/2.0, -height/2.0, width/2.0, height/2.0 );
 
     PositionVec positionVec( num_vertices( graph ) );
     //PositionMap position( positionVec.begin(), get( vertex_index, graph ) );
@@ -39,7 +39,7 @@ void randomGraphLayout( DirectedBaseGraph & graph )
         }
 }
 
-void fruchtermanGraphLayout( DirectedBaseGraph & graph )
+void fruchtermanGraphLayout( DirectedBaseGraph & graph, double width, double height )
 {
     boost::random::minstd_rand gen;
     double shift = 1e-5;
@@ -80,8 +80,8 @@ void fruchtermanGraphLayout( DirectedBaseGraph & graph )
 
     // write the posotion
     BGL_FORALL_VERTICES( vd, graph, DirectedBaseGraph ) {
-            graph[ vd ].coordPtr->x() = position[ vd ][0]*DEFAULT_WIDTH/4.0;
-            graph[ vd ].coordPtr->y() = position[ vd ][1]*DEFAULT_HEIGHT/4.0;
+            graph[ vd ].coordPtr->x() = position[ vd ][0]*width/4.0;
+            graph[ vd ].coordPtr->y() = position[ vd ][1]*height/4.0;
             //cerr << "vertexIndex[ " << vertexIndex[ vd ] << " ] = " << position[ vd ][0] << ", " << position[ vd ][1] << endl;
             //cerr << "vertexIndex[ " << vertexIndex[ vd ] << " ] = " << vertexCoord[ vd ] << endl;
         }

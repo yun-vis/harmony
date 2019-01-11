@@ -33,11 +33,11 @@ using namespace std;
 
 class BaseGraphProperty {
 
-  protected:
+protected:
 
-      void		    _init( void );
+    void		    _init( double &width, double &height );
 
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
@@ -58,7 +58,9 @@ class BaseGraphProperty {
     double *                    widthPtr;
     double *                    heightPtr;
 
-    void		                init( void )		{ _init(); }
+    void		                init( double &__width, double &__height ) {
+        _init( __width, __height );
+    }
 
 //------------------------------------------------------------------------------
 //	Special functions

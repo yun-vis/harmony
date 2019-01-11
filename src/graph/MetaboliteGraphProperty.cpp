@@ -49,9 +49,9 @@ using namespace std;
 //  Outputs
 //  none
 //
-void MetaboliteGraphProperty::_init( void )
+void MetaboliteGraphProperty::_init( double &width, double &height )
 {
-    BaseGraphProperty::_init();
+    BaseGraphProperty::_init( width, height );
 }
 
 //
@@ -65,7 +65,7 @@ void MetaboliteGraphProperty::_init( void )
 //
 MetaboliteGraphProperty::MetaboliteGraphProperty()
 {
-    _init();
+    //BaseGraphProperty::init();
 }
 
 

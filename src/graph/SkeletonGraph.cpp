@@ -29,11 +29,11 @@
 //  Outputs
 //  none
 //
-void radialPlacement( SkeletonGraph & graph )
+void radialPlacement( SkeletonGraph & graph, int width, int height )
 {
     Layout layout;
 
-    layout.init( &graph );
+    layout.init( &graph, width, height );
 	layout.radialPlacement();
 }
 
