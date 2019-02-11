@@ -32,7 +32,7 @@ if (UNIX AND NOT APPLE)
   find_package(GLUT REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lCGAL -lgmp -lboost_thread -lboost_system -lboost_graph -ldl -lpthread -lGL -lGLU -lglut")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
 
 elseif(APPLE)
 
@@ -43,7 +43,7 @@ elseif(APPLE)
   find_package(OpenGL REQUIRED)
   find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -lboost-mt -lboost_thread-mt -lboost_system-mt -lboost_graph -lCGAL -lgmp -lmpr -ldl -lpthread -framework OpenGL -framework GLUT")
+  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -framework OpenGL -framework GLUT")
 
 endif()
 
@@ -81,12 +81,16 @@ set(HEADERS
         include/base/Contour2.h
         include/base/Grid2.h
         include/base/QuardTree.h
-        include/base/Timer.h
+        include/base/TimeComplexity.h
+        include/base/Controller.h
+        include/base/Worker.h
+        include/base/WorkerPathway.h
         include/base/Color.h
         include/base/Cell.h
         include/base/Road.h
         include/base/Pathway.h
-        include/base/PathwayData.h.h
+        include/base/PathwayData.h
+        include/base/RegionData.h
         include/graph/TreeEdgeProperty.h
         include/graph/TreeGraph.h
         include/graph/TreeGraphProperty.h
@@ -138,13 +142,17 @@ set(SOURCES
         src/base/Grid2.cpp
         src/base/Line2.cpp
         src/base/QuardTree.cpp
-        src/base/Timer.cpp
+        src/base/TimeComplexity.cpp
+        src/base/Controller.cpp
+        src/base/Worker.cpp
+        src/base/WorkerPathway.cpp
         src/base/Color.cpp
         src/base/Boundary.cpp
         src/base/Cell.cpp
         src/base/Road.cpp
         src/base/Pathway.cpp
         src/base/PathwayData.cpp
+        src/base/RegionData.cpp
         src/graph/TreeEdgeProperty.cpp
         src/graph/TreeGraph.cpp
         src/graph/TreeGraphProperty.cpp
@@ -197,14 +205,25 @@ QT5_WRAP_UI( UI_HEADERS ${UI_FILES} )
 QT5_WRAP_CPP( MOC_SRCS ${UI_HEADERS})
 QT5_WRAP_CPP( MOC_SRCS ${MOC_HEADERS} )
 #QT5_WRAP_CPP( MOC_WINDOWUI ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.ui )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Worker.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerPathway.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Controller.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.h )
 QT5_WRAP_CPP( MOC_GRAPHICSVIEW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GraphicsView.h )
 #set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_ui_Window.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Worker.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerPathway.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Controller.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_Window.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_GraphicsView.cpp PROPERTY SKIP_AUTOGEN ON )
 
 add_executable(qtborder ${SOURCES} ${MOC_SRCS} ${MOC_WINDOW} ${MOC_GRAPHICSVIEW})
 message("CMAKE_CXX_FLAGS" ${CMAKE_CXX_FLAGS})
-target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml)
+if (UNIX AND NOT APPLE)
+  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml CGAL gmp boost_thread boost_system boost_graph dl pthread GL GLU glut)
+elseif(APPLE)
+  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml boost_thread-mt boost_system-mt boost_graph-mt CGAL gmp dl)
+endif()
+
 # qt stuff
 qt5_use_modules(qtborder Core Gui Svg Widgets OpenGL)

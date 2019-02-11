@@ -33,6 +33,7 @@ using namespace std;
 #include <boost/graph/make_maximal_planar.hpp>
 #include <boost/graph/planar_face_traversal.hpp>
 #include <boost/graph/graphviz.hpp>
+//#include <boost/graph/detail/read_graphviz_new.hpp>
 
 #include "boost/create_dual_graph.hpp"
 #include "base/Polygon2.h"
@@ -160,6 +161,7 @@ public:
 //------------------------------------------------------------------------------
 	void init( string pathIn, string pathOut, string fileFreq, string fileType );
 	void generate( void );
+	void exportEdges( void );
 	void initLayout( map< unsigned int, Polygon2 > &_polygonComplex );
 	void initSubdomain( void );
 	void loadPathway( void );

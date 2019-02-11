@@ -291,6 +291,7 @@ bool Pathway::isCloneMetaType( MetaboliteGraph::vertex_descriptor metaVD )
 		isClone = false;
 	}
 
+	//return false;
 	return isClone;
 }
 
@@ -314,6 +315,49 @@ void Pathway::generate( void )
     //fruchtermanGraphLayout( (DirectedBaseGraph &) _graph );
     // normalization();
     //initLayout();
+}
+
+
+//
+//  Pathway::exportEdges --    export graph edges
+//
+//  Inputs
+//  node
+//
+//  Outputs
+//  none
+//
+void Pathway::exportEdges( void )
+{
+    // graph
+	ofstream ofs( "../data/biological_yun.txt" );
+
+	BGL_FORALL_EDGES( ed, _graph, MetaboliteGraph ) {
+
+		MetaboliteGraph::vertex_descriptor vdS = source( ed, _graph );
+		MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
+
+		ofs << _graph[vdS].id << " " << _graph[vdT].id << endl;
+	}
+
+
+	// distance matrix
+	ofstream ofsm( "../data/matrix_biological_yun.txt" );
+
+	BGL_FORALL_VERTICES( vdO, _graph, MetaboliteGraph ) {
+
+		BGL_FORALL_VERTICES( vdI, _graph, MetaboliteGraph ) {
+
+            bool foundF = false, foundB = false;
+            MetaboliteGraph::edge_descriptor oldED;
+            tie( oldED, foundF ) = edge( vdO, vdI, _graph );
+            tie( oldED, foundB ) = edge( vdI, vdO, _graph );
+
+            if( foundF || foundB ) ofsm << "1,";
+            else ofsm << "100000,";
+		}
+		ofsm << endl;
+	}
 }
 
 void Pathway::loadDot( string filename )

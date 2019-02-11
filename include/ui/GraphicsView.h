@@ -28,6 +28,7 @@ using namespace std;
 #include "base/Road.h"
 #include "base/Pathway.h"
 #include "base/PathwayData.h"
+#include "base/RegionData.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -48,7 +49,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsView : public QGraphicsView, public PathwayData
+class GraphicsView : public QGraphicsView, public PathwayData, public RegionData
 {
     Q_OBJECT
 
@@ -63,10 +64,10 @@ private:
                         _is_roadFlag, _is_laneFlag,
                         _is_mclPolygonFlag, _is_pathwayPolygonFlag;
     QGraphicsScene      *_scene;
-    Boundary            *_boundary, *_simplifiedBoundary;
-    Cell                *_cellPtr;
-    Road                *_roadPtr;
-    vector< Road >      *_lanePtr;
+    //Boundary            *_boundary, *_simplifiedBoundary;
+    //Cell                *_cellPtr;
+    //Road                *_roadPtr;
+    //vector< Road >      *_lanePtr;
 
 protected:
 
@@ -131,15 +132,7 @@ public:
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
-    void    init                ( Boundary * __boundary, Boundary * __simplifiedBoundary,
-                                  Cell * __cellPtr,
-                                  Road * __roadPtr, vector< Road > * __lanePtr ){
-        _boundary = __boundary;
-        _simplifiedBoundary = __simplifiedBoundary;
-        _cellPtr = __cellPtr;
-        _roadPtr = __roadPtr;
-        _lanePtr = __lanePtr;
-    }
+    void    init ( void ) {;}
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );
 

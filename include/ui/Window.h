@@ -9,17 +9,16 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
+#include <thread>
 #include <cstdlib>
 
 using namespace std;
 
 #ifndef Q_MOC_RUN
-#include "optimization/Force.h"
-#include "optimization/Smooth.h"
-#include "optimization/Octilinear.h"
 #include "ui/GraphicsView.h"
-#include "base/Timer.h"
-#include "base/Road.h"
+#include "base/TimeComplexity.h"
+#include "base/Controller.h"
+#include "base/RegionData.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
@@ -29,11 +28,12 @@ using namespace std;
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QApplication>
 #include <QtCore/QTimer>
+#include <QtCore/QThread>
 
 #define REMOVEBACKNUM   (15)
-#define RECORD_VIDEO
+//#define RECORD_VIDEO
 
-class Window : public QMainWindow, public PathwayData
+class Window : public QMainWindow, public PathwayData, public RegionData
 {
     Q_OBJECT
 private:
@@ -47,25 +47,15 @@ private:
     // rendering
     GraphicsView    *_gv;
 
-    // data structure
-    Boundary        *_boundary;
-    Boundary        *_simplifiedBoundary;
-
-
-    // cells of subgraphs
-    Cell            _cell;
-    Road            _road;
-    vector< Road >  _lane;
-
-    Smooth          _smooth;
-    Octilinear      _octilinear;
+    // threads
+    vector< Controller * > controllers;
 
     // display
     int             _content_width;
     int             _content_height;
 
     // force target flag
-    TIMERTYPE       _timerType;   // 0:TIMER_BOUNDARY, 1:TIMER_PATHWAY_CELL, 2:TIMER_PATHWAY
+    TIMERTYPE       _timerType;   // 0:TIMER_BOUNDARY, 1:TIMER_CELL, 2:TIMER_PATHWAY
 
     // menu
     // load
@@ -93,9 +83,8 @@ private:
 
     void postLoad( void );
     void simulateKey( Qt::Key key );
-    void redrawAllScene( void );
 
-    void _init( Boundary * __boundary, Boundary * __simBoundary );
+    void _init( void );
 
 #ifdef RECORD_VIDEO
     void _timerVideoStart( void );
@@ -113,6 +102,10 @@ private:
     void _timerPathwayStop( void );
 
     bool _callTimerPathway( unsigned int id, unsigned int i, unsigned int j );
+
+    // thread
+    void processDetailedPathway( void );
+    void stopProcessDetailedPathway( void );
 
 public Q_SLOTS:
 
@@ -147,13 +140,18 @@ public Q_SLOTS:
     void timerMCL( void );
     void timerPathway( void );
 
+    void listenProcessDetailedPathway( void );
+
+    // display
+    void redrawAllScene( void );
+
 public:
     explicit Window( QWidget *parent = 0 );
     explicit Window( const Window & obj );
     ~Window();
 
-    void init( Boundary * __boundary, Boundary * __simBoundary ){
-        _init( __boundary, __simBoundary );
+    void init( void ){
+        _init();
     }
 
 protected:

@@ -13,12 +13,6 @@
 #include <QtGui/QPainter>
 #include <QtCore/QString>
 
-//#include "GraphVizAPI.h"
-//#include "optimization/Floorplan.h"
-//#include "optimization/Deformation.h"
-//#include "optimization/Layout.h"
-//#include "optimization/Flow.h"
-//#include "hola/Hola.h"
 #include "Pathway.h"
 
 

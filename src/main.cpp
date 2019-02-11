@@ -9,7 +9,6 @@ int main( int argc, char **argv )
 // data
 //----------------------------------------------------------
     Pathway pathway;
-    Boundary simplifiedBoundary, boundary;
 
 //----------------------------------------------------------
 // view
@@ -23,7 +22,7 @@ int main( int argc, char **argv )
     pathway.setWidthHeight( width, height );
     window.setWindowTitle( "qtBorder" );
     window.setPathwayData( &pathway );
-    window.init( &boundary, &simplifiedBoundary );
+    window.init();
     window.show();
 
     // cerr << "Use: c -> m -> s ->o" << endl;

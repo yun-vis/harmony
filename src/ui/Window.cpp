@@ -1,7 +1,5 @@
 #include "ui/Window.h"
 
-//ofstream    ofs( "../batch.txt" );
-
 //----------------------------------------------------------
 // Window
 //----------------------------------------------------------
@@ -23,7 +21,9 @@ Window::Window( QWidget *parent )
     //_timerPtr->resize( 1 );
     //(*_timerPtr)[0] = new QBasicTimer();
 
+#ifdef RECORD_VIDEO
     _timerVideoStart();
+#endif // RECORD_VIDEO
 }
 
 Window::~Window()
@@ -34,16 +34,16 @@ Window::Window( const Window & obj )
 {
     _timerPtr = obj._timerPtr;
     _gv = obj._gv;
-    _boundary = obj._boundary;
-    _simplifiedBoundary = obj._simplifiedBoundary;
+    _boundaryPtr = obj._boundaryPtr;
+    _simplifiedBoundaryPtr = obj._simplifiedBoundaryPtr;
 
     // cells of subgraphs
-    _cell = obj._cell;
-    _road = obj._road;
-    _lane = obj._lane;
+    _cellPtr = obj._cellPtr;
+    _roadPtr = obj._roadPtr;
+    _lanePtr = obj._lanePtr;
 
-    _smooth = obj._smooth;
-    _octilinear = obj._octilinear;
+    _smoothPtr = obj._smoothPtr;
+    _octilinearPtr = obj._octilinearPtr;
 
     // display
     _content_width = obj._content_width;
@@ -51,25 +51,28 @@ Window::Window( const Window & obj )
     _timerType = obj._timerType;
 }
 
-void Window::_init( Boundary * __boundary, Boundary * __simBoundary )
+void Window::_init( void )
 {
     _content_width = width() - LEFTRIGHT_MARGIN;
     _content_height = height() - TOPBOTTOM_MARGIN;
 
-    _boundary = __boundary;
-    _simplifiedBoundary = __simBoundary;
+    // initialization of boundary 
+    _boundaryPtr = new Boundary;
+    _simplifiedBoundaryPtr = new Boundary;
+    _smoothPtr = new Smooth;
+    _octilinearPtr = new Octilinear;
 
-    _cell.setPathwayData( _pathway );
-    _road.setPathwayData( _pathway );
+    // initialization of region data
+    _cellPtr = new Cell;
+    _roadPtr = new Road;
+    _lanePtr = new vector< Road >;
 
-    //_smoothPtr = __smoothPtr;
-    //_octilinearPtr = __octilinearPtr;
-
-    //if( _smoothPtr == NULL ) assert( _smoothPtr );
-    //if( _octilinearPtr == NULL ) assert( _octilinearPtr );
+    _cellPtr->setPathwayData( _pathway );
+    _roadPtr->setPathwayData( _pathway );
 
     _gv->setPathwayData( _pathway );
-    _gv->init( _boundary, _simplifiedBoundary, &_cell, &_road, &_lane );
+    _gv->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+                        _cellPtr, _roadPtr, _lanePtr );
 }
 
 void Window::createActions( void )
@@ -105,8 +108,8 @@ void Window::createActions( void )
 void Window::createMenus( void )
 {
     // load
-    loadMenu = menuBar()->addMenu( tr("&Load") );
-    loadMenu->addAction( selDataAct );
+    // loadMenu = menuBar()->addMenu( tr("&Load") );
+    // loadMenu->addAction( selDataAct );
 
     // simplification
     simMenu = menuBar()->addMenu( tr("&Simplification") );
@@ -135,8 +138,8 @@ void Window::simulateKey( Qt::Key key )
 
 void Window::postLoad( void )
 {
-    _boundary->adjustsize( _content_width/2, _content_height/2 );
-    _boundary->clearConflicts();
+    _boundaryPtr->adjustsize( _content_width/2, _content_height/2 );
+    _boundaryPtr->clearConflicts();
 
     redrawAllScene();
 }
@@ -160,15 +163,15 @@ void Window::selectForce( void )
 
 void Window::selectCloneGraph( void )
 {
-    _simplifiedBoundary->cloneLayout( *_boundary );
-    _simplifiedBoundary->clearConflicts();
+    _simplifiedBoundaryPtr->cloneLayout( *_boundaryPtr );
+    _simplifiedBoundaryPtr->clearConflicts();
 
     redrawAllScene();
 }
 
 void Window::selectMinDistance( void )
 {
-    _simplifiedBoundary->simplifyLayout();
+    _simplifiedBoundaryPtr->simplifyLayout();
     _gv->isSimplifiedFlag() = true;
     redrawAllScene();
 }
@@ -176,7 +179,7 @@ void Window::selectMinDistance( void )
 void Window::selectMovebackSmooth( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedBoundary->movebackNodes( *_boundary, TYPE_SMOOTH );
+    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_SMOOTH );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -184,7 +187,7 @@ void Window::selectMovebackSmooth( void )
 void Window::selectMovebackOctilinear( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedBoundary->movebackNodes( *_boundary, TYPE_OCTILINEAR );
+    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_OCTILINEAR );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -194,14 +197,14 @@ void Window::selectSmoothSmallCG( void )
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
-    unsigned int nLabels = _simplifiedBoundary->nLabels();
-    _smooth.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _smooth.ConjugateGradient( 3 * _simplifiedBoundary->nVertices() );
-    _smooth.retrieve();
+    unsigned int nLabels = _simplifiedBoundaryPtr->nLabels();
+    _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundaryPtr->nVertices() );
+    _smoothPtr->retrieve();
 
-    cerr << "simNStation = " << _simplifiedBoundary->nVertices() << endl;
-    cerr << "nStation = " << _boundary->nVertices() << endl;
-    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundary->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedBoundaryPtr->nVertices() << endl;
+    cerr << "nStation = " << _boundaryPtr->nVertices() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
 
     // run smooth optimization
     while( true ) {
@@ -211,11 +214,11 @@ void Window::selectSmoothSmallCG( void )
 
         // check if all nodes are moved back
 #ifdef  DEBUG
-        cerr << " num_vertices( _simplifiedBoundary->boundary() ) = " << num_vertices( _simplifiedBoundary->boundary() ) << endl
-             << " num_vertices( _boundary->boundary() ) = " << num_vertices( _boundary->boundary() ) << endl
+        cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
+             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
-        if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
             break;
         }
         else {
@@ -224,22 +227,22 @@ void Window::selectSmoothSmallCG( void )
             }
         }
 
-        _smooth.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
+        _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
-        err = _smooth.ConjugateGradient( iter );
-        _smooth.retrieve();
+        err = _smoothPtr->ConjugateGradient( iter );
+        _smoothPtr->retrieve();
 
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
-    //_simplifiedBoundary->adjustsize( width(), height() );
-    _smooth.clear();
-    _boundary->cloneSmooth( *_simplifiedBoundary );
+    //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+    _smoothPtr->clear();
+    _boundaryPtr->cloneSmooth( *_simplifiedBoundaryPtr );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
     // ofs << "Total Time CG = " << clock() - start_time << endl;
@@ -250,25 +253,25 @@ void Window::selectSmoothSmallCG( void )
 void Window::selectSmooth( OPTTYPE opttype )
 {
     // run smooth optimization
-    _smooth.prepare( _boundary, _content_width/2, _content_height/2 );
+    _smoothPtr->prepare( _boundaryPtr, _content_width/2, _content_height/2 );
     switch( opttype ){
         case LEAST_SQUARE:
         {
-            int iter = _boundary->nVertices();
-            _smooth.LeastSquare( iter );
+            int iter = _boundaryPtr->nVertices();
+            _smoothPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _boundary->nVertices();
-            _smooth.ConjugateGradient( iter );
+            int iter = _boundaryPtr->nVertices();
+            _smoothPtr->ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _smooth.retrieve();
-    _smooth.clear();
+    _smoothPtr->retrieve();
+    _smoothPtr->clear();
 
     redrawAllScene();
 }
@@ -289,12 +292,12 @@ void Window::selectOctilinearSmallCG( void )
 {
     // run coarse octilinear optimization
     double err = 0.0;
-    unsigned int nLabels = _simplifiedBoundary->nLabels();
+    unsigned int nLabels = _simplifiedBoundaryPtr->nLabels();
 
-    _octilinear.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-    err = _octilinear.ConjugateGradient( 5 * _simplifiedBoundary->nVertices() );
-    _octilinear.retrieve();
-    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundary->nVertices() << endl;
+    _octilinearPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedBoundaryPtr->nVertices() );
+    _octilinearPtr->retrieve();
+    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundaryPtr->nVertices() << endl;
 
     // run octilinear optimization
     while( true ) {
@@ -303,7 +306,7 @@ void Window::selectOctilinearSmallCG( void )
         int iter = 0;
 
         // check if all nodes are moved back
-        if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
             break;
         }
         else {
@@ -312,21 +315,21 @@ void Window::selectOctilinearSmallCG( void )
             }
         }
 
-        _octilinear.prepare( _simplifiedBoundary, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedBoundary->boundary() ) == ( num_vertices( _boundary->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
+        _octilinearPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundary->nVertices() + nLabels - _simplifiedBoundary->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
-        err = _octilinear.ConjugateGradient( iter );
-        _octilinear.retrieve();
+        err = _octilinearPtr->ConjugateGradient( iter );
+        _octilinearPtr->retrieve();
 
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
 
-    _octilinear.clear();
-    _boundary->cloneOctilinear( *_simplifiedBoundary );
+    _octilinearPtr->clear();
+    _boundaryPtr->cloneOctilinear( *_simplifiedBoundaryPtr );
 
     redrawAllScene();
 }
@@ -334,26 +337,26 @@ void Window::selectOctilinearSmallCG( void )
 void Window::selectOctilinear( OPTTYPE opttype )
 {
     // run octilinear optimization
-    _octilinear.prepare( _boundary, _content_width/2, _content_height/2 );
+    _octilinearPtr->prepare( _boundaryPtr, _content_width/2, _content_height/2 );
 
     switch( opttype ) {
         case LEAST_SQUARE:
         {
-            int iter = _boundary->nVertices();
-            _octilinear.LeastSquare( iter );
+            int iter = _boundaryPtr->nVertices();
+            _octilinearPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _boundary->nVertices();
-            _octilinear.ConjugateGradient( iter );
+            int iter = _boundaryPtr->nVertices();
+            _octilinearPtr->ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _octilinear.retrieve();
-    _octilinear.clear();
+    _octilinearPtr->retrieve();
+    _octilinearPtr->clear();
 
     redrawAllScene();
 }
@@ -372,11 +375,12 @@ void Window::selectOctilinearCG( void )
 
 void Window::selectBuildBoundary( void )
 {
-    _boundary->buildBoundaryGraph();
+    _boundaryPtr->buildBoundaryGraph();
     _gv->isSimplifiedFlag() = false;
     redrawAllScene();
 }
 
+#ifdef RECORD_VIDEO
 void Window::_timerVideoStart( void )
 {
     _timerVideo.start( 1000, this );
@@ -388,10 +392,12 @@ void Window::_timerVideoStop( void )
 {
     _timerVideo.stop();
 }
+
 void Window::timerVideo( void )
 {
     simulateKey( Qt::Key_E );
 }
+#endif // RECORD_VIDEO
 
 void Window::_timerBoundaryStart( void )
 {
@@ -403,9 +409,9 @@ void Window::_timerBoundaryStart( void )
     contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
     contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
 
-    _boundary->forceBoundary().init( &_boundary->composite(), contour, "../configs/boundary.conf" );
+    _boundaryPtr->forceBoundary().init( &_boundaryPtr->composite(), contour, "../configs/boundary.conf" );
 #ifdef SKIP
-    void *ptr = &_boundary->boundary();
+    void *ptr = &_boundaryPtr->boundary();
             ForceGraph *fgPtr = (ForceGraph*) (ptr);
             _forceBoundary.init( fgPtr, contour );
             printGraph( *fgPtr );
@@ -433,9 +439,9 @@ void Window::_timerBoundaryStop( void )
 {
     _timerStop();
 
-    _boundary->createPolygonComplex();
+    _boundaryPtr->createPolygonComplex();
     simulateKey( Qt::Key_B );
-    _boundary->writePolygonComplex();
+    _boundaryPtr->writePolygonComplex();
 
     _gv->isPolygonFlag() = true;
     _gv->isPolygonComplexFlag() = false;
@@ -447,15 +453,15 @@ void Window::timerBoundary( void )
 {
     double err = 0.0;
 
-    switch ( _boundary->forceBoundary().mode() ) {
+    switch ( _boundaryPtr->forceBoundary().mode() ) {
 
         case TYPE_FORCE:
         case TYPE_BARNES_HUT:
         {
-            _boundary->forceBoundary().force();
-            err = _boundary->forceBoundary().verletIntegreation();
+            _boundaryPtr->forceBoundary().force();
+            err = _boundaryPtr->forceBoundary().verletIntegreation();
             cerr << "err (force) = " << err << endl;
-            if ( err < _boundary->forceBoundary().finalEpsilon() ) {
+            if ( err < _boundaryPtr->forceBoundary().finalEpsilon() ) {
                 _timerBoundaryStop();
                 cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -465,10 +471,10 @@ void Window::timerBoundary( void )
         }
         case TYPE_CENTROID:
         {
-            _boundary->forceBoundary().centroidGeometry();
-            err = _boundary->forceBoundary().gap();
+            _boundaryPtr->forceBoundary().centroidGeometry();
+            err = _boundaryPtr->forceBoundary().gap();
             cerr << "err (centroid) = " << err << endl;
-            if ( err < _boundary->forceBoundary().finalEpsilon() ) {
+            if ( err < _boundaryPtr->forceBoundary().finalEpsilon() ) {
                 _timerBoundaryStop();
                 cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -477,11 +483,11 @@ void Window::timerBoundary( void )
         }
         case TYPE_HYBRID:
         {
-            _boundary->forceBoundary().force();
-            _boundary->forceBoundary().centroidGeometry();
-            err = _boundary->forceBoundary().verletIntegreation();
+            _boundaryPtr->forceBoundary().force();
+            _boundaryPtr->forceBoundary().centroidGeometry();
+            err = _boundaryPtr->forceBoundary().verletIntegreation();
             cerr << "err (hybrid) = " << err << endl;
-            if ( err < _boundary->forceBoundary().finalEpsilon() ) {
+            if ( err < _boundaryPtr->forceBoundary().finalEpsilon() ) {
                 _timerBoundaryStop();
                 cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -495,11 +501,11 @@ void Window::timerBoundary( void )
 
 void Window::_timerPathwayCellStart( void )
 {
-    _timerType = TIMER_PATHWAY_CELL;
-    _timerPtr->resize( _cell.forceCellVec().size() );
+    _timerType = TIMER_CELL;
+    _timerPtr->resize( _cellPtr->forceCellVec().size() );
 
-    cerr << "_cell.forceCellVec().size() = " << _cell.forceCellVec().size() << endl;
-    for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ) {
+    cerr << "_cellPtr->forceCellVec().size() = " << _cellPtr->forceCellVec().size() << endl;
+    for( unsigned int i = 0; i < _cellPtr->forceCellVec().size(); i++ ) {
         (*_timerPtr)[i] = new QBasicTimer();
         (*_timerPtr)[i]->start( 30, this );
         cerr << "Cell:_timerStart: " << " (*_timerPtr)[i].id = " << (*_timerPtr)[i]->timerId() << endl;
@@ -530,21 +536,21 @@ void Window::timerPathwayCell( void )
 {
     double err = 0.0;
 
-    assert( _timerPtr->size() == _cell.forceCellVec().size() );
+    assert( _timerPtr->size() == _cellPtr->forceCellVec().size() );
 
-    for( unsigned int i = 0; i < _cell.forceCellVec().size(); i++ ){
+    for( unsigned int i = 0; i < _cellPtr->forceCellVec().size(); i++ ){
 
         // cerr << "i = " << i << " active = " << (*_timerPtr)[i]->isActive() << endl;
         if( (*_timerPtr)[i]->isActive() == true ){
-            switch ( _cell.forceCellVec()[i].mode() ) {
+            switch ( _cellPtr->forceCellVec()[i].mode() ) {
                 case TYPE_FORCE:
                 case TYPE_BARNES_HUT:
                 {
-                    _cell.forceCellVec()[i].force();
-                    _cell.additionalForces();
-                    err = _cell.forceCellVec()[i].verletIntegreation();
+                    _cellPtr->forceCellVec()[i].force();
+                    _cellPtr->additionalForces();
+                    err = _cellPtr->forceCellVec()[i].verletIntegreation();
                     cerr << "err (force) = " << err << endl;
-                    if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
+                    if ( err < _cellPtr->forceCellVec()[i].finalEpsilon() ) {
                         (*_timerPtr)[i]->stop();
                         _timerPathwayCellStop();
                         cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
@@ -555,11 +561,11 @@ void Window::timerPathwayCell( void )
                 }
                 case TYPE_CENTROID:
                 {
-                    _cell.forceCellVec()[i].centroidGeometry();
-                    _cell.additionalForces();
-                    err = _cell.forceCellVec()[i].gap();
+                    _cellPtr->forceCellVec()[i].centroidGeometry();
+                    _cellPtr->additionalForces();
+                    err = _cellPtr->forceCellVec()[i].gap();
                     cerr << "err (centroid) = " << err << endl;
-                    if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
+                    if ( err < _cellPtr->forceCellVec()[i].finalEpsilon() ) {
                         (*_timerPtr)[i]->stop();
                         _timerPathwayCellStop();
                         cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
@@ -569,12 +575,12 @@ void Window::timerPathwayCell( void )
                 }
                 case TYPE_HYBRID:
                 {
-                    _cell.forceCellVec()[i].force();
-                    _cell.additionalForces();
-                    _cell.forceCellVec()[i].centroidGeometry();
-                    err = _cell.forceCellVec()[i].verletIntegreation();
+                    _cellPtr->forceCellVec()[i].force();
+                    _cellPtr->additionalForces();
+                    _cellPtr->forceCellVec()[i].centroidGeometry();
+                    err = _cellPtr->forceCellVec()[i].verletIntegreation();
                     cerr << "err (hybrid) = " << err << endl;
-                    if ( err < _cell.forceCellVec()[i].finalEpsilon() ) {
+                    if ( err < _cellPtr->forceCellVec()[i].finalEpsilon() ) {
                         (*_timerPtr)[i]->stop();
                         _timerPathwayCellStop();
                         cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
@@ -592,9 +598,9 @@ void Window::timerPathwayCell( void )
 
 void Window::_timerMCLStart( void )
 {
-    _timerType = TIMER_MCL;
+    _timerType = TIMER_BONE;
 
-    vector< multimap< int, CellComponent > > & cellComponentVec = _cell.cellComponentVec();
+    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
 
     for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
 
@@ -636,9 +642,9 @@ void Window::_timerMCLStop( void )
 void Window::timerMCL( void )
 {
     double err = 0.0;
-    //assert( _timerPtr->size() == _cell.forceCellVec().size() );
+    //assert( _timerPtr->size() == _cellPtr->forceCellVec().size() );
 
-    vector< multimap< int, CellComponent > > & cellComponentVec = _cell.cellComponentVec();
+    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
 
     unsigned int idT = 0;
     for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
@@ -710,7 +716,7 @@ void Window::timerMCL( void )
 void Window::_timerPathwayStart( void )
 {
     _timerType = TIMER_PATHWAY;
-    unsigned int nComponent = _cell.nComponent();
+    unsigned int nComponent = _cellPtr->nComponent();
 
     _timerPtr->resize( nComponent );
     for( unsigned int i = 0; i < nComponent; i++ ){
@@ -732,19 +738,19 @@ void Window::_timerPathwayStop( void )
     if( !isActive ) {
 
         _timerStop();
-        _road.initRoad( _cell.cellComponentVec() );
-        _road.buildRoad();
+        _roadPtr->initRoad( _cellPtr->cellComponentVec() );
+        _roadPtr->buildRoad();
         // cerr << "road built..." << endl;
         _gv->isRoadFlag() = true;
 
         cerr << "**************" << endl;
         cerr << "Steriner tree" << endl;
 
-        for( unsigned int i = 0; i < _road.highwayMat().size(); i++ ){
-            for( unsigned int j = 0; j < _road.highwayMat()[i].size(); j++ ){
+        for( unsigned int i = 0; i < _roadPtr->highwayMat().size(); i++ ){
+            for( unsigned int j = 0; j < _roadPtr->highwayMat()[i].size(); j++ ){
 
                 map< MetaboliteGraph::vertex_descriptor,
-                MetaboliteGraph::vertex_descriptor > &common = _road.highwayMat()[i][j].common;
+                MetaboliteGraph::vertex_descriptor > &common = _roadPtr->highwayMat()[i][j].common;
 
                 map< MetaboliteGraph::vertex_descriptor,
                 MetaboliteGraph::vertex_descriptor >::iterator it;
@@ -757,13 +763,13 @@ void Window::_timerPathwayStop( void )
             }
         }
 
-        _lane.clear();
-        _lane.resize( _pathway->nSubsys() );
-        for( unsigned int i = 0; i < _lane.size(); i++ ){
-            vector < Highway > &highwayVec = _road.highwayMat()[i];
-            _lane[i].setPathwayData( _pathway );
-            _lane[i].initLane( i, _cell.cellComponentVec()[i], &highwayVec );
-            _lane[i].steinerTree();
+        _lanePtr->clear();
+        _lanePtr->resize( _pathway->nSubsys() );
+        for( unsigned int i = 0; i < _lanePtr->size(); i++ ){
+            vector < Highway > &highwayVec = _roadPtr->highwayMat()[i];
+            (*_lanePtr)[i].setPathwayData( _pathway );
+            (*_lanePtr)[i].initLane( i, _cellPtr->cellComponentVec()[i], &highwayVec );
+            (*_lanePtr)[i].steinerTree();
         }
         _gv->isLaneFlag() = true;
     }
@@ -773,7 +779,7 @@ bool Window::_callTimerPathway( unsigned int id, unsigned int i, unsigned int j 
 {
     bool isStopped = false;
     double err = 0.0;
-    vector< multimap< int, CellComponent > > &cellComponentVec = _cell.cellComponentVec();
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
 
     multimap< int, CellComponent >::iterator itC;
     multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
@@ -836,12 +842,13 @@ bool Window::_callTimerPathway( unsigned int id, unsigned int i, unsigned int j 
 
 void Window::timerPathway( void )
 {
-    vector< multimap< int, CellComponent > > &cellComponentVec = _cell.cellComponentVec();
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
 
-    if( _timerPtr->size() != _cell.nComponent() ){
+    if( _timerPtr->size() != _cellPtr->nComponent() ){
 
-        cerr << "timerSize = " << _timerPtr->size() << " nCompo = " << _cell.nComponent() << endl;
-        assert( _timerPtr->size() == _cell.nComponent() );
+        cerr << "timerSize = " << _timerPtr->size() << " nCompo = " << _cellPtr->nComponent() << endl;
+        return;
+        // assert( _timerPtr->size() == _cellPtr->nComponent() );
     }
 
     vector< vector< unsigned int > > idMat;
@@ -860,6 +867,7 @@ void Window::timerPathway( void )
     // cerr << "idD = " << idD << endl;
 
     // vector< std::thread * > threads;
+    vector< std::thread * > threads;
     for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
 
         const multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
@@ -867,26 +875,141 @@ void Window::timerPathway( void )
 
         for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
 
-            _callTimerPathway( idMat[i][j], i, j );
-
+            //_callTimerPathway( idMat[i][j], i, j );
             // cerr << "id = " << idMat[i][j] << endl;
-            // QBasicTimer	*timer = (*_timerPtr)[idMat[i][j]];
 /*
+            // QBasicTimer	*timer = (*_timerPtr)[idMat[i][j]];
+            if( (*_timerPtr)[idMat[i][j]]->isActive() ){
+
+                cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
+                Controller * thPtr = new Controller;
+                threads.push_back( thPtr );
+
+                QString test;
+                Q_EMIT thPtr->operate( test );
+            }
+*/
+
+//            QBasicTimer	*timer = (*_timerPtr)[idMat[i][j]];
             if( (*_timerPtr)[idMat[i][j]]->isActive() ){
                 std::thread * th = new std::thread( &Window::_callTimerPathway, this, idMat[i][j], i, j );
                 threads.push_back( th );
             }
-*/
+
         }
     }
 
-/*
     // check if all threads are finished
     for( unsigned int i = 0; i < threads.size(); i++ ) {
         threads[ i ]->join();
         delete threads[ i ];
     }
-*/
+
+}
+
+void Window::listenProcessDetailedPathway( void )
+{
+    bool allFinished = true;
+
+    // check if all threads are finished
+    for( unsigned int i = 0; i < controllers.size(); i++ ) {
+        allFinished = allFinished && controllers[ i ]->wt().isFinished();
+        // cerr << "is controllers[" << i << "] finished ? "<< controllers[ i ]->wt().isFinished();
+    }
+
+    if( allFinished == true ){
+        simulateKey( Qt::Key_X );
+    }
+}
+
+void Window::processDetailedPathway( void )
+{
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
+
+    vector< vector< unsigned int > > idMat;
+    idMat.resize( cellComponentVec.size() );
+    unsigned int idD = 0;
+    for( unsigned int i = 0; i < idMat.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
+        idMat[i].resize( cellComponentMap.size() );
+        for( unsigned int j = 0; j < idMat[i].size(); j++ ){
+
+            idMat[i][j] = idD;
+            idD++;
+        }
+    }
+    // cerr << "idD = " << idD << endl;
+    cerr << "From main thread: " << QThread::currentThreadId() << endl;
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        const multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
+        // multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+
+        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
+
+            cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
+            Controller * conPtr = new Controller;
+            conPtr->setPathwayData( _pathway );
+            conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+                                   _cellPtr, _roadPtr, _lanePtr );
+            conPtr->init( i, j );
+            controllers.push_back( conPtr );
+
+            connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
+            connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessDetailedPathway );
+
+            QString test;
+            Q_EMIT conPtr->operate( test );
+        }
+    }
+}
+
+void Window::stopProcessDetailedPathway( void )
+{
+    // quit all threads
+    for( unsigned int i = 0; i < controllers.size(); i++ ) {
+        controllers[ i ]->wt().quit();
+        delete controllers[ i ];
+    }
+    controllers.clear();
+
+    // compute steiner tree
+    _roadPtr->initRoad( _cellPtr->cellComponentVec() );
+    _roadPtr->buildRoad();
+    // cerr << "road built..." << endl;
+    _gv->isRoadFlag() = true;
+
+    cerr << "/***************" << endl;
+    cerr << "/* Steiner tree" << endl;
+    cerr << "/***************" << endl;
+
+    for( unsigned int i = 0; i < _roadPtr->highwayMat().size(); i++ ){
+        for( unsigned int j = 0; j < _roadPtr->highwayMat()[i].size(); j++ ){
+
+            map< MetaboliteGraph::vertex_descriptor,
+                    MetaboliteGraph::vertex_descriptor > &common = _roadPtr->highwayMat()[i][j].common;
+
+            map< MetaboliteGraph::vertex_descriptor,
+                    MetaboliteGraph::vertex_descriptor >::iterator it;
+#ifdef DEBUG
+            for( it = common.begin(); it != common.end(); it++ ){
+                    cerr << _pathway->subG()[i][ it->first ].id << endl;
+                }
+                cerr << endl;
+#endif // DEBUG
+        }
+    }
+
+    _lanePtr->clear();
+    _lanePtr->resize( _pathway->nSubsys() );
+    for( unsigned int i = 0; i < _lanePtr->size(); i++ ){
+        vector < Highway > &highwayVec = _roadPtr->highwayMat()[i];
+        (*_lanePtr)[i].setPathwayData( _pathway );
+        (*_lanePtr)[i].initLane( i, _cellPtr->cellComponentVec()[i], &highwayVec );
+        (*_lanePtr)[i].steinerTree();
+    }
+    _gv->isLaneFlag() = true;
 }
 
 void Window::timerEvent( QTimerEvent *event )
@@ -894,20 +1017,22 @@ void Window::timerEvent( QTimerEvent *event )
     // cerr << "timer event..." << endl;
     Q_UNUSED( event );
 
+#ifdef RECORD_VIDEO
     if( event->timerId() == _timerVideoID ){
         // cerr << "event->timerId() = " << event->timerId() << endl;
         timerVideo();
     }
     else{
+#endif // RECORD_VIDEO
         // cerr << "timerType = " << _timerType << " event->timerId() = " << event->timerId() << endl;
 
         if( _timerType == TIMER_BOUNDARY ){
             timerBoundary();
         }
-        else if( _timerType == TIMER_PATHWAY_CELL ){
+        else if( _timerType == TIMER_CELL ){
             timerPathwayCell();
         }
-        else if( _timerType == TIMER_MCL ){
+        else if( _timerType == TIMER_BONE ){
             timerMCL();
         }
         else if( _timerType == TIMER_PATHWAY ){
@@ -919,7 +1044,9 @@ void Window::timerEvent( QTimerEvent *event )
         else {
             cerr << "Something is wrong here... at" << __LINE__ << " in " << __FILE__ << endl;
         }
+#ifdef RECORD_VIDEO
     }
+#endif // RECORD_VIDEO
     //cerr << "tid = " << event->timerId() << endl;
     //cerr << "timerType = " << _timerType << " tid = " << event->timerId() << endl;
     redrawAllScene();
@@ -983,7 +1110,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "stop timer event" << endl;
             _timerStop();
             _timerMCLStop();
-            _cell.updatePathwayCoords();
+            _cellPtr->updatePathwayCoords();
             //_gv->isMCLPolygonFlag() = false;
             redrawAllScene();
             break;
@@ -994,18 +1121,19 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            _timerPathwayStart();
+            //_timerPathwayStart();
+            processDetailedPathway();
             _gv->isPathwayPolygonFlag() = true;
             _gv->isMCLPolygonFlag() = false;
             break;
         }
         case Qt::Key_X:
         {
-            cerr << "stop timer event" << endl;
-            _timerStop();
-            _timerPathwayStop();
+            cerr << "stopProcessDetailedPathway..." << endl;
+            stopProcessDetailedPathway();
+            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
             redrawAllScene();
-            assert( _timerPtr->size() == 0 );
             break;
         }
         case Qt::Key_3:
@@ -1060,11 +1188,11 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_L:
         {
             // load setting
-            _pathway->initLayout( _boundary->polygonComplex() );
+            _pathway->initLayout( _boundaryPtr->polygonComplex() );
 
             // initialize cell
-            _cell.clear();
-            _cell.init( &_boundary->polygonComplex() );
+            _cellPtr->clear();
+            _cellPtr->init( &_boundaryPtr->polygonComplex() );
 
             _gv->isCellFlag() = true;
             _gv->isCompositeFlag() = false;
@@ -1076,9 +1204,9 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_P:
         {
-            _cell.createPolygonComplex();
-            _cell.updateMCLCoords();
-            //_cell.updatePathwayCoords();
+            _cellPtr->createPolygonComplex();
+            _cellPtr->updateMCLCoords();
+            //_cellPtr->updatePathwayCoords();
 
             // _gv->isCellPolygonComplexFlag() = true;
             // _gv->isSubPathwayFlag() = true;
@@ -1097,7 +1225,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_R:
         {
-            _boundary->readPolygonComplex();
+            _boundaryPtr->readPolygonComplex();
             _gv->isPolygonComplexFlag() = true;
             _gv->isBoundaryFlag() = true;
             redrawAllScene();
@@ -1116,7 +1244,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             selectCloneGraph();
             selectOctilinearCG();
-            _boundary->updatePolygonComplex();
+            _boundaryPtr->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
             _gv->isPolygonFlag() = false;
             _gv->isCompositeFlag() = false;
@@ -1135,13 +1263,15 @@ void Window::keyPressEvent( QKeyEvent *event )
             //_pathway->init( "../xml/tiny/", "../xml/tmp/",
             _pathway->init( "../xml/small/", "../xml/tmp/",
             //_pathway->init( "../xml/A/", "../xml/tmp/",
+            //_pathway->init( "../xml/full/", "../xml/tmp/",
                             "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
             //_pathway->loadDot( "../dot/TradeLand.dot" );
 
             _pathway->generate();
+            _pathway->exportEdges();
 
-            _boundary->init( _pathway->skeletonG() );
-            //_boundary->buildSkeleton();
+            _boundaryPtr->init( _pathway->skeletonG() );
+            //_boundaryPtr->buildSkeleton();
 
             // update content width and height
 #ifdef DEBUG
@@ -1172,9 +1302,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->setSceneRect( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
 
-            _boundary->normalizeSkeleton( _content_width, _content_height );
-            _boundary->decomposeSkeleton();
-            _boundary->normalizeComposite( _content_width, _content_height );
+            _boundaryPtr->normalizeSkeleton( _content_width, _content_height );
+            _boundaryPtr->decomposeSkeleton();
+            _boundaryPtr->normalizeComposite( _content_width, _content_height );
 
             _gv->isCompositeFlag() = true;
 

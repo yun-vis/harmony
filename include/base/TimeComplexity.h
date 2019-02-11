@@ -5,4 +5,3 @@ extern double	getCPUTime	( void );
 extern void	checkInCPUTime	( void );
 extern double	checkOutCPUTime	( void );
 extern void	reportTime	( void );
-

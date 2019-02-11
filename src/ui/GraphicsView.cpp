@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 void GraphicsView::_item_seeds( void )
 {
-    ForceGraph &c = _boundary->composite();
+    ForceGraph &c = _boundaryPtr->composite();
 
     BGL_FORALL_VERTICES( vd, c, ForceGraph ) {
 
@@ -31,7 +31,7 @@ void GraphicsView::_item_seeds( void )
 
 void GraphicsView::_item_skeleton( void )
 {
-    ForceGraph &s = _boundary->skeleton();
+    ForceGraph &s = _boundaryPtr->skeleton();
 
     // draw edges
     BGL_FORALL_EDGES( ed, s, ForceGraph ) {
@@ -66,7 +66,7 @@ void GraphicsView::_item_skeleton( void )
 
 void GraphicsView::_item_composite( void )
 {
-    ForceGraph &s = _boundary->composite();
+    ForceGraph &s = _boundaryPtr->composite();
 
     // draw edges
     BGL_FORALL_EDGES( ed, s, ForceGraph ) {
@@ -101,9 +101,9 @@ void GraphicsView::_item_composite( void )
 
 void GraphicsView::_item_polygonComplex( void )
 {
-    ForceGraph &s = _boundary->skeleton();
-    //vector < vector< Coord2 > > p = _boundary->polygons();
-    map< unsigned int, Polygon2 >  p = _boundary->polygonComplex();
+    ForceGraph &s = _boundaryPtr->skeleton();
+    //vector < vector< Coord2 > > p = _boundaryPtr->polygons();
+    map< unsigned int, Polygon2 >  p = _boundaryPtr->polygonComplex();
     map< unsigned int, Polygon2 >::iterator itP = p.begin();
     for( ; itP != p.end(); itP++ ){
 
@@ -132,8 +132,8 @@ void GraphicsView::_item_polygonComplex( void )
 
 void GraphicsView::_item_polygons( void )
 {
-    ForceGraph &s = _boundary->composite();
-    vector< Seed > &seedVec = *_boundary->forceBoundary().voronoi().seedVec();
+    ForceGraph &s = _boundaryPtr->composite();
+    vector< Seed > &seedVec = *_boundaryPtr->forceBoundary().voronoi().seedVec();
 
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -165,9 +165,9 @@ void GraphicsView::_item_boundary( void )
 {
     BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
-        g = & _simplifiedBoundary->boundary();
+        g = & _simplifiedBoundaryPtr->boundary();
     else
-        g = & _boundary->boundary();
+        g = & _boundaryPtr->boundary();
 
     // draw edges
     BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {
