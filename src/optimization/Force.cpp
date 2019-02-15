@@ -355,6 +355,7 @@ void Force::_centroidGeometry( void )
         if ( _seedVec[ g[vd].id ].cellPolygon.area() != 0 ) {
 #ifdef DEBUG
             cerr << "vid = " << g[vd].id
+                 << " element = " << _seedVec[ g[vd].id ].cellPolygon.elements().size()
                  << " area = " << _seedVec[ g[vd].id ].cellPolygon.area()
                  << " center = " << _seedVec[ g[vd].id ].cellPolygon.center() << endl;
 #endif // DEBUG
@@ -629,18 +630,20 @@ double Force::_verletIntegreation( void )
         switch ( _paramMode ) {
             case TYPE_FORCE:            // force-directed
             case TYPE_BARNES_HUT:
-                val = *g[vd].forcePtr;
+                val = *(g[vd].forcePtr);
                 break;
             case TYPE_CENTROID:
-                val = *g[vd].placePtr;
+                val = *(g[vd].placePtr);
                 break;
             case TYPE_HYBRID:
-                val = _paramRatioForce * *g[vd].forcePtr + cell * _paramRatioVoronoi * *g[vd].placePtr;
+                val = _paramRatioForce * *(g[vd].forcePtr) + cell * _paramRatioVoronoi * *g[vd].placePtr;
             default:
                 break;
         }
 
+#ifdef DEBUG
         cerr << "g[vd].id = " << g[vd].id << " displace.size() = " << displace.size() << endl;
+#endif // DEBUG
         assert( g[vd].id == displace.size() );
         displace.push_back( val );
     }
@@ -730,8 +733,17 @@ double Force::_verletIntegreation( void )
 //
 Force::Force()
 {
+    _id = 0;
+
     _width = 0.0;
     _height = 0.0;
+
+    _forceGraphPtr = NULL;
+    _seedVec.clear();
+    _diagram = NULL;
+
+    _iteration = 0;
+    _temperatureDecay = 0.0;
 
     // configuration parameter
     _paramKa                    = 0.0;
@@ -745,7 +757,7 @@ Force::Force()
     _paramThetaThreshold        = 0.0;
     _paramMinTemperature        = 0.0;
     _paramAlphaTemperature      = 0.0;
-    _paramEnableTemperature     = 0.0;
+    _paramEnableTemperature     = false;
     _paramMode                  = TYPE_HYBRID;
 }
 
@@ -761,8 +773,23 @@ Force::Force()
 //
 Force::Force( const Force & obj )
 {
-    _width = obj._width;
-    _height = obj._height;
+    _id                 = obj._id;
+
+    _width              = obj._width;
+    _height             = obj._height;
+
+    _configFilePath     = obj._configFilePath;
+    _contour            = obj._contour;
+    _boxCenter          = obj._boxCenter;
+
+    _forceGraphPtr      = obj._forceGraphPtr;
+    _seedVec            = obj._seedVec;
+    _voronoi            = obj._voronoi;
+    _diagram            = obj._diagram;
+
+    _quardTree          = obj._quardTree;
+    _iteration          = obj._iteration;
+    _temperatureDecay   = obj._temperatureDecay;
 
     // configuration parameter
     _paramKa                    = obj._paramKa;
@@ -819,8 +846,23 @@ Force::~Force()
 //
 Force & Force::operator = ( const Force & obj )
 {
-    _width = obj._width;
-    _height = obj._height;
+    _id                 = obj._id;
+
+    _width              = obj._width;
+    _height             = obj._height;
+
+    _configFilePath     = obj._configFilePath;
+    _contour            = obj._contour;
+    _boxCenter          = obj._boxCenter;
+
+    _forceGraphPtr      = obj._forceGraphPtr;
+    _seedVec            = obj._seedVec;
+    _voronoi            = obj._voronoi;
+    _diagram            = obj._diagram;
+
+    _quardTree          = obj._quardTree;
+    _iteration          = obj._iteration;
+    _temperatureDecay   = obj._temperatureDecay;
 
     // configuration parameter
     _paramKa                    = obj._paramKa;

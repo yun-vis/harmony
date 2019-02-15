@@ -8,6 +8,9 @@
 #include <iostream>
 
 #ifndef Q_MOC_RUN
+#include "base/WorkerBoundary.h"
+#include "base/WorkerCell.h"
+#include "base/WorkerBone.h"
 #include "base/WorkerPathway.h"
 #endif // Q_MOC_RUN
 
@@ -34,12 +37,7 @@ public:
 //------------------------------------------------------------------------------
 //  	Specific functions
 //------------------------------------------------------------------------------
-    void init( unsigned int i, unsigned int j ){
-        _workerPtr->setPathwayData( _pathway );
-        _workerPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
-                                   _cellPtr, _roadPtr, _lanePtr );
-        _workerPtr->init( i, j );
-    }
+    void init( vector < unsigned int > indexVec, WORKERTYPE type );
 
 public Q_SLOTS:
 

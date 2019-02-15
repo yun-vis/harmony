@@ -10,6 +10,7 @@
 //----------------------------------------------------------------------
 //  Including header files
 //----------------------------------------------------------------------
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <iomanip>

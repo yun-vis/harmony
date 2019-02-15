@@ -42,7 +42,6 @@ private:
     unsigned int             _timerVideoID;
     QBasicTimer              _timerVideo;
 #endif // RECORD_VIDEO
-    vector< QBasicTimer	* > *_timerPtr;
 
     // rendering
     GraphicsView    *_gv;
@@ -54,8 +53,6 @@ private:
     int             _content_width;
     int             _content_height;
 
-    // force target flag
-    TIMERTYPE       _timerType;   // 0:TIMER_BOUNDARY, 1:TIMER_CELL, 2:TIMER_PATHWAY
 
     // menu
     // load
@@ -91,19 +88,17 @@ private:
     void _timerVideoStop( void );
 #endif //RECORD_VIDEO
 
-    void _timerStop( void );
-    void _timerBoundaryStart( void );
-    void _timerBoundaryStop( void );
-    void _timerPathwayCellStart( void );
-    void _timerPathwayCellStop( void );
-    void _timerMCLStart( void );
-    void _timerMCLStop( void );
-    void _timerPathwayStart( void );
-    void _timerPathwayStop( void );
-
-    bool _callTimerPathway( unsigned int id, unsigned int i, unsigned int j );
-
-    // thread
+    // thread controller
+    // boundary
+    void processBoundary( void );
+    void stopProcessBoundary( void );
+    // cell
+    void processCell( void );
+    void stopProcessCell( void );
+    // bone
+    void processBone( void );
+    void stopProcessBone( void );
+    // pathway
     void processDetailedPathway( void );
     void stopProcessDetailedPathway( void );
 
@@ -135,11 +130,15 @@ public Q_SLOTS:
 #ifdef RECORD_VIDEO
     void timerVideo( void );
 #endif //RECORD_VIDEO
-    void timerBoundary( void );
-    void timerPathwayCell( void );
-    void timerMCL( void );
-    void timerPathway( void );
 
+    // thread controller
+    // boundary
+    void listenProcessBoundary( void );
+    // cell
+    void listenProcessCell( void );
+    // bone
+    void listenProcessBone( void );
+    // pathway
     void listenProcessDetailedPathway( void );
 
     // display

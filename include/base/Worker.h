@@ -7,6 +7,7 @@
 #ifndef Q_MOC_RUN
 #include "base/PathwayData.h"
 #include "base/RegionData.h"
+#include "base/Common.h"
 #endif // Q_MOC_RUN
 
 #include <QObject>
@@ -19,7 +20,7 @@ class Worker : public QObject, public PathwayData, public RegionData
 
 protected:
 
-    unsigned int _idI, _idJ;
+    vector < unsigned int > _indexVec;
     QTimer * _timerPtr;
 
 public:
@@ -27,9 +28,8 @@ public:
     explicit Worker( void );
     virtual ~Worker();
 
-    void init( unsigned int i, unsigned int j ){
-        _idI = i;
-        _idJ = j;
+    void init( vector < unsigned int > indexVec ){
+        _indexVec = indexVec;
     }
 
 protected:

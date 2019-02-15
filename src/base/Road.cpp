@@ -161,7 +161,7 @@ void Road::_initLane( unsigned int gid,
 
         _terminalVec[i].common = (*highwayRoadPtr)[i].common;
 
-        cerr << "size = " << _terminalVec[i].common.size() << endl;
+        // cerr << "size = " << _terminalVec[i].common.size() << endl;
 
         map< UndirectedBaseGraph::vertex_descriptor,
                 UndirectedBaseGraph::vertex_descriptor >::iterator it;
@@ -204,7 +204,7 @@ void Road::_initLane( unsigned int gid,
 #endif // DEBUG
     }
 
-    cerr << "nVertices = " << num_vertices( _road ) << endl;
+    // cerr << "nVertices = " << num_vertices( _road ) << endl;
 
     multimap< int, CellComponent >::iterator itC;
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){

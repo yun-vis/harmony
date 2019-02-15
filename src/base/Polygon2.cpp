@@ -77,6 +77,7 @@ void Polygon2::_clear( void )
 //
 Polygon2::Polygon2()
 {
+    _clear();
 }
 
 //

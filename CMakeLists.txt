@@ -84,6 +84,9 @@ set(HEADERS
         include/base/TimeComplexity.h
         include/base/Controller.h
         include/base/Worker.h
+        include/base/WorkerBoundary.h
+        include/base/WorkerCell.h
+        include/base/WorkerBone.h
         include/base/WorkerPathway.h
         include/base/Color.h
         include/base/Cell.h
@@ -145,6 +148,9 @@ set(SOURCES
         src/base/TimeComplexity.cpp
         src/base/Controller.cpp
         src/base/Worker.cpp
+        src/base/WorkerBoundary.cpp
+        src/base/WorkerCell.cpp
+        src/base/WorkerBone.cpp
         src/base/WorkerPathway.cpp
         src/base/Color.cpp
         src/base/Boundary.cpp
@@ -206,12 +212,18 @@ QT5_WRAP_CPP( MOC_SRCS ${UI_HEADERS})
 QT5_WRAP_CPP( MOC_SRCS ${MOC_HEADERS} )
 #QT5_WRAP_CPP( MOC_WINDOWUI ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.ui )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Worker.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerBoundary.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerCell.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerBone.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerPathway.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Controller.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.h )
 QT5_WRAP_CPP( MOC_GRAPHICSVIEW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GraphicsView.h )
 #set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_ui_Window.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Worker.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerCell.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBone.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerPathway.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Controller.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_Window.cpp PROPERTY SKIP_AUTOGEN ON )

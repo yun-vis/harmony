@@ -4,7 +4,7 @@
 //
 //==============================================================================
 
-#ifndef _Boundary_H        // begining of header file
+#ifndef _Boundary_H        // beginning of header file
 #define _Boundary_H        // notifying that this file is included
 
 //----------------------------------------------------------------------
@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <string>
 #include <tinyxml.h>
 
 using namespace std;

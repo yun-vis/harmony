@@ -133,16 +133,20 @@ void GraphicsView::_item_polygonComplex( void )
 void GraphicsView::_item_polygons( void )
 {
     ForceGraph &s = _boundaryPtr->composite();
-    vector< Seed > &seedVec = *_boundaryPtr->forceBoundary().voronoi().seedVec();
+    vector< Seed > &seedVec = *(_boundaryPtr->forceBoundary().voronoi().seedVec());
 
+    // cerr << "test = " << (*_boundaryPtr->forceBoundary().voronoi().seedVec())[0].cellPolygon.elements().size() << endl;
+
+    // cerr << "seedVec.size() = " << seedVec.size() << endl;
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
         Polygon2 &p = seedVec[i].cellPolygon;
+        // cerr << "p.elements().size() = " << p.elements().size() << endl;
 
         QPolygonF polygon;
         for( unsigned int j = 0; j < p.elements().size(); j++ ){
+            // cerr << "i = " << i << " x = " << p.elements()[j].x() << " y = " << p.elements()[j].y() << endl;
             polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
-            // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
         }
 
         GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
@@ -151,6 +155,7 @@ void GraphicsView::_item_polygons( void )
 
         unsigned int gid = s[vd].initID;
         pickBrewerColor( gid, rgb );
+        // cerr << rgb[0]*255 << ", " << rgb[1]*255 << ", " << rgb[2]*255 << endl;
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
         itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
@@ -878,7 +883,6 @@ void GraphicsView::initSceneItems ( void )
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
     if( _is_laneFlag == true ) _item_lane();
-    //if( _is_subPathwayFlag == true ) _item_pathways();
     if( _is_subPathwayFlag == true ) _item_subpathways();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;

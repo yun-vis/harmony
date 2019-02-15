@@ -1070,7 +1070,7 @@ void Boundary::buildSkeleton( void )
         if( key == "node" ){
             string id = elemPtr->Attribute( "id" );
             id.erase( 0, 1 );
-            int vid = stoi( id );
+            int vid = std::stoi( id );
             const string sx = elemPtr->Attribute( "x" );
             double x = stod( sx );
             const string sy = elemPtr->Attribute( "y" );
@@ -1161,6 +1161,7 @@ void Boundary::decomposeSkeleton( void )
         _composite[ vdNew ].heightPtr = new double( *_skeleton[vd].heightPtr );
         _composite[ vdNew ].areaPtr = new double( *_skeleton[vd].areaPtr );
     }
+
     BGL_FORALL_EDGES( ed, _skeleton, ForceGraph )
     {
         ForceGraph::vertex_descriptor vdS = source( ed, _skeleton );
