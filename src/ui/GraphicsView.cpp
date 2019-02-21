@@ -948,19 +948,52 @@ GraphicsView::GraphicsView( QWidget *parent )
     if ( conf.has( "font_size" ) ){
         string paramFont = conf.gets( "font_size" );
         _font_size = stringToDouble( paramFont );
-
+    }
+    if ( conf.has( "size_ratio" ) ){
+        string paramSizeRatio = conf.gets( "size_ratio" );
+        _size_ratio = stringToDouble( paramSizeRatio );
+    }
+    if ( conf.has( "default_width" ) ){
         string paramWidth = conf.gets( "default_width" );
         default_width = stoi( paramWidth );
-
+    }
+    if ( conf.has( "default_height" ) ){
         string paramHeight = conf.gets( "default_height" );
         default_height = stoi( paramHeight );
-        setGeometry( 0, 0, default_width, default_height );
+    }
+    setGeometry( 0, 0, default_width, default_height );
+
+    if ( conf.has( "clone_threshold" ) ){
+        string paramCloneThreshold = conf.gets( "clone_threshold" );
+        _clonedThreshold = stoi( paramCloneThreshold );
+    }
+    if ( conf.has( "input_path" ) ){
+        string paramInputPath = conf.gets( "input_path" );
+        _inputpath = paramInputPath;
+    }
+    if ( conf.has( "tmp_path" ) ){
+        string paramTmpPath = conf.gets( "tmp_path" );
+        _tmppath = paramTmpPath;
+    }
+    if ( conf.has( "file_type" ) ){
+        string paramFileType = conf.gets( "file_type" );
+        _fileType = paramFileType;
+    }
+    if ( conf.has( "file_freq" ) ){
+        string paramFileFreq = conf.gets( "file_freq" );
+        _fileFreq = paramFileFreq;
     }
 
     cerr << "filepath: " << configFilePath << endl;
     cerr << "font_size: " << _font_size << endl;
+    cerr << "size_ratio: " << _size_ratio << endl;
     cerr << "default_width: " << default_width << endl;
     cerr << "default_height: " << default_height << endl;
+    cerr << "clone_threshold: " << _clonedThreshold << endl;
+    cerr << "input_path: " << _inputpath << endl;
+    cerr << "tmp_path: " << _tmppath << endl;
+    cerr << "file_type: " << _fileFreq << endl;
+    cerr << "file_Freq: " << _fileType << endl;
 
     setAutoFillBackground( true );
     setBackgroundBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
@@ -987,7 +1020,6 @@ GraphicsView::GraphicsView( QWidget *parent )
     //setHorizontalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );
     //setVerticalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );
     //viewport()->scroll( 500, 500 );
-
     this->setScene( _scene );
 }
 

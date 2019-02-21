@@ -67,7 +67,7 @@ protected:
     unsigned int				_nEdges;
     unsigned int				_nEbeforeSim;   // edge no. before simplification
     double                                      _meanVSize; // mean area size of the node
-    double                                      _distAlpha;
+    double                                      _distAlpha; // unit distance of a focused edge
     double                                      _distBeta;  // unit distance of an edge
 
     // for recording the information if nodes or edged are deleted.

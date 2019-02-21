@@ -59,7 +59,7 @@ void Controller::init( vector < unsigned int > indexVec, WORKERTYPE type )
     cerr << "Controller::tID = " << QThread::currentThreadId() << endl;
 #endif // DEBUG
 
-    _workerPtr->setPathwayData( _pathway );
+    _workerPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     _workerPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
                                _cellPtr, _roadPtr, _lanePtr );
     _workerPtr->init( indexVec );

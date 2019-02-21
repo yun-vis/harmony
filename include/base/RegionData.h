@@ -21,6 +21,7 @@ using namespace std;
 #include "optimization/Force.h"
 #include "optimization/Smooth.h"
 #include "optimization/Octilinear.h"
+#include "optimization/Stress.h"
 #include "base/Road.h"
 #endif // Q_MOC_RUN
 
@@ -33,6 +34,7 @@ protected:
     Boundary        *_simplifiedBoundaryPtr;
     Smooth          *_smoothPtr;
     Octilinear      *_octilinearPtr;
+    Stress          *_stressPtr;
 
     // cells of subgraphs
     Cell            *_cellPtr;

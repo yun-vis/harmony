@@ -44,26 +44,23 @@ using namespace std;
 #include "graph/ForceGraph.h"
 #include "graph/SkeletonGraph.h"
 
-#define DUPL_THRESHOLD	(8)  // <-- Ecoli_Palsson2011_iJO1366
-//#define DUPL_THRESHOLD	(1000) // > 1
-//#define DUPL_THRESHOLD	(100)
-
 class Pathway
 {
 private:
 
-    int                        *_widthPtr, *_heightPtr;
-	unsigned int				_nHyperEtoE;
-	map< string, string >		_nV;
+    double                     *_widthPtr, *_heightPtr;		// window width and height
+	unsigned int				_nHyperEtoE;	// numbers of hyper edges to single egdes
+	map< string, string >		_nV;			// distinct metabolites, duplicated nodes are not counted
 
-	MetaboliteGraph				_graph;
-    ForceGraph					_layoutGraph;
+	// metabolite graph
+	MetaboliteGraph				_graph;			// directed
+    ForceGraph					_layoutGraph;	// undirected
 
-    vector< MetaboliteGraph	>	_subGraph;
-    vector< ForceGraph	>		_layoutSubGraph;
+    // metabolite subgraph
+    vector< MetaboliteGraph	>	_subGraph;		// directed
+    vector< ForceGraph	>		_layoutSubGraph;// undirected
 
-	SkeletonGraph				_skeletonGraph;   // dependGraph
-	vector< vector< SkeletonGraph::vertex_descriptor > > _embeddingVec;
+	SkeletonGraph				_skeletonGraph; // undirected, show connectivity and relative position of sub-system
 
     map< string, unsigned int > _metaFreq;		// map for recording the frequency of all metabolites
 	map< string, string > 		_metaType;		// map for recording the types of all metabolites
@@ -75,18 +72,17 @@ private:
 
     // ui
     bool                        _isCloneByThreshold;
-    double                      _threshold;
+    double                      _threshold;		// threshold value
 	unsigned int 				_nZoneDiff;		// total different zone value
 
 protected:
 
-	string 						_inputpath, _outputpath;
-	string 						_fileFreq, _fileType;
+	string 						_inputpath, _outputpath;	// input output files
+	string 						_fileFreq, _fileType;		// metabolite frequency
 
 	void loadMetaFreq( string filename );
 	void loadMetaType( string filename );
     void loadXml( string filename );
-
 
 	// graph
     MetaboliteGraph::vertex_descriptor findVertex( unsigned int id, MetaboliteGraph &g );
@@ -137,30 +133,25 @@ public:
 	const map< string, Subdomain * > &         	  subsys( void ) const 	 { return _sub; }
     map< string, Subdomain * > &                  subsys( void )       	 { return _sub; }
 
+    const unsigned int		nVertices( void ) 	{ return num_vertices( _graph ); }
+	const unsigned int		nEdges( void ) 		{ return num_edges( _graph ); }
+	const unsigned int		nSubsys( void ) 	{ return _sub.size(); }
+
 	const string &          inpath( void ) const   { return _inputpath; }
 	string &                inpath( void )         { return _inputpath; }
 	const string &          outpath( void ) const  { return _outputpath; }
 	string &                outpath( void )        { return _outputpath; }
 
-	const unsigned int		nVertices( void ) 	{ return num_vertices( _graph ); }
-	const unsigned int		nEdges( void ) 		{ return num_edges( _graph ); }
-    const unsigned int		nSubsys( void ) 	{ return _sub.size(); }
-
-
-    const int *             width( void ) const  { return _widthPtr; }
-    int *                   width( void )        { return _widthPtr; }
-    const int *             height( void ) const { return _heightPtr; }
-    int *                   height( void )       { return _heightPtr; }
-
-    void setWidthHeight( int &width, int &height ) {
-        _widthPtr = &width;
-        _heightPtr = &height;
-    }
+    const double *        	width( void ) const  { return _widthPtr; }
+    double *                width( void )        { return _widthPtr; }
+    const double *          height( void ) const { return _heightPtr; }
+    double *                height( void )       { return _heightPtr; }
 
 //------------------------------------------------------------------------------
 //  	Specific functions
 //------------------------------------------------------------------------------
-	void init( string pathIn, string pathOut, string fileFreq, string fileType );
+	void init( string pathIn, string pathOut,
+               string fileFreq, string fileType, int clonedThreshold );
 	void generate( void );
 	void exportEdges( void );
 	void initLayout( map< unsigned int, Polygon2 > &_polygonComplex );
@@ -174,7 +165,6 @@ public:
 	void genDependencyGraph( void );
 
 	void loadDot( string filename );
-
 	void normalization( void );
 
 //------------------------------------------------------------------------------

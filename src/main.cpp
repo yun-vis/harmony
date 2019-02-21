@@ -14,19 +14,15 @@ int main( int argc, char **argv )
 // view
 //----------------------------------------------------------
     Window window;
-
-    int width = window.width();
-    int height = window.height();
-
-    // cerr << "width = " << width << " height = " << height << endl;
-    pathway.setWidthHeight( width, height );
     window.setWindowTitle( "qtBorder" );
-    window.setPathwayData( &pathway );
+    double w = window.width();
+    double h = window.height();
+
+    window.setPathwayData( &pathway, w, h );
     window.init();
     window.show();
 
-    // cerr << "Use: c -> m -> s ->o" << endl;
-    cerr << "Use: v -> 1 -> 2 -> o -> l -> q -> w -> a -> s -> p -> z -> x" << endl;
+    cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x" << endl;
 
     return app.exec();
 }

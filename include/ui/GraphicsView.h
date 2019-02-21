@@ -55,27 +55,33 @@ class GraphicsView : public QGraphicsView, public PathwayData, public RegionData
 
 private:
 
-    int                 _font_size;
+    QGraphicsScene      *_scene;
+
+    // data structure
     bool                _is_simplifiedFlag;
+    int                 _clonedThreshold;           // if == 0, cloned by type, else by threshold value
+    string 				_inputpath, _tmppath,    // input output files
+                        _fileFreq, _fileType;       // metabolite frequency
+
+    // ui
+    int                 _font_size;
+    double              _size_ratio;
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
                         _is_boundaryFlag, _is_subPathwayFlag,
                         _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
                         _is_roadFlag, _is_laneFlag,
                         _is_mclPolygonFlag, _is_pathwayPolygonFlag;
-    QGraphicsScene      *_scene;
-    //Boundary            *_boundary, *_simplifiedBoundary;
-    //Cell                *_cellPtr;
-    //Road                *_roadPtr;
-    //vector< Road >      *_lanePtr;
 
 protected:
 
     void _item_boundary( void );
     void _item_skeleton( void );
     void _item_composite( void );
+
     void _item_pathways( void );
     void _item_subpathways( void );
+
     void _item_cells( void );
     void _item_seeds( void );
     void _item_polygonComplex( void );
@@ -95,8 +101,21 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
+    int &           cloneThreshold( void )          { return _clonedThreshold; }
+    const int &     cloneThreshold( void ) const    { return _clonedThreshold; }
+    string &        inputPath( void )               { return _inputpath; }
+    const string &  inputPath( void ) const         { return _inputpath; }
+    string &        tmpPath( void )                 { return _tmppath; }
+    const string &  tmpPath( void ) const           { return _tmppath; }
+    string &        fileFreq( void )                { return _fileFreq; }
+    const string &  fileFreq( void ) const          { return _fileFreq; }
+    string &        fileType( void )                { return _fileType; }
+    const string &  fileType( void ) const          { return _fileType; }
+
     int &           fontSize( void )                { return _font_size; }
     const int &     fontSize( void ) const          { return _font_size; }
+    double &        sizeRatio( void )               { return _size_ratio; }
+    const double &  sizeRatio( void ) const         { return _size_ratio; }
 
     bool &          isSimplifiedFlag( void )        { return _is_simplifiedFlag; }
     const bool &    isSimplifiedFlag( void ) const  { return _is_simplifiedFlag; }

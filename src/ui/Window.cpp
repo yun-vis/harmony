@@ -14,6 +14,8 @@ Window::Window( QWidget *parent )
     createActions();
     createMenus();
 
+
+
 #ifdef RECORD_VIDEO
     _timerVideoStart();
 #endif // RECORD_VIDEO
@@ -36,6 +38,7 @@ Window::Window( const Window & obj )
 
     _smoothPtr = obj._smoothPtr;
     _octilinearPtr = obj._octilinearPtr;
+    _stressPtr = obj._stressPtr;
 
     // display
     _content_width = obj._content_width;
@@ -52,16 +55,17 @@ void Window::_init( void )
     _simplifiedBoundaryPtr = new Boundary;
     _smoothPtr = new Smooth;
     _octilinearPtr = new Octilinear;
+    _stressPtr = new Stress;
 
     // initialization of region data
     _cellPtr = new Cell;
     _roadPtr = new Road;
     _lanePtr = new vector< Road >;
 
-    _cellPtr->setPathwayData( _pathway );
-    _roadPtr->setPathwayData( _pathway );
+    _cellPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+    _roadPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
 
-    _gv->setPathwayData( _pathway );
+    _gv->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     _gv->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
                         _cellPtr, _roadPtr, _lanePtr );
 }
@@ -73,27 +77,42 @@ void Window::createActions( void )
     connect( selCloneGraphAct, SIGNAL( triggered() ), this, SLOT( selectCloneGraph() ) );
     selMinDistanceAct = new QAction( tr("M&inDistance"), this );
     connect( selMinDistanceAct, SIGNAL( triggered() ), this, SLOT( selectMinDistance() ) );
+
     selMovebackSmoothAct = new QAction( tr("M&ovebackSmooth"), this );
     connect( selMovebackSmoothAct, SIGNAL( triggered() ), this, SLOT( selectMovebackSmooth() ) );
+
     selMovebackOctilinearAct = new QAction( tr("M&ovebackOctilinear"), this );
     connect( selMovebackOctilinearAct, SIGNAL( triggered() ), this, SLOT( selectMovebackOctilinear() ) );
+
+    selMovebackStressAct = new QAction( tr("M&ovebackStress"), this );
+    connect( selMovebackStressAct, SIGNAL( triggered() ), this, SLOT( selectMovebackStress() ) );
 
     // optimization
     // least square
     selSmoothLSAct = new QAction( tr("S&mooth Original (LS)"), this );
     connect( selSmoothLSAct, SIGNAL( triggered() ), this, SLOT( selectSmoothLS() ) );
+
     selOctilinearLSAct = new QAction( tr("O&ctilinear Original (LS)"), this );
     connect( selOctilinearLSAct, SIGNAL( triggered() ), this, SLOT( selectOctilinearLS() ) );
+
+    selStressLSAct = new QAction( tr("S&tress Original (LS)"), this );
+    connect( selStressLSAct, SIGNAL( triggered() ), this, SLOT( selectStressLS() ) );
 
     // conjugate gradient
     selSmoothSmallCGAct = new QAction( tr("S&mooth Small (CG)"), this );
     connect( selSmoothSmallCGAct, SIGNAL( triggered() ), this, SLOT( selectSmoothSmallCG() ) );
     selSmoothCGAct = new QAction( tr("S&mooth Original (CG)"), this );
     connect( selSmoothCGAct, SIGNAL( triggered() ), this, SLOT( selectSmoothCG() ) );
+
     selOctilinearSmallCGAct = new QAction( tr("O&ctilinear Small (CG)"), this );
     connect( selOctilinearSmallCGAct, SIGNAL( triggered() ), this, SLOT( selectOctilinearSmallCG() ) );
     selOctilinearCGAct = new QAction( tr("O&ctilinear Original (CG)"), this );
     connect( selOctilinearCGAct, SIGNAL( triggered() ), this, SLOT( selectOctilinearCG() ) );
+
+    selStressSmallCGAct = new QAction( tr("S&tress Small (CG)"), this );
+    connect( selStressSmallCGAct, SIGNAL( triggered() ), this, SLOT( selectStressSmallCG() ) );
+    selStressCGAct = new QAction( tr("S&tress Original (CG)"), this );
+    connect( selStressCGAct, SIGNAL( triggered() ), this, SLOT( selectStressCG() ) );
 }
 
 void Window::createMenus( void )
@@ -108,15 +127,21 @@ void Window::createMenus( void )
     simMenu->addAction( selMinDistanceAct );
     simMenu->addAction( selMovebackSmoothAct );
     simMenu->addAction( selMovebackOctilinearAct );
+    simMenu->addAction( selMovebackStressAct );
 
     // optimization
     optMenu = menuBar()->addMenu( tr("&Optimization") );
     optMenu->addAction( selSmoothLSAct );
-    optMenu->addAction( selOctilinearLSAct );
     optMenu->addAction( selSmoothSmallCGAct );
     optMenu->addAction( selSmoothCGAct );
+
+    optMenu->addAction( selOctilinearLSAct );
     optMenu->addAction( selOctilinearSmallCGAct );
     optMenu->addAction( selOctilinearCGAct );
+
+    optMenu->addAction( selStressLSAct );
+    optMenu->addAction( selStressSmallCGAct );
+    optMenu->addAction( selStressCGAct );
 }
 
 void Window::simulateKey( Qt::Key key )
@@ -179,6 +204,14 @@ void Window::selectMovebackOctilinear( void )
 {
     bool isFinished = true;
     isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_OCTILINEAR );
+    // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
+    redrawAllScene();
+}
+
+void Window::selectMovebackStress( void )
+{
+    bool isFinished = true;
+    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_STRESS );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -364,6 +397,105 @@ void Window::selectOctilinearCG( void )
     redrawAllScene();
 }
 
+
+void Window::selectStressSmallCG( void )
+{
+    // run coarse smooth optimization
+    clock_t start_time = clock();
+    double err = 0.0;
+    unsigned int nLabels = _simplifiedBoundaryPtr->nLabels();
+    _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundaryPtr->nVertices() );
+    _smoothPtr->retrieve();
+
+    cerr << "simNStation = " << _simplifiedBoundaryPtr->nVertices() << endl;
+    cerr << "nStation = " << _boundaryPtr->nVertices() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
+
+    // run smooth optimization
+    while( true ) {
+
+        clock_t start = clock();
+        int iter = 0;
+
+        // check if all nodes are moved back
+#ifdef  DEBUG
+        cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
+             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
+             << " nLabels = " << nLabels << endl;
+#endif  // DEBUG
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+            break;
+        }
+        else {
+            for( int i = 0; i < REMOVEBACKNUM; i++ ){
+                selectMovebackSmooth();
+            }
+        }
+
+        _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+        }
+        else{
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+        }
+        err = _smoothPtr->ConjugateGradient( iter );
+        _smoothPtr->retrieve();
+
+        cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
+        // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
+    }
+    //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+    _smoothPtr->clear();
+    _boundaryPtr->cloneSmooth( *_simplifiedBoundaryPtr );
+
+    // cerr << "Total Time CG = " << clock() - start_time << endl;
+    // ofs << "Total Time CG = " << clock() - start_time << endl;
+
+    redrawAllScene();
+}
+
+void Window::selectStress( OPTTYPE opttype )
+{
+    // run smooth optimization
+    _stressPtr->prepare( &_boundaryPtr->skeleton(), _content_width/2, _content_height/2 );
+
+    switch( opttype ){
+        case LEAST_SQUARE:
+        {
+            int iter = _boundaryPtr->nVertices();
+            _stressPtr->LeastSquare( iter );
+            break;
+        }
+        case CONJUGATE_GRADIENT:
+        {
+            unsigned int long iter = _stressPtr->nVertices();
+            //_stressPtr->ConjugateGradient( iter );
+            _stressPtr->ConjugateGradient( 1 );
+            break;
+        }
+        default:
+            break;
+    }
+    _stressPtr->retrieve();
+    _stressPtr->clear();
+
+    redrawAllScene();
+}
+
+void Window::selectStressLS( void )
+{
+    selectStress( LEAST_SQUARE );
+    redrawAllScene();
+}
+
+void Window::selectStressCG( void )
+{
+    selectStress( CONJUGATE_GRADIENT );
+    redrawAllScene();
+}
+
 void Window::selectBuildBoundary( void )
 {
     _boundaryPtr->buildBoundaryGraph();
@@ -419,7 +551,7 @@ void Window::processBoundary( void )
     _gv->isPolygonFlag() = true;
 
     Controller * conPtr = new Controller;
-    conPtr->setPathwayData( _pathway );
+    conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
                            _cellPtr, _roadPtr, _lanePtr );
 
@@ -477,7 +609,7 @@ void Window::processCell( void )
     for( unsigned int i = 0; i < _cellPtr->forceCellVec().size(); i++ ){
 
         Controller * conPtr = new Controller;
-        conPtr->setPathwayData( _pathway );
+        conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
         conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
                                _cellPtr, _roadPtr, _lanePtr );
         vector < unsigned int > indexVec;
@@ -541,7 +673,7 @@ void Window::processBone( void )
             CellComponent &cell = itC->second;
 
             Controller * conPtr = new Controller;
-            conPtr->setPathwayData( _pathway );
+            conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
             conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
             vector < unsigned int > indexVec;
@@ -615,7 +747,7 @@ void Window::processDetailedPathway( void )
 
             // cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
             Controller * conPtr = new Controller;
-            conPtr->setPathwayData( _pathway );
+            conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
             conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
             vector < unsigned int > indexVec;
@@ -673,7 +805,7 @@ void Window::stopProcessDetailedPathway( void )
     _lanePtr->resize( _pathway->nSubsys() );
     for( unsigned int i = 0; i < _lanePtr->size(); i++ ){
         vector < Highway > &highwayVec = _roadPtr->highwayMat()[i];
-        (*_lanePtr)[i].setPathwayData( _pathway );
+        (*_lanePtr)[i].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
         (*_lanePtr)[i].initLane( i, _cellPtr->cellComponentVec()[i], &highwayVec );
         (*_lanePtr)[i].steinerTree();
     }
@@ -895,6 +1027,18 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             break;
         }
+        case Qt::Key_T:
+        {
+            selectCloneGraph();
+            selectStressCG();
+            //_boundaryPtr->updatePolygonComplex();
+            //selectOctilinearSmallCboundary();
+
+            _gv->isSkeletonFlag() = true;
+            //_gv->isPolygonFlag() = true;
+            redrawAllScene();
+            break;
+        }
         case Qt::Key_B:
         {
             _boundaryPtr->createPolygonComplex();
@@ -904,18 +1048,14 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_V:
         {
-            //_pathway->init( "../xml/tiny/", "../xml/tmp/",
-            _pathway->init( "../xml/small/", "../xml/tmp/",
-            //_pathway->init( "../xml/A/", "../xml/tmp/",
-            //_pathway->init( "../xml/full/", "../xml/tmp/",
-                            "../xml/frequency/metabolite_frequency.txt", "../xml/type/typelist.txt" );
-            //_pathway->loadDot( "../dot/TradeLand.dot" );
+            _pathway->init( _gv->inputPath(), _gv->tmpPath(),
+                            _gv->fileFreq(), _gv->fileType(),
+                            _gv->cloneThreshold() );
 
             _pathway->generate();
             _pathway->exportEdges();
 
             _boundaryPtr->init( _pathway->skeletonG() );
-            //_boundaryPtr->buildSkeleton();
 
             // update content width and height
 #ifdef DEBUG
@@ -931,10 +1071,10 @@ void Window::keyPressEvent( QKeyEvent *event )
                 sum += sx*sy;
             }
 
-            double ratio = 12.0;
+            double ratio = _gv->sizeRatio();
             double x = sqrt( sum * ratio / 12.0 );
-            _content_width = 4 * x;
-            _content_height = 3 * x;
+            _content_width = 4.0 * x;
+            _content_height = 3.0 * x;
 
 #ifdef DEBUG
             cerr << "width x height = " << width() * height() << endl;
@@ -950,6 +1090,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _boundaryPtr->decomposeSkeleton();
             _boundaryPtr->normalizeComposite( _content_width, _content_height );
 
+            // ui
             _gv->isCompositeFlag() = true;
 
             redrawAllScene();

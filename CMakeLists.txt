@@ -124,6 +124,7 @@ set(HEADERS
         include/optimization/Voronoi.h
         include/optimization/Octilinear.h
         include/optimization/Smooth.h
+        include/optimization/Stress.h
         include/optimization/Similarity.h
         include/optimization/Layout.h
         inlcude/steinertree/include.h
@@ -189,6 +190,7 @@ set(SOURCES
         src/optimization/Voronoi.cpp
         src/optimization/Octilinear.cpp
         src/optimization/Smooth.cpp
+        src/optimization/Stress.cpp
         src/optimization/Similarity.cpp
         src/optimization/Layout.cpp
         src/steinertree/dijkstra.cpp
@@ -221,6 +223,7 @@ QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.h )
 QT5_WRAP_CPP( MOC_GRAPHICSVIEW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GraphicsView.h )
 #set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_ui_Window.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Worker.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerCell.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBone.cpp PROPERTY SKIP_AUTOGEN ON )

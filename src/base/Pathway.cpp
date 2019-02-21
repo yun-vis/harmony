@@ -49,6 +49,8 @@ struct coord_t
 //
 Pathway::Pathway( void )
 {
+    _widthPtr = new double (0.0);
+    _heightPtr = new double (0.0);
 }
 
 //
@@ -93,13 +95,21 @@ Pathway::~Pathway( void )
 //  Outputs
 //  node
 //
-void Pathway::init( string pathIn, string pathOut, string fileFreq, string fileType )
+void Pathway::init( string pathIn, string pathOut,
+					string fileFreq, string fileType, int clonedThreshold )
 {
 	_inputpath = pathIn;
 	_outputpath = pathOut;
     _fileFreq = fileFreq;
     _fileType = fileType;
-    _isCloneByThreshold = false;
+    if( clonedThreshold == 0 ){
+		_isCloneByThreshold = false;
+		_threshold = 0;
+    }
+    else{
+		_isCloneByThreshold = true;
+		_threshold = clonedThreshold;
+    }
 	_nHyperEtoE = 0;
 }
 
@@ -630,8 +640,8 @@ void Pathway::genGraph( void )
         _graph[ reactVD ].isAlias       = false;
         _graph[ reactVD ].type 			= "reaction";
 		_graph[ reactVD ].coordPtr		= new Coord2;
-		_graph[ reactVD ].coordPtr->x() = rand() % *_widthPtr - *_widthPtr/2.0;
-		_graph[ reactVD ].coordPtr->y() = rand() % *_heightPtr - *_heightPtr/2.0;
+		_graph[ reactVD ].coordPtr->x() = rand() % (int)*_widthPtr - *_widthPtr/2.0;
+		_graph[ reactVD ].coordPtr->y() = rand() % (int)*_heightPtr - *_heightPtr/2.0;
         _graph[ reactVD ].widthPtr      = new double (10.0);
         _graph[ reactVD ].heightPtr		= new double (10.0);
         _graph[ reactVD ].metaPtr		= NULL;
@@ -693,8 +703,8 @@ void Pathway::genGraph( void )
                 _graph[ metaVD ].isAlias        = false;
 				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr		= new Coord2;
-				_graph[ metaVD ].coordPtr->x() 	= rand() % *_widthPtr - *_widthPtr/2.0;
-				_graph[ metaVD ].coordPtr->y() 	= rand() % *_heightPtr - *_heightPtr/2.0;
+				_graph[ metaVD ].coordPtr->x() 	= rand() % (int)*_widthPtr - *_widthPtr/2.0;
+				_graph[ metaVD ].coordPtr->y() 	= rand() % (int)*_heightPtr - *_heightPtr/2.0;
                 _graph[ metaVD ].widthPtr	    = new double (10.0);
                 _graph[ metaVD ].heightPtr		= new double (10.0);
 				_graph[ metaVD ].metaPtr		= &_meta[ index ];
@@ -789,8 +799,8 @@ void Pathway::genGraph( void )
                 _graph[ metaVD ].isAlias        = false;
   				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr 		= new Coord2;
-				_graph[ metaVD ].coordPtr->x() 	= rand() % *_widthPtr - *_widthPtr/2.0;
-				_graph[ metaVD ].coordPtr->y() 	= rand() % *_heightPtr - *_heightPtr/2.0;
+				_graph[ metaVD ].coordPtr->x() 	= rand() % (int)*_widthPtr - *_widthPtr/2.0;
+				_graph[ metaVD ].coordPtr->y() 	= rand() % (int)*_heightPtr - *_heightPtr/2.0;
                 _graph[ metaVD ].widthPtr	    = new double(10.0);
                 _graph[ metaVD ].heightPtr		= new double(10.0);
                 _graph[ metaVD ].metaPtr		= &_meta[ index ];
@@ -1622,26 +1632,26 @@ void Pathway::planar_graph_embedding( vector< SkeletonGraphVVPair > &addedED )
 	// find the planar embedding
 	boyer_myrvold_planarity_test( boyer_myrvold_params::graph = propG,
 								  boyer_myrvold_params::embedding = embedding );
+	vector< vector< SkeletonGraph::vertex_descriptor > > embeddingVec; // planar graph embedding of each vertex
 
 	BGL_FORALL_VERTICES( vd, propG, UndirectedPropertyGraph ) {
 
-			//cerr << "id = " << vertexIndex[ vd ] << endl;
+		//cerr << "id = " << vertexIndex[ vd ] << endl;
 
-			vector< SkeletonGraph::vertex_descriptor > vdVec;
-			boost::property_traits< embedding_t >::value_type::const_iterator itE = embedding[ vd ].begin();
-			for( ; itE != embedding[ vd ].end(); itE++ ){
-				graph_traits< UndirectedPropertyGraph >::edge_descriptor vdE = *itE;
-				graph_traits< UndirectedPropertyGraph >::vertex_descriptor vdS = source( vdE, propG );
-				graph_traits< UndirectedPropertyGraph >::vertex_descriptor vdT = target( vdE, propG );
+		vector< SkeletonGraph::vertex_descriptor > vdVec;
+		boost::property_traits< embedding_t >::value_type::const_iterator itE = embedding[ vd ].begin();
+		for( ; itE != embedding[ vd ].end(); itE++ ){
+			graph_traits< UndirectedPropertyGraph >::edge_descriptor vdE = *itE;
+			graph_traits< UndirectedPropertyGraph >::vertex_descriptor vdS = source( vdE, propG );
+			graph_traits< UndirectedPropertyGraph >::vertex_descriptor vdT = target( vdE, propG );
 
-				if( vertexIndex[ vd ] == vertexIndex[ vdS ] ) vdVec.push_back( vertex( vertexIndex[ vdT ], _skeletonGraph ) );
-				else vdVec.push_back( vertex( vertexIndex[ vdS ], _skeletonGraph ) );
-				//cerr << vertexIndex[ vdS ] << " == " << vertexIndex[ vdT ] << ", " << endl;
-			}
-			//cerr << endl;
-			_embeddingVec.push_back( vdVec );
+			if( vertexIndex[ vd ] == vertexIndex[ vdS ] ) vdVec.push_back( vertex( vertexIndex[ vdT ], _skeletonGraph ) );
+			else vdVec.push_back( vertex( vertexIndex[ vdS ], _skeletonGraph ) );
+			//cerr << vertexIndex[ vdS ] << " == " << vertexIndex[ vdT ] << ", " << endl;
 		}
-
+		//cerr << endl;
+		embeddingVec.push_back( vdVec );
+	}
 
 #ifdef  SKIP
 	for( unsigned int i = 0; i < _embeddingVec.size(); i++ ){
@@ -2090,94 +2100,94 @@ void Pathway::genDependencyGraph( void )
 	unsigned int nEdges = 0;
 	BGL_FORALL_VERTICES( vd, _graph, MetaboliteGraph ) {
 
-			map< unsigned int, unsigned int > domainFreq;
-			//if( _graph[ vd ].type == "metabolite" && isCloneMetaType( vd ) == false ) {
-			//cerr << "isCloneMetaType( vd ) = " << isCloneMetaType( vd ) << endl;
+		map< unsigned int, unsigned int > domainFreq;
+		//if( _graph[ vd ].type == "metabolite" && isCloneMetaType( vd ) == false ) {
+		//cerr << "isCloneMetaType( vd ) = " << isCloneMetaType( vd ) << endl;
 
-			bool isProceed = false;
-			if( _isCloneByThreshold == true ){
-				isProceed = ( _graph[ vd ].type == "metabolite" ) && ( _graph[ vd ].metaPtr->freq <= _threshold );
-			}
-			else
-			{
-				isProceed = ( _graph[ vd ].type == "metabolite" ) && isCloneMetaType( vd ) == false;
-			}
-			if( isProceed ) {
+		bool isProceed = false;
+		if( _isCloneByThreshold == true ){
+			isProceed = ( _graph[ vd ].type == "metabolite" ) && ( _graph[ vd ].metaPtr->freq <= _threshold );
+		}
+		else
+		{
+			isProceed = ( _graph[ vd ].type == "metabolite" ) && isCloneMetaType( vd ) == false;
+		}
+		if( isProceed ) {
 
-				//assert( _graph[ vd ].metaPtr->metaType != "7_WATER" );
+			//assert( _graph[ vd ].metaPtr->metaType != "7_WATER" );
 
-				// out edges
-				MetaboliteGraph::out_edge_iterator eo, eo_end;
-				for( tie( eo, eo_end ) = out_edges( vd, _graph ); eo != eo_end; ++eo ){
+			// out edges
+			MetaboliteGraph::out_edge_iterator eo, eo_end;
+			for( tie( eo, eo_end ) = out_edges( vd, _graph ); eo != eo_end; ++eo ){
 
-					MetaboliteGraph::edge_descriptor ed = *eo;
-					MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
-					if( _graph[ vdT ].type == "reaction" ) {
-						map< unsigned int, unsigned int >::iterator dIter;
-						dIter = domainFreq.find( _graph[ vdT ].reactPtr->subsystem->id );
-						if( dIter != domainFreq.end() ){
-							//cerr << "id = " << _graph[ vdT ].reactPtr->subsystem->id << endl;
-							dIter->second += 1;
-						}
-						else{
-							domainFreq.insert( pair< unsigned int, unsigned int >( _graph[ vdT ].reactPtr->subsystem->id, 1 ) );
-						}
+				MetaboliteGraph::edge_descriptor ed = *eo;
+				MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
+				if( _graph[ vdT ].type == "reaction" ) {
+					map< unsigned int, unsigned int >::iterator dIter;
+					dIter = domainFreq.find( _graph[ vdT ].reactPtr->subsystem->id );
+					if( dIter != domainFreq.end() ){
+						//cerr << "id = " << _graph[ vdT ].reactPtr->subsystem->id << endl;
+						dIter->second += 1;
+					}
+					else{
+						domainFreq.insert( pair< unsigned int, unsigned int >( _graph[ vdT ].reactPtr->subsystem->id, 1 ) );
 					}
 				}
+			}
 
-				// in edges
-				MetaboliteGraph::in_edge_iterator ei, ei_end;
-				for( tie( ei, ei_end ) = in_edges( vd, _graph ); ei != ei_end; ++ei ){
+			// in edges
+			MetaboliteGraph::in_edge_iterator ei, ei_end;
+			for( tie( ei, ei_end ) = in_edges( vd, _graph ); ei != ei_end; ++ei ){
 
-					MetaboliteGraph::edge_descriptor ed = *ei;
-					MetaboliteGraph::vertex_descriptor vdS = source( ed, _graph );
-					if( _graph[ vdS ].type == "reaction" ) {
-						map< unsigned int, unsigned int >::iterator dIter;
-						dIter = domainFreq.find( _graph[ vdS ].reactPtr->subsystem->id );
-						if( dIter != domainFreq.end() ){
-							//cerr << "id = " << _graph[ vdS ].reactPtr->subsystem->id << endl;
-							dIter->second += 1;
-						}
-						else{
-							domainFreq.insert( pair< unsigned int, unsigned int >( _graph[ vdS ].reactPtr->subsystem->id, 1 ) );
-						}
+				MetaboliteGraph::edge_descriptor ed = *ei;
+				MetaboliteGraph::vertex_descriptor vdS = source( ed, _graph );
+				if( _graph[ vdS ].type == "reaction" ) {
+					map< unsigned int, unsigned int >::iterator dIter;
+					dIter = domainFreq.find( _graph[ vdS ].reactPtr->subsystem->id );
+					if( dIter != domainFreq.end() ){
+						//cerr << "id = " << _graph[ vdS ].reactPtr->subsystem->id << endl;
+						dIter->second += 1;
+					}
+					else{
+						domainFreq.insert( pair< unsigned int, unsigned int >( _graph[ vdS ].reactPtr->subsystem->id, 1 ) );
 					}
 				}
+			}
 
-				for( map< unsigned int, unsigned int >::iterator oIter = domainFreq.begin();
-					 oIter != domainFreq.end(); oIter++ ){
+			for( map< unsigned int, unsigned int >::iterator oIter = domainFreq.begin();
+				 oIter != domainFreq.end(); oIter++ ){
 
-					map< unsigned int, unsigned int >::iterator iIter = oIter;
-					iIter++;
-					for( ; iIter != domainFreq.end(); iIter++ ){
+				map< unsigned int, unsigned int >::iterator iIter = oIter;
+				iIter++;
+				for( ; iIter != domainFreq.end(); iIter++ ){
 
-						unsigned int sysIDS = oIter->first;
-						unsigned int sysIDT = iIter->first;
-						unsigned int freq = oIter->second * iIter->second;
+					unsigned int sysIDS = oIter->first;
+					unsigned int sysIDT = iIter->first;
+					unsigned int freq = oIter->second * iIter->second;
 
-						SkeletonGraph::vertex_descriptor vdS = vertex( sysIDS, _skeletonGraph );
-						SkeletonGraph::vertex_descriptor vdT = vertex( sysIDT, _skeletonGraph );
+					SkeletonGraph::vertex_descriptor vdS = vertex( sysIDS, _skeletonGraph );
+					SkeletonGraph::vertex_descriptor vdT = vertex( sysIDT, _skeletonGraph );
 
-						bool found = false;
-						SkeletonGraph::edge_descriptor oldED;
-						tie( oldED, found ) = edge( vdS, vdT, _skeletonGraph );
+					bool found = false;
+					SkeletonGraph::edge_descriptor oldED;
+					tie( oldED, found ) = edge( vdS, vdT, _skeletonGraph );
 
-						if( found == true ){
-							_skeletonGraph[ oldED ].weight 	+= freq;
-						}
-						else{
-							pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _skeletonGraph );
-							SkeletonGraph::edge_descriptor foreED = foreE.first;
-							_skeletonGraph[ foreED ].id 			= nEdges;
-							_skeletonGraph[ foreED ].weight 		= freq;
+					if( found == true ){
+						_skeletonGraph[ oldED ].weight 	+= freq;
+					}
+					else{
+						pair< SkeletonGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _skeletonGraph );
+						SkeletonGraph::edge_descriptor foreED = foreE.first;
+						_skeletonGraph[ foreED ].id 			= nEdges;
+						_skeletonGraph[ foreED ].weight 		= freq;
 
-							nEdges++;
-							//cerr << "nEdges = " << nEdges << endl;
-						}
+						nEdges++;
+						//cerr << "nEdges = " << nEdges << endl;
 					}
 				}
 			}
 		}
+	}
 
 #ifdef  DEBUG
 	double avg = 0;

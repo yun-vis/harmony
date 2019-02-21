@@ -28,10 +28,6 @@
 //
 PathwayData::PathwayData( void )
 {
-    // _contentWidth   = DEFAULT_WIDTH;
-    // _contentHeight  = DEFAULT_HEIGHT;
-    _scaleWidth     = 1.0;
-    _scaleHeight    = 1.0;
 }
 
 //
@@ -76,13 +72,11 @@ PathwayData::~PathwayData( void )
 //  Outputs
 //  node
 //
-void PathwayData::setPathwayData( Pathway *pathway )
+void PathwayData::setPathwayData( Pathway *pathway, double &width, double &height )
 {
 	_pathway        = pathway;
-    _contentWidth   = *_pathway->width();
-    _contentHeight  = *_pathway->height();
-    _scaleWidth     = 1.0;
-    _scaleHeight    = 1.0;
+    *_pathway->width() = width;
+    *_pathway->height() = height;
 }
 
 void PathwayData::_pickPredefinedColor( unsigned int id, vector< double > &rgb )

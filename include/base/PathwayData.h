@@ -22,12 +22,6 @@ protected:
 
 	Pathway             *_pathway;
 
-    double              _contentWidth;
-	double              _contentHeight;
-	double				_scaleWidth;
-	double				_scaleHeight;
-
-
     void _pickColor( COLORTYPE colorScheme, unsigned int id, vector< double > &rgb );
 	void _pickPredefinedColor( unsigned int id, vector< double > &rgb );
 	void _pickMonotoneColor( unsigned int id, vector< double > &rgb );
@@ -43,19 +37,7 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-	void setPathwayData( Pathway *pathway );
-
-	const double &    	  	  	contentWidth( void ) const 	{ return _contentWidth; }
-	double &            	  	contentWidth( void )		{ return _contentWidth; }
-
-	const double &    	  	  	contentHeight( void ) const { return _contentHeight; }
-	double &            	  	contentHeight( void )		{ return _contentHeight; }
-
-	const double &    	  	  	scaleWidth( void ) const 	{ return _scaleWidth; }
-	double &            	  	scaleWidth( void )			{ return _scaleWidth; }
-
-	const double &    	  	  	scaleHeight( void ) const 	{ return _scaleHeight; }
-	double &            	  	scaleHeight( void )			{ return _scaleHeight; }
+	void setPathwayData( Pathway *pathway, double &width, double &height );
 
 //------------------------------------------------------------------------------
 //      I/O

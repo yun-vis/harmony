@@ -65,15 +65,21 @@ private:
     QAction *selMinDistanceAct;
     QAction *selMovebackSmoothAct;
     QAction *selMovebackOctilinearAct;
+    QAction *selMovebackStressAct;
 
     // optimization
     QMenu *optMenu;
     QAction *selSmoothLSAct;
-    QAction *selOctilinearLSAct;
     QAction *selSmoothSmallCGAct;
     QAction *selSmoothCGAct;
+
+    QAction *selOctilinearLSAct;
     QAction *selOctilinearSmallCGAct;
     QAction *selOctilinearCGAct;
+
+    QAction *selStressLSAct;
+    QAction *selStressSmallCGAct;
+    QAction *selStressCGAct;
 
     void createActions( void );
     void createMenus( void );
@@ -109,6 +115,7 @@ public Q_SLOTS:
     void selectMinDistance( void );
     void selectMovebackSmooth( void );
     void selectMovebackOctilinear( void );
+    void selectMovebackStress( void );
 
     // force
     void selectForce( void );
@@ -116,12 +123,19 @@ public Q_SLOTS:
     // optimization
     void selectSmoothLS( void );
     void selectOctilinearLS( void );
-    void selectSmoothSmallCG( void );
+    void selectStressLS( void );
+
     void selectSmoothCG( void );
-    void selectOctilinearSmallCG( void );
     void selectOctilinearCG( void );
+    void selectStressCG( void );
+
+    void selectSmoothSmallCG( void );
+    void selectOctilinearSmallCG( void );
+    void selectStressSmallCG( void );
+
     void selectSmooth( OPTTYPE opttype = CONJUGATE_GRADIENT );
     void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
+    void selectStress( OPTTYPE opttype = CONJUGATE_GRADIENT );
 
     // voronoi
     void selectBuildBoundary( void );
