@@ -2,7 +2,15 @@
 #include "base/Common.h"
 
 
-double stringToDouble( string str )
+//  Common::_stringToDouble -- convert string to double
+//
+//  Inputs
+//      string
+//
+//  Outputs
+//  double
+//
+double Common::stringToDouble( string str )
 {
     stringstream ss( str );
     double val = 0;

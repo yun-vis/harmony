@@ -11,17 +11,6 @@
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cassert>
-#include <cstring>
-#include <cmath>
-
-using namespace std;
-
-
 #include <boost/graph/max_cardinality_matching.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>

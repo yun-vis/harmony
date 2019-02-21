@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------------
 void GraphicsView::_item_seeds( void )
 {
-    ForceGraph &c = _boundaryPtr->composite();
+    ForceGraph &c = _levelhighPtr->bone();
 
     BGL_FORALL_VERTICES( vd, c, ForceGraph ) {
 
@@ -31,7 +31,7 @@ void GraphicsView::_item_seeds( void )
 
 void GraphicsView::_item_skeleton( void )
 {
-    ForceGraph &s = _boundaryPtr->skeleton();
+    ForceGraph &s = _levelhighPtr->skeleton();
 
     // draw edges
     BGL_FORALL_EDGES( ed, s, ForceGraph ) {
@@ -66,7 +66,7 @@ void GraphicsView::_item_skeleton( void )
 
 void GraphicsView::_item_composite( void )
 {
-    ForceGraph &s = _boundaryPtr->composite();
+    ForceGraph &s = _levelhighPtr->bone();
 
     // draw edges
     BGL_FORALL_EDGES( ed, s, ForceGraph ) {
@@ -101,9 +101,9 @@ void GraphicsView::_item_composite( void )
 
 void GraphicsView::_item_polygonComplex( void )
 {
-    ForceGraph &s = _boundaryPtr->skeleton();
-    //vector < vector< Coord2 > > p = _boundaryPtr->polygons();
-    map< unsigned int, Polygon2 >  p = _boundaryPtr->polygonComplex();
+    ForceGraph &s = _levelhighPtr->skeleton();
+    //vector < vector< Coord2 > > p = _levelhighPtr->polygons();
+    map< unsigned int, Polygon2 >  p = _levelhighPtr->polygonComplex();
     map< unsigned int, Polygon2 >::iterator itP = p.begin();
     for( ; itP != p.end(); itP++ ){
 
@@ -132,10 +132,10 @@ void GraphicsView::_item_polygonComplex( void )
 
 void GraphicsView::_item_polygons( void )
 {
-    ForceGraph &s = _boundaryPtr->composite();
-    vector< Seed > &seedVec = *(_boundaryPtr->forceBoundary().voronoi().seedVec());
+    ForceGraph &s = _levelhighPtr->bone();
+    vector< Seed > &seedVec = *(_levelhighPtr->forceBone().voronoi().seedVec());
 
-    // cerr << "test = " << (*_boundaryPtr->forceBoundary().voronoi().seedVec())[0].cellPolygon.elements().size() << endl;
+    // cerr << "test = " << (*_levelhighPtr->forceBone().voronoi().seedVec())[0].cellPolygon.elements().size() << endl;
 
     // cerr << "seedVec.size() = " << seedVec.size() << endl;
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
@@ -170,9 +170,9 @@ void GraphicsView::_item_boundary( void )
 {
     BoundaryGraph * g =  NULL;
     if( _is_simplifiedFlag == true )
-        g = & _simplifiedBoundaryPtr->boundary();
+        g = & _simplifiedLevelHighPtr->boundary();
     else
-        g = & _boundaryPtr->boundary();
+        g = & _levelhighPtr->boundary();
 
     // draw edges
     BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {

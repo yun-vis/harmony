@@ -18,7 +18,7 @@
 
 using namespace std;
 
-#include "base/Boundary.h"
+#include "base/LevelHigh.h"
 #include "base/Config.h"
 
 //------------------------------------------------------------------------------
@@ -31,11 +31,11 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class Smooth
+class Smooth : public Common
 {
 private:
 
-    Boundary         * _boundary;
+    LevelHigh         * _levelhigh;
     Eigen::VectorXd _var;           // x
     Eigen::VectorXd _output;        // b
     Eigen::MatrixXd _coef;          // A
@@ -60,7 +60,7 @@ protected:
     void            _initOutputs    ( void );
     void            _updateCoefs    ( void );
     void            _updateOutputs  ( void );
-    virtual void    _init           ( Boundary * __metro, double __width, double __height );
+    virtual void    _init           ( LevelHigh * __level, double __width, double __height );
 
 public:
 
@@ -81,7 +81,7 @@ public:
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-    void prepare( Boundary * __boundary, double __width, double __height ) {
+    void prepare( LevelHigh * __boundary, double __width, double __height ) {
         _init( __boundary, __width, __height );
     }
 

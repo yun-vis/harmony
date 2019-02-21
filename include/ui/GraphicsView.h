@@ -23,7 +23,7 @@ using namespace std;
 #include "ui/GraphicsPolygonItem.h"
 #include "optimization/Force.h"
 #include "base/Color.h"
-#include "base/Boundary.h"
+#include "base/LevelHigh.h"
 #include "base/Cell.h"
 #include "base/Road.h"
 #include "base/Pathway.h"
@@ -49,7 +49,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsView : public QGraphicsView, public PathwayData, public RegionData
+class GraphicsView : public QGraphicsView, public PathwayData, public RegionData, public Common
 {
     Q_OBJECT
 

@@ -31,7 +31,7 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class Stress
+class Stress : public Common
 {
 private:
 

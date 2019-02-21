@@ -8,7 +8,7 @@
 #include <iostream>
 
 #ifndef Q_MOC_RUN
-#include "base/WorkerBoundary.h"
+#include "base/WorkerLevelHigh.h"
 #include "base/WorkerCell.h"
 #include "base/WorkerBone.h"
 #include "base/WorkerPathway.h"

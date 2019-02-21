@@ -34,14 +34,14 @@ using namespace std;
 //  Outputs
 //      none
 //
-void Smooth::_init( Boundary * __boundary, double __half_width, double __half_height )
+void Smooth::_init( LevelHigh * __levelhigh, double __half_width, double __half_height )
 {
-    _boundary                   = __boundary;
-    BoundaryGraph & g           = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nVertices();
-    unsigned int nEdges         = _boundary->nEdges();
-    _d_Alpha                    = _boundary->dAlpha();
-    _d_Beta                     = _boundary->dBeta();
+    _levelhigh                   = __levelhigh;
+    BoundaryGraph & g           = _levelhigh->boundary();
+    unsigned int nVertices      = _levelhigh->nVertices();
+    unsigned int nEdges         = _levelhigh->nEdges();
+    _d_Alpha                    = _levelhigh->dAlpha();
+    _d_Beta                     = _levelhigh->dBeta();
 
     // initialization
     _nVars = _nConstrs = 0;
@@ -151,8 +151,8 @@ void Smooth::_init( Boundary * __boundary, double __half_width, double __half_he
 //
 void Smooth::_initCoefs( void )
 {
-    BoundaryGraph  & g            = _boundary->boundary();
-    unsigned int nVertices              = _boundary->nVertices();
+    BoundaryGraph  & g            = _levelhigh->boundary();
+    unsigned int nVertices              = _levelhigh->nVertices();
 
     //cerr<< "nVertices = " << nVertices << endl;
 
@@ -310,8 +310,8 @@ void Smooth::_initCoefs( void )
 //
 void Smooth::_initVars( void )
 {
-    BoundaryGraph & g           = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nVertices();
+    BoundaryGraph & g           = _levelhigh->boundary();
+    unsigned int nVertices      = _levelhigh->nVertices();
 
     // initialization
     _var.resize( _nVars );
@@ -342,7 +342,7 @@ void Smooth::_initVars( void )
 //
 void Smooth::_initOutputs( void )
 {
-    BoundaryGraph        & g            = _boundary->boundary();
+    BoundaryGraph        & g            = _levelhigh->boundary();
 
     // initialization
     unsigned int nRows = 0;
@@ -427,16 +427,16 @@ void Smooth::_initOutputs( void )
 //
 void Smooth::_updateCoefs( void )
 {
-    BoundaryGraph               & g             = _boundary->boundary();
-    unsigned int        nVertices       = _boundary->nVertices();
+    BoundaryGraph               & g             = _levelhigh->boundary();
+    unsigned int        nVertices       = _levelhigh->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-    vector< double >    ratioR          = _boundary->ratioR();
+    vector< double >    ratioR          = _levelhigh->ratioR();
 
     Eigen::MatrixXd     oldCoef;
     oldCoef = _coef.block( 0, 0, _nConstrs, _nVars );
 #ifdef  SMOOTH_CONFLICT
-    nVE = _boundary->VEconflict().size();
+    nVE = _levelhigh->VEconflict().size();
 #endif  // SMOOTH_CONFLICT
 #ifdef  SMOOTH_BOUNDARY
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
@@ -495,8 +495,8 @@ void Smooth::_updateCoefs( void )
 #ifdef  SMOOTH_CONFLICT
     // add conflict coefficient
     unsigned int countVE = 0;
-    for ( VEMap::iterator it = _boundary->VEconflict().begin();
-          it != _boundary->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _levelhigh->VEconflict().begin();
+          it != _levelhigh->VEconflict().end(); ++it ) {
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
         BoundaryGraph::edge_descriptor ed = it->second.second;
         BoundaryGraph::vertex_descriptor vdS = source( ed, g );
@@ -541,17 +541,17 @@ void Smooth::_updateCoefs( void )
 //
 void Smooth::_updateOutputs( void )
 {
-    BoundaryGraph       & g             = _boundary->boundary();
-    unsigned int        nVertices       = _boundary->nVertices();
+    BoundaryGraph       & g             = _levelhigh->boundary();
+    unsigned int        nVertices       = _levelhigh->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-    vector< double >    ratioR          = _boundary->ratioR();
+    vector< double >    ratioR          = _levelhigh->ratioR();
 
     unsigned int nRows = 0;
     Eigen::VectorXd     oldOutput;
     oldOutput = _output;
 #ifdef  SMOOTH_CONFLICT
-    nVE = _boundary->VEconflict().size();
+    nVE = _levelhigh->VEconflict().size();
 #endif  // SMOOTH_CONFLICT
 #ifdef  SMOOTH_BOUNDARY
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
@@ -677,8 +677,8 @@ void Smooth::_updateOutputs( void )
 #ifdef  SMOOTH_CONFLICT
     // conflict constraints
     unsigned int countVE = 0;
-    for ( VEMap::iterator it = _boundary->VEconflict().begin();
-          it != _boundary->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _levelhigh->VEconflict().begin();
+          it != _levelhigh->VEconflict().end(); ++it ) {
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
         BoundaryGraph::edge_descriptor ed = it->second.second;
         BoundaryGraph::vertex_descriptor vdS = source( ed, g );
@@ -850,13 +850,13 @@ double Smooth::ConjugateGradient( unsigned int iter )
 //
 void Smooth::retrieve( void )
 {
-    BoundaryGraph        & g    = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nVertices();
+    BoundaryGraph        & g    = _levelhigh->boundary();
+    unsigned int nVertices      = _levelhigh->nVertices();
 
     vector< vector< BoundaryGraph::vertex_descriptor > > vdMatrix;
     // find the vertex that is too close to an edge
-    for ( VEMap::iterator it = _boundary->VEconflict().begin();
-          it != _boundary->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _levelhigh->VEconflict().begin();
+          it != _levelhigh->VEconflict().end(); ++it ) {
 
         vector< BoundaryGraph::vertex_descriptor > vdVec;
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
@@ -943,7 +943,7 @@ void Smooth::retrieve( void )
     }
 
     // check possible conflict
-    _boundary->checkVEConflicts();
+    _levelhigh->checkVEConflicts();
 
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;

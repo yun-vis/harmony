@@ -97,8 +97,8 @@ using namespace::std;
 #define DEFAULT_ASPECT		(1.0)
 #define DEFAULT_SIDE		(1.2)
 #define DEFAULT_GRIDSIZE	(32)
-#define TOPBOTTOM_MARGIN	(50)
-#define LEFTRIGHT_MARGIN	(50)
+#define TOPBOTTOM_MARGIN	(30)
+#define LEFTRIGHT_MARGIN	(4*TOPBOTTOM_MARGIN/3)
 
 #define DEFAULT_TEXTURE_BLOCK_SIZE	(64)
 #define TEXTURE_GRID_MARGIN		(0)
@@ -171,5 +171,12 @@ enum WORKERTYPE{ WORKER_BOUNDARY, WORKER_CELL, WORKER_BONE, WORKER_PATHWAY };
 // extern int font_size;
 
 double stringToDouble( string str );
+
+class Common{
+
+protected:
+
+    double stringToDouble( string str );
+};
 
 #endif // _Common_H

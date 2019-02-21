@@ -56,7 +56,7 @@ class Contour2 {
     virtual ~Contour2() {}		// destructor
 
 //------------------------------------------------------------------------------
-//	Assignment opereators
+//	Assignment operators
 //------------------------------------------------------------------------------
     Contour2 &		operator = ( const Contour2 & p );
     // assignment

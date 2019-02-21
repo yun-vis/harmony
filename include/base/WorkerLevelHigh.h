@@ -1,6 +1,6 @@
 
-#ifndef WORKERBOUNDARY_H
-#define WORKERBOUNDARY_H
+#ifndef WORKERLEVELHIGH_H
+#define WORKERLEVELHIGH_H
 
 #include <iostream>
 
@@ -12,7 +12,7 @@
 #include <QThread>
 #include <QTimer>
 
-class WorkerBoundary : public Worker
+class WorkerLevelHigh : public Worker
 {
     Q_OBJECT
 
@@ -22,8 +22,8 @@ protected:
 
 public:
 
-    explicit WorkerBoundary( void );
-    virtual ~WorkerBoundary();
+    explicit WorkerLevelHigh( void );
+    virtual ~WorkerLevelHigh();
 
 public Q_SLOTS:
 
@@ -33,4 +33,4 @@ public Q_SLOTS:
 Q_SIGNALS:
 
 };
-#endif // WORKERBOUNDARY_H
+#endif // WORKERLEVELHIGH_H

@@ -28,7 +28,8 @@
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class Force {
+class Force : public Common
+{
 
   private:
 

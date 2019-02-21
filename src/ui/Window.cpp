@@ -28,8 +28,8 @@ Window::~Window()
 Window::Window( const Window & obj )
 {
     _gv = obj._gv;
-    _boundaryPtr = obj._boundaryPtr;
-    _simplifiedBoundaryPtr = obj._simplifiedBoundaryPtr;
+    _levelhighPtr = obj._levelhighPtr;
+    _simplifiedLevelHighPtr = obj._simplifiedLevelHighPtr;
 
     // cells of subgraphs
     _cellPtr = obj._cellPtr;
@@ -51,8 +51,8 @@ void Window::_init( void )
     _content_height = height() - TOPBOTTOM_MARGIN;
 
     // initialization of boundary 
-    _boundaryPtr = new Boundary;
-    _simplifiedBoundaryPtr = new Boundary;
+    _levelhighPtr = new LevelHigh;
+    _simplifiedLevelHighPtr = new LevelHigh;
     _smoothPtr = new Smooth;
     _octilinearPtr = new Octilinear;
     _stressPtr = new Stress;
@@ -66,7 +66,7 @@ void Window::_init( void )
     _roadPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
 
     _gv->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    _gv->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+    _gv->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
                         _cellPtr, _roadPtr, _lanePtr );
 }
 
@@ -154,8 +154,8 @@ void Window::simulateKey( Qt::Key key )
 
 void Window::postLoad( void )
 {
-    _boundaryPtr->adjustsize( _content_width/2, _content_height/2 );
-    _boundaryPtr->clearConflicts();
+    _levelhighPtr->adjustsize( _content_width/2, _content_height/2 );
+    _levelhighPtr->clearConflicts();
 
     redrawAllScene();
 }
@@ -179,15 +179,15 @@ void Window::selectForce( void )
 
 void Window::selectCloneGraph( void )
 {
-    _simplifiedBoundaryPtr->cloneLayout( *_boundaryPtr );
-    _simplifiedBoundaryPtr->clearConflicts();
+    _simplifiedLevelHighPtr->cloneLayout( *_levelhighPtr );
+    _simplifiedLevelHighPtr->clearConflicts();
 
     redrawAllScene();
 }
 
 void Window::selectMinDistance( void )
 {
-    _simplifiedBoundaryPtr->simplifyLayout();
+    _simplifiedLevelHighPtr->simplifyLayout();
     _gv->isSimplifiedFlag() = true;
     redrawAllScene();
 }
@@ -195,7 +195,7 @@ void Window::selectMinDistance( void )
 void Window::selectMovebackSmooth( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_SMOOTH );
+    isFinished = _simplifiedLevelHighPtr->movebackNodes( *_levelhighPtr, TYPE_SMOOTH );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -203,7 +203,7 @@ void Window::selectMovebackSmooth( void )
 void Window::selectMovebackOctilinear( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_OCTILINEAR );
+    isFinished = _simplifiedLevelHighPtr->movebackNodes( *_levelhighPtr, TYPE_OCTILINEAR );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -211,7 +211,7 @@ void Window::selectMovebackOctilinear( void )
 void Window::selectMovebackStress( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_STRESS );
+    isFinished = _simplifiedLevelHighPtr->movebackNodes( *_levelhighPtr, TYPE_STRESS );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
@@ -221,14 +221,14 @@ void Window::selectSmoothSmallCG( void )
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
-    unsigned int nLabels = _simplifiedBoundaryPtr->nLabels();
-    _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
-    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundaryPtr->nVertices() );
+
+    _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
+    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedLevelHighPtr->nVertices() );
     _smoothPtr->retrieve();
 
-    cerr << "simNStation = " << _simplifiedBoundaryPtr->nVertices() << endl;
-    cerr << "nStation = " << _boundaryPtr->nVertices() << endl;
-    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedLevelHighPtr->nVertices() << endl;
+    cerr << "nVertices = " << _levelhighPtr->nVertices() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedLevelHighPtr->nStations() << endl;
 
     // run smooth optimization
     while( true ) {
@@ -238,11 +238,11 @@ void Window::selectSmoothSmallCG( void )
 
         // check if all nodes are moved back
 #ifdef  DEBUG
-        cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
-             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
+        cerr << " num_vertices( _simplifiedLevelHighPtr->boundary() ) = " << num_vertices( _simplifiedLevelHighPtr->boundary() ) << endl
+             << " num_vertices( _levelhighPtr->boundary() ) = " << num_vertices( _levelhighPtr->boundary() ) << endl
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
-        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
             break;
         }
         else {
@@ -251,12 +251,12 @@ void Window::selectSmoothSmallCG( void )
             }
         }
 
-        _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+        _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
+            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
         }
         err = _smoothPtr->ConjugateGradient( iter );
         _smoothPtr->retrieve();
@@ -264,9 +264,9 @@ void Window::selectSmoothSmallCG( void )
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
-    //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+    //_simplifiedLevelHighPtr->adjustsize( width(), height() );
     _smoothPtr->clear();
-    _boundaryPtr->cloneSmooth( *_simplifiedBoundaryPtr );
+    _levelhighPtr->cloneSmooth( *_simplifiedLevelHighPtr );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
     // ofs << "Total Time CG = " << clock() - start_time << endl;
@@ -277,17 +277,17 @@ void Window::selectSmoothSmallCG( void )
 void Window::selectSmooth( OPTTYPE opttype )
 {
     // run smooth optimization
-    _smoothPtr->prepare( _boundaryPtr, _content_width/2, _content_height/2 );
+    _smoothPtr->prepare( _levelhighPtr, _content_width/2, _content_height/2 );
     switch( opttype ){
         case LEAST_SQUARE:
         {
-            int iter = _boundaryPtr->nVertices();
+            int iter = _levelhighPtr->nVertices();
             _smoothPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _boundaryPtr->nVertices();
+            int iter = _levelhighPtr->nVertices();
             _smoothPtr->ConjugateGradient( iter );
         }
             break;
@@ -316,12 +316,11 @@ void Window::selectOctilinearSmallCG( void )
 {
     // run coarse octilinear optimization
     double err = 0.0;
-    unsigned int nLabels = _simplifiedBoundaryPtr->nLabels();
 
-    _octilinearPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
-    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedBoundaryPtr->nVertices() );
+    _octilinearPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
+    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedLevelHighPtr->nVertices() );
     _octilinearPtr->retrieve();
-    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundaryPtr->nVertices() << endl;
+    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedLevelHighPtr->nVertices() << endl;
 
     // run octilinear optimization
     while( true ) {
@@ -330,7 +329,7 @@ void Window::selectOctilinearSmallCG( void )
         int iter = 0;
 
         // check if all nodes are moved back
-        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
             break;
         }
         else {
@@ -339,12 +338,12 @@ void Window::selectOctilinearSmallCG( void )
             }
         }
 
-        _octilinearPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+        _octilinearPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
+            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
         }
         err = _octilinearPtr->ConjugateGradient( iter );
         _octilinearPtr->retrieve();
@@ -353,7 +352,7 @@ void Window::selectOctilinearSmallCG( void )
     }
 
     _octilinearPtr->clear();
-    _boundaryPtr->cloneOctilinear( *_simplifiedBoundaryPtr );
+    _levelhighPtr->cloneOctilinear( *_simplifiedLevelHighPtr );
 
     redrawAllScene();
 }
@@ -361,18 +360,18 @@ void Window::selectOctilinearSmallCG( void )
 void Window::selectOctilinear( OPTTYPE opttype )
 {
     // run octilinear optimization
-    _octilinearPtr->prepare( _boundaryPtr, _content_width/2, _content_height/2 );
+    _octilinearPtr->prepare( _levelhighPtr, _content_width/2, _content_height/2 );
 
     switch( opttype ) {
         case LEAST_SQUARE:
         {
-            int iter = _boundaryPtr->nVertices();
+            int iter = _levelhighPtr->nVertices();
             _octilinearPtr->LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _boundaryPtr->nVertices();
+            int iter = _levelhighPtr->nVertices();
             _octilinearPtr->ConjugateGradient( iter );
         }
             break;
@@ -403,14 +402,14 @@ void Window::selectStressSmallCG( void )
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
-    unsigned int nLabels = _simplifiedBoundaryPtr->nLabels();
-    _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
-    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedBoundaryPtr->nVertices() );
+
+    _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
+    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedLevelHighPtr->nVertices() );
     _smoothPtr->retrieve();
 
-    cerr << "simNStation = " << _simplifiedBoundaryPtr->nVertices() << endl;
-    cerr << "nStation = " << _boundaryPtr->nVertices() << endl;
-    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedLevelHighPtr->nVertices() << endl;
+    cerr << "nStation = " << _levelhighPtr->nVertices() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedLevelHighPtr->nStations() << endl;
 
     // run smooth optimization
     while( true ) {
@@ -420,11 +419,11 @@ void Window::selectStressSmallCG( void )
 
         // check if all nodes are moved back
 #ifdef  DEBUG
-        cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
-             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
+        cerr << " num_vertices( _simplifiedLevelHighPtr->boundary() ) = " << num_vertices( _simplifiedLevelHighPtr->boundary() ) << endl
+             << " num_vertices( _levelhighPtr->boundary() ) = " << num_vertices( _levelhighPtr->boundary() ) << endl
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
-        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
+        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
             break;
         }
         else {
@@ -433,12 +432,12 @@ void Window::selectStressSmallCG( void )
             }
         }
 
-        _smoothPtr->prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) + nLabels ) ) {
-            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+        _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
+            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _boundaryPtr->nVertices() + nLabels - _simplifiedBoundaryPtr->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
         }
         err = _smoothPtr->ConjugateGradient( iter );
         _smoothPtr->retrieve();
@@ -446,9 +445,9 @@ void Window::selectStressSmallCG( void )
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
-    //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+    //_simplifiedLevelHighPtr->adjustsize( width(), height() );
     _smoothPtr->clear();
-    _boundaryPtr->cloneSmooth( *_simplifiedBoundaryPtr );
+    _levelhighPtr->cloneSmooth( *_simplifiedLevelHighPtr );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
     // ofs << "Total Time CG = " << clock() - start_time << endl;
@@ -459,12 +458,12 @@ void Window::selectStressSmallCG( void )
 void Window::selectStress( OPTTYPE opttype )
 {
     // run smooth optimization
-    _stressPtr->prepare( &_boundaryPtr->skeleton(), _content_width/2, _content_height/2 );
+    _stressPtr->prepare( &_levelhighPtr->skeleton(), _content_width/2, _content_height/2 );
 
     switch( opttype ){
         case LEAST_SQUARE:
         {
-            int iter = _boundaryPtr->nVertices();
+            int iter = _levelhighPtr->nVertices();
             _stressPtr->LeastSquare( iter );
             break;
         }
@@ -498,7 +497,7 @@ void Window::selectStressCG( void )
 
 void Window::selectBuildBoundary( void )
 {
-    _boundaryPtr->buildBoundaryGraph();
+    _levelhighPtr->buildBoundaryGraph();
     _gv->isSimplifiedFlag() = false;
     redrawAllScene();
 }
@@ -546,13 +545,13 @@ void Window::processBoundary( void )
     contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
     contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
 
-    _boundaryPtr->forceBoundary().init( &_boundaryPtr->composite(), contour, "../configs/boundary.conf" );
+    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), contour, "../configs/boundary.conf" );
 
     _gv->isPolygonFlag() = true;
 
     Controller * conPtr = new Controller;
     conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+    conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
                            _cellPtr, _roadPtr, _lanePtr );
 
     vector < unsigned int > indexVec;
@@ -610,7 +609,7 @@ void Window::processCell( void )
 
         Controller * conPtr = new Controller;
         conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-        conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+        conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
                                _cellPtr, _roadPtr, _lanePtr );
         vector < unsigned int > indexVec;
         indexVec.push_back( i );
@@ -674,7 +673,7 @@ void Window::processBone( void )
 
             Controller * conPtr = new Controller;
             conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+            conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
             vector < unsigned int > indexVec;
             indexVec.push_back( i );
@@ -748,7 +747,7 @@ void Window::processDetailedPathway( void )
             // cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
             Controller * conPtr = new Controller;
             conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _boundaryPtr, _simplifiedBoundaryPtr,
+            conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
             vector < unsigned int > indexVec;
             indexVec.push_back( i );
@@ -842,9 +841,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_2:
         {
-            cerr << "test = " << (*_boundaryPtr->forceBoundary().voronoi().seedVec())[0].cellPolygon.elements().size() << endl;
             stopProcessBoundary();
-            cerr << "test2 = " << (*_boundaryPtr->forceBoundary().voronoi().seedVec())[0].cellPolygon.elements().size() << endl;
             redrawAllScene();
             break;
         }
@@ -962,11 +959,11 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_L:
         {
             // load setting
-            _pathway->initLayout( _boundaryPtr->polygonComplex() );
+            _pathway->initLayout( _levelhighPtr->polygonComplex() );
 
             // initialize cell
             _cellPtr->clear();
-            _cellPtr->init( &_boundaryPtr->polygonComplex() );
+            _cellPtr->init( &_levelhighPtr->polygonComplex() );
 
             _gv->isCellFlag() = true;
             _gv->isCompositeFlag() = false;
@@ -999,7 +996,9 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_R:
         {
-            _boundaryPtr->readPolygonComplex();
+#ifdef SKIP
+            _levelhighPtr->readPolygonComplex();
+#endif // SKIP
             _gv->isPolygonComplexFlag() = true;
             _gv->isBoundaryFlag() = true;
             redrawAllScene();
@@ -1018,7 +1017,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             selectCloneGraph();
             selectOctilinearCG();
-            _boundaryPtr->updatePolygonComplex();
+            _levelhighPtr->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
             _gv->isPolygonFlag() = false;
             _gv->isCompositeFlag() = false;
@@ -1031,7 +1030,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             selectCloneGraph();
             selectStressCG();
-            //_boundaryPtr->updatePolygonComplex();
+            //_levelhighPtr->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
 
             _gv->isSkeletonFlag() = true;
@@ -1041,9 +1040,11 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_B:
         {
-            _boundaryPtr->createPolygonComplex();
+            _levelhighPtr->createPolygonComplex( num_vertices( _levelhighPtr->skeleton() ) );
             selectBuildBoundary();
-            _boundaryPtr->writePolygonComplex();
+#ifdef SKIP
+            _levelhighPtr->writePolygonComplex();
+#endif // SKIP
             break;
         }
         case Qt::Key_V:
@@ -1055,7 +1056,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _pathway->generate();
             _pathway->exportEdges();
 
-            _boundaryPtr->init( _pathway->skeletonG() );
+            _levelhighPtr->init( _pathway->skeletonG() );
 
             // update content width and height
 #ifdef DEBUG
@@ -1086,9 +1087,11 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->setSceneRect( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
 
-            _boundaryPtr->normalizeSkeleton( _content_width, _content_height );
-            _boundaryPtr->decomposeSkeleton();
-            _boundaryPtr->normalizeComposite( _content_width, _content_height );
+            _levelhighPtr->normalizeSkeleton( _content_width - LEFTRIGHT_MARGIN,
+                                             _content_height - TOPBOTTOM_MARGIN );
+            _levelhighPtr->decomposeSkeleton();
+            _levelhighPtr->normalizeBone( _content_width - LEFTRIGHT_MARGIN,
+                                         _content_height - TOPBOTTOM_MARGIN );
 
             // ui
             _gv->isCompositeFlag() = true;

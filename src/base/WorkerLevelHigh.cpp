@@ -1,33 +1,33 @@
 
-#include "base/WorkerBoundary.h"
+#include "base/WorkerLevelHigh.h"
 
 //----------------------------------------------------------
 // Worker
 //----------------------------------------------------------
-WorkerBoundary::WorkerBoundary( void )
+WorkerLevelHigh::WorkerLevelHigh( void )
 {
     // cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
 }
 
-WorkerBoundary::~WorkerBoundary()
+WorkerLevelHigh::~WorkerLevelHigh()
 {
 }
 
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerBoundary::onTimeout( void )
+void WorkerLevelHigh::onTimeout( void )
 {
     double err = 0.0;
-    switch ( _boundaryPtr->forceBoundary().mode() ) {
+    switch ( _levelhighPtr->forceBone().mode() ) {
 
         case TYPE_FORCE:
         case TYPE_BARNES_HUT:
         {
-            _boundaryPtr->forceBoundary().force();
-            err = _boundaryPtr->forceBoundary().verletIntegreation();
-            // cerr << "WorkerBoundary::err (force) = " << err << endl;
-            if ( err < _boundaryPtr->forceBoundary().finalEpsilon() ) {
+            _levelhighPtr->forceBone().force();
+            err = _levelhighPtr->forceBone().verletIntegreation();
+            // cerr << "WorkerLevelHigh::err (force) = " << err << endl;
+            if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -36,10 +36,10 @@ void WorkerBoundary::onTimeout( void )
         }
         case TYPE_CENTROID:
         {
-            _boundaryPtr->forceBoundary().centroidGeometry();
-            err = _boundaryPtr->forceBoundary().gap();
-            // cerr << "WorkerBoundary::err (centroid) = " << err << endl;
-            if ( err < _boundaryPtr->forceBoundary().finalEpsilon() ) {
+            _levelhighPtr->forceBone().centroidGeometry();
+            err = _levelhighPtr->forceBone().gap();
+            // cerr << "WorkerLevelHigh::err (centroid) = " << err << endl;
+            if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
                 stop();
                 //cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -48,11 +48,11 @@ void WorkerBoundary::onTimeout( void )
         }
         case TYPE_HYBRID:
         {
-            _boundaryPtr->forceBoundary().force();
-            _boundaryPtr->forceBoundary().centroidGeometry();
-            err = _boundaryPtr->forceBoundary().verletIntegreation();
-            // cerr << "WorkerBoundary::err (hybrid) = " << err << endl;
-            if ( err < _boundaryPtr->forceBoundary().finalEpsilon() ) {
+            _levelhighPtr->forceBone().force();
+            _levelhighPtr->forceBone().centroidGeometry();
+            err = _levelhighPtr->forceBone().verletIntegreation();
+            // cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
+            if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
                 stop();
                 //cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
@@ -66,15 +66,15 @@ void WorkerBoundary::onTimeout( void )
     Q_EMIT updateProcess();
 }
 
-void WorkerBoundary::process( const QString &parameter )
+void WorkerLevelHigh::process( const QString &parameter )
 {
     // here is the expensive or blocking operation
     // signal and slot should be thread safe
 
-    // cerr << "WorkerBoundary::process =  " << QThread::currentThreadId() << endl;
+    // cerr << "WorkerLevelHigh::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerBoundary::onTimeout );
+    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelHigh::onTimeout );
 
     start( TIMER_INTERVAL );
 }

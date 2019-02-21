@@ -12,11 +12,15 @@
 //----------------------------------------------------------------------
 
 #include <iostream>
-#include <iomanip>
-#include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <cassert>
+#include <cstring>
+#include <cmath>
 
 using namespace std;
 
+#include "base/Common.h"
 #include "base/Config.h"
 #include "base/PathwayData.h"
 #include "base/Grid2.h"
@@ -50,7 +54,7 @@ public:
     ForceGraph                              detailGraph;
 };
 
-class Cell : public PathwayData
+class Cell : public PathwayData, public Common
 {
 private:
 

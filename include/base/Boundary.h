@@ -12,17 +12,20 @@
 //----------------------------------------------------------------------
 
 #include <iostream>
-#include <iomanip>
-#include <string>
-#include <tinyxml.h>
+#include <fstream>
+#include <sstream>
+#include <cassert>
+#include <cstring>
+#include <cmath>
 
 using namespace std;
 
 #include "base/Grid2.h"
 #include "base/Contour2.h"
 #include "graph/BoundaryGraph.h"
-#include "graph/SkeletonGraph.h"
+#include "graph/ForceGraph.h"
 #include "optimization/Force.h"
+#include "optimization/Stress.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -31,44 +34,31 @@ typedef pair< BoundaryGraph::vertex_descriptor, BoundaryGraph::edge_descriptor >
 typedef pair< unsigned int, unsigned int >	        VVIDPair;
 typedef map< Grid2, VEPair >                        VEMap;
 
-//----------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //	Defining macros
-//----------------------------------------------------------------------
-
-#define MAX_LINES		(32)
-#define MAX_STATIONS		(1024)
-#define NEIGHBORHOOD_RADIUS	(1.0)
-#define LABELING_MARGIN		(1)
-
+//------------------------------------------------------------------------------
 class Boundary
 {
-private:
-
-    BoundaryGraph                           _boundary;
-    ForceGraph                              _skeleton;
-    ForceGraph                              _composite;
-    Force                                   _forceBoundary;
-
-    map< unsigned int, Polygon2 >           _polygonComplex;    // for skeleton graph
-    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;    // for skeleton graph
-
-    vector< vector< BoundaryGraph::vertex_descriptor > >            _shortestPathM;
-    
 protected:
-    
+
+    // skeleton
+    BoundaryGraph               _boundary;      // inner + outer boundary
+    Contour2                    _contour;       // outer boundary
+
+    // optimization
+    Stress                      _stressBorder;  // stress layout on boundary
+
+    // boundary graph
     vector< vector< BoundaryGraph::edge_descriptor > >	    _line;
     vector< vector< BoundaryGraph::vertex_descriptor > >	_lineSta;
-    double					    _lineColor  [ MAX_LINES ][ 3 ];
-    char					    _lineName   [ MAX_LINES ][ MAX_STR ];
-    unsigned int				_nLines;
     unsigned int				_nVertices;
-    unsigned int				_nSbeforeSim;   // station no. before simplification
-    unsigned int				_nLabels;
     unsigned int				_nEdges;
+    unsigned int				_nLines;
+    unsigned int				_nSbeforeSim;   // station no. before simplification
     unsigned int				_nEbeforeSim;   // edge no. before simplification
-    double                                      _meanVSize; // mean area size of the node
-    double                                      _distAlpha; // unit distance of a focused edge
-    double                                      _distBeta;  // unit distance of an edge
+    double                      _meanVSize;     // mean area size of the node
+    double                      _distAlpha;     // unit distance of a focused edge
+    double                      _distBeta;      // unit distance of an edge
 
     // for recording the information if nodes or edged are deleted.
     vector< unsigned int >                      _removedVertices;   // ID of removed vertices
@@ -79,8 +69,12 @@ protected:
     VEMap                                       _VEconflict;    // vertex-edge pair that is too close to each other
     vector< double >                            _ratioR;        // ratio of vertices projected on the edge, r*v1 + (r-1)*v2
 
-    double                      _stringToDouble( string str );
-    void                        _init( SkeletonGraph & skeletonGraph );
+
+//------------------------------------------------------------------------------
+//  Specific functions
+//------------------------------------------------------------------------------
+    void _init( void );
+    void _clear( void );
 
 public:
     
@@ -91,36 +85,18 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    double *    lineColor( int lineID ) {
-        return &_lineColor[ lineID ][ 0 ];
-    }
+    const BoundaryGraph &       boundary( void ) const      { return _boundary; }
+    BoundaryGraph &			    boundary( void )	        { return _boundary; }
 
-    char *      lineName( int lineID ) {
-        return & _lineName[ lineID ][ 0 ];
-    }
-    
+    const Stress &		        stressBorder( void ) const  { return _stressBorder; }
+    Stress &			        stressBorder( void )	    { return _stressBorder; }
+
+    // boundary graph
     const unsigned int &			nVertices( void ) const { return _nVertices; }
     const unsigned int &			nEdges( void ) const { return _nEdges; }
-    //const unsigned int &			nLines( void ) const { return _nLines; }
-    const unsigned int &			nLabels( void ) const { return _nLabels; }
     const double &			        meanVSize( void ) const { return _meanVSize; }
     const double &			        dAlpha( void ) const { return _distAlpha; }
     const double &			        dBeta( void ) const { return _distBeta; }
-
-    const BoundaryGraph &		    boundary( void ) const  { return _boundary; }
-    BoundaryGraph &			        boundary( void )	    { return _boundary; }
-    const ForceGraph &		        skeleton( void ) const  { return _skeleton; }
-    ForceGraph &			        skeleton( void )	    { return _skeleton; }
-    const ForceGraph &		        composite( void ) const  { return _composite; }
-    ForceGraph &			        composite( void )	     { return _composite; }
-
-    const Force &		            forceBoundary( void ) const  { return _forceBoundary; }
-    Force &			                forceBoundary( void )	     { return _forceBoundary; }
-
-    const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
-    map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }
-
-    const vector< vector< BoundaryGraph::vertex_descriptor > > &    spM( void ) const { return _shortestPathM; }
 
     const vector< vector< BoundaryGraph::edge_descriptor > > &      line( void ) const { return _line; }
     const vector< vector< BoundaryGraph::vertex_descriptor > > &    lineSta( void ) const { return _lineSta; }
@@ -146,20 +122,8 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void adjustsize( const int & width, const int & height );   // normalize the Boundary size
-    void normalizeSkeleton( const int & width, const int & height );   // normalize the Boundary size
-    void normalizeComposite( const int & width, const int & height );   // normalize the Boundary size
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
-    void buildBoundaryGraph( void );
-    void buildSkeleton( void );
-    void decomposeSkeleton( void );
-    void createPolygonComplex( void );
-    void updatePolygonComplex( void );
-    void readPolygonComplex( void );
-    void writePolygonComplex( void );
-    bool findVertexInComplex( Coord2 &coord, ForceGraph &complex,
-                              ForceGraph::vertex_descriptor &target );
 
 //------------------------------------------------------------------------------
 //  File I/O
@@ -169,8 +133,9 @@ public:
     void cloneOctilinear( const Boundary & obj );
     void updateTempCoord( void );
     void reorderID( void );                                     // reorder Boundary vertex and edge id
-    void init( SkeletonGraph &__skeletonGraph ) { _init( __skeletonGraph ); }
-    void clear( void );
+
+    void init( void ) { _init(); }
+    void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------
 //      I/O
