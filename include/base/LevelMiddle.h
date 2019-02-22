@@ -1,11 +1,11 @@
 //==============================================================================
-// LevelHigh.h
-//  : header file for the LevelHigh network
+// LevelMiddle.h
+//  : header file for the LevelMiddle network
 //
 //==============================================================================
 
-#ifndef _LevelHigh_H        // beginning of header file
-#define _LevelHigh_H        // notifying that this file is included
+#ifndef _LevelMiddle_H        // beginning of header file
+#define _LevelMiddle_H        // notifying that this file is included
 
 //----------------------------------------------------------------------
 //  Including header files
@@ -34,11 +34,9 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class LevelHigh : public Package
+class LevelMiddle : public Package
 {
 private:
-
-    ForceGraph                  _skeleton;
 
     // optimization
     Smooth                      _smoothBoundary;    // smooth boundary
@@ -52,31 +50,17 @@ protected:
 
 public:
     
-    LevelHigh();                        // default constructor
-    LevelHigh( const LevelHigh & obj );     // Copy constructor
-    virtual ~LevelHigh();               // Destructor
+    LevelMiddle();                        // default constructor
+    LevelMiddle( const LevelMiddle & obj );     // Copy constructor
+    virtual ~LevelMiddle();               // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    const ForceGraph &		        skeleton( void ) const  { return _skeleton; }
-    ForceGraph &			        skeleton( void )	    { return _skeleton; }
-
-
-
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void adjustsize( const int & width, const int & height );   // normalize the LevelHigh size
-    void normalizeSkeleton( const int & width, const int & height );   // normalize the LevelHigh size
-    void normalizeBone( const int & width, const int & height );   // normalize the LevelHigh size
-    void decomposeSkeleton( void );
-
-#ifdef SKIP
-    void readPolygonComplex( void );
-    void writePolygonComplex( void );
-#endif // SKIP
 
 //------------------------------------------------------------------------------
 //  File I/O
@@ -87,16 +71,16 @@ public:
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const LevelHigh & obj );
+    friend ostream & operator << ( ostream & stream, const LevelMiddle & obj );
                                 // Output
-    friend istream & operator >> ( istream & stream, LevelHigh & obj );
+    friend istream & operator >> ( istream & stream, LevelMiddle & obj );
                                 // Input
 
-    virtual const char * className( void ) const { return "LevelHigh"; }
+    virtual const char * className( void ) const { return "LevelMiddle"; }
                                 // Class name
 };
 
-#endif // _LevelHigh_H
+#endif // _LevelMiddle_H
 
 // end of header file
 // Do not add any stuff under this line.

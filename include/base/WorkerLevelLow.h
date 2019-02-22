@@ -1,6 +1,6 @@
 
-#ifndef WORKERPATHWAY_H
-#define WORKERPATHWAY_H
+#ifndef WorkerLevelLow_H
+#define WorkerLevelLow_H
 
 #include <iostream>
 
@@ -12,7 +12,7 @@
 #include <QThread>
 #include <QTimer>
 
-class WorkerPathway : public Worker
+class WorkerLevelLow : public Worker
 {
     Q_OBJECT
 
@@ -22,8 +22,8 @@ protected:
 
 public:
 
-    explicit WorkerPathway( void );
-    virtual ~WorkerPathway();
+    explicit WorkerLevelLow( void );
+    virtual ~WorkerLevelLow();
 
 public Q_SLOTS:
 
@@ -33,4 +33,4 @@ public Q_SLOTS:
 Q_SIGNALS:
 
 };
-#endif // WORKERPATHWAY_H
+#endif // WorkerLevelLow_H

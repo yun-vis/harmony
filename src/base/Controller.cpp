@@ -25,17 +25,17 @@ void Controller::init( vector < unsigned int > indexVec, WORKERTYPE type )
         }
         case WORKER_CELL:
         {
-            _workerPtr = new WorkerCell;
+            _workerPtr = new WorkerLevelMiddle;
             break;
         }
         case WORKER_BONE:
         {
-            _workerPtr = new WorkerBone;
+            _workerPtr = new WorkerLevelLow;
             break;
         }
         case WORKER_PATHWAY:
         {
-            _workerPtr = new WorkerPathway;
+            _workerPtr = new WorkerLevelDetailed;
             break;
         }
         default:

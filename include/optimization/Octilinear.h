@@ -18,7 +18,7 @@
 
 using namespace std;
 
-#include "base/LevelHigh.h"
+#include "base/Boundary.h"
 #include "base/Config.h"
 
 //------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ class Octilinear : public Common
 {
 private:
 
-    LevelHigh            *_levelhigh;
+    Boundary            *_boundary;
     Eigen::VectorXd     _var;           // x
     Eigen::VectorXd     _output;        // b
     Eigen::MatrixXd     _coef;          // A
@@ -59,7 +59,7 @@ protected:
     void                _initOutputs    ( void );
     void                _updateCoefs    ( void );
     void                _updateOutputs  ( void );
-    virtual void        _init           ( LevelHigh * __boundary, double __width, double __height );
+    virtual void        _init           ( Boundary * __boundary, double __width, double __height );
     void                _setTargetAngle( void );
     void                _updateEdgeCurAngle( void );
 
@@ -82,7 +82,7 @@ public:
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-    void prepare( LevelHigh * __boundary, double __half_width, double __half_height ) {
+    void prepare( Boundary * __boundary, double __half_width, double __half_height ) {
 
         _init( __boundary, __half_width, __half_height );
     }

@@ -37,94 +37,7 @@ void Package::_init( void )
 }
 
 //
-//  Package::createPolygonComplex --    create the ploygon complex
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void Package::createPolygonComplex( unsigned int nV )
-{
-    vector< vector< Polygon2 > > _polygonMat;
-    vector< Seed > &seedVec = *_forceBone.voronoi().seedVec();
-
-    // initialization
-    _polygonComplex.clear();
-
-    // find the sets of the polygons of the same group
-    // int nV = num_vertices( _skeleton );
-    _polygonMat.resize( nV );
-    assert( seedVec.size() == num_vertices( _bone ) );
-    for( unsigned int i = 0; i < seedVec.size(); i++ ){
-
-        int gid = _bone[ vertex( i, _bone ) ].initID;
-        _polygonMat[ gid ].push_back( seedVec[i].cellPolygon );
-    }
-
-    for( unsigned int i = 0; i < _polygonMat.size(); i++ ){
-
-        int cSize = _polygonMat[i].size();
-        if( cSize > 1 ){
-
-            Contour2 contour;
-            vector< Polygon2 > pVec;
-            for( unsigned int j = 0; j < _polygonMat[i].size(); j++ ) {
-                Polygon2 &p = _polygonMat[i][j];
-                pVec.push_back( p );
-            }
-            contour.init( i, pVec );
-            contour.createContour();
-            _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, contour.contour() ) );
-        }
-        else{
-            Polygon2 &p = _polygonMat[i][0];
-            p.updateOrientation();
-            _polygonComplex.insert( pair< unsigned int, Polygon2 >( i, p ) );
-        }
-    }
-
-#ifdef DEBUG
-    map< unsigned int, Polygon2 >::iterator itC = _polygonComplex.begin();
-    for( ; itC != _polygonComplex.end(); itC++ ){
-        Polygon2 &p = itC->second;
-        for( unsigned int i = 0; i < p.elements().size(); i++ ){
-            cerr << p.elements()[i] << " ";
-        }
-    }
-    cerr << endl;
-#endif // DEBUG
-}
-
-
-//
-//  Package::updatePolygonComplex --    update the ploygon complex
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void Package::updatePolygonComplex( void )
-{
-    cerr << "updating polygonComplex after optimization ..." << endl;
-
-    map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
-    map< unsigned int, Polygon2 >::iterator itC = _polygonComplex.begin();
-    for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
-        vector< ForceGraph::vertex_descriptor > &p = itP->second;
-        for( unsigned int i = 0; i < p.size(); i++ ){
-            itC->second.elements()[i].x() = _boundary[ p[i] ].coordPtr->x();
-            itC->second.elements()[i].y() = _boundary[ p[i] ].coordPtr->y();
-        }
-        itC++;
-    }
-}
-
-//
-//  Package::buildBoneGraph --    build the boundary from the voronoi cell
+//  Package::buildPackageGraph --    build the boundary from the voronoi cell
 //
 //  Inputs
 //  none
@@ -287,33 +200,30 @@ void Package::buildBoundaryGraph( void )
 #endif // DEBUG
 }
 
+
 //
-//  Package::findVertexInComplex --    detect vertex-edge pair that is close to each other
+//  Package::updatePolygonComplex --    update the ploygon complex
 //
 //  Inputs
-//  coord: coordinates of a point
-//  complex: the graph
-//  vd: vertex descriptor
+//  none
 //
 //  Outputs
-//  isFound: binary
+//  none
 //
-bool Package::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
-                                   ForceGraph::vertex_descriptor &target )
+void Package::updatePolygonComplex( void )
 {
-    bool isFound = false;
+    cerr << "updating polygonComplex after optimization ..." << endl;
 
-    BGL_FORALL_VERTICES( vd, complex, ForceGraph )
-        {
-            //cerr << " vd " << *complex[vd].coordPtr << endl;
-            if( ( coord - *complex[vd].coordPtr ).norm() < 1e-2 ){
-                target = vd;
-                isFound = true;
-            }
+    map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
+    map< unsigned int, Polygon2 >::iterator itC = _polygonComplex.begin();
+    for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
+        vector< ForceGraph::vertex_descriptor > &p = itP->second;
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            itC->second.elements()[i].x() = _boundary[ p[i] ].coordPtr->x();
+            itC->second.elements()[i].y() = _boundary[ p[i] ].coordPtr->y();
         }
-
-    //cerr << "isFound = " << isFound << endl;
-    return isFound;
+        itC++;
+    }
 }
 
 //

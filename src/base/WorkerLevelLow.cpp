@@ -1,24 +1,24 @@
 
-#include "base/WorkerBone.h"
+#include "base/WorkerLevelLow.h"
 
 //----------------------------------------------------------
 // Worker
 //----------------------------------------------------------
-WorkerBone::WorkerBone( void )
+WorkerLevelLow::WorkerLevelLow( void )
 {
     // cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
 }
 
-WorkerBone::~WorkerBone()
+WorkerLevelLow::~WorkerLevelLow()
 {
 }
 
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerBone::onTimeout( void )
+void WorkerLevelLow::onTimeout( void )
 {
-    // cerr << "WorkerBone::timeout =  " << QThread::currentThreadId() << endl;
+    // cerr << "WorkerLevelLow::timeout =  " << QThread::currentThreadId() << endl;
 
     double err = 0.0;
     vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
@@ -77,15 +77,15 @@ void WorkerBone::onTimeout( void )
     Q_EMIT updateProcess();
 }
 
-void WorkerBone::process( const QString &parameter )
+void WorkerLevelLow::process( const QString &parameter )
 {
     // here is the expensive or blocking operation
     // signal and slot should be thread safe
 
-    // cerr << "WorkerBone::process =  " << QThread::currentThreadId() << endl;
+    // cerr << "WorkerLevelLow::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerBone::onTimeout );
+    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelLow::onTimeout );
 
     start( TIMER_INTERVAL );
 }

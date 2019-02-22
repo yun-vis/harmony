@@ -1,6 +1,6 @@
 
-#ifndef WORKERBONE_H
-#define WORKERBONE_H
+#ifndef WorkerLevelDetailed_H
+#define WorkerLevelDetailed_H
 
 #include <iostream>
 
@@ -12,7 +12,7 @@
 #include <QThread>
 #include <QTimer>
 
-class WorkerBone : public Worker
+class WorkerLevelDetailed : public Worker
 {
     Q_OBJECT
 
@@ -22,8 +22,8 @@ protected:
 
 public:
 
-    explicit WorkerBone( void );
-    virtual ~WorkerBone();
+    explicit WorkerLevelDetailed( void );
+    virtual ~WorkerLevelDetailed();
 
 public Q_SLOTS:
 
@@ -33,4 +33,4 @@ public Q_SLOTS:
 Q_SIGNALS:
 
 };
-#endif // WORKERBONE_H
+#endif // WorkerLevelDetailed_H

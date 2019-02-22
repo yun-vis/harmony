@@ -1,22 +1,22 @@
 
-#include "base/WorkerCell.h"
+#include "base/WorkerLevelMiddle.h"
 
 //----------------------------------------------------------
 // Worker
 //----------------------------------------------------------
-WorkerCell::WorkerCell( void )
+WorkerLevelMiddle::WorkerLevelMiddle( void )
 {
     // cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
 }
 
-WorkerCell::~WorkerCell()
+WorkerLevelMiddle::~WorkerLevelMiddle()
 {
 }
 
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerCell::onTimeout( void )
+void WorkerLevelMiddle::onTimeout( void )
 {
     double err = 0.0;
 
@@ -27,7 +27,7 @@ void WorkerCell::onTimeout( void )
             _cellPtr->forceCellVec()[ _indexVec[0] ].force();
             _cellPtr->additionalForces();
             // err = _cellPtr->forceCellVec()[ _indexVec[0] ].verletIntegreation();
-            cerr << "WorkerCell::err (force) = " << err << endl;
+            cerr << "WorkerLevelMiddle::err (force) = " << err << endl;
             if ( err < _cellPtr->forceCellVec()[ _indexVec[0] ].finalEpsilon() ) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
@@ -40,7 +40,7 @@ void WorkerCell::onTimeout( void )
             _cellPtr->forceCellVec()[ _indexVec[0] ].centroidGeometry();
             _cellPtr->additionalForces();
             err = _cellPtr->forceCellVec()[ _indexVec[0] ].gap();
-            // cerr << "WorkerCell::err (centroid) = " << err << endl;
+            // cerr << "WorkerLevelMiddle::err (centroid) = " << err << endl;
             if ( err < _cellPtr->forceCellVec()[ _indexVec[0] ].finalEpsilon() ) {
                 stop();
                 //cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
@@ -54,7 +54,7 @@ void WorkerCell::onTimeout( void )
             _cellPtr->additionalForces();
             _cellPtr->forceCellVec()[ _indexVec[0] ].centroidGeometry();
             err = _cellPtr->forceCellVec()[ _indexVec[0] ].verletIntegreation();
-            // cerr << "WorkerCell::err (hybrid) = " << err << endl;
+            // cerr << "WorkerLevelMiddle::err (hybrid) = " << err << endl;
             if ( err < _cellPtr->forceCellVec()[ _indexVec[0] ].finalEpsilon() ) {
                 stop();
                 //cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
@@ -69,15 +69,15 @@ void WorkerCell::onTimeout( void )
     Q_EMIT updateProcess();
 }
 
-void WorkerCell::process( const QString &parameter )
+void WorkerLevelMiddle::process( const QString &parameter )
 {
     // here is the expensive or blocking operation
     // signal and slot should be thread safe
 
-    // cerr << "WorkerCell::process =  " << QThread::currentThreadId() << endl;
+    // cerr << "WorkerLevelMiddle::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerCell::onTimeout );
+    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeout );
 
     start( TIMER_INTERVAL );
 }

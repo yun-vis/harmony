@@ -9,9 +9,9 @@
 
 #ifndef Q_MOC_RUN
 #include "base/WorkerLevelHigh.h"
-#include "base/WorkerCell.h"
-#include "base/WorkerBone.h"
-#include "base/WorkerPathway.h"
+#include "base/WorkerLevelMiddle.h"
+#include "base/WorkerLevelLow.h"
+#include "base/WorkerLevelDetailed.h"
 #endif // Q_MOC_RUN
 
 class Controller: public QObject, public PathwayData, public RegionData

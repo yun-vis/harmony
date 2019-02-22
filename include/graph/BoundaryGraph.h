@@ -29,6 +29,7 @@ using namespace std;
 using namespace boost;
 
 #include "base/Coord2.h"
+#include "base/Grid2.h"
 #include "graph/BoundaryGraphProperty.h"
 #include "graph/BoundaryVertexProperty.h"
 #include "graph/BoundaryEdgeProperty.h"
@@ -37,6 +38,10 @@ using namespace boost;
 typedef adjacency_list< listS, listS, undirectedS,
 		BoundaryVertexProperty, BoundaryEdgeProperty,
 		BoundaryGraphProperty >  BoundaryGraph;
+
+typedef pair< BoundaryGraph::vertex_descriptor,
+			  BoundaryGraph::edge_descriptor >	VEPair;
+typedef map< Grid2, VEPair >                    VEMap;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions

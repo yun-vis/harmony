@@ -842,7 +842,8 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_2:
         {
             stopProcessBoundary();
-            redrawAllScene();
+            simulateKey( Qt::Key_O );
+            // redrawAllScene();
             break;
         }
         case Qt::Key_Q:

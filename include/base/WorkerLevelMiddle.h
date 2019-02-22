@@ -1,6 +1,6 @@
 
-#ifndef WORKERCELL_H
-#define WORKERCELL_H
+#ifndef WorkerLevelMiddle_H
+#define WorkerLevelMiddle_H
 
 #include <iostream>
 
@@ -12,7 +12,7 @@
 #include <QThread>
 #include <QTimer>
 
-class WorkerCell : public Worker
+class WorkerLevelMiddle : public Worker
 {
     Q_OBJECT
 
@@ -22,8 +22,8 @@ protected:
 
 public:
 
-    explicit WorkerCell( void );
-    virtual ~WorkerCell();
+    explicit WorkerLevelMiddle( void );
+    virtual ~WorkerLevelMiddle();
 
 public Q_SLOTS:
 
@@ -33,4 +33,4 @@ public Q_SLOTS:
 Q_SIGNALS:
 
 };
-#endif // WORKERCELL_H
+#endif // WorkerLevelMiddle_H

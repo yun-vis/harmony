@@ -24,29 +24,21 @@ using namespace std;
 #include "base/Contour2.h"
 #include "graph/BoundaryGraph.h"
 #include "graph/ForceGraph.h"
-#include "optimization/Force.h"
-#include "optimization/Stress.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
 //------------------------------------------------------------------------------
-typedef pair< BoundaryGraph::vertex_descriptor, BoundaryGraph::edge_descriptor >	VEPair;
-typedef pair< unsigned int, unsigned int >	        VVIDPair;
-typedef map< Grid2, VEPair >                        VEMap;
 
 //------------------------------------------------------------------------------
 //	Defining macros
 //------------------------------------------------------------------------------
-class Boundary
+class Boundary : public Common
 {
 protected:
 
     // skeleton
     BoundaryGraph               _boundary;      // inner + outer boundary
     Contour2                    _contour;       // outer boundary
-
-    // optimization
-    Stress                      _stressBorder;  // stress layout on boundary
 
     // boundary graph
     vector< vector< BoundaryGraph::edge_descriptor > >	    _line;
@@ -88,15 +80,12 @@ public:
     const BoundaryGraph &       boundary( void ) const      { return _boundary; }
     BoundaryGraph &			    boundary( void )	        { return _boundary; }
 
-    const Stress &		        stressBorder( void ) const  { return _stressBorder; }
-    Stress &			        stressBorder( void )	    { return _stressBorder; }
-
     // boundary graph
-    const unsigned int &			nVertices( void ) const { return _nVertices; }
-    const unsigned int &			nEdges( void ) const { return _nEdges; }
-    const double &			        meanVSize( void ) const { return _meanVSize; }
-    const double &			        dAlpha( void ) const { return _distAlpha; }
-    const double &			        dBeta( void ) const { return _distBeta; }
+    const unsigned int &		nVertices( void ) const { return _nVertices; }
+    const unsigned int &	    nEdges( void ) const { return _nEdges; }
+    const double &			    meanVSize( void ) const { return _meanVSize; }
+    const double &			    dAlpha( void ) const { return _distAlpha; }
+    const double &			    dBeta( void ) const { return _distBeta; }
 
     const vector< vector< BoundaryGraph::edge_descriptor > > &      line( void ) const { return _line; }
     const vector< vector< BoundaryGraph::vertex_descriptor > > &    lineSta( void ) const { return _lineSta; }

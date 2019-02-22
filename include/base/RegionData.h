@@ -19,10 +19,11 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "optimization/Force.h"
-#include "optimization/Smooth.h"
-#include "optimization/Octilinear.h"
+//#include "optimization/Smooth.h"
+//#include "optimization/Octilinear.h"
 #include "optimization/Stress.h"
 #include "base/Road.h"
+#include "base/LevelHigh.h"
 #endif // Q_MOC_RUN
 
 class RegionData

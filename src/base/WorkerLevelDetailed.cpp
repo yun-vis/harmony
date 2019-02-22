@@ -1,24 +1,24 @@
 
-#include "base/WorkerPathway.h"
+#include "base/WorkerLevelDetailed.h"
 
 //----------------------------------------------------------
 // Worker
 //----------------------------------------------------------
-WorkerPathway::WorkerPathway( void )
+WorkerLevelDetailed::WorkerLevelDetailed( void )
 {
     // cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
 }
 
-WorkerPathway::~WorkerPathway()
+WorkerLevelDetailed::~WorkerLevelDetailed()
 {
 }
 
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerPathway::onTimeout( void )
+void WorkerLevelDetailed::onTimeout( void )
 {
-    // cerr << "WorkerPathway::timeout =  " << QThread::currentThreadId() << endl;
+    // cerr << "WorkerLevelDetailed::timeout =  " << QThread::currentThreadId() << endl;
 
     double err = 0.0;
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
@@ -33,7 +33,7 @@ void WorkerPathway::onTimeout( void )
         {
             itC->second.detail.force();
             err = itC->second.detail.verletIntegreation();
-            //cerr << "WorkerPathway:: err (pathway force) = " << err << endl;
+            //cerr << "WorkerLevelDetailed:: err (pathway force) = " << err << endl;
             if (err < itC->second.detail.finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
@@ -45,7 +45,7 @@ void WorkerPathway::onTimeout( void )
         {
             itC->second.detail.centroidGeometry();
             err = itC->second.detail.gap();
-            //cerr << "WorkerPathway::err (pathway force) = " << err << endl;
+            //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
             if (err < itC->second.detail.finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
@@ -58,7 +58,7 @@ void WorkerPathway::onTimeout( void )
             itC->second.detail.force();
             itC->second.detail.centroidGeometry();
             err = itC->second.detail.verletIntegreation();
-            //cerr << "WorkerPathway::err (pathway force) = " << err << endl;
+            //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
             //cerr << "_idI = " << _idI << ", idJ = " << _idJ << ": err (pathway force) = " << err << endl;
             if ( err < itC->second.detail.finalEpsilon() ) {
                 stop();
@@ -74,15 +74,15 @@ void WorkerPathway::onTimeout( void )
     Q_EMIT updateProcess();
 }
 
-void WorkerPathway::process( const QString &parameter )
+void WorkerLevelDetailed::process( const QString &parameter )
 {
     // here is the expensive or blocking operation
     // signal and slot should be thread safe
 
-    // cerr << "WorkerPathway::process =  " << QThread::currentThreadId() << endl;
+    // cerr << "WorkerLevelDetailed::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerPathway::onTimeout );
+    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeout );
 
     start( 500 );
 }

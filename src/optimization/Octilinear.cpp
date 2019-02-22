@@ -34,14 +34,14 @@ using namespace std;
 //  Outputs
 //      none
 //
-void Octilinear::_init( LevelHigh * __levelhigh, double __half_width, double __half_height )
+void Octilinear::_init( Boundary * __boundary, double __half_width, double __half_height )
 {
-    _levelhigh                   = __levelhigh;
-    BoundaryGraph        & g    = _levelhigh->boundary();
-    unsigned int nVertices      = _levelhigh->nVertices();
-    unsigned int nEdges         = _levelhigh->nEdges();
-    _d_Alpha                    = _levelhigh->dAlpha();
-    _d_Beta                     = _levelhigh->dBeta();
+    _boundary                   = __boundary;
+    BoundaryGraph        & g    = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
+    unsigned int nEdges         = _boundary->nEdges();
+    _d_Alpha                    = _boundary->dAlpha();
+    _d_Beta                     = _boundary->dBeta();
 
     // initialization
     _nVars = _nConstrs = 0;
@@ -123,9 +123,9 @@ void Octilinear::_init( LevelHigh * __levelhigh, double __half_width, double __h
 //
 void Octilinear::_initCoefs( void )
 {
-    BoundaryGraph        & g      = _levelhigh->boundary();
-    unsigned int nVertices        = _levelhigh->nVertices();
-    //unsigned int nEdges         = _levelhigh->nEdges();
+    BoundaryGraph        & g      = _boundary->boundary();
+    unsigned int nVertices        = _boundary->nVertices();
+    //unsigned int nEdges         = _boundary->nEdges();
 
     // initialization
     unsigned int nRows = 0;
@@ -183,8 +183,8 @@ void Octilinear::_initCoefs( void )
 //
 void Octilinear::_initVars( void )
 {
-    BoundaryGraph        & g            = _levelhigh->boundary();
-    unsigned int nVertices      = _levelhigh->nVertices();
+    BoundaryGraph        & g            = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
     // initialization
     _var.resize( _nVars );
@@ -206,7 +206,7 @@ void Octilinear::_initVars( void )
 
 void Octilinear::_updateEdgeCurAngle( void )
 {
-    BoundaryGraph        & g            = _levelhigh->boundary();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     // initialization
     BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
@@ -238,7 +238,7 @@ void Octilinear::_updateEdgeCurAngle( void )
 
 void Octilinear::_setTargetAngle( void )
 {
-    BoundaryGraph        &g            = _levelhigh->boundary();
+    BoundaryGraph        &g            = _boundary->boundary();
 
     double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
                            M_PI/4.0, M_PI/2.0, 3.0*M_PI/4.0, M_PI };
@@ -262,7 +262,7 @@ void Octilinear::_setTargetAngle( void )
 #ifdef  SKIP
 void Octilinear::_setTargetAngle( void )
 {
-    BoundaryGraph        & g            = _levelhigh->boundary();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
                            M_PI/4.0, M_PI/2.0, 3.0*M_PI/4.0, M_PI };
@@ -406,7 +406,7 @@ double Octilinear::_findRotateAngle( double input )
 //
 void Octilinear::_initOutputs( void )
 {
-    BoundaryGraph        & g            = _levelhigh->boundary();
+    BoundaryGraph        & g            = _boundary->boundary();
 
     // initialization
     unsigned int nRows = 0;
@@ -483,17 +483,17 @@ void Octilinear::_initOutputs( void )
 //
 void Octilinear::_updateCoefs( void )
 {
-    BoundaryGraph               & g             = _levelhigh->boundary();
-    unsigned int        nVertices       = _levelhigh->nVertices();
+    BoundaryGraph               & g             = _boundary->boundary();
+    unsigned int        nVertices       = _boundary->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-    vector< double >    ratioR          = _levelhigh->ratioR();
+    vector< double >    ratioR          = _boundary->ratioR();
 
     Eigen::MatrixXd     oldCoef;
     oldCoef = _coef.block( 0, 0, _nConstrs, _nVars );
 
 #ifdef OCTILINEAR_CONFLICT
-    nVE = _levelhigh->VEconflict().size();
+    nVE = _boundary->VEconflict().size();
 #endif // OCTILINEAR_CONFLICT
 #ifdef OCTILINEAR_BOUNDARY
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
@@ -547,8 +547,8 @@ void Octilinear::_updateCoefs( void )
 #ifdef  OCTILINEAR_CONFLICT
     // copy conflict coefficient
     unsigned int countVE = 0;
-    for ( VEMap::iterator it = _levelhigh->VEconflict().begin();
-          it != _levelhigh->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _boundary->VEconflict().begin();
+          it != _boundary->VEconflict().end(); ++it ) {
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
         BoundaryGraph::edge_descriptor ed = it->second.second;
         BoundaryGraph::vertex_descriptor vdS = source( ed, g );
@@ -593,16 +593,16 @@ void Octilinear::_updateCoefs( void )
 //
 void Octilinear::_updateOutputs( void )
 {
-    BoundaryGraph               & g             = _levelhigh->boundary();
+    BoundaryGraph               & g             = _boundary->boundary();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-    vector< double >    ratioR          = _levelhigh->ratioR();
+    vector< double >    ratioR          = _boundary->ratioR();
 
     unsigned int nRows = 0;
     Eigen::VectorXd     oldOutput;
     oldOutput = _output;
 #ifdef  OCTILINEAR_CONFLICT
-    nVE = _levelhigh->VEconflict().size();
+    nVE = _boundary->VEconflict().size();
 #endif  // OCTILINEAR_CONFLICT
 #ifdef  OCTILINEAR_BOUNDARY
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
@@ -701,8 +701,8 @@ void Octilinear::_updateOutputs( void )
 #ifdef  OCTILINEAR_CONFLICT
     // copy conflict coefficient
     unsigned int countVE = 0;
-    for ( VEMap::iterator it = _levelhigh->VEconflict().begin();
-          it != _levelhigh->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _boundary->VEconflict().begin();
+          it != _boundary->VEconflict().end(); ++it ) {
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
         BoundaryGraph::edge_descriptor ed = it->second.second;
         BoundaryGraph::vertex_descriptor vdS = source( ed, g );
@@ -867,13 +867,13 @@ double Octilinear::ConjugateGradient( unsigned int iter )
 //
 void Octilinear::retrieve( void )
 {
-    BoundaryGraph & g           = _levelhigh->boundary();
-    unsigned int nVertices      = _levelhigh->nVertices();
+    BoundaryGraph & g           = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
     // find the vertex that is too close to an edge
     vector< BoundaryGraph::vertex_descriptor > vdVec;
-    for ( VEMap::iterator it = _levelhigh->VEconflict().begin();
-          it != _levelhigh->VEconflict().end(); ++it ) {
+    for ( VEMap::iterator it = _boundary->VEconflict().begin();
+          it != _boundary->VEconflict().end(); ++it ) {
         BoundaryGraph::vertex_descriptor vdV = it->second.first;
         vdVec.push_back( vdV );
     }
@@ -888,7 +888,7 @@ void Octilinear::retrieve( void )
             if( vertex == vdVec[i] ) doClose = true;
         }
 
-        if( _levelhigh->VEconflict().size() > 0 ){
+        if( _boundary->VEconflict().size() > 0 ){
             Coord2 downscale;
             downscale.x() = ( _var( nRows, 0 ) - g[ vertex ].coordPtr->x() )/2.0 + g[ vertex ].coordPtr->x();
             downscale.y() = ( _var( nRows + nVertices, 0 ) - g[ vertex ].coordPtr->y() )/2.0 + g[ vertex ].coordPtr->y();
@@ -903,7 +903,7 @@ void Octilinear::retrieve( void )
     }
 
     // check possible conflict
-    _levelhigh->checkVEConflicts();
+    _boundary->checkVEConflicts();
 
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;
