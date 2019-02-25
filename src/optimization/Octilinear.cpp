@@ -78,9 +78,18 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
         _w_crossing = sqrt( stringToDouble( paramCrossing ) );
     }
 
+    if ( conf.has( "opttype" ) ){
+        string paramType = conf.gets( "opttype" );
+        if( paramType == "LEAST_SQUARE" )
+            _opttype = LEAST_SQUARE;
+        if( paramType == "CONJUGATE_GRADIENT" )
+            _opttype = CONJUGATE_GRADIENT;
+    }
+
 #ifdef DEBUG
     cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nVertices = " << nEdges << endl;
     cerr << "_d_Alpha = " << _d_Alpha << " _d_Beta = " << _d_Beta << endl;
+    cerr << "_opttype = " << _opttype << endl;
 #endif  // DEBUG
 
 //------------------------------------------------------------------------------

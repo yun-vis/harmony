@@ -30,12 +30,12 @@ class RegionData
 {
 protected:
 
+    // boundary
+    Boundary        *_boundaryPtr;
+    Boundary        *_simplifiedBoundaryPtr;
+
     // levelhigh
     LevelHigh       *_levelhighPtr;
-    LevelHigh       *_simplifiedLevelHighPtr;
-    Smooth          *_smoothPtr;
-    Octilinear      *_octilinearPtr;
-    Stress          *_stressPtr;
 
     // cells of subgraphs
     Cell            *_cellPtr;
@@ -52,11 +52,14 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
 	// void setRegionData( Pathway *pathway );
-    void setRegionData( LevelHigh * __levelhigh, LevelHigh * __simplifiedLevelHigh,
+    void setRegionData( LevelHigh * __levelhigh,
+                        Boundary * __boundary,
+                        Boundary * __simplifiedBoundary,
                         Cell * __cellPtr, Road * __roadPtr,
                         vector< Road > * __lanePtr ){
         _levelhighPtr = __levelhigh;
-        _simplifiedLevelHighPtr = __simplifiedLevelHigh;
+        _boundaryPtr = __boundary;
+        _simplifiedBoundaryPtr = __simplifiedBoundary;
         _cellPtr = __cellPtr;
         _roadPtr = __roadPtr;
         _lanePtr = __lanePtr;

@@ -77,6 +77,14 @@ void Stress::_init( ForceGraph     *__forceGraphPtr, double __half_width, double
         _w_crossing = sqrt( stringToDouble( paramCrossing ) );
     }
 
+    if ( conf.has( "opttype" ) ){
+        string paramType = conf.gets( "opttype" );
+        if( paramType == "LEAST_SQUARE" )
+            _opttype = LEAST_SQUARE;
+        if( paramType == "CONJUGATE_GRADIENT" )
+            _opttype = CONJUGATE_GRADIENT;
+    }
+
 #ifdef  DEBUG
     cout << " stress: numStations = " << _nVertices << endl;
     cout << " stress: numEdges = " << _nEdges << endl;
@@ -87,6 +95,7 @@ void Stress::_init( ForceGraph     *__forceGraphPtr, double __half_width, double
          << "_w_position = " << _w_position << endl
          << "_w_boundary = " << _w_boundary << endl
          << "_w_crossing = " << _w_crossing << endl;
+    cerr << "_opttype = " << _opttype << endl;
 #endif  // DEBUG
 
     // Maximal angles of incident edges

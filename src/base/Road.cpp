@@ -210,7 +210,7 @@ void Road::_initLane( unsigned int gid,
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
         // Voronoi &voronoi = itC->second.detail.voronoi();
-        vector< Seed > &seedVec = *itC->second.detail.voronoi().seedVec();
+        vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 

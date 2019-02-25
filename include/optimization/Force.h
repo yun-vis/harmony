@@ -35,7 +35,7 @@ class Force : public Common
 
     unsigned int    _id;
     string          _configFilePath;        // config file path
-    Polygon2        _contour;
+    Polygon2        _contour;               // outer boundary
     Coord2          _boxCenter;             // bounding box center of the contour
     double			_width, _height;        // bounding box of the contour
 

@@ -35,6 +35,8 @@ class Smooth : public Common
 {
 private:
 
+    OPTTYPE         _opttype;
+
     Boundary        * _boundary;
     Eigen::VectorXd _var;           // x
     Eigen::VectorXd _output;        // b
@@ -71,12 +73,15 @@ public:
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
+    const OPTTYPE &		    opttype( void ) const   { return _opttype; }
+    OPTTYPE &			    opttype( void )	        { return _opttype; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
     double LeastSquare( unsigned int iter );
     double ConjugateGradient( unsigned int iter );
+    void run( void );
 
 //------------------------------------------------------------------------------
 //      Initialization functions

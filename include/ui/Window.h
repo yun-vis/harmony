@@ -81,8 +81,8 @@ private:
     QAction *selStressSmallCGAct;
     QAction *selStressCGAct;
 
-    void createActions( void );
-    void createMenus( void );
+    //void createActions( void );
+    //void createMenus( void );
 
     void postLoad( void );
     void simulateKey( Qt::Key key );
@@ -110,35 +110,32 @@ private:
 
 public Q_SLOTS:
 
+    // level high
+    void selectLevelHighBuildBoundary( void );
+    void buildLevelHighBoundaryGraph( void );
+    void updateLevelHighPolygonComplex( void );
+
+    void selectLevelHighSmooth( void );
+    void selectLevelHighOctilinear( void );
+    void selectLevelHighStress( void );
+
     // simplification
     void selectCloneGraph( void );
-    void selectMinDistance( void );
-    void selectMovebackSmooth( void );
-    void selectMovebackOctilinear( void );
-    void selectMovebackStress( void );
+    void selectLevelHighMinDistance( void );
+    void selectLevelHighMovebackSmooth( void );
+    void selectLevelHighMovebackOctilinear( void );
+    void selectLevelHighMovebackStress( void );
 
-    // force
-    void selectForce( void );
+    void selectLevelHighSmoothSmall( void );
+    void selectLevelHighOctilinearSmall( void );
+    void selectLevelHighStressSmall( void );
 
-    // optimization
-    void selectSmoothLS( void );
-    void selectOctilinearLS( void );
-    void selectStressLS( void );
+    // level middle
+    void selectLevelMiddleBuildBoundary( void );
+    void buildLevelMiddleBoundaryGraph( void );
+    void updateLevelMiddlePolygonComplex( void );
+    void selectLevelMiddleOctilinear( void );
 
-    void selectSmoothCG( void );
-    void selectOctilinearCG( void );
-    void selectStressCG( void );
-
-    void selectSmoothSmallCG( void );
-    void selectOctilinearSmallCG( void );
-    void selectStressSmallCG( void );
-
-    void selectSmooth( OPTTYPE opttype = CONJUGATE_GRADIENT );
-    void selectOctilinear( OPTTYPE opttype = CONJUGATE_GRADIENT );
-    void selectStress( OPTTYPE opttype = CONJUGATE_GRADIENT );
-
-    // voronoi
-    void selectBuildBoundary( void );
 
     // timer
 #ifdef RECORD_VIDEO
@@ -154,7 +151,6 @@ public Q_SLOTS:
     void listenProcessBone( void );
     // pathway
     void listenProcessDetailedPathway( void );
-
     // display
     void redrawAllScene( void );
 

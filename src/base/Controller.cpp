@@ -40,7 +40,7 @@ void Controller::init( vector < unsigned int > indexVec, WORKERTYPE type )
         }
         default:
         {
-            cerr << "someting is wrong here at " << __LINE__ << " in " << __FILE__ << endl;
+            cerr << "something is wrong here at " << __LINE__ << " in " << __FILE__ << endl;
             assert( false );
             break;
         }
@@ -60,7 +60,8 @@ void Controller::init( vector < unsigned int > indexVec, WORKERTYPE type )
 #endif // DEBUG
 
     _workerPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    _workerPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
+    _workerPtr->setRegionData( _levelhighPtr,
+                               _boundaryPtr, _simplifiedBoundaryPtr,
                                _cellPtr, _roadPtr, _lanePtr );
     _workerPtr->init( indexVec );
 }

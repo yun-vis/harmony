@@ -168,20 +168,22 @@ void GraphicsView::_item_polygons( void )
 
 void GraphicsView::_item_boundary( void )
 {
-    BoundaryGraph * g =  NULL;
+    BoundaryGraph &g =  _boundaryPtr->boundary();
+#ifdef SKIP
     if( _is_simplifiedFlag == true )
         g = & _simplifiedLevelHighPtr->boundary();
     else
         g = & _levelhighPtr->boundary();
+#endif // SKIP
 
     // draw edges
-    BGL_FORALL_EDGES( ed, *g, BoundaryGraph ) {
+    BGL_FORALL_EDGES( ed, g, BoundaryGraph ) {
 
-        BoundaryGraph::vertex_descriptor vdS = source( ed, *g );
-        BoundaryGraph::vertex_descriptor vdT = target( ed, *g );
+        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
         QPainterPath path;
-        path.moveTo( (*g)[vdS].coordPtr->x(), -(*g)[vdS].coordPtr->y() );
-        path.lineTo( (*g)[vdT].coordPtr->x(), -(*g)[vdT].coordPtr->y() );
+        path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
+        path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
 
         GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
@@ -191,14 +193,14 @@ void GraphicsView::_item_boundary( void )
     }
 
     // draw vertices
-    BGL_FORALL_VERTICES( vd, *g, BoundaryGraph ) {
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph ) {
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
         itemptr->fontSize() = _font_size;
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setRect( QRectF( (*g)[vd].coordPtr->x(), -(*g)[vd].coordPtr->y(), 10, 10 ) );
-        itemptr->id() = (*g)[vd].id;
+        itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
+        itemptr->id() = g[vd].id;
 
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
@@ -228,7 +230,7 @@ void GraphicsView::_item_subpathways( void )
 
         for( ; itC != componentMap.end(); itC++ ){
 
-            ForceGraph &dg = itC->second.detailGraph;
+            ForceGraph &dg = itC->second.detail.bone();
 
             // draw edges
             BGL_FORALL_EDGES( ed, dg, ForceGraph ) {
@@ -324,20 +326,21 @@ void GraphicsView::_item_pathways( void )
 
 void GraphicsView::_item_cells( void )
 {
-    vector< ForceGraph > &cellGVec   = _cellPtr->forceCellGraphVec();
+    vector< Package > &cellVec      = _cellPtr->cellVec();
+    //vector< ForceGraph > &cellGVec   = _cellPtr->forceCellGraphVec();
 
     // create edge object from the spanning tree and add it to the scene
-    for( unsigned int i = 0; i < cellGVec.size(); i++ ){
+    for( unsigned int i = 0; i < cellVec.size(); i++ ){
 
         // draw edges
-        BGL_FORALL_EDGES( ed, cellGVec[i], ForceGraph ) {
+        BGL_FORALL_EDGES( ed, cellVec[i].bone(), ForceGraph ) {
 
-            ForceGraph::vertex_descriptor vdS = source( ed, cellGVec[i] );
-            ForceGraph::vertex_descriptor vdT = target( ed, cellGVec[i] );
+            ForceGraph::vertex_descriptor vdS = source( ed, cellVec[i].bone() );
+            ForceGraph::vertex_descriptor vdT = target( ed, cellVec[i].bone() );
 
             QPainterPath path;
-            path.moveTo( cellGVec[i][vdS].coordPtr->x(), -cellGVec[i][vdS].coordPtr->y() );
-            path.lineTo( cellGVec[i][vdT].coordPtr->x(), -cellGVec[i][vdT].coordPtr->y() );
+            path.moveTo( cellVec[i].bone()[vdS].coordPtr->x(), -cellVec[i].bone()[vdS].coordPtr->y() );
+            path.lineTo( cellVec[i].bone()[vdT].coordPtr->x(), -cellVec[i].bone()[vdT].coordPtr->y() );
 
             // add path
             GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
@@ -349,16 +352,16 @@ void GraphicsView::_item_cells( void )
         }
 
         // draw vertices
-        BGL_FORALL_VERTICES( vd, cellGVec[i], ForceGraph ) {
+        BGL_FORALL_VERTICES( vd, cellVec[i].bone(), ForceGraph ) {
 
-            ForceGraph::degree_size_type degrees = out_degree( vd, cellGVec[i] );
+            ForceGraph::degree_size_type degrees = out_degree( vd, cellVec[i].bone() );
 
             GraphicsBallItem *itemptr = new GraphicsBallItem;
             itemptr->fontSize() = _font_size;
             itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( cellGVec[i][vd].coordPtr->x(), -cellGVec[i][vd].coordPtr->y(), 10, 10 ) );
-            itemptr->id() = cellGVec[i][vd].id;
+            itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = cellVec[i].bone()[vd].id;
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
@@ -368,7 +371,8 @@ void GraphicsView::_item_cells( void )
 
 void GraphicsView::_item_interCellComponents( void )
 {
-    vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
+    vector< Package >                     &cellVec    = _cellPtr->cellVec();
+    //vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
     // vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
     //multimap< Grid2, pair< CellComponent*, CellComponent* > > & interCCMap = _cellPtr->interCellComponentMap();
@@ -389,8 +393,8 @@ void GraphicsView::_item_interCellComponents( void )
 #endif // DEBUG
 
         QPainterPath path;
-        path.moveTo( cellGVec[idS][ccS.cellgVec[0]].coordPtr->x(), -cellGVec[idS][ccS.cellgVec[0]].coordPtr->y() );
-        path.lineTo( cellGVec[idT][ccT.cellgVec[0]].coordPtr->x(), -cellGVec[idT][ccT.cellgVec[0]].coordPtr->y() );
+        path.moveTo( cellVec[idS].bone()[ccS.cellgVec[0]].coordPtr->x(), -cellVec[idS].bone()[ccS.cellgVec[0]].coordPtr->y() );
+        path.lineTo( cellVec[idT].bone()[ccT.cellgVec[0]].coordPtr->x(), -cellVec[idT].bone()[ccT.cellgVec[0]].coordPtr->y() );
 
         GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
         itemptr->setPen( QPen( QColor( 255, 0, 0, 100 ), 3 ) );
@@ -404,13 +408,14 @@ void GraphicsView::_item_interCellComponents( void )
 
 void GraphicsView::_item_cellPolygons( void )
 {
-    vector< Force >      & cellFVec    = _cellPtr->forceCellVec();
-    vector< ForceGraph > & cellGVec    = _cellPtr->forceCellGraphVec();
+    vector< Package >    & cellVec      = _cellPtr->cellVec();
+    //vector< Force >      & cellFVec     = _cellPtr->forceCellVec();
+    //vector< ForceGraph > & cellGVec     = _cellPtr->forceCellGraphVec();
 
     //for( unsigned int k = 1; k < 2; k++ ){
-    for( unsigned int k = 0; k < cellFVec.size(); k++ ){
+    for( unsigned int k = 0; k < cellVec.size(); k++ ){
 
-        vector< Seed > &seedVec = *cellFVec[k].voronoi().seedVec();
+        vector< Seed > &seedVec = *cellVec[k].forceBone().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -424,9 +429,9 @@ void GraphicsView::_item_cellPolygons( void )
 
             GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
             vector< double > rgb;
-            ForceGraph::vertex_descriptor vd = vertex( i, cellGVec[k] );
+            ForceGraph::vertex_descriptor vd = vertex( i, cellVec[k].bone() );
 
-            unsigned int gid = cellGVec[k][vd].groupID;
+            unsigned int gid = cellVec[k].bone()[vd].groupID;
             pickBrewerColor( gid, rgb );
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
@@ -442,7 +447,8 @@ void GraphicsView::_item_cellPolygons( void )
 
 void GraphicsView::_item_cellPolygonComplex( void )
 {
-    vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
+    vector< Package > &cellVec      = _cellPtr->cellVec();
+    //vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
     for( unsigned int k = 0; k < cellCVec.size(); k++ ){
@@ -460,9 +466,9 @@ void GraphicsView::_item_cellPolygonComplex( void )
 
             GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
             vector< double > rgb;
-            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, cellGVec[k] );
+            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, cellVec[k].bone() );
 
-            unsigned int gid = cellGVec[k][vd].groupID;
+            unsigned int gid = cellVec[k].bone()[vd].groupID;
             pickBrewerColor( gid, rgb );
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
@@ -507,7 +513,7 @@ void GraphicsView::_item_mclPolygons( void )
             // draw polygons
             if( itC->second.nMCL > 1 ){
 
-                Force &f = itC->second.mcl;
+                Force &f = itC->second.mcl.forceBone();
                 vector< Seed > &seedVec = *f.voronoi().seedVec();
 
                 for( unsigned int i = 0; i < seedVec.size(); i++ ) {
@@ -550,7 +556,7 @@ void GraphicsView::_item_pathwayPolygons( void )
 
         for( ; itC != componentMap.end(); itC++ ){
 
-            Force &f = itC->second.detail;
+            Force &f = itC->second.detail.forceBone();
 
             // draw polygons
             vector< Seed > &seedVec = *f.voronoi().seedVec();
@@ -872,7 +878,6 @@ void GraphicsView::initSceneItems ( void )
     if( _is_compositeFlag == true ) _item_composite();
     if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
-    if( _is_boundaryFlag == true ) _item_boundary();
     if( _is_cellFlag == true ) {
         _item_cells();
         _item_interCellComponents();
@@ -884,6 +889,7 @@ void GraphicsView::initSceneItems ( void )
     if( _is_roadFlag == true ) _item_road();
     if( _is_laneFlag == true ) _item_lane();
     if( _is_subPathwayFlag == true ) _item_subpathways();
+    if( _is_boundaryFlag == true ) _item_boundary();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }

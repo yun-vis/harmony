@@ -86,6 +86,14 @@ void Smooth::_init( Boundary * __boundary, double __half_width, double __half_he
         _w_crossing = sqrt( stringToDouble( paramCrossing ) );
     }
 
+    if ( conf.has( "opttype" ) ){
+        string paramType = conf.gets( "opttype" );
+        if( paramType == "LEAST_SQUARE" )
+            _opttype = LEAST_SQUARE;
+        if( paramType == "CONJUGATE_GRADIENT" )
+            _opttype = CONJUGATE_GRADIENT;
+    }
+
 //#ifdef  DEBUG
     cout << " smooth: numStations = " << nVertices << " num_vertices = " << num_vertices( g ) << endl;
     cout << " smooth: numEdges = " << nEdges << " num_edges = " << num_edges( g ) << endl;
@@ -96,6 +104,7 @@ void Smooth::_init( Boundary * __boundary, double __half_width, double __half_he
          << "_w_position = " << _w_position << endl
          << "_w_boundary = " << _w_boundary << endl
          << "_w_crossing = " << _w_crossing << endl;
+    cerr << "_opttype = " << _opttype << endl;
 //#endif  // DEBUG
 
 //------------------------------------------------------------------------------
@@ -956,6 +965,18 @@ void Smooth::retrieve( void )
 #endif  // DEBUG
 }
 
+//
+//  Smooth::run --        run optimization
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+void Smooth::run( void )
+{
+}
 
 //
 //  Smooth::clear --        memory management

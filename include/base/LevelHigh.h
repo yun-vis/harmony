@@ -40,14 +40,8 @@ private:
 
     ForceGraph                  _skeleton;
 
-    // optimization
-    Smooth                      _smoothBoundary;    // smooth boundary
-    Octilinear                  _octilinearBoundary;// octilinear boundary
-
 protected:
     
-
-    double                      _stringToDouble( string str );
     void                        _init( SkeletonGraph & skeletonGraph );
 
 public:
@@ -59,16 +53,12 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    const ForceGraph &		        skeleton( void ) const  { return _skeleton; }
-    ForceGraph &			        skeleton( void )	    { return _skeleton; }
-
-
-
+    const ForceGraph &		    skeleton( void ) const  { return _skeleton; }
+    ForceGraph &			    skeleton( void )	    { return _skeleton; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void adjustsize( const int & width, const int & height );   // normalize the LevelHigh size
     void normalizeSkeleton( const int & width, const int & height );   // normalize the LevelHigh size
     void normalizeBone( const int & width, const int & height );   // normalize the LevelHigh size
     void decomposeSkeleton( void );

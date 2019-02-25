@@ -38,7 +38,6 @@ protected:
 
     // skeleton
     BoundaryGraph               _boundary;      // inner + outer boundary
-    Contour2                    _contour;       // outer boundary
 
     // boundary graph
     vector< vector< BoundaryGraph::edge_descriptor > >	    _line;
@@ -82,22 +81,28 @@ public:
 
     // boundary graph
     const unsigned int &		nVertices( void ) const { return _nVertices; }
-    const unsigned int &	    nEdges( void ) const { return _nEdges; }
+    unsigned int &		        nVertices( void )       { return _nVertices; }
+    const unsigned int &	    nEdges( void ) const    { return _nEdges; }
+    unsigned int &	            nEdges( void )          { return _nEdges; }
+    const unsigned int &	    nLines( void ) const    { return _nLines; }
+    unsigned int &	            nLines( void )          { return _nLines; }
     const double &			    meanVSize( void ) const { return _meanVSize; }
     const double &			    dAlpha( void ) const { return _distAlpha; }
     const double &			    dBeta( void ) const { return _distBeta; }
 
-    const vector< vector< BoundaryGraph::edge_descriptor > > &      line( void ) const { return _line; }
-    const vector< vector< BoundaryGraph::vertex_descriptor > > &    lineSta( void ) const { return _lineSta; }
+    const vector< vector< BoundaryGraph::edge_descriptor > > &      line( void ) const      { return _line; }
+    vector< vector< BoundaryGraph::edge_descriptor > > &            line( void )            { return _line; }
+    const vector< vector< BoundaryGraph::vertex_descriptor > > &    lineSta( void ) const   { return _lineSta; }
+    vector< vector< BoundaryGraph::vertex_descriptor > > &          lineSta( void )         { return _lineSta; }
 
-    const vector< unsigned int > &              removedVertices( void ) const { return _removedVertices; }
-    const vector< VVIDPair > &                  removedEdges( void ) const { return _removedEdges; }
-    const vector< double > &                    removedWeights( void ) const { return _removedWeights; }
+    const vector< unsigned int > &              removedVertices( void ) const   { return _removedVertices; }
+    const vector< VVIDPair > &                  removedEdges( void ) const      { return _removedEdges; }
+    const vector< double > &                    removedWeights( void ) const    { return _removedWeights; }
 
-    const VEMap &                               VEconflict( void ) const { return _VEconflict; }
-    VEMap &                                     VEconflict( void ) { return _VEconflict; }
+    const VEMap &                               VEconflict( void ) const    { return _VEconflict; }
+    VEMap &                                     VEconflict( void )          { return _VEconflict; }
 
-    const vector< double > &                    ratioR( void ) const { return _ratioR; }
+    const vector< double > &                    ratioR( void ) const        { return _ratioR; }
 
 //------------------------------------------------------------------------------
 //      Find conflicts
@@ -111,6 +116,7 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
+    void adjustsize( const int & width, const int & height );   // normalize the LevelHigh size
     void simplifyLayout( void );                                // remove nearly straight degree 2 stations
     bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
 

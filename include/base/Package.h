@@ -28,6 +28,8 @@ using namespace std;
 #include "graph/ForceGraph.h"
 #include "optimization/Force.h"
 #include "optimization/Stress.h"
+#include "optimization/Smooth.h"
+#include "optimization/Octilinear.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -37,9 +39,13 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Defining macros
 //------------------------------------------------------------------------------
-class Package : public Boundary, public Bone
+class Package : public Bone
 {
 protected:
+
+    // optimization
+    Smooth                      _smooth;        // smooth cellunit
+    Octilinear                  _octilinear;    // octilinear cellunit
 
 //------------------------------------------------------------------------------
 //  Specific functions
@@ -56,9 +62,13 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
+    const Smooth &		        smooth( void ) const    { return _smooth; }
+    Smooth &			        smooth( void )	        { return _smooth; }
+    const Octilinear &		    octilinear( void ) const{ return _octilinear; }
+    Octilinear &			    octilinear( void )	    { return _octilinear; }
 
 //------------------------------------------------------------------------------
-//      Find conflicts
+//  Find conflicts
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------

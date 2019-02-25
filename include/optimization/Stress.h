@@ -35,6 +35,8 @@ class Stress : public Common
 {
 private:
 
+    OPTTYPE         _opttype;
+
     // Graph
     ForceGraph     *_forceGraphPtr;
     unsigned long   _nVertices;
@@ -85,6 +87,9 @@ public:
 //------------------------------------------------------------------------------
     const unsigned long &			nVertices( void ) const { return _nVertices; }
     const unsigned long &			nEdges( void ) const { return _nEdges; }
+
+    const OPTTYPE &		    opttype( void ) const   { return _opttype; }
+    OPTTYPE &			    opttype( void )	        { return _opttype; }
 
 //------------------------------------------------------------------------------
 //  Specific functions

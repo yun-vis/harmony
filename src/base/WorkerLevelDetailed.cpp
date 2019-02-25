@@ -27,14 +27,14 @@ void WorkerLevelDetailed::onTimeout( void )
     multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
     advance( itC, _indexVec[1] );
 
-    switch ( itC->second.detail.mode() ) {
+    switch ( itC->second.detail.forceBone().mode() ) {
         case TYPE_FORCE:
         case TYPE_BARNES_HUT:
         {
-            itC->second.detail.force();
-            err = itC->second.detail.verletIntegreation();
+            itC->second.detail.forceBone().force();
+            err = itC->second.detail.forceBone().verletIntegreation();
             //cerr << "WorkerLevelDetailed:: err (pathway force) = " << err << endl;
-            if (err < itC->second.detail.finalEpsilon()) {
+            if (err < itC->second.detail.forceBone().finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
@@ -43,10 +43,10 @@ void WorkerLevelDetailed::onTimeout( void )
         }
         case TYPE_CENTROID:
         {
-            itC->second.detail.centroidGeometry();
-            err = itC->second.detail.gap();
+            itC->second.detail.forceBone().centroidGeometry();
+            err = itC->second.detail.forceBone().gap();
             //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
-            if (err < itC->second.detail.finalEpsilon()) {
+            if (err < itC->second.detail.forceBone().finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
@@ -55,12 +55,12 @@ void WorkerLevelDetailed::onTimeout( void )
         }
         case TYPE_HYBRID:
         {
-            itC->second.detail.force();
-            itC->second.detail.centroidGeometry();
-            err = itC->second.detail.verletIntegreation();
+            itC->second.detail.forceBone().force();
+            itC->second.detail.forceBone().centroidGeometry();
+            err = itC->second.detail.forceBone().verletIntegreation();
             //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
             //cerr << "_idI = " << _idI << ", idJ = " << _idJ << ": err (pathway force) = " << err << endl;
-            if ( err < itC->second.detail.finalEpsilon() ) {
+            if ( err < itC->second.detail.forceBone().finalEpsilon() ) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutCPUTime() << endl;

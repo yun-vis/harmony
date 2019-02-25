@@ -27,13 +27,15 @@ using namespace std;
 #define OCTILINEAR_CONFLICT
 #define OCTILINEAR_BOUNDARY
 
-//----------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //	Defining macros
-//----------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 class Octilinear : public Common
 {
 private:
+
+    OPTTYPE             _opttype;
 
     Boundary            *_boundary;
     Eigen::VectorXd     _var;           // x
@@ -72,6 +74,8 @@ public:
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
+    const OPTTYPE &		    opttype( void ) const   { return _opttype; }
+    OPTTYPE &			    opttype( void )	        { return _opttype; }
 
 //------------------------------------------------------------------------------
 //  Specific functions

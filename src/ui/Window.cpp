@@ -11,10 +11,10 @@ Window::Window( QWidget *parent )
 
     setGeometry( 0, 0, _gv->width(), _gv->height() );
 
+#ifdef SKIP
     createActions();
     createMenus();
-
-
+#endif // SKIP
 
 #ifdef RECORD_VIDEO
     _timerVideoStart();
@@ -29,16 +29,13 @@ Window::Window( const Window & obj )
 {
     _gv = obj._gv;
     _levelhighPtr = obj._levelhighPtr;
-    _simplifiedLevelHighPtr = obj._simplifiedLevelHighPtr;
+    _boundaryPtr = obj._boundaryPtr;
+    _simplifiedBoundaryPtr = obj._simplifiedBoundaryPtr;
 
     // cells of subgraphs
     _cellPtr = obj._cellPtr;
     _roadPtr = obj._roadPtr;
     _lanePtr = obj._lanePtr;
-
-    _smoothPtr = obj._smoothPtr;
-    _octilinearPtr = obj._octilinearPtr;
-    _stressPtr = obj._stressPtr;
 
     // display
     _content_width = obj._content_width;
@@ -52,12 +49,10 @@ void Window::_init( void )
 
     // initialization of boundary 
     _levelhighPtr = new LevelHigh;
-    _simplifiedLevelHighPtr = new LevelHigh;
-    _smoothPtr = new Smooth;
-    _octilinearPtr = new Octilinear;
-    _stressPtr = new Stress;
 
     // initialization of region data
+    _boundaryPtr = new Boundary;
+    _simplifiedBoundaryPtr = new Boundary;
     _cellPtr = new Cell;
     _roadPtr = new Road;
     _lanePtr = new vector< Road >;
@@ -66,10 +61,12 @@ void Window::_init( void )
     _roadPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
 
     _gv->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    _gv->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
+    _gv->setRegionData( _levelhighPtr,
+                        _boundaryPtr, _simplifiedBoundaryPtr,
                         _cellPtr, _roadPtr, _lanePtr );
 }
 
+#ifdef SKIP
 void Window::createActions( void )
 {
     // simplification
@@ -143,6 +140,7 @@ void Window::createMenus( void )
     optMenu->addAction( selStressSmallCGAct );
     optMenu->addAction( selStressCGAct );
 }
+#endif // SKIP
 
 void Window::simulateKey( Qt::Key key )
 {
@@ -154,8 +152,8 @@ void Window::simulateKey( Qt::Key key )
 
 void Window::postLoad( void )
 {
-    _levelhighPtr->adjustsize( _content_width/2, _content_height/2 );
-    _levelhighPtr->clearConflicts();
+    _boundaryPtr->adjustsize( _content_width/2, _content_height/2 );
+    _boundaryPtr->clearConflicts();
 
     redrawAllScene();
 }
@@ -171,64 +169,67 @@ void Window::redrawAllScene( void )
     QCoreApplication::processEvents();
 }
 
+#ifdef SKIP
 void Window::selectForce( void )
 {
     simulateKey( Qt::Key_F );
     redrawAllScene();
 }
+#endif // SKIP
 
 void Window::selectCloneGraph( void )
 {
-    _simplifiedLevelHighPtr->cloneLayout( *_levelhighPtr );
-    _simplifiedLevelHighPtr->clearConflicts();
+    // initialization
+    _simplifiedBoundaryPtr->cloneLayout( *_boundaryPtr );
+    _simplifiedBoundaryPtr->clearConflicts();
 
     redrawAllScene();
 }
 
-void Window::selectMinDistance( void )
+void Window::selectLevelHighMinDistance( void )
 {
-    _simplifiedLevelHighPtr->simplifyLayout();
+    _simplifiedBoundaryPtr->simplifyLayout();
     _gv->isSimplifiedFlag() = true;
     redrawAllScene();
 }
 
-void Window::selectMovebackSmooth( void )
+void Window::selectLevelHighMovebackSmooth( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedLevelHighPtr->movebackNodes( *_levelhighPtr, TYPE_SMOOTH );
+    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_SMOOTH );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
 
-void Window::selectMovebackOctilinear( void )
+void Window::selectLevelHighMovebackOctilinear( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedLevelHighPtr->movebackNodes( *_levelhighPtr, TYPE_OCTILINEAR );
+    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_OCTILINEAR );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
 
-void Window::selectMovebackStress( void )
+void Window::selectLevelHighMovebackStress( void )
 {
     bool isFinished = true;
-    isFinished = _simplifiedLevelHighPtr->movebackNodes( *_levelhighPtr, TYPE_STRESS );
+    isFinished = _simplifiedBoundaryPtr->movebackNodes( *_boundaryPtr, TYPE_STRESS );
     // if( isFinished == true ) cerr << "All stations are moved back!!" << endl;
     redrawAllScene();
 }
 
-void Window::selectSmoothSmallCG( void )
+void Window::selectLevelHighSmoothSmall( void )
 {
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
 
-    _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
-    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedLevelHighPtr->nVertices() );
-    _smoothPtr->retrieve();
+    _levelhighPtr->smooth().prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+    err = _levelhighPtr->smooth().ConjugateGradient( 3 * _simplifiedBoundaryPtr->nVertices() );
+    _levelhighPtr->smooth().retrieve();
 
-    cerr << "simNStation = " << _simplifiedLevelHighPtr->nVertices() << endl;
-    cerr << "nVertices = " << _levelhighPtr->nVertices() << endl;
-    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedLevelHighPtr->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedBoundaryPtr->nVertices() << endl;
+    cerr << "nVertices = " << _boundaryPtr->nVertices() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
 
     // run smooth optimization
     while( true ) {
@@ -238,35 +239,35 @@ void Window::selectSmoothSmallCG( void )
 
         // check if all nodes are moved back
 #ifdef  DEBUG
-        cerr << " num_vertices( _simplifiedLevelHighPtr->boundary() ) = " << num_vertices( _simplifiedLevelHighPtr->boundary() ) << endl
-             << " num_vertices( _levelhighPtr->boundary() ) = " << num_vertices( _levelhighPtr->boundary() ) << endl
+        cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
+             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
-        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) ) ) {
             break;
         }
         else {
             for( int i = 0; i < REMOVEBACKNUM; i++ ){
-                selectMovebackSmooth();
+                selectLevelHighMovebackSmooth();
             }
         }
 
-        _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
-            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
+        _levelhighPtr->smooth().prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) ) ) {
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
-        err = _smoothPtr->ConjugateGradient( iter );
-        _smoothPtr->retrieve();
+        err = _levelhighPtr->smooth().ConjugateGradient( iter );
+        _levelhighPtr->smooth().retrieve();
 
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
-    //_simplifiedLevelHighPtr->adjustsize( width(), height() );
-    _smoothPtr->clear();
-    _levelhighPtr->cloneSmooth( *_simplifiedLevelHighPtr );
+    //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+    _levelhighPtr->smooth().clear();
+    _boundaryPtr->cloneSmooth( *_simplifiedBoundaryPtr );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
     // ofs << "Total Time CG = " << clock() - start_time << endl;
@@ -274,53 +275,44 @@ void Window::selectSmoothSmallCG( void )
     redrawAllScene();
 }
 
-void Window::selectSmooth( OPTTYPE opttype )
+void Window::selectLevelHighSmooth( void )
 {
+    OPTTYPE opttype = _levelhighPtr->smooth().opttype();
+
     // run smooth optimization
-    _smoothPtr->prepare( _levelhighPtr, _content_width/2, _content_height/2 );
+    _levelhighPtr->smooth().prepare( _boundaryPtr, _content_width/2, _content_height/2 );
+
     switch( opttype ){
         case LEAST_SQUARE:
         {
-            int iter = _levelhighPtr->nVertices();
-            _smoothPtr->LeastSquare( iter );
+            int iter = _boundaryPtr->nVertices();
+            _levelhighPtr->smooth().LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _levelhighPtr->nVertices();
-            _smoothPtr->ConjugateGradient( iter );
+            int iter = _boundaryPtr->nVertices();
+            _levelhighPtr->smooth().ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _smoothPtr->retrieve();
-    _smoothPtr->clear();
+    _levelhighPtr->smooth().retrieve();
+    _levelhighPtr->smooth().clear();
 
     redrawAllScene();
 }
 
-void Window::selectSmoothLS( void )
-{
-    selectSmooth( LEAST_SQUARE );
-    redrawAllScene();
-}
-
-void Window::selectSmoothCG( void )
-{
-    selectSmooth( CONJUGATE_GRADIENT );
-    redrawAllScene();
-}
-
-void Window::selectOctilinearSmallCG( void )
+void Window::selectLevelHighOctilinearSmall( void )
 {
     // run coarse octilinear optimization
     double err = 0.0;
 
-    _octilinearPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
-    err = _octilinearPtr->ConjugateGradient( 5 * _simplifiedLevelHighPtr->nVertices() );
-    _octilinearPtr->retrieve();
-    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedLevelHighPtr->nVertices() << endl;
+    _levelhighPtr->octilinear().prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+    err = _levelhighPtr->octilinear().ConjugateGradient( 5 * _simplifiedBoundaryPtr->nVertices() );
+    _levelhighPtr->octilinear().retrieve();
+    //ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 5 * _simplifiedBoundaryPtr->nVertices() << endl;
 
     // run octilinear optimization
     while( true ) {
@@ -329,87 +321,76 @@ void Window::selectOctilinearSmallCG( void )
         int iter = 0;
 
         // check if all nodes are moved back
-        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) ) ) {
             break;
         }
         else {
             for( int i = 0; i < REMOVEBACKNUM; i++ ){
-                selectMovebackOctilinear();
+                selectLevelHighMovebackOctilinear();
             }
         }
 
-        _octilinearPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
-            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
+        _levelhighPtr->octilinear().prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) ) ) {
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
-        err = _octilinearPtr->ConjugateGradient( iter );
-        _octilinearPtr->retrieve();
+        err = _levelhighPtr->octilinear().ConjugateGradient( iter );
+        _levelhighPtr->octilinear().retrieve();
 
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
 
-    _octilinearPtr->clear();
-    _levelhighPtr->cloneOctilinear( *_simplifiedLevelHighPtr );
+    _levelhighPtr->octilinear().clear();
+    _boundaryPtr->cloneOctilinear( *_simplifiedBoundaryPtr );
 
     redrawAllScene();
 }
 
-void Window::selectOctilinear( OPTTYPE opttype )
+void Window::selectLevelHighOctilinear( void )
 {
+    // initialization
+    OPTTYPE opttype = _levelhighPtr->octilinear().opttype();
+    int iter = _boundaryPtr->nVertices();
+
     // run octilinear optimization
-    _octilinearPtr->prepare( _levelhighPtr, _content_width/2, _content_height/2 );
+    _levelhighPtr->octilinear().prepare( _boundaryPtr, _content_width/2, _content_height/2 );
 
     switch( opttype ) {
         case LEAST_SQUARE:
         {
-            int iter = _levelhighPtr->nVertices();
-            _octilinearPtr->LeastSquare( iter );
+            _levelhighPtr->octilinear().LeastSquare( iter );
         }
             break;
         case CONJUGATE_GRADIENT:
         {
-            int iter = _levelhighPtr->nVertices();
-            _octilinearPtr->ConjugateGradient( iter );
+            _levelhighPtr->octilinear().ConjugateGradient( iter );
         }
             break;
         default:
             break;
     }
-    _octilinearPtr->retrieve();
-    _octilinearPtr->clear();
+    _levelhighPtr->octilinear().retrieve();
+    _levelhighPtr->octilinear().clear();
 
     redrawAllScene();
 }
 
-void Window::selectOctilinearLS( void )
-{
-    selectOctilinear( LEAST_SQUARE );
-    redrawAllScene();
-}
-
-void Window::selectOctilinearCG( void )
-{
-    selectOctilinear( CONJUGATE_GRADIENT );
-    redrawAllScene();
-}
-
-
-void Window::selectStressSmallCG( void )
+void Window::selectLevelHighStressSmall( void )
 {
     // run coarse smooth optimization
     clock_t start_time = clock();
     double err = 0.0;
 
-    _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
-    err = _smoothPtr->ConjugateGradient( 3 * _simplifiedLevelHighPtr->nVertices() );
-    _smoothPtr->retrieve();
+    _levelhighPtr->smooth().prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+    err = _levelhighPtr->smooth().ConjugateGradient( 3 * _simplifiedBoundaryPtr->nVertices() );
+    _levelhighPtr->smooth().retrieve();
 
-    cerr << "simNStation = " << _simplifiedLevelHighPtr->nVertices() << endl;
-    cerr << "nStation = " << _levelhighPtr->nVertices() << endl;
-    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedLevelHighPtr->nStations() << endl;
+    cerr << "simNStation = " << _simplifiedBoundaryPtr->nVertices() << endl;
+    cerr << "nStation = " << _boundaryPtr->nVertices() << endl;
+    // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
 
     // run smooth optimization
     while( true ) {
@@ -419,35 +400,35 @@ void Window::selectStressSmallCG( void )
 
         // check if all nodes are moved back
 #ifdef  DEBUG
-        cerr << " num_vertices( _simplifiedLevelHighPtr->boundary() ) = " << num_vertices( _simplifiedLevelHighPtr->boundary() ) << endl
-             << " num_vertices( _levelhighPtr->boundary() ) = " << num_vertices( _levelhighPtr->boundary() ) << endl
+        cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
+             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
              << " nLabels = " << nLabels << endl;
 #endif  // DEBUG
-        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) ) ) {
             break;
         }
         else {
             for( int i = 0; i < REMOVEBACKNUM; i++ ){
-                selectMovebackSmooth();
+                selectLevelHighMovebackSmooth();
             }
         }
 
-        _smoothPtr->prepare( _simplifiedLevelHighPtr, _content_width/2, _content_height/2 );
-        if( num_vertices( _simplifiedLevelHighPtr->boundary() ) == ( num_vertices( _levelhighPtr->boundary() ) ) ) {
-            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
+        _levelhighPtr->smooth().prepare( _simplifiedBoundaryPtr, _content_width/2, _content_height/2 );
+        if( num_vertices( _simplifiedBoundaryPtr->boundary() ) == ( num_vertices( _boundaryPtr->boundary() ) ) ) {
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
         else{
-            iter = MAX2( 2 * ( _levelhighPtr->nVertices() - _simplifiedLevelHighPtr->nVertices() ), 30 );
+            iter = MAX2( 2 * ( _boundaryPtr->nVertices() - _simplifiedBoundaryPtr->nVertices() ), 30 );
         }
-        err = _smoothPtr->ConjugateGradient( iter );
-        _smoothPtr->retrieve();
+        err = _levelhighPtr->smooth().ConjugateGradient( iter );
+        _levelhighPtr->smooth().retrieve();
 
         cerr << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
         // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
     }
-    //_simplifiedLevelHighPtr->adjustsize( width(), height() );
-    _smoothPtr->clear();
-    _levelhighPtr->cloneSmooth( *_simplifiedLevelHighPtr );
+    //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+    _levelhighPtr->smooth().clear();
+    _boundaryPtr->cloneSmooth( *_simplifiedBoundaryPtr );
 
     // cerr << "Total Time CG = " << clock() - start_time << endl;
     // ofs << "Total Time CG = " << clock() - start_time << endl;
@@ -455,49 +436,42 @@ void Window::selectStressSmallCG( void )
     redrawAllScene();
 }
 
-void Window::selectStress( OPTTYPE opttype )
+void Window::selectLevelHighStress( void )
 {
+    OPTTYPE opttype = _levelhighPtr->stressBone().opttype();
+
     // run smooth optimization
-    _stressPtr->prepare( &_levelhighPtr->skeleton(), _content_width/2, _content_height/2 );
+    _levelhighPtr->stressBone().prepare( &_levelhighPtr->skeleton(), _content_width/2, _content_height/2 );
 
     switch( opttype ){
         case LEAST_SQUARE:
         {
-            int iter = _levelhighPtr->nVertices();
-            _stressPtr->LeastSquare( iter );
+            int iter = _boundaryPtr->nVertices();
+            _levelhighPtr->stressBone().LeastSquare( iter );
             break;
         }
         case CONJUGATE_GRADIENT:
         {
-            unsigned int long iter = _stressPtr->nVertices();
+            unsigned int long iter = _levelhighPtr->stressBone().nVertices();
             //_stressPtr->ConjugateGradient( iter );
-            _stressPtr->ConjugateGradient( 1 );
+            _levelhighPtr->stressBone().ConjugateGradient( 1 );
             break;
         }
         default:
             break;
     }
-    _stressPtr->retrieve();
-    _stressPtr->clear();
+    _levelhighPtr->stressBone().retrieve();
+    _levelhighPtr->stressBone().clear();
 
     redrawAllScene();
 }
 
-void Window::selectStressLS( void )
-{
-    selectStress( LEAST_SQUARE );
-    redrawAllScene();
-}
 
-void Window::selectStressCG( void )
+void Window::selectLevelHighBuildBoundary( void )
 {
-    selectStress( CONJUGATE_GRADIENT );
-    redrawAllScene();
-}
+    //clearGraph( _simplifiedBoundaryPtr->boundary() );
 
-void Window::selectBuildBoundary( void )
-{
-    _levelhighPtr->buildBoundaryGraph();
+    buildLevelHighBoundaryGraph();
     _gv->isSimplifiedFlag() = false;
     redrawAllScene();
 }
@@ -551,7 +525,7 @@ void Window::processBoundary( void )
 
     Controller * conPtr = new Controller;
     conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
+    conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                            _cellPtr, _roadPtr, _lanePtr );
 
     vector < unsigned int > indexVec;
@@ -605,11 +579,11 @@ void Window::processCell( void )
     _gv->isCellPolygonFlag() = true;
     _gv->isCellFlag() = true;
 
-    for( unsigned int i = 0; i < _cellPtr->forceCellVec().size(); i++ ){
+    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
 
         Controller * conPtr = new Controller;
         conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-        conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
+        conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                                _cellPtr, _roadPtr, _lanePtr );
         vector < unsigned int > indexVec;
         indexVec.push_back( i );
@@ -673,7 +647,7 @@ void Window::processBone( void )
 
             Controller * conPtr = new Controller;
             conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
+            conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
             vector < unsigned int > indexVec;
             indexVec.push_back( i );
@@ -747,7 +721,7 @@ void Window::processDetailedPathway( void )
             // cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
             Controller * conPtr = new Controller;
             conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _levelhighPtr, _simplifiedLevelHighPtr,
+            conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
             vector < unsigned int > indexVec;
             indexVec.push_back( i );
@@ -811,6 +785,438 @@ void Window::stopProcessDetailedPathway( void )
     _gv->isLaneFlag() = true;
 }
 
+//
+//  Window::buildPackageGraph --    build the boundary from the voronoi cell
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Window::buildLevelHighBoundaryGraph( void )
+{
+    // initialization
+    _levelhighPtr->polygonComplexVD().clear();
+    clearGraph( _boundaryPtr->boundary() );
+    _boundaryPtr->nVertices() = 0;
+    _boundaryPtr->nEdges() = 0;
+    _boundaryPtr->nLines() = 0;
+    unsigned int &nVertices = _boundaryPtr->nVertices();
+    unsigned int &nEdges = _boundaryPtr->nEdges();
+    unsigned int &nLines = _boundaryPtr->nLines();
+
+    // create boundary graph
+    for( unsigned int i = 0; i < _levelhighPtr->polygonComplex().size(); i++ ){
+
+        Polygon2 &polygon = _levelhighPtr->polygonComplex()[i];
+        vector< ForceGraph::vertex_descriptor > vdVec;
+
+        unsigned int size = polygon.elements().size();
+        for( unsigned int j = 1; j < size+1; j++ ){
+
+            //Coord2 &coordS = polygon.elements()[j-1];
+            //Coord2 &coordT = polygon.elements()[j%polygon.elements().size()];
+
+            // Check if the station exists or not
+            BoundaryGraph::vertex_descriptor curVDS = NULL;
+            BoundaryGraph::vertex_descriptor curVDT = NULL;
+
+            // add vertices
+            for( unsigned int k = 0; k < 2; k++ ){
+
+                BoundaryGraph::vertex_descriptor curVD = NULL;
+
+                // Check if the station exists or not
+                BGL_FORALL_VERTICES( vd, _boundaryPtr->boundary(), BoundaryGraph )
+                    {
+                        Coord2 &c = *_boundaryPtr->boundary()[ vd ].coordPtr;
+                        if( fabs( ( polygon.elements()[ (j-1+k)%size]-c ).norm() ) < 1e-2 ){
+
+#ifdef DEBUG
+                            cerr << "The node has been in the database." << endl;
+#endif  // DEBUG
+                            if( k == 0 ) curVD = curVDS = vd;
+                            if( k == 1 ) curVD = curVDT = vd;
+                            break;
+                        }
+                    }
+
+                if ( curVD == NULL ){
+
+                    curVD = add_vertex( _boundaryPtr->boundary() );
+                    //vector< unsigned int > lineID = _boundaryPtr->boundary()[ curVD ].lineID;
+                    //lineID.push_back( nLines );
+
+                    double x = polygon.elements()[j-1+k].x();
+                    double y = polygon.elements()[j-1+k].y();
+                    _boundaryPtr->boundary()[ curVD ].geoPtr       = new Coord2( x, y );
+                    _boundaryPtr->boundary()[ curVD ].smoothPtr    = new Coord2( x, y );
+                    _boundaryPtr->boundary()[ curVD ].coordPtr     = new Coord2( x, y );
+
+                    _boundaryPtr->boundary()[ curVD ].id = _boundaryPtr->boundary()[ curVD ].initID = nVertices;
+                    _boundaryPtr->boundary()[ curVD ].namePtr = new string( to_string( _boundaryPtr->boundary()[ curVD ].id ) );
+                    _boundaryPtr->boundary()[ curVD ].weight = 1.0;
+                    //_boundaryPtr->boundary()[ curVD ].lineID.push_back( nLines );
+
+                    if( k == 0 ) curVDS = curVD;
+                    if( k == 1 ) curVDT = curVD;
+                    nVertices++;
+                }
+                else{
+                    _boundaryPtr->boundary()[ curVD ].lineID.push_back( nLines );
+#ifdef DEBUG
+                    cerr << "[Existing] curV : lineID = " << endl;
+                for ( unsigned int k = 0; k < vertexLineID[ curVD ].size(); ++k )
+                    cerr << "lineID[ " << setw( 3 ) << k << " ] = " << vertexLineID[ curVD ][ k ] << endl;
+#endif  // DEBUG
+                }
+            }
+            vdVec.push_back( curVDS );
+            // cerr << _boundary[ curVDS ].id << " ";
+
+            //cerr << "( " << _boundary[ curVDS ].id << ", " << _boundary[ curVDT ].id << " )" << endl;
+
+            // add edges
+            // search previous edge
+            bool found = false;
+            BoundaryGraph::edge_descriptor oldED;
+            //BoundaryGraph::vertex_descriptor oldVS = ptrSta[ origID ];
+            //BoundaryGraph::vertex_descriptor oldVT = ptrSta[ destID ];
+            //unsigned int indexS = _boundary[ curVDS ].initID;
+            //unsigned int indexT = _boundary[ curVDT ].initID;
+            tie( oldED, found ) = edge( curVDS, curVDT, _boundaryPtr->boundary() );
+
+
+            if ( found == true ) {
+
+                _boundaryPtr->boundary()[ oldED ].lineID.push_back( nLines );
+                //eachline.push_back( oldED );
+                //bool test = false;
+                //tie( oldED, test ) = edge( oldVT, oldVS, _boundary );
+            }
+            else{
+
+                //BoundaryGraph::vertex_descriptor src = vertex( indexS, _boundary );
+                //BoundaryGraph::vertex_descriptor tar = vertex( indexT, _boundary );
+
+                // handle fore edge
+                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( curVDS, curVDT, _boundaryPtr->boundary() );
+                BoundaryGraph::edge_descriptor foreED = foreE.first;
+
+                // calculate geographical angle
+                Coord2 coordO;
+                Coord2 coordD;
+                if( _boundaryPtr->boundary()[ curVDS ].initID < _boundaryPtr->boundary()[ curVDT ].initID ){
+                    coordO = *_boundaryPtr->boundary()[ curVDS ].coordPtr;
+                    coordD = *_boundaryPtr->boundary()[ curVDT ].coordPtr;
+                }
+                else{
+                    coordO = *_boundaryPtr->boundary()[ curVDT ].coordPtr;
+                    coordD = *_boundaryPtr->boundary()[ curVDS ].coordPtr;
+                }
+                double diffX = coordD.x() - coordO.x();
+                double diffY = coordD.y() - coordO.y();
+                double angle = atan2( diffY, diffX );
+
+                _boundaryPtr->boundary()[ foreED ].initID = _boundaryPtr->boundary()[ foreED ].id = nEdges;
+                _boundaryPtr->boundary()[ foreED ].weight = 1.0;
+                _boundaryPtr->boundary()[ foreED ].geoAngle = angle;
+                _boundaryPtr->boundary()[ foreED ].smoothAngle = angle;
+                _boundaryPtr->boundary()[ foreED ].angle = angle;
+                _boundaryPtr->boundary()[ foreED ].lineID.push_back( nLines );
+
+                //eachline.push_back( foreED );
+#ifdef  DEBUG
+                cout << "nEdges = " << _nEdges << " angle = " << angle << endl;
+#endif  // DEBUG
+                nEdges++;
+            }
+        }
+        _levelhighPtr->polygonComplexVD().insert( pair< unsigned int, vector< ForceGraph::vertex_descriptor > >( i, vdVec ) );
+    }
+
+    // create lines
+    // _line.resize( _polygonComplexVD.size() );
+    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
+    // map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
+    for( itS = _levelhighPtr->polygonComplexVD().begin(); itS != _levelhighPtr->polygonComplexVD().end(); itS++ ){
+        vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
+        _boundaryPtr->lineSta().push_back( vdVec );
+    }
+    nLines = _levelhighPtr->polygonComplexVD().size();
+
+#ifdef DEBUG
+    cerr << "nV = " << _nVertices << " nE = " << _nEdges
+         << " nL = " << _nLines << endl;
+#endif // DEBUG
+}
+
+
+//
+//  Window::selectLevelMiddleBuildBoundary --    build the boundary from the voronoi cell
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Window::selectLevelMiddleBuildBoundary( void )
+{
+    //clearGraph( _simplifiedBoundaryPtr->boundary() );
+
+    buildLevelMiddleBoundaryGraph();
+    _gv->isSimplifiedFlag() = false;
+    redrawAllScene();
+
+    cerr << "MiddleBuildBoundary::nV = " << num_vertices( _boundaryPtr->boundary() ) << endl;
+}
+
+//
+//  Window::buildLevelMiddleBoundaryGraph --    build the boundary from the voronoi cell
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Window::buildLevelMiddleBoundaryGraph( void )
+{
+    // initialization
+    vector< Package >   &cellVec = _cellPtr->cellVec();
+    for( unsigned int i = 0; i < cellVec.size(); i++ ){
+        cellVec[ i ].polygonComplexVD().clear();
+    }
+    clearGraph( _boundaryPtr->boundary() );
+    _boundaryPtr->nVertices() = 0;
+    _boundaryPtr->nEdges() = 0;
+    _boundaryPtr->nLines() = 0;
+    unsigned int &nVertices = _boundaryPtr->nVertices();
+    unsigned int &nEdges = _boundaryPtr->nEdges();
+    unsigned int &nLines = _boundaryPtr->nLines();
+
+    // create boundary graph
+    for( unsigned int m = 0; m < cellVec.size(); m++ ){
+        for( unsigned int i = 0; i < cellVec[ m ].polygonComplex().size(); i++ ){
+
+            Polygon2 &polygon = cellVec[ m ].polygonComplex()[i];
+            vector< ForceGraph::vertex_descriptor > vdVec;
+            unsigned int size = polygon.elements().size();
+
+            for( unsigned int j = 1; j < size+1; j++ ){
+
+                //Coord2 &coordS = polygon.elements()[j-1];
+                //Coord2 &coordT = polygon.elements()[j%polygon.elements().size()];
+
+                // Check if the station exists or not
+                BoundaryGraph::vertex_descriptor curVDS = NULL;
+                BoundaryGraph::vertex_descriptor curVDT = NULL;
+
+                // add vertices
+                for( unsigned int k = 0; k < 2; k++ ){
+
+                    BoundaryGraph::vertex_descriptor curVD = NULL;
+
+                    // Check if the station exists or not
+                    BGL_FORALL_VERTICES( vd, _boundaryPtr->boundary(), BoundaryGraph )
+                        {
+                            Coord2 &c = *_boundaryPtr->boundary()[ vd ].coordPtr;
+                            if( fabs( ( polygon.elements()[ (j-1+k)%size]-c ).norm() ) < 1e-2 ){
+
+#ifdef DEBUG
+                                cerr << "The node has been in the database." << endl;
+#endif  // DEBUG
+                                if( k == 0 ) curVD = curVDS = vd;
+                                if( k == 1 ) curVD = curVDT = vd;
+                                break;
+                            }
+                        }
+
+                    if ( curVD == NULL ){
+
+                        curVD = add_vertex( _boundaryPtr->boundary() );
+                        //vector< unsigned int > lineID = _boundaryPtr->boundary()[ curVD ].lineID;
+                        //lineID.push_back( nLines );
+
+                        double x = polygon.elements()[j-1+k].x();
+                        double y = polygon.elements()[j-1+k].y();
+                        _boundaryPtr->boundary()[ curVD ].geoPtr       = new Coord2( x, y );
+                        _boundaryPtr->boundary()[ curVD ].smoothPtr    = new Coord2( x, y );
+                        _boundaryPtr->boundary()[ curVD ].coordPtr     = new Coord2( x, y );
+
+                        _boundaryPtr->boundary()[ curVD ].id = _boundaryPtr->boundary()[ curVD ].initID = nVertices;
+                        _boundaryPtr->boundary()[ curVD ].namePtr = new string( to_string( _boundaryPtr->boundary()[ curVD ].id ) );
+                        _boundaryPtr->boundary()[ curVD ].weight = 1.0;
+                        //_boundaryPtr->boundary()[ curVD ].lineID.push_back( nLines );
+
+                        if( k == 0 ) curVDS = curVD;
+                        if( k == 1 ) curVDT = curVD;
+                        nVertices++;
+                    }
+                    else{
+                        _boundaryPtr->boundary()[ curVD ].lineID.push_back( nLines );
+#ifdef DEBUG
+                        cerr << "[Existing] curV : lineID = " << endl;
+                for ( unsigned int k = 0; k < vertexLineID[ curVD ].size(); ++k )
+                    cerr << "lineID[ " << setw( 3 ) << k << " ] = " << vertexLineID[ curVD ][ k ] << endl;
+#endif  // DEBUG
+                    }
+                }
+                vdVec.push_back( curVDS );
+                // cerr << _boundary[ curVDS ].id << " ";
+                // cerr << "( " << _boundary[ curVDS ].id << ", " << _boundary[ curVDT ].id << " )" << endl;
+
+                // add edges
+                // search previous edge
+                bool found = false;
+                BoundaryGraph::edge_descriptor oldED;
+                //BoundaryGraph::vertex_descriptor oldVS = ptrSta[ origID ];
+                //BoundaryGraph::vertex_descriptor oldVT = ptrSta[ destID ];
+                //unsigned int indexS = _boundary[ curVDS ].initID;
+                //unsigned int indexT = _boundary[ curVDT ].initID;
+                tie( oldED, found ) = edge( curVDS, curVDT, _boundaryPtr->boundary() );
+
+
+                if ( found == true ) {
+
+                    _boundaryPtr->boundary()[ oldED ].lineID.push_back( nLines );
+                    //eachline.push_back( oldED );
+                    //bool test = false;
+                    //tie( oldED, test ) = edge( oldVT, oldVS, _boundary );
+                }
+                else{
+
+                    //BoundaryGraph::vertex_descriptor src = vertex( indexS, _boundary );
+                    //BoundaryGraph::vertex_descriptor tar = vertex( indexT, _boundary );
+
+                    // handle fore edge
+                    pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( curVDS, curVDT, _boundaryPtr->boundary() );
+                    BoundaryGraph::edge_descriptor foreED = foreE.first;
+
+                    // calculate geographical angle
+                    Coord2 coordO;
+                    Coord2 coordD;
+                    if( _boundaryPtr->boundary()[ curVDS ].initID < _boundaryPtr->boundary()[ curVDT ].initID ){
+                        coordO = *_boundaryPtr->boundary()[ curVDS ].coordPtr;
+                        coordD = *_boundaryPtr->boundary()[ curVDT ].coordPtr;
+                    }
+                    else{
+                        coordO = *_boundaryPtr->boundary()[ curVDT ].coordPtr;
+                        coordD = *_boundaryPtr->boundary()[ curVDS ].coordPtr;
+                    }
+                    double diffX = coordD.x() - coordO.x();
+                    double diffY = coordD.y() - coordO.y();
+                    double angle = atan2( diffY, diffX );
+
+                    _boundaryPtr->boundary()[ foreED ].initID = _boundaryPtr->boundary()[ foreED ].id = nEdges;
+                    _boundaryPtr->boundary()[ foreED ].weight = 1.0;
+                    _boundaryPtr->boundary()[ foreED ].geoAngle = angle;
+                    _boundaryPtr->boundary()[ foreED ].smoothAngle = angle;
+                    _boundaryPtr->boundary()[ foreED ].angle = angle;
+                    _boundaryPtr->boundary()[ foreED ].lineID.push_back( nLines );
+
+                    //eachline.push_back( foreED );
+#ifdef  DEBUG
+                    cout << "nEdges = " << _nEdges << " angle = " << angle << endl;
+#endif  // DEBUG
+                    nEdges++;
+                }
+            }
+            cellVec[ m ].polygonComplexVD().insert( pair< unsigned int, vector< ForceGraph::vertex_descriptor > >( i, vdVec ) );
+        }
+
+#ifdef SKIP
+        // create lines
+        // _line.resize( _polygonComplexVD.size() );
+        map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
+        // map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
+        for( itS = _levelhighPtr->polygonComplexVD().begin(); itS != cellVec[ m ].polygonComplexVD().end(); itS++ ){
+            vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
+            _boundaryPtr->lineSta().push_back( vdVec );
+        }
+        nLines = cellVec[ m ].polygonComplexVD().size();
+#endif // SKIP
+
+#ifdef DEBUG
+        cerr << "nV = " << _nVertices << " nE = " << _nEdges
+         << " nL = " << _nLines << endl;
+#endif // DEBUG
+
+    }
+}
+
+//
+//  Window::updateLevelMiddlePolygonComplex --    build the boundary from the voronoi cell
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Window::updateLevelMiddlePolygonComplex( void )
+{
+    cerr << "updating polygonComplex after optimization ..." << endl;
+
+    vector< Package >   &cellVec = _cellPtr->cellVec();
+    for( unsigned int m = 0; m < cellVec.size(); m++ ){
+
+        map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
+        map< unsigned int, Polygon2 >::iterator itC = cellVec[ m ].polygonComplex().begin();
+        for( itP = cellVec[ m ].polygonComplexVD().begin(); itP != cellVec[ m ].polygonComplexVD().end(); itP++ ){
+            vector< ForceGraph::vertex_descriptor > &p = itP->second;
+            for( unsigned int i = 0; i < p.size(); i++ ){
+                itC->second.elements()[i].x() = _boundaryPtr->boundary()[ p[i] ].coordPtr->x();
+                itC->second.elements()[i].y() = _boundaryPtr->boundary()[ p[i] ].coordPtr->y();
+            }
+            itC++;
+        }
+    }
+}
+
+
+//
+//  Window::selectLevelMiddleOctilinear --    build the boundary from the voronoi cell
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Window::selectLevelMiddleOctilinear( void )
+{
+
+}
+
+
+//
+//  Window::updatePolygonComplex --    update the ploygon complex
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Window::updateLevelHighPolygonComplex( void )
+{
+    cerr << "updating polygonComplex after optimization ..." << endl;
+
+    map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
+    map< unsigned int, Polygon2 >::iterator itC = _levelhighPtr->polygonComplex().begin();
+    for( itP = _levelhighPtr->polygonComplexVD().begin(); itP != _levelhighPtr->polygonComplexVD().end(); itP++ ){
+        vector< ForceGraph::vertex_descriptor > &p = itP->second;
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            itC->second.elements()[i].x() = _boundaryPtr->boundary()[ p[i] ].coordPtr->x();
+            itC->second.elements()[i].y() = _boundaryPtr->boundary()[ p[i] ].coordPtr->y();
+        }
+        itC++;
+    }
+}
+
 void Window::timerEvent( QTimerEvent *event )
 {
     Q_UNUSED( event );
@@ -863,6 +1269,20 @@ void Window::keyPressEvent( QKeyEvent *event )
             //simulateKey( Qt::Key_P );
             stopProcessCell();
             //assert( _timerPtr->size() == 0 );
+
+            selectLevelMiddleBuildBoundary();
+
+            selectCloneGraph();
+            selectLevelMiddleOctilinear();
+
+            updateLevelMiddlePolygonComplex();
+            //selectOctilinearSmallCboundary();
+
+            //_gv->isPolygonFlag() = false;
+            //_gv->isCompositeFlag() = false;
+            //_gv->isPolygonComplexFlag() = true;
+            _gv->isBoundaryFlag() = true;
+
             redrawAllScene();
             break;
         }
@@ -992,7 +1412,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_M:
         {
-            selectMinDistance();
+            selectLevelHighMinDistance();
             break;
         }
         case Qt::Key_R:
@@ -1005,21 +1425,21 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             break;
         }
-/*
-        case Qt::Key_S:
+        case Qt::Key_D:
         {
             selectCloneGraph();
-            selectSmoothCG();
+            selectLevelHighSmooth();
             //selectSmoothSmallCboundary();
             break;
         }
-*/
         case Qt::Key_O:
         {
             selectCloneGraph();
-            selectOctilinearCG();
-            _levelhighPtr->updatePolygonComplex();
+            selectLevelHighOctilinear();
+
+            updateLevelHighPolygonComplex();
             //selectOctilinearSmallCboundary();
+
             _gv->isPolygonFlag() = false;
             _gv->isCompositeFlag() = false;
             _gv->isPolygonComplexFlag() = true;
@@ -1030,7 +1450,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_T:
         {
             selectCloneGraph();
-            selectStressCG();
+            selectLevelHighStress();
             //_levelhighPtr->updatePolygonComplex();
             //selectOctilinearSmallCboundary();
 
@@ -1042,7 +1462,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_B:
         {
             _levelhighPtr->createPolygonComplex( num_vertices( _levelhighPtr->skeleton() ) );
-            selectBuildBoundary();
+            selectLevelHighBuildBoundary();
 #ifdef SKIP
             _levelhighPtr->writePolygonComplex();
 #endif // SKIP

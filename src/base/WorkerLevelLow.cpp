@@ -31,14 +31,14 @@ void WorkerLevelLow::onTimeout( void )
 
     if( cell.nMCL <= 1 ) return;
 
-    switch ( itC->second.mcl.mode() ) {
+    switch ( itC->second.mcl.forceBone().mode() ) {
         case TYPE_FORCE:
         case TYPE_BARNES_HUT:
         {
-            itC->second.mcl.force();
-            err = itC->second.mcl.verletIntegreation();
+            itC->second.mcl.forceBone().force();
+            err = itC->second.mcl.forceBone().verletIntegreation();
             // cerr << "WorkerCell::err (mcl force) = " << err << endl;
-            if (err < itC->second.mcl.finalEpsilon()) {
+            if (err < itC->second.mcl.forceBone().finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << idT << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << idT << "] = " << checkOutCPUTime() << endl;
@@ -47,10 +47,10 @@ void WorkerLevelLow::onTimeout( void )
         }
         case TYPE_CENTROID:
         {
-            itC->second.mcl.centroidGeometry();
-            err = itC->second.mcl.gap();
+            itC->second.mcl.forceBone().centroidGeometry();
+            err = itC->second.mcl.forceBone().gap();
             // cerr << "WorkerCell::err (mcl force) = " << err << endl;
-            if (err < itC->second.mcl.finalEpsilon()) {
+            if (err < itC->second.mcl.forceBone().finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << idT << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << idT << "] = " << checkOutCPUTime() << endl;
@@ -59,11 +59,11 @@ void WorkerLevelLow::onTimeout( void )
         }
         case TYPE_HYBRID:
         {
-            itC->second.mcl.force();
-            itC->second.mcl.centroidGeometry();
-            err = itC->second.mcl.verletIntegreation();
+            itC->second.mcl.forceBone().force();
+            itC->second.mcl.forceBone().centroidGeometry();
+            err = itC->second.mcl.forceBone().verletIntegreation();
             // cerr << "WorkerCell:: err (mcl force) = " << err << endl;
-            if (err < itC->second.mcl.finalEpsilon()) {
+            if (err < itC->second.mcl.forceBone().finalEpsilon()) {
                 stop();
                 //cerr << "[Force-Directed] Finished Execution Time [" << idT << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << idT << "] = " << checkOutCPUTime() << endl;

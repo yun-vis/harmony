@@ -25,8 +25,11 @@ using namespace std;
 #include "base/PathwayData.h"
 #include "base/Grid2.h"
 #include "base/Contour2.h"
+#include "base/Package.h"
 #include "optimization/Force.h"
 #include "optimization/Similarity.h"
+#include "optimization/Smooth.h"
+#include "optimization/Octilinear.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -35,42 +38,39 @@ using namespace std;
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
-
 class CellComponent
 {
 public:
     unsigned int                            id;         // component id
     unsigned int                            groupID;    // subsystem id
-    //unsigned int                            subgID;     // sub graph id
     unsigned int                            nMCL;       // number of mcl clustering
 
     Polygon2                                contour;    // contour of the cell component
     double                                  multiple;   // multiple of cell unit
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
     vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
-    Force                                   mcl;
-    ForceGraph                              mclGraph;
-    Force                                   detail;
-    ForceGraph                              detailGraph;
+
+    Package                                 mcl;
+    Package                                 detail;
 };
 
 class Cell : public PathwayData, public Common
 {
 private:
 
-    vector< Force >                                 _forceCellVec;
-    vector< ForceGraph >                            _forceCellGraphVec;
-    vector< multimap< int, CellComponent > >        _cellComponentVec;          // int: number of nodes in lsubg
+    vector< Package >                               _cellVec;
     map< unsigned int, Polygon2 >                  *_polygonComplexPtr;
-    vector< vector< vector< double > > >            _cellComponentSimilarityVec;   // cell component similarity
+
+    vector< multimap< int, CellComponent > >        _cellComponentVec;              // int: number of nodes in lsubg
+    vector< vector< vector< double > > >            _cellComponentSimilarityVec;    // cell component similarity
     multimap< Grid2, pair< CellComponent*, CellComponent* > > _interCellComponentMap;            // pair of inter cell component
     multimap< Grid2, pair< CellComponent*, CellComponent* > > _reducedInterCellComponentMap;     // pair of inter cell component
 
     unsigned int    _nComponent;            // number of connected component
 
     // configuration parameter
-    double          _paramAddKa;               // attractive force
-    double          _paramAddKr;               // repulsive force
+    double          _paramAddKa;            // attractive force
+    double          _paramAddKr;            // repulsive force
     double          _paramUnit;             // cell unit
 
 //------------------------------------------------------------------------------
@@ -100,11 +100,8 @@ public:
     unsigned int &              nComponent( void )          { return _nComponent; }
     const unsigned int &        nComponent( void ) const    { return _nComponent; }
 
-    vector< Force > &           forceCellVec( void )        { return _forceCellVec; }
-    const vector< Force > &     forceCellVec( void ) const  { return _forceCellVec; }
-
-    vector< ForceGraph > &          forceCellGraphVec( void )        { return _forceCellGraphVec; }
-    const vector< ForceGraph > &    forceCellGraphVec( void ) const  { return _forceCellGraphVec; }
+    vector< Package > &           cellVec( void )        { return _cellVec; }
+    const vector< Package > &     cellVec( void ) const  { return _cellVec; }
 
     map< unsigned int, Polygon2 > * polygonComplex( void )              { return _polygonComplexPtr; }
     const map< unsigned int, Polygon2 > * polygonComplex( void ) const  { return _polygonComplexPtr; }

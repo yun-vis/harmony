@@ -78,6 +78,9 @@ public:
     const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
     map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }
 
+    const map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > & polygonComplexVD( void ) const  { return _polygonComplexVD; }
+    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > &       polygonComplexVD( void )        { return _polygonComplexVD; }
+
 //------------------------------------------------------------------------------
 //      Find conflicts
 //------------------------------------------------------------------------------
