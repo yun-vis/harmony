@@ -37,9 +37,9 @@ typedef std::vector< std::string > Tokens;
 //  Outputs
 //  none
 //
-void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
+void Cell::_init( map< unsigned int, Polygon2 > * polygonComplexPtr )
 {
-    _polygonComplexPtr              = __polygonComplexPtr;
+    //_polygonComplexPtr              = __polygonComplexPtr;
     vector< ForceGraph > &lsubg     = _pathway->lsubG();
 
     //read config file
@@ -62,27 +62,22 @@ void Cell::_init( map< unsigned int, Polygon2 > * __polygonComplexPtr )
     }
 
     _cellVec.resize( lsubg.size() );
-    for( unsigned int i = 0; i < _cellVec.size(); i++ ){
-        //_cellVec->
-    }
-
-    assert( lsubg.size() == _polygonComplexPtr->size() );
-    cerr << "HERE..." << endl;
-
-    _buildConnectedComponent();
-    _computeCellComponentSimilarity();
-    _buildInterCellComponents();
-    _buildCellGraphs();
 
     //for( unsigned int i = 1; i < 2; i++ ){
     for( unsigned int i = 0; i < lsubg.size(); i++ ){
 
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
-        map< unsigned int, Polygon2 >::iterator itP = _polygonComplexPtr->begin();
+        map< unsigned int, Polygon2 >::iterator itP = polygonComplexPtr->begin();
         advance( itP, i );
         _cellVec[i].forceBone().init( &_cellVec[i].bone(), itP->second, "../configs/cell.conf" );
         _cellVec[i].forceBone().id() = i;
+        _cellVec[i].forceBone().contour() = itP->second;
     }
+
+    _buildConnectedComponent();
+    _computeCellComponentSimilarity();
+    _buildInterCellComponents();
+    _buildCellGraphs();
 
     cerr << "filepath: " << configFilePath << endl;
     cerr << "addKa: " << _paramAddKa << endl;
@@ -286,10 +281,10 @@ void Cell::_buildCellGraphs( void )
     for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 
         multimap<int, CellComponent>::iterator itC = _cellComponentVec[i].begin();
-        map<unsigned int, Polygon2>::iterator itP = _polygonComplexPtr->begin();
-        advance(itP, i);
-
-        // vector <vector<ForceGraph::vertex_descriptor>> mergeVec;      // vector of cell need to be merged
+        Polygon2 &contour = _cellVec[i].forceBone().contour();
+        //map<unsigned int, Polygon2>::iterator itP = _cellVec[i].forceBone().contour().begin();
+        //advance(itP, i);
+        //vector <vector<ForceGraph::vertex_descriptor>> mergeVec;      // vector of cell need to be merged
 
         unsigned int idV = 0, idE = 0;
         for (; itC != _cellComponentVec[i].end(); itC++) {
@@ -306,8 +301,8 @@ void Cell::_buildCellGraphs( void )
 
                 // add vertex
                 ForceGraph::vertex_descriptor vdNew = add_vertex(  _cellVec[i].bone() );
-                double x = itP->second.centroid().x() + rand() % 100 - 50;
-                double y = itP->second.centroid().y() + rand() % 100 - 50;
+                double x = contour.centroid().x() + rand() % 100 - 50;
+                double y = contour.centroid().y() + rand() % 100 - 50;
 
                 _cellVec[i].bone()[vdNew].id = idV;
                 _cellVec[i].bone()[vdNew].groupID = i;
@@ -386,12 +381,13 @@ void Cell::_buildCellGraphs( void )
 #endif // DEBUG
     }
 
-    // initialization the position
+    // initialize the position
     for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 
         multimap<int, CellComponent>::iterator itC = _cellComponentVec[i].begin();
-        map<unsigned int, Polygon2>::iterator itP = _polygonComplexPtr->begin();
-        advance(itP, i);
+        Polygon2 &contourI = _cellVec[i].forceBone().contour();
+        // map<unsigned int, Polygon2>::iterator itP = _polygonComplexPtr->begin();
+        // advance(itP, i);
 
         vector <vector<ForceGraph::vertex_descriptor>> mergeVec;      // vector of cell need to be merged
 
@@ -434,13 +430,16 @@ void Cell::_buildCellGraphs( void )
         targetCoords.resize( lsubg.size() );
         for( unsigned int m = 0; m < targetCoords.size(); m++ ){
 
-            map< unsigned int, Polygon2 >::iterator itS = _polygonComplexPtr->begin();
-            map< unsigned int, Polygon2 >::iterator itT = _polygonComplexPtr->begin();
-            advance( itS, i );
-            advance( itT, m );
+            Polygon2 &contourM = _cellVec[ m ].forceBone().contour();
 
-            Polygon2 & cS = itS->second;
-            Polygon2 & cT = itT->second;
+            //map< unsigned int, Polygon2 >::iterator itS = _polygonComplexPtr->begin();
+            //map< unsigned int, Polygon2 >::iterator itT = _polygonComplexPtr->begin();
+            //advance( itS, i );
+            //advance( itT, m );
+
+            cerr << "cs = " << contourI << endl;
+            Polygon2 & cS = contourI;
+            Polygon2 & cT = contourM;
             targetCoords[i].zero();
 
             double maxLength = 0;
@@ -500,8 +499,8 @@ void Cell::_buildCellGraphs( void )
         }
 
         unsigned int total = mergeVec.size() + setMap.size() + unique.size();
-        double x = itP->second.centroid().x(); // + rand()%100 - 50;
-        double y = itP->second.centroid().y(); // + rand()%100 - 50;
+        double x = contourI.centroid().x(); // + rand()%100 - 50;
+        double y = contourI.centroid().y(); // + rand()%100 - 50;
         double mainRadius = 50.0, secondRadius = 10.0;
 
         // initialize cell position
@@ -720,9 +719,6 @@ void Cell::createPolygonComplex( void )
                 c.contour = p;
             }
 
-            c.detail.forceBone().init( &c.detail.bone(), c.contour, "../configs/pathway.conf" );
-            //c.detail.mode() = TYPE_BARNES_HUT;
-            c.detail.forceBone().id() = idC;
             idC++;
         }
     }
@@ -900,12 +896,6 @@ void Cell::updateMCLCoords( void )
                         nEdges++;
                     }
                 }
-
-                // create mcl force
-                itC->second.mcl.forceBone().init( &itC->second.mcl.bone(), itC->second.contour, "../configs/mcl.conf" );
-                //c.detail.mode() = TYPE_BARNES_HUT;
-                itC->second.mcl.forceBone().id() = 0;
-
 #ifdef DEBUG
                 printGraph( mclg );
 #endif // DEBUG

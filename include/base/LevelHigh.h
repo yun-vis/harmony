@@ -34,7 +34,7 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class LevelHigh : public Package
+class LevelHigh : public Bone
 {
 private:
 
@@ -42,7 +42,7 @@ private:
 
 protected:
     
-    void                        _init( SkeletonGraph & skeletonGraph );
+    void                        _init( SkeletonGraph & skeletonGraph, Polygon2 &contour );
 
 public:
     
@@ -71,7 +71,9 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( SkeletonGraph &__skeletonGraph ) { _init( __skeletonGraph ); }
+    void init( SkeletonGraph &__skeletonGraph, Polygon2 &__contour ) {
+        _init( __skeletonGraph, __contour );
+    }
     void clear( void );
 
 //------------------------------------------------------------------------------

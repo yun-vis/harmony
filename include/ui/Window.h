@@ -33,7 +33,7 @@ using namespace std;
 #define REMOVEBACKNUM   (15)
 //#define RECORD_VIDEO
 
-class Window : public QMainWindow, public PathwayData, public RegionData
+class Window : public QMainWindow, public PathwayData, public RegionData, public Package
 {
     Q_OBJECT
 private:
@@ -46,13 +46,13 @@ private:
     // rendering
     GraphicsView    *_gv;
 
+
     // threads
     vector< Controller * > controllers;
 
     // display
     int             _content_width;
     int             _content_height;
-
 
     // menu
     // load
@@ -107,17 +107,17 @@ private:
     // pathway
     void processDetailedPathway( void );
     void stopProcessDetailedPathway( void );
+    void steinertree( void );
 
 public Q_SLOTS:
 
-    // level high
-    void selectLevelHighBuildBoundary( void );
-    void buildLevelHighBoundaryGraph( void );
-    void updateLevelHighPolygonComplex( void );
-
-    void selectLevelHighSmooth( void );
-    void selectLevelHighOctilinear( void );
-    void selectLevelHighStress( void );
+    // optimization
+    void selectSmooth( void );
+    void selectOctilinear( void );
+    void selectStress( void );
+    void selectSmoothSmall( void );
+    void selectOctilinearSmall( void );
+    void selectStressSmall( void );
 
     // simplification
     void selectCloneGraph( void );
@@ -126,16 +126,21 @@ public Q_SLOTS:
     void selectLevelHighMovebackOctilinear( void );
     void selectLevelHighMovebackStress( void );
 
-    void selectLevelHighSmoothSmall( void );
-    void selectLevelHighOctilinearSmall( void );
-    void selectLevelHighStressSmall( void );
+    // level high
+    void selectLevelHighBuildBoundary( void );
+    void buildLevelHighBoundaryGraph( void );
+    void updateLevelHighPolygonComplex( void );
 
     // level middle
     void selectLevelMiddleBuildBoundary( void );
     void buildLevelMiddleBoundaryGraph( void );
     void updateLevelMiddlePolygonComplex( void );
-    void selectLevelMiddleOctilinear( void );
 
+    // level low
+    // level detail
+    void selectLevelDetailBuildBoundary( void );
+    void buildLevelDetailBoundaryGraph( void );
+    void updateLevelDetailPolygonComplex( void );
 
     // timer
 #ifdef RECORD_VIDEO

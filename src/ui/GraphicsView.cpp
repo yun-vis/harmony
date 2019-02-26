@@ -326,7 +326,7 @@ void GraphicsView::_item_pathways( void )
 
 void GraphicsView::_item_cells( void )
 {
-    vector< Package > &cellVec      = _cellPtr->cellVec();
+    vector< Bone > &cellVec      = _cellPtr->cellVec();
     //vector< ForceGraph > &cellGVec   = _cellPtr->forceCellGraphVec();
 
     // create edge object from the spanning tree and add it to the scene
@@ -371,7 +371,7 @@ void GraphicsView::_item_cells( void )
 
 void GraphicsView::_item_interCellComponents( void )
 {
-    vector< Package >                     &cellVec    = _cellPtr->cellVec();
+    vector< Bone >                     &cellVec    = _cellPtr->cellVec();
     //vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
     // vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
@@ -408,7 +408,7 @@ void GraphicsView::_item_interCellComponents( void )
 
 void GraphicsView::_item_cellPolygons( void )
 {
-    vector< Package >    & cellVec      = _cellPtr->cellVec();
+    vector< Bone >    & cellVec      = _cellPtr->cellVec();
     //vector< Force >      & cellFVec     = _cellPtr->forceCellVec();
     //vector< ForceGraph > & cellGVec     = _cellPtr->forceCellGraphVec();
 
@@ -447,7 +447,7 @@ void GraphicsView::_item_cellPolygons( void )
 
 void GraphicsView::_item_cellPolygonComplex( void )
 {
-    vector< Package > &cellVec      = _cellPtr->cellVec();
+    vector< Bone > &cellVec      = _cellPtr->cellVec();
     //vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
@@ -472,7 +472,7 @@ void GraphicsView::_item_cellPolygonComplex( void )
             pickBrewerColor( gid, rgb );
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
-            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 0 ), Qt::SolidPattern ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
             itemptr->setPolygon( polygon );
 
             //cerr << vertexCoord[vd];
@@ -884,13 +884,14 @@ void GraphicsView::initSceneItems ( void )
     }
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
+/*
     if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
     if( _is_laneFlag == true ) _item_lane();
     if( _is_subPathwayFlag == true ) _item_subpathways();
+*/
     if( _is_boundaryFlag == true ) _item_boundary();
-
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
 

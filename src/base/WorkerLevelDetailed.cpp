@@ -71,6 +71,7 @@ void WorkerLevelDetailed::onTimeout( void )
             break;
     }
 
+    QCoreApplication::processEvents();
     Q_EMIT updateProcess();
 }
 

@@ -47,7 +47,7 @@ void Package::_init( void )
 //
 void Package::_clear( void )
 {
-    Bone::_clear();
+    // Bone::_clear();
 }
 
 
@@ -62,6 +62,8 @@ void Package::_clear( void )
 //
 Package::Package( void )
 {
+    _smoothPtr = new Smooth;
+    _octilinearPtr = new Octilinear;
 }
 
 //

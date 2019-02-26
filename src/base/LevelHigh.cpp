@@ -35,8 +35,10 @@ using namespace std;
 //  Outputs
 //  double
 //
-void LevelHigh::_init( SkeletonGraph & skeletonGraph )
+void LevelHigh::_init( SkeletonGraph & skeletonGraph, Polygon2 & contour )
 {
+    _forceBone.init( &_bone, contour, "../configs/boundary.conf" );
+
     clearGraph( _skeleton );
 
     // copy skeleton to composite

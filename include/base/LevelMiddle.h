@@ -34,7 +34,7 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class LevelMiddle : public Package
+class LevelMiddle : public Bone
 {
 private:
 
@@ -46,7 +46,7 @@ protected:
     
 
     double                      _stringToDouble( string str );
-    void                        _init( SkeletonGraph & skeletonGraph );
+    void                        _init( SkeletonGraph & skeletonGraph, Polygon2 &__contour );
 
 public:
     
@@ -65,7 +65,9 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( SkeletonGraph &__skeletonGraph ) { _init( __skeletonGraph ); }
+    void init( SkeletonGraph &__skeletonGraph, Polygon2 &__contour ) {
+        _init( __skeletonGraph, __contour );
+    }
     void clear( void );
 
 //------------------------------------------------------------------------------

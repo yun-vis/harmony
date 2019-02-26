@@ -39,13 +39,13 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Defining macros
 //------------------------------------------------------------------------------
-class Package : public Bone
+class Package
 {
 protected:
 
     // optimization
-    Smooth                      _smooth;        // smooth cellunit
-    Octilinear                  _octilinear;    // octilinear cellunit
+    Smooth          *_smoothPtr;        // smooth cellunit
+    Octilinear      *_octilinearPtr;    // octilinear cellunit
 
 //------------------------------------------------------------------------------
 //  Specific functions
@@ -62,10 +62,10 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    const Smooth &		        smooth( void ) const    { return _smooth; }
-    Smooth &			        smooth( void )	        { return _smooth; }
-    const Octilinear &		    octilinear( void ) const{ return _octilinear; }
-    Octilinear &			    octilinear( void )	    { return _octilinear; }
+    //const Smooth &		        smooth( void ) const    { return _smooth; }
+    //Smooth &			        smooth( void )	        { return _smooth; }
+    //const Octilinear &		    octilinear( void ) const{ return _octilinear; }
+    //Octilinear &			    octilinear( void )	    { return _octilinear; }
 
 //------------------------------------------------------------------------------
 //  Find conflicts

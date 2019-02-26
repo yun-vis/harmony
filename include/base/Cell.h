@@ -50,16 +50,17 @@ public:
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
     vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
 
-    Package                                 mcl;
-    Package                                 detail;
+    Bone                                    mcl;
+    Bone                                    detail;
+
+    vector< ForceGraph::vertex_descriptor > polygonComplexVD; // vd of contour in the BoundaryGraph
 };
 
 class Cell : public PathwayData, public Common
 {
 private:
 
-    vector< Package >                               _cellVec;
-    map< unsigned int, Polygon2 >                  *_polygonComplexPtr;
+    vector< Bone >                                  _cellVec;
 
     vector< multimap< int, CellComponent > >        _cellComponentVec;              // int: number of nodes in lsubg
     vector< vector< vector< double > > >            _cellComponentSimilarityVec;    // cell component similarity
@@ -82,16 +83,16 @@ private:
     void _buildCellGraphs( void );
     int _computeClusters( ForceGraph &dg,
                           vector< MetaboliteGraph::vertex_descriptor > & cluster );
-    void _init( map< unsigned int, Polygon2 > * __polygonComplexPtr );
+    void _init( map< unsigned int, Polygon2 > * polygonComplexPtr );
     void _clear( void );
 
 protected:
 
 public:
     
-    Cell();                        // default constructor
-    Cell( const Cell & obj );     // Copy constructor
-    virtual ~Cell();               // Destructor
+    Cell();                         // default constructor
+    Cell( const Cell & obj );       // Copy constructor
+    virtual ~Cell();                // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
@@ -100,11 +101,8 @@ public:
     unsigned int &              nComponent( void )          { return _nComponent; }
     const unsigned int &        nComponent( void ) const    { return _nComponent; }
 
-    vector< Package > &           cellVec( void )        { return _cellVec; }
-    const vector< Package > &     cellVec( void ) const  { return _cellVec; }
-
-    map< unsigned int, Polygon2 > * polygonComplex( void )              { return _polygonComplexPtr; }
-    const map< unsigned int, Polygon2 > * polygonComplex( void ) const  { return _polygonComplexPtr; }
+    vector< Bone > &            cellVec( void )        { return _cellVec; }
+    const vector< Bone > &      cellVec( void ) const  { return _cellVec; }
 
     vector< multimap< int, CellComponent > > &  cellComponentVec( void )                { return _cellComponentVec; }
     const vector< multimap< int, CellComponent > > &  cellComponentVec( void ) const    { return _cellComponentVec; }

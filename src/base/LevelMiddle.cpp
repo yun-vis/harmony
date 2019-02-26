@@ -35,7 +35,7 @@ using namespace std;
 //  Outputs
 //  double
 //
-void LevelMiddle::_init( SkeletonGraph & skeletonGraph )
+void LevelMiddle::_init( SkeletonGraph & skeletonGraph, Polygon2 &__contour )
 {
     clearGraph( _skeleton );
 

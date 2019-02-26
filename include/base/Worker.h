@@ -10,6 +10,7 @@
 #include "base/Common.h"
 #endif // Q_MOC_RUN
 
+#include <QApplication>
 #include <QObject>
 #include <QThread>
 #include <QTimer>
