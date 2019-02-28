@@ -35,9 +35,14 @@ using namespace std;
 //  Outputs
 //  double
 //
-void LevelHigh::_init( SkeletonGraph & skeletonGraph, Polygon2 & contour )
+//
+void LevelHigh::_init( double *widthPtr, double *heightPtr, double *veCoveragePtr,
+                       SkeletonGraph & skeletonGraph, Polygon2 & contour )
 {
+    _content_widthPtr = widthPtr;
+    _content_heightPtr = heightPtr;
     _forceBone.init( &_bone, contour, "../configs/boundary.conf" );
+    _veCoveragePtr = veCoveragePtr;
 
     clearGraph( _skeleton );
 
@@ -250,7 +255,7 @@ void LevelHigh::buildSkeleton( void )
 //
 void LevelHigh::decomposeSkeleton( void )
 {
-    double unit = 8000.0;
+    double labelArea = 0.0;
     unsigned int index = num_vertices( _skeleton );
 
     // copy skeleton to composite
@@ -270,8 +275,10 @@ void LevelHigh::decomposeSkeleton( void )
         _bone[ vdNew ].widthPtr = new double( *_skeleton[vd].widthPtr );
         _bone[ vdNew ].heightPtr = new double( *_skeleton[vd].heightPtr );
         _bone[ vdNew ].areaPtr = new double( *_skeleton[vd].areaPtr );
-    }
 
+        // cerr << "bonearea = " << *_bone[ vdNew ].areaPtr << endl;
+        labelArea += *_bone[ vdNew ].areaPtr;
+    }
     BGL_FORALL_EDGES( ed, _skeleton, ForceGraph )
     {
         ForceGraph::vertex_descriptor vdS = source( ed, _skeleton );
@@ -292,13 +299,20 @@ void LevelHigh::decomposeSkeleton( void )
     }
 #endif // DEBUG
 
+    // split large vertices
+    double unit = labelArea/40.0;
+    // double unit = 8000.0;
+#ifdef DEBUG
+    cerr << "labelArea = " << labelArea
+         << " veCoverage = " << *_veCoveragePtr << " unit = " << unit << endl;
+#endif // DEBUG
     BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
     {
-        int mag = round((*_bone[ vd ].widthPtr) * (*_bone[ vd ].heightPtr)/unit);
+        int mag = round( *_bone[ vd ].areaPtr/unit );
+        // int mag = round((*_bone[ vd ].widthPtr) * (*_bone[ vd ].heightPtr)/unit);
 
 #ifdef DEBUG
-            cerr << "area = " << (*_bone[ vd ].widthPtr) * (*_bone[ vd ].heightPtr)
-             << " mag = " << mag << endl;
+            cerr << "area = " << *_bone[ vd ].areaPtr << " mag = " << mag << endl;
 #endif // DEBUG
 
         vector< ForceGraph::edge_descriptor > removeEVec;

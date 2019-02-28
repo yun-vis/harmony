@@ -39,10 +39,14 @@ class LevelHigh : public Bone
 private:
 
     ForceGraph                  _skeleton;
+    double                     *_content_widthPtr;
+    double                     *_content_heightPtr;
+    double                     *_veCoveragePtr;
 
 protected:
     
-    void                        _init( SkeletonGraph & skeletonGraph, Polygon2 &contour );
+    void                        _init( double *widthPtr, double *heightPtr, double *veCoveragePtr,
+                                       SkeletonGraph & skeletonGraph, Polygon2 &contour );
 
 public:
     
@@ -71,8 +75,10 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( SkeletonGraph &__skeletonGraph, Polygon2 &__contour ) {
-        _init( __skeletonGraph, __contour );
+    void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr,
+               SkeletonGraph &__skeletonGraph, Polygon2 &__contour ) {
+        _init( __widthPtr, __heightPtr, __veCoveragePtr,
+               __skeletonGraph, __contour );
     }
     void clear( void );
 

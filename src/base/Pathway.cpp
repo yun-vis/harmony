@@ -319,8 +319,9 @@ void Pathway::generate( void )
     loadPathway();
     initSubdomain();
     genGraph();
-	genDependencyGraph();
     genSubGraphs();
+	computeIdealAreaOfSubdomain();
+	genDependencyGraph();
     //randomGraphLayout( (DirectedBaseGraph &) _graph );
     //fruchtermanGraphLayout( (DirectedBaseGraph &) _graph );
     // normalization();
@@ -1114,6 +1115,7 @@ void Pathway::initSubdomain( void )
 	double totalNum = 0.0;
     double mag = 0.3;
 
+    cerr << "*_widthPtr = " << *_widthPtr << " *_heightPtr = " << *_heightPtr << endl;
 	// find the sum of total area
 	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ){
 		totalNum += it->second->reactNum;
@@ -1125,6 +1127,7 @@ void Pathway::initSubdomain( void )
 	// cerr << "totalArea = " << totalArea << " totalNum = " << totalNum << endl;
     double minX = INFINITY, maxX = -INFINITY, minY = INFINITY, maxY = -INFINITY;
 	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ){
+
 		double subArea = totalArea * (double)it->second->reactNum / totalNum * mag;
 
 		it->second->area = subArea;		// best size for drawing
@@ -1158,6 +1161,41 @@ void Pathway::initSubdomain( void )
 	}
 }
 
+//
+//  Pathway::computeIdealAreaOfSubdomain --    compute ideal area of subdomain
+//
+//  Inputs
+//  node
+//
+//  Output
+//  none
+//
+void Pathway::computeIdealAreaOfSubdomain( void ) {
+
+	// initialization
+	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ) {
+		it->second->idealArea = 0.0;
+	}
+
+	// create edge object from the spanning tree and add it to the scene
+	for( unsigned int i = 0; i < _layoutSubGraph.size(); i++ ){
+
+		map< string, Subdomain * >::iterator it = _sub.begin();
+		advance( it, i );
+		BGL_FORALL_VERTICES( vd, _layoutSubGraph[i], ForceGraph )
+		{
+#ifdef DEBUG
+			cerr << "gid = " << _layoutSubGraph[i][vd].groupID
+				 << " cid = " << _layoutSubGraph[i][vd].componentID << endl;
+			cerr << "textW = " << *_layoutSubGraph[i][vd].namePixelWidthPtr
+				 << " textH = " << *_layoutSubGraph[i][vd].namePixelHeightPtr << endl;
+#endif // DEBUG
+			double textW = *_layoutSubGraph[i][vd].namePixelWidthPtr;
+			double textH = *_layoutSubGraph[i][vd].namePixelHeightPtr;
+			it->second->idealArea += textW * textH;
+		}
+	}
+}
 //
 //  Pathway::layoutPathway --    layout the pathway
 //
@@ -2066,13 +2104,14 @@ void Pathway::genDependencyGraph( void )
 
 		SkeletonGraph::vertex_descriptor vd 	= add_vertex( _skeletonGraph );
 		_skeletonGraph[ vd ].id 			= idV;// + num_vertices( _graph );
-		_skeletonGraph[ vd ].name         = it->second->name;
-		_skeletonGraph[ vd ].coordPtr 	= &it->second->center;
-		_skeletonGraph[ vd ].domainPtr 	= it->second;
+		_skeletonGraph[ vd ].name         	= it->second->name;
+		_skeletonGraph[ vd ].coordPtr 		= &it->second->center;
+		_skeletonGraph[ vd ].domainPtr 		= it->second;
 		_skeletonGraph[ vd ].initID 		= -1;	// not exit in the original graph
 		_skeletonGraph[ vd ].widthPtr		= &it->second->width;
-		_skeletonGraph[ vd ].heightPtr	= &it->second->height;
-		_skeletonGraph[ vd ].areaPtr		= &it->second->area;
+		_skeletonGraph[ vd ].heightPtr		= &it->second->height;
+		//_skeletonGraph[ vd ].areaPtr		= &it->second->area;
+		_skeletonGraph[ vd ].areaPtr		= &it->second->idealArea;
 		//_skeletonGraph[ vd ].isSelected	= false;
 
 		_skeletonGraph[ vd ].geodesicDist = 0.0;	// geodesic distance

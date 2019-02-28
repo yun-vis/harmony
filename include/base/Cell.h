@@ -15,8 +15,9 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
-#include <cstring>
 #include <cmath>
+#include <cstdlib>
+#include <string>
 
 using namespace std;
 
@@ -60,6 +61,7 @@ class Cell : public PathwayData, public Common
 {
 private:
 
+    double                                         *_veCoveragePtr;
     vector< Bone >                                  _cellVec;
 
     vector< multimap< int, CellComponent > >        _cellComponentVec;              // int: number of nodes in lsubg
@@ -83,7 +85,7 @@ private:
     void _buildCellGraphs( void );
     int _computeClusters( ForceGraph &dg,
                           vector< MetaboliteGraph::vertex_descriptor > & cluster );
-    void _init( map< unsigned int, Polygon2 > * polygonComplexPtr );
+    void _init( double *veCoveragePtr, map< unsigned int, Polygon2 > * polygonComplexPtr );
     void _clear( void );
 
 protected:
@@ -128,8 +130,8 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( map< unsigned int, Polygon2 > * __polygonComplexPtr ) {
-        _init( __polygonComplexPtr );
+    void init( double *__veCoveragePtr, map< unsigned int, Polygon2 > * __polygonComplexPtr ) {
+        _init( __veCoveragePtr, __polygonComplexPtr );
     }
     void clear( void ) { _clear(); }
 

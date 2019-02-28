@@ -82,14 +82,16 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
         string paramType = conf.gets( "opttype" );
         if( paramType == "LEAST_SQUARE" )
             _opttype = LEAST_SQUARE;
-        if( paramType == "CONJUGATE_GRADIENT" )
+        else if( paramType == "CONJUGATE_GRADIENT" )
             _opttype = CONJUGATE_GRADIENT;
+        else{
+            assert( false );
+        }
     }
 
 #ifdef DEBUG
     cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nVertices = " << nEdges << endl;
     cerr << "_d_Alpha = " << _d_Alpha << " _d_Beta = " << _d_Beta << endl;
-    cerr << "_opttype = " << _opttype << endl;
 #endif  // DEBUG
 
 //------------------------------------------------------------------------------
@@ -117,6 +119,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
     cerr << " nVertices = " << nVertices << " nEdges = " << nEdges << endl;
     cerr << " nVars = " << _nVars << " nConstrs = " << _nConstrs << endl;
     cerr << "Finished initializing the linear system" << endl;
+    cerr << "_opttype = " << _opttype << endl;
 #endif  // DEBUG
 }
 
@@ -917,10 +920,10 @@ void Octilinear::retrieve( void )
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
-        cerr << "V(" << vertexID[ vertex ] << ") = " << vertexSmooth[ vertex ];
+        cerr << "V(" << g[ vertex ].id << ") = " << vertexSmooth[ vertex ];
     }
     BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
-        cerr << "E(" << edgeID[ edge ] << ") : smoAngle= " << edgeSmoAngle[ edge ] << endl;
+        cerr << "E(" << g[ edge ].id << ") : smoAngle= " << edgeSmoAngle[ edge ] << endl;
     }
 #endif  // DEBUG
 }

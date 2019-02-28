@@ -87,13 +87,13 @@ void Boundary::adjustsize( const int & width, const int & height )
 
     // Scan all the vertex coordinates first
     BGL_FORALL_VERTICES( vertex, _boundary, BoundaryGraph )
-        {
-            Coord2 coord = *_boundary[ vertex ].geoPtr;
-            if ( coord.x() < xMin ) xMin = coord.x();
-            if ( coord.x() > xMax ) xMax = coord.x();
-            if ( coord.y() < yMin ) yMin = coord.y();
-            if ( coord.y() > yMax ) yMax = coord.y();
-        }
+    {
+        Coord2 coord = *_boundary[ vertex ].geoPtr;
+        if ( coord.x() < xMin ) xMin = coord.x();
+        if ( coord.x() > xMax ) xMax = coord.x();
+        if ( coord.y() < yMin ) yMin = coord.y();
+        if ( coord.y() > yMax ) yMax = coord.y();
+    }
 
     // double range = 0.5 * MAX2( xMax - xMin, yMax - yMin );
     double xRange;
@@ -116,42 +116,42 @@ void Boundary::adjustsize( const int & width, const int & height )
 
     // Normalize the coordinates
     BGL_FORALL_VERTICES( vertex, _boundary, BoundaryGraph )
-        {
-            Coord2 geo = *_boundary[ vertex ].geoPtr;
-            Coord2 smooth = *_boundary[ vertex ].smoothPtr;
-            Coord2 coord = *_boundary[ vertex ].coordPtr;
+    {
+        Coord2 geo = *_boundary[ vertex ].geoPtr;
+        Coord2 smooth = *_boundary[ vertex ].smoothPtr;
+        Coord2 coord = *_boundary[ vertex ].coordPtr;
 
-            geo.setX( width  * ( geo.x() - xMid ) / xRange );
-            geo.setY( height * ( geo.y() - yMid ) / yRange );
-            smooth.setX( width  * ( smooth.x() - xMid ) / xRange );
-            smooth.setY( height * ( smooth.y() - yMid ) / yRange );
-            coord.setX( width  * ( coord.x() - xMid ) / xRange );
-            coord.setY( height * ( coord.y() - yMid ) / yRange );
+        geo.setX( width  * ( geo.x() - xMid ) / xRange );
+        geo.setY( height * ( geo.y() - yMid ) / yRange );
+        smooth.setX( width  * ( smooth.x() - xMid ) / xRange );
+        smooth.setY( height * ( smooth.y() - yMid ) / yRange );
+        coord.setX( width  * ( coord.x() - xMid ) / xRange );
+        coord.setY( height * ( coord.y() - yMid ) / yRange );
 
-            _boundary[ vertex ].geoPtr->x() = geo.x();
-            _boundary[ vertex ].geoPtr->y() = geo.y();
-            _boundary[ vertex ].smoothPtr->x() = smooth.x();
-            _boundary[ vertex ].smoothPtr->y() = smooth.y();
-            _boundary[ vertex ].coordPtr->x() = coord.x();
-            _boundary[ vertex ].coordPtr->y() = coord.y();
+        _boundary[ vertex ].geoPtr->x() = geo.x();
+        _boundary[ vertex ].geoPtr->y() = geo.y();
+        _boundary[ vertex ].smoothPtr->x() = smooth.x();
+        _boundary[ vertex ].smoothPtr->y() = smooth.y();
+        _boundary[ vertex ].coordPtr->x() = coord.x();
+        _boundary[ vertex ].coordPtr->y() = coord.y();
 
-        }
+    }
 
     // compute the unit length of an edge (ratio)
     int nAlpha = 0;
     int nBeta = 0;
     double totallength = 0.0;
     BGL_FORALL_EDGES( edge, _boundary, BoundaryGraph )
-        {
-            BoundaryGraph::vertex_descriptor vdS = source( edge, _boundary );
-            BoundaryGraph::vertex_descriptor vdT = target( edge, _boundary );
+    {
+        BoundaryGraph::vertex_descriptor vdS = source( edge, _boundary );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, _boundary );
 
-            Coord2 coord = *_boundary[ vdT ].geoPtr - *_boundary[ vdS ].geoPtr;
-            totallength += coord.norm();
-            double w = _boundary[ edge ].weight;
-            if( w == 1.0 ) nBeta++;
-            else nAlpha++;
-        }
+        Coord2 coord = *_boundary[ vdT ].geoPtr - *_boundary[ vdS ].geoPtr;
+        totallength += coord.norm();
+        double w = _boundary[ edge ].weight;
+        if( w == 1.0 ) nBeta++;
+        else nAlpha++;
+    }
     double magLength = 2.0;
     _distBeta = totallength / ( magLength * nAlpha + nBeta );
     _distAlpha = magLength * _distBeta;

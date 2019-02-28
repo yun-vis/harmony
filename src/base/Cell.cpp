@@ -37,9 +37,9 @@ typedef std::vector< std::string > Tokens;
 //  Outputs
 //  none
 //
-void Cell::_init( map< unsigned int, Polygon2 > * polygonComplexPtr )
+void Cell::_init( double *veCoveragePtr, map< unsigned int, Polygon2 > * polygonComplexPtr )
 {
-    //_polygonComplexPtr              = __polygonComplexPtr;
+    _veCoveragePtr = veCoveragePtr;
     vector< ForceGraph > &lsubg     = _pathway->lsubG();
 
     //read config file
@@ -157,7 +157,16 @@ void Cell::_buildConnectedComponent( void )
         multimap< int, CellComponent > &cellComponent = _cellComponentVec[i];
         cellComponent.clear();
         for( unsigned int j = 0; j < num; j++ ){
-            cc[j].multiple = ceil( (double)cc[j].lsubgVec.size()/(double)_paramUnit );
+
+            double totalArea = 0.0;
+            for( unsigned int k = 0; k < cc[j].lsubgVec.size(); k++ ){
+                double textW = *lsubg[i][ cc[j].lsubgVec[k] ].namePixelWidthPtr;
+                double textH = *lsubg[i][ cc[j].lsubgVec[k] ].namePixelHeightPtr;
+                totalArea += textW * textH;
+            }
+            cc[j].multiple = ceil( totalArea/(*_veCoveragePtr)/(double)_paramUnit );    // text area size
+            // cc[j].multiple = ceil( (double)cc[j].lsubgVec.size()/(double)_paramUnit );   // node size
+            // cerr << "totalArea = " << totalArea << " cc[j].multiple = " << cc[j].multiple << endl;
             multimap< int, CellComponent >::iterator itC = cellComponent.insert( pair< int, CellComponent >( cc[j].lsubgVec.size(), cc[j] ) );
 
             ForceGraph &fg = itC->second.detail.bone();
@@ -280,11 +289,8 @@ void Cell::_buildCellGraphs( void )
     _cellVec.resize( lsubg.size() );
     for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 
-        multimap<int, CellComponent>::iterator itC = _cellComponentVec[i].begin();
+        multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
         Polygon2 &contour = _cellVec[i].forceBone().contour();
-        //map<unsigned int, Polygon2>::iterator itP = _cellVec[i].forceBone().contour().begin();
-        //advance(itP, i);
-        //vector <vector<ForceGraph::vertex_descriptor>> mergeVec;      // vector of cell need to be merged
 
         unsigned int idV = 0, idE = 0;
         for (; itC != _cellComponentVec[i].end(); itC++) {
@@ -318,9 +324,9 @@ void Cell::_buildCellGraphs( void )
                 _cellVec[i].bone()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
                 _cellVec[i].bone()[vdNew].weight = (double) itC->second.lsubgVec.size() / (double) multiple;
 
-                _cellVec[i].bone()[vdNew].widthPtr = new double(sqrt(_paramUnit));
-                _cellVec[i].bone()[vdNew].heightPtr = new double(sqrt(_paramUnit));
-                _cellVec[i].bone()[vdNew].areaPtr = new double(_paramUnit);
+                _cellVec[i].bone()[vdNew].widthPtr = new double( sqrt(_paramUnit) );
+                _cellVec[i].bone()[vdNew].heightPtr = new double( sqrt(_paramUnit) );
+                _cellVec[i].bone()[vdNew].areaPtr = new double( _paramUnit );
 
                 idV++;
                 vdVec.push_back(vdNew);
@@ -389,7 +395,7 @@ void Cell::_buildCellGraphs( void )
         // map<unsigned int, Polygon2>::iterator itP = _polygonComplexPtr->begin();
         // advance(itP, i);
 
-        vector <vector<ForceGraph::vertex_descriptor>> mergeVec;      // vector of cell need to be merged
+        vector < vector< ForceGraph::vertex_descriptor > > mergeVec;      // vector of cell need to be merged
 
         for (; itC != _cellComponentVec[i].end(); itC++) {
             if ( itC->second.cellgVec.size() > 1) mergeVec.push_back( itC->second.cellgVec );
@@ -782,7 +788,7 @@ int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_desc
             // cerr << "cID = " << cID << ": ";
             BOOST_FOREACH( const std::string& i, tokens ) {
 
-                int id = stoi( i );
+                int id = std::stoi( i );
                 // cerr << id << ", ";
                 ForceGraph::vertex_descriptor vd = vertex( id, dg );
                 dg[ vd ].label = cID;

@@ -67,7 +67,7 @@ public:
 	unsigned int id;		// subsystem
 	string name;			// subsystem name
 	unsigned int reactNum;	// number of reaction in the subsystem
-	//double area;			// best size for drawing
+	double idealArea;		// best size for drawing
 
 	//Coord2 lb;			// left-button point of the subdomain
 	Coord2 center;			// center point of the subdomain

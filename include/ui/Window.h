@@ -51,8 +51,8 @@ private:
     vector< Controller * > controllers;
 
     // display
-    int             _content_width;
-    int             _content_height;
+    double             _content_width;
+    double             _content_height;
 
     // menu
     // load

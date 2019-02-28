@@ -39,8 +39,6 @@ class LevelMiddle : public Bone
 private:
 
     // optimization
-    Smooth                      _smoothBoundary;    // smooth boundary
-    Octilinear                  _octilinearBoundary;// octilinear boundary
 
 protected:
     

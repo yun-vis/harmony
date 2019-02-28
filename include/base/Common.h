@@ -176,7 +176,7 @@ class Common{
 
 protected:
 
-    typedef pair< unsigned int, unsigned int >	        VVIDPair;
+    typedef pair< unsigned int, unsigned int >	    VVIDPair;
 
     double stringToDouble( string str );
 };

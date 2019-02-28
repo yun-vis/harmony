@@ -18,6 +18,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <cstring>
 #include <tinyxml.h>
 //#include <tinystr.h>
 
@@ -159,6 +160,7 @@ public:
 	void loadPathway( void );
 	void layoutPathway( void );
     void genGraph( void );
+	void computeIdealAreaOfSubdomain( void );
     void genLayoutGraph( void );
     void genSubGraphs( void );
     void genLayoutSubGraphs( void );

@@ -186,7 +186,8 @@ void GraphicsView::_item_boundary( void )
         path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
 
         GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
         itemptr->setPath( path );
 
         _scene->addItem( itemptr );
@@ -197,8 +198,8 @@ void GraphicsView::_item_boundary( void )
 
         GraphicsBallItem *itemptr = new GraphicsBallItem;
         itemptr->fontSize() = _font_size;
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+        itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
         itemptr->id() = g[vd].id;
 
@@ -503,41 +504,35 @@ void GraphicsView::_item_mclPolygons( void )
 
     for( unsigned int k = 0; k < cellCVec.size(); k++ ){
 
-
         multimap< int, CellComponent > &componentMap = cellCVec[k];
         multimap< int, CellComponent >::iterator itC = componentMap.begin();
-
-
         for( ; itC != componentMap.end(); itC++ ){
 
             // draw polygons
-            if( itC->second.nMCL > 1 ){
+            Force &f = itC->second.mcl.forceBone();
+            vector< Seed > &seedVec = *f.voronoi().seedVec();
 
-                Force &f = itC->second.mcl.forceBone();
-                vector< Seed > &seedVec = *f.voronoi().seedVec();
+            for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 
-                for( unsigned int i = 0; i < seedVec.size(); i++ ) {
+                Polygon2 &p = seedVec[i].cellPolygon;
 
-                    Polygon2 &p = seedVec[i].cellPolygon;
-
-                    QPolygonF polygon;
-                    for( unsigned int j = 0; j < p.elements().size(); j++ ){
-                        polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
-                        // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
-                    }
-
-                    GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
-                    vector< double > rgb;
-
-                    pickBrewerColor( k, rgb );
-                    QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
-                    itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
-                    itemptr->setPolygon( polygon );
-
-                    //cerr << vertexCoord[vd];
-                    _scene->addItem( itemptr );
+                QPolygonF polygon;
+                for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                    polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                    // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
                 }
+
+                GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+                vector< double > rgb;
+
+                pickBrewerColor( k, rgb );
+                QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+                itemptr->setPolygon( polygon );
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
             }
         }
     }
@@ -884,14 +879,12 @@ void GraphicsView::initSceneItems ( void )
     }
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
-/*
     if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_roadFlag == true ) _item_road();
     if( _is_laneFlag == true ) _item_lane();
-    if( _is_subPathwayFlag == true ) _item_subpathways();
-*/
     if( _is_boundaryFlag == true ) _item_boundary();
+    if( _is_subPathwayFlag == true ) _item_subpathways();
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 }
 
@@ -913,7 +906,7 @@ void GraphicsView::exportPNG ( double x, double y, double w, double h )
     ss << setw(8) << std::setfill('0') << id;
     string s2( ss.str() );
     QString idStr = QString::fromStdString( s2 );
-    cerr << "s2 = " << s2 << endl;
+    // cerr << "s2 = " << s2 << endl;
     QString newPath = QString( QLatin1String( "../svg/pathway-" ) ) + idStr + QString( QLatin1String( ".png" ) );
     _scene->setSceneRect( x, y, w, h );  // x, y, w, h
 
@@ -956,9 +949,9 @@ GraphicsView::GraphicsView( QWidget *parent )
         string paramFont = conf.gets( "font_size" );
         _font_size = stringToDouble( paramFont );
     }
-    if ( conf.has( "size_ratio" ) ){
-        string paramSizeRatio = conf.gets( "size_ratio" );
-        _size_ratio = stringToDouble( paramSizeRatio );
+    if ( conf.has( "vertex_edge_ratio" ) ){
+        string paramVERatio = conf.gets( "vertex_edge_ratio" );
+        _vertex_edge_ratio = stringToDouble( paramVERatio );
     }
     if ( conf.has( "default_width" ) ){
         string paramWidth = conf.gets( "default_width" );
@@ -993,7 +986,7 @@ GraphicsView::GraphicsView( QWidget *parent )
 
     cerr << "filepath: " << configFilePath << endl;
     cerr << "font_size: " << _font_size << endl;
-    cerr << "size_ratio: " << _size_ratio << endl;
+    cerr << "vertex_edge_ratio: " << _vertex_edge_ratio << endl;
     cerr << "default_width: " << default_width << endl;
     cerr << "default_height: " << default_height << endl;
     cerr << "clone_threshold: " << _clonedThreshold << endl;

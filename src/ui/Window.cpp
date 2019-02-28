@@ -166,8 +166,10 @@ void Window::redrawAllScene( void )
     update();
     repaint();
 
+#ifdef DEBUG
     cerr << "_is_polygonFlag = " << _gv->isPolygonFlag() << endl;
     cerr << "_is_polygonComplexFlag = " << _gv->isPolygonComplexFlag() << endl;
+#endif // DEBUG
 
     QCoreApplication::processEvents();
 }
@@ -363,12 +365,12 @@ void Window::selectOctilinear( void )
     cerr << "select octilinear ..." << endl;
 
     // initialization
-    OPTTYPE opttype = _octilinearPtr->opttype();
     int iter = _boundaryPtr->nVertices();
-
-    // run octilinear optimization
     _octilinearPtr->clear();
     _octilinearPtr->prepare( _simplifiedBoundaryPtr, _content_width/2.0, _content_height/2.0 );
+
+    // run octilinear optimization
+    OPTTYPE opttype = _octilinearPtr->opttype();
 #ifdef DEBUG
     cerr << "oct::_content_width = " << _content_width << " half = " << _content_width/2 << endl;
     cerr << "iter = " << iter << endl;
@@ -385,6 +387,9 @@ void Window::selectOctilinear( void )
         }
             break;
         default:
+        {
+            cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+        }
             break;
     }
     _octilinearPtr->retrieve();
@@ -964,10 +969,10 @@ void Window::buildLevelHighBoundaryGraph( void )
     }
     nLines = _levelhighPtr->polygonComplexVD().size();
 
-#ifdef DEBUG
-    cerr << "nV = " << _nVertices << " nE = " << _nEdges
-         << " nL = " << _nLines << endl;
-#endif // DEBUG
+//#ifdef DEBUG
+    cerr << "nV = " << nVertices << " nE = " << nEdges
+         << " nL = " << nLines << endl;
+//#endif // DEBUG
 }
 
 
@@ -1361,16 +1366,19 @@ void Window::buildLevelDetailBoundaryGraph( void )
 //
 void Window::updateLevelHighPolygonComplex( void )
 {
-    cerr << "updating polygonComplex after optimization ..." << endl;
+    cerr << "updating high polygonComplex after optimization ..." << endl;
 
     BoundaryGraph &bg = _boundaryPtr->boundary();
     map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
     map< unsigned int, Polygon2 >::iterator itC = _levelhighPtr->polygonComplex().begin();
     for( itP = _levelhighPtr->polygonComplexVD().begin(); itP != _levelhighPtr->polygonComplexVD().end(); itP++ ){
+
         vector< ForceGraph::vertex_descriptor > &p = itP->second;
         for( unsigned int i = 0; i < p.size(); i++ ){
             itC->second.elements()[i].x() = bg[ p[i] ].coordPtr->x();
             itC->second.elements()[i].y() = bg[ p[i] ].coordPtr->y();
+
+            // cerr << "i = " << i << " " << itC->second.elements()[i];
         }
         itC++;
     }
@@ -1387,7 +1395,7 @@ void Window::updateLevelHighPolygonComplex( void )
 //
 void Window::updateLevelMiddlePolygonComplex( void )
 {
-    cerr << "updating polygonComplex after optimization ..." << endl;
+    cerr << "updating middle polygonComplex after optimization ..." << endl;
 
     vector< Bone >   &cellVec = _cellPtr->cellVec();
     BoundaryGraph &bg = _boundaryPtr->boundary();
@@ -1418,7 +1426,7 @@ void Window::updateLevelMiddlePolygonComplex( void )
 //
 void Window::updateLevelDetailPolygonComplex( void )
 {
-    cerr << "updating polygonComplex after optimization ..." << endl;
+    cerr << "updating detail polygonComplex after optimization ..." << endl;
 
     vector< Bone >   &cellVec = _cellPtr->cellVec();
     BoundaryGraph &bg = _boundaryPtr->boundary();
@@ -1481,7 +1489,6 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             stopProcessBoundary();
             simulateKey( Qt::Key_O );
-            // redrawAllScene();
             break;
         }
         case Qt::Key_Q:
@@ -1512,6 +1519,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //selectOctilinearSmallCboundary();
 
             _gv->isBoundaryFlag() = true;
+            _gv->isPolygonComplexFlag() = false;
 
             redrawAllScene();
             break;
@@ -1524,9 +1532,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
             processBone();
             _gv->isCellPolygonFlag() = false;
-            _gv->isCellPolygonComplexFlag() = false;
+            _gv->isCellPolygonComplexFlag() = true;
             _gv->isMCLPolygonFlag() = true;
             _gv->isPathwayPolygonFlag() = false;
+            redrawAllScene();
             break;
         }
         case Qt::Key_S:
@@ -1534,7 +1543,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "stopProcessBone..." << endl;
             stopProcessBone();
             _cellPtr->updatePathwayCoords();
-            //_gv->isMCLPolygonFlag() = false;
             redrawAllScene();
             break;
         }
@@ -1546,6 +1554,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
             //_timerPathwayStart();
             processDetailedPathway();
+            _gv->isCellPolygonComplexFlag() = false;
             _gv->isPathwayPolygonFlag() = true;
             _gv->isMCLPolygonFlag() = false;
             break;
@@ -1627,7 +1636,7 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // initialize cell
             _cellPtr->clear();
-            _cellPtr->init( &_levelhighPtr->polygonComplex() );
+            _cellPtr->init( &_gv->veCoverage(), &_levelhighPtr->polygonComplex() );
 
             _gv->isCellFlag() = true;
             _gv->isCompositeFlag() = false;
@@ -1717,36 +1726,46 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_V:
         {
-            // read and intializa the data
+            // read and initialize the data
             _pathway->init( _gv->inputPath(), _gv->tmpPath(),
                             _gv->fileFreq(), _gv->fileType(),
                             _gv->cloneThreshold() );
 
             _pathway->generate();
             _pathway->exportEdges();
+            _gv->veCoverage() = _pathway->nVertices() + _gv->veRatio() * _pathway->nEdges();
 
-            // update content width and height
-            double sum = 0.0;
-            MetaboliteGraph             &g         = _pathway->g();
-            BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
-                QFontMetrics metrics( QFont( "Arial", _gv->fontSize(), QFont::Bold, false ) );
-                double sx = metrics.width( QString::fromStdString( *g[vd].namePtr ) );
-                double sy = metrics.height();
-                sum += sx*sy;
+            // canvasArea: content width and height
+            // labelArea: total area of text labels
+            double canvasArea = width() * height();
+            double labelArea = 0.0;
+            map< string, Subdomain * > &sub = _pathway->subsys();
+            for( map< string, Subdomain * >::iterator it = sub.begin();
+                 it != sub.end(); it++ ){
+                labelArea += it->second->idealArea;
             }
 
-            double ratio = _gv->sizeRatio();
-            double x = sqrt( sum * ratio / 12.0 );
+#ifdef DEBUG
+            cerr << "canvas = " << canvasArea << " labelArea = " << labelArea << endl;
+            cerr << "nV = " << _pathway->nVertices() << " nE = " << _pathway->nEdges()
+                 << " veCoverage = " << _gv->veCoverage() << endl;
+#endif // DEBUG
+
+            double x = sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / 12.0 );
             _content_width = 4.0 * x;
             _content_height = 3.0 * x;
+            if( 2.0 * _content_width < width() ){
+                _content_width = width()/2.0;
+                _content_height = height()/2.0;
+            }
 
             Polygon2 contour;
             contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
             contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
             contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
             contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
-            _levelhighPtr->init( _pathway->skeletonG(), contour );
-
+            _levelhighPtr->init( &_content_width, &_content_height, &_gv->veCoverage(),
+                                 _pathway->skeletonG(), contour );
 #ifdef DEBUG
             cerr << "width x height = " << width() * height() << endl;
             cerr << "label sum = " << sum << endl;
@@ -1774,6 +1793,43 @@ void Window::keyPressEvent( QKeyEvent *event )
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
             break;
         }
+        case Qt::Key_Minus:
+        {
+            _gv->isSimplifiedFlag() = false;
+            _gv->isSkeletonFlag() = false;
+            _gv->isCompositeFlag() = false;
+            _gv->isPolygonFlag() = false;
+            _gv->isPolygonComplexFlag() = false;
+            _gv->isBoundaryFlag() = false;
+            _gv->isCellFlag() = false;
+            _gv->isCellPolygonFlag() = false;
+            _gv->isCellPolygonComplexFlag() = false;
+            _gv->isMCLPolygonFlag() = false;
+            _gv->isRoadFlag() = true;
+            _gv->isLaneFlag() = true;
+            _gv->isSubPathwayFlag() = true;
+            _gv->isPathwayPolygonFlag() = true;
+            redrawAllScene();
+        }
+            break;
+        case Qt::Key_Plus:
+        {
+            cerr << "_gv->isSimplifiedFlag() = " << _gv->isSimplifiedFlag() << endl;
+            cerr << "_gv->isSkeletonFlag() = " << _gv->isSkeletonFlag() << endl;
+            cerr << "_gv->isCompositeFlag() = " << _gv->isCompositeFlag() << endl;
+            cerr << "_gv->isPolygonFlag() = " << _gv->isPolygonFlag() << endl;
+            cerr << "_gv->isPolygonComplexFlag() = " << _gv->isPolygonComplexFlag() << endl;
+            cerr << "_gv->isBoundaryFlag() = " << _gv->isBoundaryFlag() << endl;
+            cerr << "_gv->isCellFlag() = " << _gv->isCellFlag() << endl;
+            cerr << "_gv->isCellPolygonFlag() = " << _gv->isCellPolygonFlag() << endl;
+            cerr << "_gv->isCellPolygonComplexFlag() = " << _gv->isCellPolygonComplexFlag() << endl;
+            cerr << "_gv->isMCLPolygonFlag() = " << _gv->isMCLPolygonFlag() << endl;
+            cerr << "_gv->isRoadFlag() = " << _gv->isRoadFlag() << endl;
+            cerr << "_gv->isLaneFlag() = " << _gv->isLaneFlag() << endl;
+            cerr << "_gv->isSubPathwayFlag() = " << _gv->isSubPathwayFlag() << endl;
+            cerr << "_gv->isPathwayPolygonFlag() = " << _gv->isPathwayPolygonFlag() << endl;
+        }
+            break;
         case Qt::Key_Escape:
             close();
             break;

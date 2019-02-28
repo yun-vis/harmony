@@ -60,12 +60,12 @@ private:
     // data structure
     bool                _is_simplifiedFlag;
     int                 _clonedThreshold;           // if == 0, cloned by type, else by threshold value
-    string 				_inputpath, _tmppath,    // input output files
+    string 				_inputpath, _tmppath,       // input output files
                         _fileFreq, _fileType;       // metabolite frequency
 
     // ui
     int                 _font_size;
-    double              _size_ratio;
+    double              _vertex_edge_ratio, _vertex_edge_coverage;
     bool                _is_skeletonFlag, _is_compositeFlag,
                         _is_polygonFlag, _is_polygonComplexFlag,
                         _is_boundaryFlag, _is_subPathwayFlag,
@@ -114,8 +114,10 @@ public:
 
     int &           fontSize( void )                { return _font_size; }
     const int &     fontSize( void ) const          { return _font_size; }
-    double &        sizeRatio( void )               { return _size_ratio; }
-    const double &  sizeRatio( void ) const         { return _size_ratio; }
+    double &        veRatio( void )                 { return _vertex_edge_ratio; }
+    const double &  veRatio( void ) const           { return _vertex_edge_ratio; }
+    double &        veCoverage( void )              { return _vertex_edge_coverage; }
+    const double &  veCoverage( void ) const        { return _vertex_edge_coverage; }
 
     bool &          isSimplifiedFlag( void )        { return _is_simplifiedFlag; }
     const bool &    isSimplifiedFlag( void ) const  { return _is_simplifiedFlag; }
