@@ -36,6 +36,9 @@ class GraphicsEdgeItem : public  QGraphicsPathItem
 {
 private:
 
+    unsigned int    _id;
+    QString         _name;
+    bool            _textOn;
 
 protected:
 
@@ -67,6 +70,14 @@ public:
 //      Reference to members
 //------------------------------------------------------------------------------
 
+    unsigned int &	        id( void ) 	        { return _id; }
+    const unsigned int &	id( void ) const	{ return _id; }
+
+    QString &	            name( void )        { return _name; }
+    const QString &	        name( void ) const	{ return _name; }
+
+    bool &	                textOn( void ) 	    { return _textOn; }
+    const bool &	        textOn( void ) const{ return _textOn; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

@@ -43,10 +43,11 @@ using namespace std;
 //
 void BoundaryVertexProperty::_init( void )
 {
-    id          = 0;
-    coordPtr    = NULL;
-    widthPtr    = NULL;
-    heightPtr   = NULL;
+    BaseVertexProperty::init();
+
+    initID = 0;
+    lineID.clear();
+    isFixed    = false;
 }
 
 //------------------------------------------------------------------------------

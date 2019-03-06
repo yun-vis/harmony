@@ -44,6 +44,7 @@ using namespace std;
 void BaseVertexProperty::_init( void )
 {
     id          = 0;
+
     coordPtr    = NULL;
     widthPtr    = NULL;
     heightPtr   = NULL;

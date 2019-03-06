@@ -49,5 +49,6 @@ typedef map< Grid2, VEPair >                    VEMap;
 
 void printGraph( BoundaryGraph & g );
 void clearGraph( BoundaryGraph & g );
+void resetVisitedTimes( BoundaryGraph & g );
 
 #endif  // _BoundaryGraph_H

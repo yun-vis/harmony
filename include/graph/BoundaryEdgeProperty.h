@@ -61,6 +61,7 @@ class BoundaryEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
     unsigned int                initID;
     vector< unsigned int >      lineID;
+    int                         visitedTimes;
 
     double                      geoAngle;
     double                      smoothAngle;

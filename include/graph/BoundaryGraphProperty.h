@@ -36,12 +36,12 @@ class BoundaryGraphProperty : public BaseGraphProperty{
 
   protected:
 
-      void		    _init( double &width, double &height );
+    void		        _init( double &width, double &height );
 
   public:
 
 //------------------------------------------------------------------------------
-//	Constuructors
+//	Constructors
 //------------------------------------------------------------------------------
     BoundaryGraphProperty();				// constructor (default)
     BoundaryGraphProperty( const BoundaryGraphProperty & v ) {

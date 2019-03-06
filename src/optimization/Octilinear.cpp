@@ -68,6 +68,11 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
         _w_position = sqrt( stringToDouble( paramPosition ) );
     }
 
+    if ( conf.has( "w_fixposition" ) ){
+        string paramFixPosition = conf.gets( "w_fixposition" );
+        _w_fixposition = sqrt( stringToDouble( paramFixPosition ) );
+    }
+
     if ( conf.has( "w_boundary" ) ){
         string paramBoundary = conf.gets( "w_boundary" );
         _w_boundary = sqrt( stringToDouble( paramBoundary ) );
@@ -123,6 +128,27 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 #endif  // DEBUG
 }
 
+//
+//  Octilinear::_isOnLine --        check if point a lies on line segment [b,c]
+//
+//  Inputs
+//      Coord2 &a, &b, &c
+//
+//  Outputs
+//      bool
+//
+bool Octilinear::_isOnLine( Coord2 &a, Coord2 &b, Coord2 &c )
+{
+    bool isOnLine = false;
+
+    Coord2 ab = b - a;
+    Coord2 ac = c - a;
+
+    double cross = ab.x() * ac.y() - ab.y() * ac.x();
+    if( fabs( cross ) < 1e-2 ) isOnLine = true;
+
+    return isOnLine;
+}
 
 //
 //  Octilinear::_initCoefs --        initialize the coefficient
@@ -167,13 +193,49 @@ void Octilinear::_initCoefs( void )
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         unsigned int id = g[ vertex ].id;
+        bool fix = false;
 
-        // x
-        _coef( nRows, id ) = _w_position;
-        nRows++;
+        // collect fixed vertices
+        vector< BoundaryGraph::vertex_descriptor > vdVec;
+        BoundaryGraph::out_edge_iterator eo, eo_end;
+        for( tie( eo, eo_end ) = out_edges( vertex, g ); eo != eo_end; ++eo ){
 
-        // y
-        _coef( nRows, id + nVertices ) = _w_position;
+            BoundaryGraph::edge_descriptor ed = *eo;
+            BoundaryGraph::vertex_descriptor vdT = target( ed, g );
+
+            if( g[ vertex ].isFixed == true ){
+                vdVec.push_back( vdT );
+            }
+        }
+
+        // check if on a line
+        if( vdVec.size() == 2 ){
+
+            fix = !_isOnLine( *g[ vertex ].coordPtr,
+                            *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
+
+            // cerr << "vid = " << g[ vertex ].id << endl;
+        }
+
+        if( fix == true ){
+
+            // cerr << "vid = " << g[ vertex ].id << " node = " << *g[ vertex ].coordPtr;
+
+            // x
+            _coef( nRows, id ) = _w_fixposition;
+            nRows++;
+
+            // y
+            _coef( nRows, id + nVertices ) = _w_fixposition;
+        }
+        else{
+            // x
+            _coef( nRows, id ) = _w_position;
+            nRows++;
+
+            // y
+            _coef( nRows, id + nVertices ) = _w_position;
+        }
         nRows++;
     }
 
@@ -471,10 +533,41 @@ void Octilinear::_initOutputs( void )
     // Positional constraints
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
-        _output( nRows, 0 ) = _w_position * g[ vertex ].smoothPtr->x();
-        nRows++;
-        _output( nRows, 0 ) = _w_position * g[ vertex ].smoothPtr->y();
-        nRows++;
+        bool fix = false;
+
+        // collect fixed vertices
+        vector< BoundaryGraph::vertex_descriptor > vdVec;
+        BoundaryGraph::out_edge_iterator eo, eo_end;
+        for( tie( eo, eo_end ) = out_edges( vertex, g ); eo != eo_end; ++eo ){
+
+            BoundaryGraph::edge_descriptor ed = *eo;
+            BoundaryGraph::vertex_descriptor vdT = target( ed, g );
+
+            if( g[ vertex ].isFixed == true ){
+                vdVec.push_back( vdT );
+            }
+        }
+
+        // check if on a line
+        if( vdVec.size() == 2 ){
+
+            fix = !_isOnLine( *g[ vertex ].coordPtr,
+                             *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
+        }
+
+        if( fix == true ){
+
+            _output( nRows, 0 ) = _w_fixposition * g[ vertex ].smoothPtr->x();
+            nRows++;
+            _output( nRows, 0 ) = _w_fixposition * g[ vertex ].smoothPtr->y();
+            nRows++;
+        }
+        else{
+            _output( nRows, 0 ) = _w_position * g[ vertex ].smoothPtr->x();
+            nRows++;
+            _output( nRows, 0 ) = _w_position * g[ vertex ].smoothPtr->y();
+            nRows++;
+        }
     }
 
 #ifdef  DEBUG

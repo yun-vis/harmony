@@ -46,12 +46,12 @@ public:
          MetaboliteGraph::vertex_descriptor > common;
 
     map< MetaboliteGraph::vertex_descriptor,
-         UndirectedBaseGraph::vertex_descriptor > commonGates; // in lane
+         UndirectedBaseGraph::vertex_descriptor > commonGates;  // in lane
 
-    UndirectedBaseGraph::vertex_descriptor routerVD;        // in lane
+    UndirectedBaseGraph::vertex_descriptor routerVD;            // in lane
 
     map< UndirectedBaseGraph::vertex_descriptor,
-         UndirectedBaseGraph::vertex_descriptor > terminals; // gates + router
+         UndirectedBaseGraph::vertex_descriptor > terminals;    // gates + router
 
     vector< pair< UndirectedBaseGraph::vertex_descriptor,
             UndirectedBaseGraph::vertex_descriptor > > treeEdges;
@@ -69,7 +69,6 @@ private:
 
     unsigned int                    _gid;
     vector < Terminal >             _terminalVec;
-    //vector < Highway >            * _highwayRoadPtr;
 
 //------------------------------------------------------------------------------
 //  Specific functions

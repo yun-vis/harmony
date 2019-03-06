@@ -45,6 +45,7 @@ void BoundaryEdgeProperty::_init( void )
 {
 	id = 0;
 	weight = 1.0;
+	visitedTimes = -1;
 }
 
 //------------------------------------------------------------------------------

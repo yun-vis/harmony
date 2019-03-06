@@ -770,6 +770,7 @@ void Window::steinertree( void )
     cerr << "/* Steiner tree" << endl;
     cerr << "/***************" << endl;
 
+#ifdef DEBUG
     for( unsigned int i = 0; i < _roadPtr->highwayMat().size(); i++ ){
         for( unsigned int j = 0; j < _roadPtr->highwayMat()[i].size(); j++ ){
 
@@ -778,14 +779,13 @@ void Window::steinertree( void )
 
             map< MetaboliteGraph::vertex_descriptor,
                     MetaboliteGraph::vertex_descriptor >::iterator it;
-#ifdef DEBUG
             for( it = common.begin(); it != common.end(); it++ ){
                     cerr << _pathway->subG()[i][ it->first ].id << endl;
                 }
                 cerr << endl;
-#endif // DEBUG
         }
     }
+#endif // DEBUG
 
     _lanePtr->clear();
     _lanePtr->resize( _pathway->nSubsys() );
@@ -914,6 +914,7 @@ void Window::buildLevelHighBoundaryGraph( void )
             if ( found == true ) {
 
                 bg[ oldED ].lineID.push_back( nLines );
+                bg[ oldED ].visitedTimes += 1;
                 //eachline.push_back( oldED );
                 //bool test = false;
                 //tie( oldED, test ) = edge( oldVT, oldVS, _boundary );
@@ -948,6 +949,7 @@ void Window::buildLevelHighBoundaryGraph( void )
                 bg[ foreED ].smoothAngle = angle;
                 bg[ foreED ].angle = angle;
                 bg[ foreED ].lineID.push_back( nLines );
+                bg[ foreED ].visitedTimes = 0;
 
                 //eachline.push_back( foreED );
 #ifdef  DEBUG
@@ -957,6 +959,21 @@ void Window::buildLevelHighBoundaryGraph( void )
             }
         }
         _levelhighPtr->polygonComplexVD().insert( pair< unsigned int, vector< ForceGraph::vertex_descriptor > >( i, vdVec ) );
+    }
+
+    // update the fixed flag
+    BGL_FORALL_EDGES( ed, bg, BoundaryGraph )
+    {
+        if( bg[ ed ].visitedTimes == 0 ){
+
+            BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
+            BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
+
+            bg[ vdS ].isFixed = true;
+            bg[ vdT ].isFixed = true;
+
+            // cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
+        }
     }
 
     // create lines
@@ -969,10 +986,10 @@ void Window::buildLevelHighBoundaryGraph( void )
     }
     nLines = _levelhighPtr->polygonComplexVD().size();
 
-//#ifdef DEBUG
+#ifdef DEBUG
     cerr << "nV = " << nVertices << " nE = " << nEdges
          << " nL = " << nLines << endl;
-//#endif // DEBUG
+#endif // DEBUG
 }
 
 
@@ -1019,6 +1036,7 @@ void Window::buildLevelMiddleBoundaryGraph( void )
     // create boundary graph
     for( unsigned int m = 0; m < _cellPtr->cellComponentVec().size(); m++ ){
 
+        resetVisitedTimes( bg );
         multimap< int, CellComponent > &cellComponent = _cellPtr->cellComponentVec()[m];
         unsigned int id = 0;
         for( multimap< int, CellComponent >::iterator itC = _cellPtr->cellComponentVec()[m].begin();
@@ -1098,10 +1116,10 @@ void Window::buildLevelMiddleBoundaryGraph( void )
                 //unsigned int indexT = _boundary[ curVDT ].initID;
                 tie( oldED, found ) = edge( curVDS, curVDT, bg );
 
-
                 if ( found == true ) {
 
                     bg[ oldED ].lineID.push_back( nLines );
+                    bg[ oldED ].visitedTimes += 1;
                     //eachline.push_back( oldED );
                     //bool test = false;
                     //tie( oldED, test ) = edge( oldVT, oldVS, _boundary );
@@ -1136,6 +1154,7 @@ void Window::buildLevelMiddleBoundaryGraph( void )
                     bg[ foreED ].smoothAngle = angle;
                     bg[ foreED ].angle = angle;
                     bg[ foreED ].lineID.push_back( nLines );
+                    bg[ foreED ].visitedTimes = 0;
 
                     //eachline.push_back( foreED );
 #ifdef  DEBUG
@@ -1148,6 +1167,21 @@ void Window::buildLevelMiddleBoundaryGraph( void )
             id++;
         }
 
+        // update the fixed flag
+        BGL_FORALL_EDGES( ed, bg, BoundaryGraph )
+        {
+            if( bg[ ed ].visitedTimes == 0 ){
+
+                BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
+                BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
+
+                bg[ vdS ].isFixed = true;
+                bg[ vdT ].isFixed = true;
+
+                // cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
+            }
+        }
+        // cerr << endl;
 
 #ifdef SKIP
         // create lines
@@ -1218,6 +1252,7 @@ void Window::buildLevelDetailBoundaryGraph( void )
 
         for( ; itC != componentMap.end(); itC++ ){
 
+            resetVisitedTimes( bg );
             Force &f = itC->second.detail.forceBone();
 
             // draw polygons
@@ -1302,6 +1337,7 @@ void Window::buildLevelDetailBoundaryGraph( void )
                     if ( found == true ) {
 
                         bg[ oldED ].lineID.push_back( nLines );
+                        bg[ oldED ].visitedTimes += 1;
                         //eachline.push_back( oldED );
                         //bool test = false;
                         //tie( oldED, test ) = edge( oldVT, oldVS, _boundary );
@@ -1336,6 +1372,7 @@ void Window::buildLevelDetailBoundaryGraph( void )
                         bg[ foreED ].smoothAngle = angle;
                         bg[ foreED ].angle = angle;
                         bg[ foreED ].lineID.push_back( nLines );
+                        bg[ foreED ].visitedTimes = 0;
 
                         //eachline.push_back( foreED );
 #ifdef  DEBUG
@@ -1349,6 +1386,22 @@ void Window::buildLevelDetailBoundaryGraph( void )
                         ( i, vdVec ) );
                 //id++;
             }
+
+            // update the fixed flag
+            BGL_FORALL_EDGES( ed, bg, BoundaryGraph )
+            {
+                if( bg[ ed ].visitedTimes == 0 ){
+
+                    BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
+                    BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
+
+                    bg[ vdS ].isFixed = true;
+                    bg[ vdT ].isFixed = true;
+
+                    // cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
+                }
+            }
+            //cerr << endl;
         }
     }
 
@@ -1454,6 +1507,9 @@ void Window::updateLevelDetailPolygonComplex( void )
             }
         }
     }
+
+    // update cell contour
+    _cellPtr->createPolygonComplexFromDetailGraph();
 }
 
 
@@ -1809,11 +1865,6 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->isLaneFlag() = true;
             _gv->isSubPathwayFlag() = true;
             _gv->isPathwayPolygonFlag() = true;
-            redrawAllScene();
-        }
-            break;
-        case Qt::Key_Plus:
-        {
             cerr << "_gv->isSimplifiedFlag() = " << _gv->isSimplifiedFlag() << endl;
             cerr << "_gv->isSkeletonFlag() = " << _gv->isSkeletonFlag() << endl;
             cerr << "_gv->isCompositeFlag() = " << _gv->isCompositeFlag() << endl;
@@ -1828,6 +1879,40 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "_gv->isLaneFlag() = " << _gv->isLaneFlag() << endl;
             cerr << "_gv->isSubPathwayFlag() = " << _gv->isSubPathwayFlag() << endl;
             cerr << "_gv->isPathwayPolygonFlag() = " << _gv->isPathwayPolygonFlag() << endl;
+            redrawAllScene();
+        }
+            break;
+        case Qt::Key_Plus:
+        {
+            _gv->isSimplifiedFlag() = false;
+            _gv->isSkeletonFlag() = false;
+            _gv->isCompositeFlag() = false;
+            _gv->isPolygonFlag() = false;
+            _gv->isPolygonComplexFlag() = false;
+            _gv->isBoundaryFlag() = true;
+            _gv->isCellFlag() = false;
+            _gv->isCellPolygonFlag() = false;
+            _gv->isCellPolygonComplexFlag() = false;
+            _gv->isMCLPolygonFlag() = false;
+            _gv->isRoadFlag() = true;
+            _gv->isLaneFlag() = true;
+            _gv->isSubPathwayFlag() = true;
+            _gv->isPathwayPolygonFlag() = true;
+            cerr << "_gv->isSimplifiedFlag() = " << _gv->isSimplifiedFlag() << endl;
+            cerr << "_gv->isSkeletonFlag() = " << _gv->isSkeletonFlag() << endl;
+            cerr << "_gv->isCompositeFlag() = " << _gv->isCompositeFlag() << endl;
+            cerr << "_gv->isPolygonFlag() = " << _gv->isPolygonFlag() << endl;
+            cerr << "_gv->isPolygonComplexFlag() = " << _gv->isPolygonComplexFlag() << endl;
+            cerr << "_gv->isBoundaryFlag() = " << _gv->isBoundaryFlag() << endl;
+            cerr << "_gv->isCellFlag() = " << _gv->isCellFlag() << endl;
+            cerr << "_gv->isCellPolygonFlag() = " << _gv->isCellPolygonFlag() << endl;
+            cerr << "_gv->isCellPolygonComplexFlag() = " << _gv->isCellPolygonComplexFlag() << endl;
+            cerr << "_gv->isMCLPolygonFlag() = " << _gv->isMCLPolygonFlag() << endl;
+            cerr << "_gv->isRoadFlag() = " << _gv->isRoadFlag() << endl;
+            cerr << "_gv->isLaneFlag() = " << _gv->isLaneFlag() << endl;
+            cerr << "_gv->isSubPathwayFlag() = " << _gv->isSubPathwayFlag() << endl;
+            cerr << "_gv->isPathwayPolygonFlag() = " << _gv->isPathwayPolygonFlag() << endl;
+            redrawAllScene();
         }
             break;
         case Qt::Key_Escape:

@@ -392,8 +392,6 @@ void Cell::_buildCellGraphs( void )
 
         multimap<int, CellComponent>::iterator itC = _cellComponentVec[i].begin();
         Polygon2 &contourI = _cellVec[i].forceBone().contour();
-        // map<unsigned int, Polygon2>::iterator itP = _polygonComplexPtr->begin();
-        // advance(itP, i);
 
         vector < vector< ForceGraph::vertex_descriptor > > mergeVec;      // vector of cell need to be merged
 
@@ -438,12 +436,7 @@ void Cell::_buildCellGraphs( void )
 
             Polygon2 &contourM = _cellVec[ m ].forceBone().contour();
 
-            //map< unsigned int, Polygon2 >::iterator itS = _polygonComplexPtr->begin();
-            //map< unsigned int, Polygon2 >::iterator itT = _polygonComplexPtr->begin();
-            //advance( itS, i );
-            //advance( itT, m );
-
-            cerr << "cs = " << contourI << endl;
+            //cerr << "cs = " << contourI << endl;
             Polygon2 & cS = contourI;
             Polygon2 & cT = contourM;
             targetCoords[i].zero();
@@ -469,7 +462,6 @@ void Cell::_buildCellGraphs( void )
                     }
                 }
             }
-
         }
 
 #ifdef DEBUG
@@ -688,6 +680,48 @@ void Cell::_buildCellGraphs( void )
         cerr << endl;
     }
 #endif // DEBUG
+}
+
+void Cell::createPolygonComplexFromDetailGraph( void )
+{
+    unsigned int idC = 0;
+    for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &componentMap = _cellComponentVec[i];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+
+        for( ; itC != componentMap.end(); itC++ ){
+
+            Force       &f = itC->second.detail.forceBone();
+            ForceGraph &fg = itC->second.detail.bone();
+
+            CellComponent &c = itC->second;
+            c.contour.clear();
+            int cSize = num_vertices( fg );
+            if( cSize > 1 ){
+
+                Contour2 contour;
+                vector< Polygon2 > pVec;
+                for( unsigned int j = 0; j < cSize; j++ ) {
+                    pVec.push_back( (*f.voronoi().seedVec())[j].cellPolygon );
+                }
+                contour.init( idC, pVec );
+                contour.createContour();
+                c.contour = contour.contour();
+            }
+            else{
+                // cerr << "csize = 1" << endl;
+                // int id = fg[c.cellgVec[0]].id;
+                Polygon2 &p = (*f.voronoi().seedVec())[0].cellPolygon;
+                p.updateOrientation();;
+                c.contour = p;
+            }
+
+            idC++;
+        }
+    }
+
+    assert( idC == _nComponent );
 }
 
 void Cell::createPolygonComplex( void )

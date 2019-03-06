@@ -189,6 +189,8 @@ void GraphicsView::_item_boundary( void )
         itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
         itemptr->setPath( path );
+        itemptr->id() = g[ed].id;
+        itemptr->textOn() = true;
 
         _scene->addItem( itemptr );
     }
@@ -202,6 +204,7 @@ void GraphicsView::_item_boundary( void )
         itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
         itemptr->id() = g[vd].id;
+        itemptr->textOn() = true;
 
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );

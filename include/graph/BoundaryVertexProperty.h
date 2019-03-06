@@ -36,7 +36,7 @@ class BoundaryVertexProperty: public BaseVertexProperty {
 
   protected:
 
-      void		    _init( void );
+    void		        _init( void );
 
   public:
 
@@ -57,6 +57,7 @@ class BoundaryVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
     unsigned int                initID;
     vector< unsigned int >      lineID;
+    bool                        isFixed;
 
     Coord2 *                    geoPtr;
     Coord2 *                    smoothPtr;

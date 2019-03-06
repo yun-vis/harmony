@@ -46,7 +46,7 @@ private:
 
     unsigned int        _nVars;
     unsigned int        _nConstrs;
-    double              _w_octilinear, _w_position;
+    double              _w_octilinear, _w_position, _w_fixposition;
     double              _w_boundary, _w_crossing;
     double              _d_Alpha;
     double              _d_Beta;
@@ -62,8 +62,9 @@ protected:
     void                _updateCoefs    ( void );
     void                _updateOutputs  ( void );
     virtual void        _init           ( Boundary * __boundary, double __width, double __height );
-    void                _setTargetAngle( void );
+    void                _setTargetAngle ( void );
     void                _updateEdgeCurAngle( void );
+    bool                _isOnLine       ( Coord2 &a, Coord2 &b, Coord2 &c );
 
 public:
 

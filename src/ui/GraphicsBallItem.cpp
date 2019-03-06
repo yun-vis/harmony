@@ -41,8 +41,10 @@ void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
 	painter->drawEllipse( fineRect );
 
 	//cerr << "id = " << _id << endl;
-	//painter->drawText( rect().x(), rect().y(), QString::fromStdString( to_string( _id ) ) );
-	//painter->drawText( rect().x()+10, rect().y()-10, _name );
+	if( _textOn == true ){
+		painter->drawText( rect().x(), rect().y(), QString::fromStdString( to_string( _id ) ) );
+		//painter->drawText( rect().x()+10, rect().y()-10, _name );
+	}
 
     //cerr << "paint x = " << pos().x() << " y = " << pos().y() << endl;
 

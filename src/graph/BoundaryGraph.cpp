@@ -25,10 +25,27 @@
 //	Customized BoundaryGraph Functions
 //------------------------------------------------------------------------------
 //
+//  BoundaryGraph::resetVisitedTimes -- reset edge visitedTimes values.
+//
+//  Inputs
+//  g   : object of Graph
+//
+//  Outputs
+//  none
+//
+void resetVisitedTimes( BoundaryGraph & graph )
+{
+    BGL_FORALL_EDGES( ed, graph, BoundaryGraph ) {
+
+        graph[ ed ].visitedTimes = -1;
+    }
+}
+
+//
 //  BoundaryGraph::printGraph -- print the graph.
 //
 //  Inputs
-//  g   : object of Grpah
+//  g   : object of Graph
 //
 //  Outputs
 //  none
@@ -97,3 +114,4 @@ void clearGraph( BoundaryGraph & graph )
 		remove_vertex( vd, graph );
     }
 }
+
