@@ -947,6 +947,7 @@ void Cell::updateMCLCoords( void )
 void Cell::updatePathwayCoords( void )
 {
     vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+    double range = 10.0;
 
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
@@ -955,17 +956,36 @@ void Cell::updatePathwayCoords( void )
 
             ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].bone() );
             Coord2 &avg = itC->second.contour.centroid();
-
+            vector< Coord2 > coordVec;
             if( itC->second.nMCL > 1 ){
 
                 ForceGraph &dg = itC->second.detail.bone();
                 ForceGraph &mcl = itC->second.mcl.bone();
                 BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
+                    Coord2 coord( rand()%(int)range-0.5*range, rand()%(int)range-0.5*range );
+                    // check ig already exists
+                    while( true ){
+
+                        bool isExisted = false;
+                        for( unsigned int k = 0; k < coordVec.size(); k++ ){
+                            if( coordVec[k] == coord )
+                                isExisted = true;
+                        }
+                        if( isExisted == false ){
+                            break;
+                        }
+                        else{
+                            coord.x() = rand()%(int)range-0.5*range;
+                            coord.y() = rand()%(int)range-0.5*range;
+                        }
+                    }
+
                     unsigned int mclID = dg[ vd ].label;
                     ForceGraph::vertex_descriptor vdM = vertex( mclID, mcl );
-                    dg[ vd ].coordPtr->x() = mcl[ vdM ].coordPtr->x() + rand()%10-5.0;
-                    dg[ vd ].coordPtr->y() = mcl[ vdM ].coordPtr->y() + rand()%10-5.0;
+                    dg[ vd ].coordPtr->x() = mcl[ vdM ].coordPtr->x() + coord.x();
+                    dg[ vd ].coordPtr->y() = mcl[ vdM ].coordPtr->y() + coord.y();
+                    coordVec.push_back( coord );
                 }
             }
             else{
@@ -973,8 +993,27 @@ void Cell::updatePathwayCoords( void )
                 ForceGraph &dg = itC->second.detail.bone();
                 BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
-                    dg[ vd ].coordPtr->x() = avg.x() + rand()%10-5.0;
-                    dg[ vd ].coordPtr->y() = avg.y() + rand()%10-5.0;
+                    Coord2 coord( rand()%(int)range-0.5*range, rand()%(int)range-0.5*range );
+                    // check ig already exists
+                    while( true ){
+
+                        bool isExisted = false;
+                        for( unsigned int k = 0; k < coordVec.size(); k++ ){
+                            if( coordVec[k] == coord )
+                                isExisted = true;
+                        }
+                        if( isExisted == false ){
+                            break;
+                        }
+                        else{
+                            coord.x() = rand()%(int)range-0.5*range;
+                            coord.y() = rand()%(int)range-0.5*range;
+                        }
+                    }
+
+                    dg[ vd ].coordPtr->x() = avg.x() + coord.x();
+                    dg[ vd ].coordPtr->y() = avg.y() + coord.y();
+                    coordVec.push_back( coord );
                 }
             }
 

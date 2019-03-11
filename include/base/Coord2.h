@@ -17,8 +17,10 @@
 
 #include <cmath>
 #include <iostream>
+
 using namespace std;
 
+#include "Common.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros

@@ -61,6 +61,7 @@ class BaseEdgeProperty {
     double                      angle;
     double                      weight;
     bool                        visit;
+    int                         visitedTimes;
 
     bool                        isFore;
     bool                        isBack;

@@ -43,6 +43,10 @@ void Smooth::_init( Boundary * __boundary, double __half_width, double __half_he
     _d_Alpha                    = _boundary->dAlpha();
     _d_Beta                     = _boundary->dBeta();
 
+    _d_Alpha                    = 10;
+    _d_Beta                     = 10;
+
+
     // initialization
     _nVars = _nConstrs = 0;
     _half_width = __half_width;
@@ -912,7 +916,7 @@ void Smooth::retrieve( void )
                     //cerr << "diff = " << diff << "new = " << newCoord << "cur = " << curCoord << endl;
                     newCoord = diff/2.0 + curCoord;
                     tmpS = tmpS/2.0;
-                    //cerr << vertexID[ vertex ] << " == ( " << vertexID[ vdS ] << ", " << vertexID[ vdT ] << " )" << endl;
+                    //cerr << g[ vertex ].id << " == ( " << g[ vdS ].id << ", " << g[ vdT ].id << " )" << endl;
                 }
                 if( tmpS < scale ) scale = tmpS;
             }
@@ -920,9 +924,20 @@ void Smooth::retrieve( void )
     }
     //cerr << "scale = " << scale << endl;
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
-        Coord2 curCoord = *g[ vertex ].smoothPtr;
-        g[ vertex ].coordPtr->x() = g[ vertex ].smoothPtr->x() = _var( nRows, 0 );
-        g[ vertex ].coordPtr->y() = g[ vertex ].smoothPtr->y() = _var( nRows + nVertices, 0 );
+
+        // Coord2 curCoord = *g[ vertex ].smoothPtr;
+        double x = _var( nRows, 0 );
+        double y = _var( nRows + nVertices, 0 );
+        if( isnan( x ) || isnan( y ) ){
+            cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+            assert( false );
+        }
+        else{
+            g[ vertex ].coordPtr->x() = g[ vertex ].smoothPtr->x() = x;
+            g[ vertex ].coordPtr->y() = g[ vertex ].smoothPtr->y() = y;
+        }
+
+        // cerr << g[ vertex ].id << " = " << *g[ vertex ].smoothPtr;
         assert( g[ vertex ].id == nRows );
         nRows++;
     }

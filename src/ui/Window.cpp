@@ -706,6 +706,123 @@ void Window::processDetailedPathway( void )
 {
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
 
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
+
+        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
+
+            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+            advance( itC, j );
+            CellComponent &c = itC->second;
+
+            Boundary b;
+            Smooth s;
+            double err = 0.0;
+            unsigned int &nVertices = b.nVertices();
+            unsigned int &nEdges = b.nEdges();
+            unsigned int &nLines = b.nLines();
+            ForceGraph &cg = c.detail.bone();
+            BoundaryGraph &bg = b.boundary();
+
+            // copy vertices
+            BGL_FORALL_VERTICES( vd, cg, ForceGraph )
+            {
+                BoundaryGraph::vertex_descriptor curVD = add_vertex( bg );
+
+                bg[ curVD ].id          = cg[ vd ].id;
+                bg[ curVD ].geoPtr      = new Coord2( cg[ vd ].coordPtr->x(), cg[ vd ].coordPtr->y() );
+                bg[ curVD ].smoothPtr   = new Coord2( cg[ vd ].coordPtr->x(), cg[ vd ].coordPtr->y() );
+                bg[ curVD ].coordPtr    = cg[ vd ].coordPtr;
+
+                if( i == 0 ){
+
+                    cerr << "i = " << i << " vid = " << cg[ vd ].id << " cg[ vd ].coordPtr = " << *cg[ vd ].coordPtr;
+
+                }
+
+                bg[ curVD ].id = bg[ curVD ].initID = nVertices;
+                bg[ curVD ].namePtr = new string( to_string( bg[ curVD ].id ) );
+                bg[ curVD ].weight = 1.0;
+                //bg[ curVD ].lineID.push_back( nLines );
+
+                nVertices++;
+            }
+
+            // copy edges
+            BGL_FORALL_EDGES( ed, cg, ForceGraph )
+            {
+                unsigned int idS = cg[ source( ed, cg ) ].id;
+                unsigned int idT = cg[ target( ed, cg ) ].id;
+                BoundaryGraph::vertex_descriptor vdS = vertex( idS, bg );
+                BoundaryGraph::vertex_descriptor vdT = vertex( idT, bg );
+                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, bg );
+                BoundaryGraph::edge_descriptor foreED = foreE.first;
+
+                // calculate geographical angle
+                Coord2 coordO;
+                Coord2 coordD;
+                if( bg[ vdS ].initID < bg[ vdT ].initID ){
+                    coordO = *bg[ vdS ].coordPtr;
+                    coordD = *bg[ vdT ].coordPtr;
+                }
+                else{
+                    coordO = *bg[ vdT ].coordPtr;
+                    coordD = *bg[ vdS ].coordPtr;
+                }
+                double diffX = coordD.x() - coordO.x();
+                double diffY = coordD.y() - coordO.y();
+                double angle = atan2( diffY, diffX );
+
+                bg[ foreED ].initID = bg[ foreED ].id = cg[ ed ].id;
+                bg[ foreED ].weight = 1.0;
+                bg[ foreED ].geoAngle = angle;
+                bg[ foreED ].smoothAngle = angle;
+                bg[ foreED ].angle = angle;
+                bg[ foreED ].lineID.push_back( nLines );
+                bg[ foreED ].visitedTimes = 0;
+
+                nEdges++;
+            }
+
+            // run smooth optimization
+            s.prepare( &b, _content_width/2, _content_height/2 );
+            err = s.ConjugateGradient( 3 * nVertices );
+            s.retrieve();
+
+            cerr << "simNStation = " << nVertices << endl;
+            cerr << "nVertices = " << nVertices << endl;
+            // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
+
+            for( unsigned int k = 0; k < 2; k++ ) {
+            // while( true ) {
+
+                clock_t start = clock();
+                int iter = 0;
+
+                // check if all nodes are moved back
+#ifdef  DEBUG
+                cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
+             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
+             << " nLabels = " << nLabels << endl;
+#endif  // DEBUG
+                s.prepare( &b, _content_width/2, _content_height/2 );
+                iter = MAX2( 2 * ( &b.nVertices() - &b.nVertices() ), 30 );
+                err = s.ConjugateGradient( iter );
+                s.retrieve();
+
+                cerr << "i = " << i << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
+                // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
+            }
+            //_simplifiedBoundaryPtr->adjustsize( width(), height() );
+            s.clear();
+            b.cloneSmooth( b );
+
+            // cerr << "Total Time CG = " << clock() - start_time << endl;
+            // ofs << "Total Time CG = " << clock() - start_time << endl;
+        }
+    }
+
     vector< vector< unsigned int > > idMat;
     idMat.resize( cellComponentVec.size() );
     unsigned int idD = 0;
@@ -761,7 +878,8 @@ void Window::steinertree( void )
 {
 
     // compute steiner tree
-    _roadPtr->initRoad( _cellPtr->cellComponentVec() );
+    _roadPtr->initRoad( _cellPtr );
+    // _roadPtr->initRoad( _cellPtr->cellComponentVec() );
     _roadPtr->buildRoad();
     // cerr << "road built..." << endl;
     _gv->isRoadFlag() = true;
@@ -796,6 +914,7 @@ void Window::steinertree( void )
         (*_lanePtr)[i].steinerTree();
     }
     _gv->isLaneFlag() = true;
+
 }
 
 void Window::stopProcessDetailedPathway( void )
@@ -1450,7 +1569,6 @@ void Window::updateLevelMiddlePolygonComplex( void )
 {
     cerr << "updating middle polygonComplex after optimization ..." << endl;
 
-    vector< Bone >   &cellVec = _cellPtr->cellVec();
     BoundaryGraph &bg = _boundaryPtr->boundary();
     for( unsigned int m = 0; m < _cellPtr->cellComponentVec().size(); m++ ){
 
@@ -1481,7 +1599,6 @@ void Window::updateLevelDetailPolygonComplex( void )
 {
     cerr << "updating detail polygonComplex after optimization ..." << endl;
 
-    vector< Bone >   &cellVec = _cellPtr->cellVec();
     BoundaryGraph &bg = _boundaryPtr->boundary();
 
     for( unsigned int m = 0; m < _cellPtr->cellComponentVec().size(); m++ ){
@@ -1544,6 +1661,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_2:
         {
             stopProcessBoundary();
+            // redrawAllScene();
             simulateKey( Qt::Key_O );
             break;
         }
@@ -1568,11 +1686,13 @@ void Window::keyPressEvent( QKeyEvent *event )
             // initialization and build the boundary
             selectLevelMiddleBuildBoundary();
 
+            cerr << "before octilinear..." << endl;
             // optimization
             selectCloneGraph();
             selectOctilinear();
             updateLevelMiddlePolygonComplex();
             //selectOctilinearSmallCboundary();
+            cerr << "after octilinear..." << endl;
 
             _gv->isBoundaryFlag() = true;
             _gv->isPolygonComplexFlag() = false;
@@ -1608,11 +1728,11 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            //_timerPathwayStart();
             processDetailedPathway();
             _gv->isCellPolygonComplexFlag() = false;
             _gv->isPathwayPolygonFlag() = true;
             _gv->isMCLPolygonFlag() = false;
+            redrawAllScene();
             break;
         }
         case Qt::Key_X:
@@ -1624,12 +1744,12 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // initialization and build the boundary
             selectLevelDetailBuildBoundary();
-
+/*
             // boundary optimization
             selectCloneGraph();
             selectOctilinear();
             updateLevelDetailPolygonComplex();
-
+*/
             // steiner tree
             steinertree();
 
@@ -1793,7 +1913,7 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // canvasArea: content width and height
             // labelArea: total area of text labels
-            double canvasArea = width() * height();
+            // double canvasArea = width() * height();
             double labelArea = 0.0;
             map< string, Subdomain * > &sub = _pathway->subsys();
             for( map< string, Subdomain * >::iterator it = sub.begin();
@@ -1807,7 +1927,8 @@ void Window::keyPressEvent( QKeyEvent *event )
                  << " veCoverage = " << _gv->veCoverage() << endl;
 #endif // DEBUG
 
-            double x = sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / 12.0 );
+            double ratio = 5.0;
+            double x = ratio * sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / 12.0 );
             _content_width = 4.0 * x;
             _content_height = 3.0 * x;
             if( 2.0 * _content_width < width() ){

@@ -43,6 +43,7 @@ class CellComponent
 {
 public:
     unsigned int                            id;         // component id
+    // unsigned int                            componentID;// id in subg
     unsigned int                            groupID;    // subsystem id
     unsigned int                            nMCL;       // number of mcl clustering
 

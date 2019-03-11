@@ -128,6 +128,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 #endif  // DEBUG
 }
 
+/*
 //
 //  Octilinear::_isOnLine --        check if point a lies on line segment [b,c]
 //
@@ -149,6 +150,7 @@ bool Octilinear::_isOnLine( Coord2 &a, Coord2 &b, Coord2 &c )
 
     return isOnLine;
 }
+*/
 
 //
 //  Octilinear::_initCoefs --        initialize the coefficient
@@ -211,7 +213,7 @@ void Octilinear::_initCoefs( void )
         // check if on a line
         if( vdVec.size() == 2 ){
 
-            fix = !_isOnLine( *g[ vertex ].coordPtr,
+            fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
                             *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
 
             // cerr << "vid = " << g[ vertex ].id << endl;
@@ -551,7 +553,7 @@ void Octilinear::_initOutputs( void )
         // check if on a line
         if( vdVec.size() == 2 ){
 
-            fix = !_isOnLine( *g[ vertex ].coordPtr,
+            fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
                              *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
         }
 

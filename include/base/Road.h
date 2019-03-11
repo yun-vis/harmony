@@ -77,7 +77,8 @@ private:
     bool _findClosestVertexInLane( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     bool _findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     void _findShortestPaths( void );
-    void _initRoad( vector< multimap< int, CellComponent > > & cellComponentVec );
+    bool _findVertexOnLine( Coord2 &coord, UndirectedBaseGraph::edge_descriptor &edT );
+    void _initRoad( Cell *cellPtr );
     void _initLane( unsigned int gid,  multimap< int, CellComponent > & cellComponent, vector < Highway > * highwayRoadPtr );
     void _clear( void );
 
@@ -115,8 +116,8 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void initRoad( vector< multimap< int, CellComponent > > & __cellComponentVec ) {
-        _initRoad( __cellComponentVec );
+    void initRoad( Cell *__cellPtr ) {
+        _initRoad( __cellPtr );
     }
     void initLane( unsigned int gid, multimap< int, CellComponent > & __cellComponent, vector < Highway > *__highwayRoadPtr ) {
         _initLane( gid, __cellComponent, __highwayRoadPtr );

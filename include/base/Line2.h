@@ -67,7 +67,7 @@ class Line2 {
 //	Special functions
 //------------------------------------------------------------------------------
     void        addSample( Coord2 & coord );
-
+    static bool isOnLine( Coord2 &a, Coord2 &b, Coord2 &c );
 
 //------------------------------------------------------------------------------
 //	Intersection check

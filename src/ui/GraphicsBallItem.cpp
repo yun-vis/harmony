@@ -42,7 +42,7 @@ void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
 
 	//cerr << "id = " << _id << endl;
 	if( _textOn == true ){
-		painter->drawText( rect().x(), rect().y(), QString::fromStdString( to_string( _id ) ) );
+		painter->drawText( rect().x()+5, rect().y()-5, QString::fromStdString( to_string( _id ) ) );
 		//painter->drawText( rect().x()+10, rect().y()-10, _name );
 	}
 
@@ -64,6 +64,7 @@ GraphicsBallItem::GraphicsBallItem( QGraphicsItem *parent )
 	//setFlag( QGraphicsItem::ItemSendsGeometryChanges );
 	//setAcceptDrops( true );
 
+	_textOn = false;
 	_radius = 10;
 }
 

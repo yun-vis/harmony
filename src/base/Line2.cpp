@@ -80,6 +80,34 @@ void Line2::addSample( Coord2 & coord )
 }
 
 
+
+//
+//  Line2::isOnLine --        check if point a lies on line segment [b,c]
+//
+//  Inputs
+//      Coord2 &a, &b, &c
+//
+//  Outputs
+//      bool
+//
+bool Line2::isOnLine( Coord2 &a, Coord2 &b, Coord2 &c )
+{
+    bool isOnLine = false;
+
+    Coord2 ab = b - a;
+    Coord2 ac = c - a;
+
+    double cross = ab.x() * ac.y() - ab.y() * ac.x();
+    if( fabs( cross ) < 1e-2 ) {
+
+        if ( ( MIN2( b.x(), c.x() ) <= a.x() ) && ( a.x() <= MAX2( b.x(), c.x() ) ) &&
+             ( MIN2( b.y(), c.y() ) <= a.y() ) && ( a.y() <= MAX2( b.y(), c.y() ) ) )
+            isOnLine = true;
+    }
+
+    return isOnLine;
+}
+
 //------------------------------------------------------------------------------
 //	Friend functions
 //------------------------------------------------------------------------------
