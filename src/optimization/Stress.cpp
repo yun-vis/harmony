@@ -34,20 +34,88 @@ using namespace std;
 //  Outputs
 //      none
 //
-void Stress::_init( ForceGraph     *__forceGraphPtr, double __half_width, double __half_height )
+void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double __half_height )
 {
-    _forceGraphPtr      = __forceGraphPtr;
-    ForceGraph &g       = *_forceGraphPtr;
-    _nVertices          = num_vertices( g );
-    _nEdges             = num_edges( g );
+    _boundary                   = new Boundary;
+    BoundaryGraph & g           = _boundary->boundary();
+    unsigned int &nVertices     = _boundary->nVertices();
+    unsigned int &nEdges        = _boundary->nEdges();
+    unsigned int &nLines        = _boundary->nLines();
+    _half_width                 = __half_width;
+    _half_height                = __half_height;
 
     // initialization
-    _nVars          = 0;
-    _nConstrs       = 0;
-    _half_width     = __half_width;
-    _half_height    = __half_height;
+    _contour.elements().clear();
+    _contour.elements().push_back( Coord2( - _half_width, - _half_height ) );
+    _contour.elements().push_back( Coord2( + _half_width, - _half_height ) );
+    _contour.elements().push_back( Coord2( + _half_width, + _half_height ) );
+    _contour.elements().push_back( Coord2( - _half_width, + _half_height ) );
 
-    string configFilePath = "../configs/stress.conf";
+    // copy the graph
+    BGL_FORALL_VERTICES( vd, *forceGraphPtr, ForceGraph ) {
+
+        BoundaryGraph::vertex_descriptor vdNew = add_vertex( g );
+        g[ vdNew ].id = (*forceGraphPtr)[vd].id;
+        g[ vdNew ].weight = (*forceGraphPtr)[vd].weight;
+        g[ vdNew ].coordPtr = (*forceGraphPtr)[vd].coordPtr;
+        g[ vdNew ].geoPtr = new Coord2( g[ vdNew ].coordPtr->x(), g[ vdNew ].coordPtr->y() );
+        g[ vdNew ].smoothPtr = new Coord2( g[ vdNew ].coordPtr->x(), g[ vdNew ].coordPtr->y() );
+        g[ vdNew ].centroidPtr = new Coord2( g[ vdNew ].coordPtr->x(), g[ vdNew ].coordPtr->y() );
+        //g[ vdNew ].stressPtr = new Coord2( g[ vdNew ].coordPtr->x(), g[ vdNew ].coordPtr->y() );
+        //g[ vdNew ].octilinearPtr = new Coord2( g[ vdNew ].coordPtr->x(), g[ vdNew ].coordPtr->y() );
+    }
+    BGL_FORALL_EDGES( ed, *forceGraphPtr, ForceGraph ) {
+
+        ForceGraph::vertex_descriptor vdFS = source( ed, *forceGraphPtr );
+        ForceGraph::vertex_descriptor vdFT = target( ed, *forceGraphPtr );
+        BoundaryGraph::vertex_descriptor vdBS = vertex( (*forceGraphPtr)[ vdFS ].id, g );
+        BoundaryGraph::vertex_descriptor vdBT = vertex( (*forceGraphPtr)[ vdFT ].id, g );
+
+        pair< BoundaryGraph::edge_descriptor, unsigned int > addE = add_edge( vdBS, vdBT, g );
+        BoundaryGraph::edge_descriptor addED = addE.first;
+
+        // calculate geographical angle
+        Coord2 coordO;
+        Coord2 coordD;
+        if( g[ vdBS ].initID < g[ vdBT ].initID ){
+            coordO = *g[ vdBS ].coordPtr;
+            coordD = *g[ vdBT ].coordPtr;
+        }
+        else{
+            coordO = *g[ vdBT ].coordPtr;
+            coordD = *g[ vdBS ].coordPtr;
+        }
+        double diffX = coordD.x() - coordO.x();
+        double diffY = coordD.y() - coordO.y();
+        double angle = atan2( diffY, diffX );
+
+        g[ addED ].initID = g[ addED ].id = (*forceGraphPtr)[ed].id;
+        g[ addED ].weight = 1.0;
+        g[ addED ].geoAngle = angle;
+        g[ addED ].smoothAngle = angle;
+        g[ addED ].angle = angle;
+        g[ addED ].lineID.push_back( nLines );
+        g[ addED ].visitedTimes = 0;
+    }
+
+    // initialization
+    _boundary->init();
+    _d_Alpha                    = 1.5*_boundary->dAlpha();
+
+    //_d_Beta                     = _boundary->dBeta();
+
+    // initialization
+    _nVars = _nConstrs = 0;
+
+    //_w_focuslength      = sqrt(  5.0  ); // <- 5.0
+    //_w_contextlength    = sqrt(  2.5  ); // <- 5.0
+    //_w_angle            = sqrt(  1.0  ); // <- 1.0
+    //_w_position         = sqrt(  0.025 ); // <- 0.05
+    //_w_boundary         = sqrt( 20.0  ); // <- 15.0
+    //_w_crossing         = sqrt( 60.0  ); // <- 15.0
+    //_w_labelangle       = sqrt( 20.0  ); // <- 1.0
+
+    string configFilePath = "../configs/Stress.conf";
 
     //read config file
     Base::Config conf( configFilePath );
@@ -85,54 +153,40 @@ void Stress::_init( ForceGraph     *__forceGraphPtr, double __half_width, double
             _opttype = CONJUGATE_GRADIENT;
     }
 
-#ifdef  DEBUG
-    cout << " stress: numStations = " << _nVertices << endl;
-    cout << " stress: numEdges = " << _nEdges << endl;
+//#ifdef  DEBUG
+    cout << " Stress: numStations = " << nVertices << " num_vertices = " << num_vertices( g ) << endl;
+    cout << " Stress: numEdges = " << nEdges << " num_edges = " << num_edges( g ) << endl;
     //cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nLabels = " << nLabels << " nEdges = " << nEdges << endl;
-    //cerr << "_d_Alpha = " << _d_Alpha << " _d_Beta = " << _d_Beta << endl;
+    cerr << "_d_Alpha = " << _d_Alpha << endl;
     cerr << "_w_contextlength = " << _w_contextlength << endl
          << "_w_angle = " << _w_angle << endl
          << "_w_position = " << _w_position << endl
          << "_w_boundary = " << _w_boundary << endl
          << "_w_crossing = " << _w_crossing << endl;
     cerr << "_opttype = " << _opttype << endl;
-#endif  // DEBUG
-
-    // Maximal angles of incident edges
-    _unit_length    = 0.0;
-    BGL_FORALL_EDGES( ed, g, ForceGraph )
-    {
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
-
-        double length = ( *g[ vdS ].coordPtr - *g[ vdT ].coordPtr ).norm();
-        _unit_length += length;
-    }
-    _unit_length = _unit_length / (double) num_edges( g );
+//#endif  // DEBUG
 
 //------------------------------------------------------------------------------
 //      Total number of linear variables
 //------------------------------------------------------------------------------
-    _nVars = 2 * _nVertices;
+    _nVars = 2 * nVertices;
 
 //------------------------------------------------------------------------------
 //      Total number of linear constraints
 //------------------------------------------------------------------------------
     // Regular edge length
-    _nConstrs += 2 * _nEdges;
+    _nConstrs += 2 * nEdges;
 
-#ifdef SKIP
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vd, g, ForceGraph )
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph )
     {
-        ForceGraph::degree_size_type degrees = out_degree( vd, g );
+        BoundaryGraph::degree_size_type degrees = out_degree( vertex, g );
         if( degrees > 1 ) _nConstrs += 2 * degrees;
     }
     //cerr << "degreeConstrs = " << _nConstrs << endl;
-#endif // SKIP
 
     // Positional constraints
-    _nConstrs += 2 * _nVertices;
+    _nConstrs += 2 * nVertices;
 
     _initVars();
     _initCoefs();
@@ -142,12 +196,16 @@ void Stress::_init( ForceGraph     *__forceGraphPtr, double __half_width, double
 
 #ifdef  DEBUG
     printGraph( g );
+#endif  // DEBUG
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+#ifdef  DEBUG
     cerr << " nVertices = " << nVertices << " nEdges = " << nEdges << endl;
     cerr << " nVars = " << _nVars << " nConstrs = " << _nConstrs << endl;
     cerr << "Finished initializing the linear system" << endl;
 #endif  // DEBUG
 }
-
 
 //
 //  Stress::_initCoefs --        initialize the coefficient
@@ -160,7 +218,10 @@ void Stress::_init( ForceGraph     *__forceGraphPtr, double __half_width, double
 //
 void Stress::_initCoefs( void )
 {
-    ForceGraph  & g            = *_forceGraphPtr;
+    BoundaryGraph  & g            = _boundary->boundary();
+    unsigned int nVertices              = _boundary->nVertices();
+
+    //cerr<< "nVertices = " << nVertices << endl;
 
     // initialization
     unsigned int nRows = 0;
@@ -168,44 +229,43 @@ void Stress::_initCoefs( void )
     _coef << Eigen::MatrixXd::Zero( _nConstrs, _nVars );
 
     // Regular edge length
-    BGL_FORALL_EDGES( ed, g, ForceGraph )
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph )
     {
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
         unsigned int idS = g[ vdS ].id;
         unsigned int idT = g[ vdT ].id;
 
         double wL = _w_contextlength;
 
         // x
-        _coef( nRows, idS ) = wL;
+        _coef( nRows, idS ) = wL; 
         _coef( nRows, idT ) = -wL;
-        nRows++;
-
+        nRows++;        
+        
         // y
-        _coef( nRows, idS + _nVertices ) = wL;
-        _coef( nRows, idT + _nVertices ) = -wL;
+        _coef( nRows, idS + nVertices ) = wL;
+        _coef( nRows, idT + nVertices ) = -wL;
         nRows++;
     }
 
-#ifdef SKIP
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
-        ForceGraph::degree_size_type degrees = out_degree( vd, g );
+        BoundaryGraph::degree_size_type degrees = out_degree( vertex, g );
 #ifdef  DEBUG
-        cerr << "V(" << vertexID[ vd ] << ") degrees = " << degrees << endl;
+        cerr << "V(" << vertexID[ vertex ] << ") degrees = " << degrees << endl;
 #endif  // DEBUG
-
+    
         if( degrees > 1 ){
 
             // sort the embedding
-            map< double, ForceGraph::edge_descriptor > circM;
-            ForceGraph::out_edge_iterator e, e_end;
-            for ( tie( e, e_end ) = out_edges( vd, g ); e != e_end; ++e ) {
-                ForceGraph::edge_descriptor ed = *e;
-                ForceGraph::vertex_descriptor vS = source( ed, g );
-                ForceGraph::vertex_descriptor vT = target( ed, g );
+            map< double, BoundaryGraph::edge_descriptor > circM;
+            BoundaryGraph::out_edge_iterator e, e_end;
+            for ( tie( e, e_end ) = out_edges( vertex, g ); e != e_end; ++e ) {
+                BoundaryGraph::edge_descriptor ed = *e;
+                BoundaryGraph::vertex_descriptor vS = source( ed, g );
+                BoundaryGraph::vertex_descriptor vT = target( ed, g );
                 double angle = g[ ed ].geoAngle;
 
                 if ( g[ vS ].id > g[ vT ].id ) {
@@ -214,60 +274,61 @@ void Stress::_initCoefs( void )
                 }
 #ifdef  DEBUG
                 cerr << vertexID[ vS ] << endl;
-                cerr << vertexID[ vT ] << ", "
-                     << vertexCoord[ vT ] << ", "
+                cerr << vertexID[ vT ] << ", " 
+                     << vertexCoord[ vT ] << ", " 
                      << vertexGeo[ vT ] << endl;
                 cerr << "EIA = " << edgeID[ ed ] << setw(10) << " angle = " << angle << endl;
 #endif  // DEBUG
-                circM.insert( pair< double, ForceGraph::edge_descriptor >( angle, ed ) );
+                circM.insert( pair< double, BoundaryGraph::edge_descriptor >( angle, ed ) );
             }
 #ifdef  DEBUG
             cerr << "seq: ";
-            for ( map< double, ForceGraph::edge_descriptor >::iterator it = circM.begin();
+            for ( map< double, BoundaryGraph::edge_descriptor >::iterator it = circM.begin();
                   it != circM.end(); it++ ) {
-                ForceGraph::edge_descriptor ed = it->second;
-                ForceGraph::vertex_descriptor vS = source( ed, g );
-                ForceGraph::vertex_descriptor vT = target( ed, g );
+                BoundaryGraph::edge_descriptor ed = it->second;
+                BoundaryGraph::vertex_descriptor vS = source( ed, g );
+                BoundaryGraph::vertex_descriptor vT = target( ed, g );
                 cerr << " " << vertexID[ vT ];
             }
             cerr << endl;
-#endif // DEBUG
+#endif  // DEBUG
+
 
             // set coefficient
             double tanTheta = tan( (double)( degrees - 2 ) * M_PI / 2.0 / (double) degrees );
 #ifdef  DEBUG
-            if( vertexIsStation[ vd ] != true )
-                cerr << "id = " << vertexID[ vd ] << " degrees = " << degrees << " tanTheta = " << tanTheta << endl;
+            if( vertexIsStation[ vertex ] != true )
+                cerr << "id = " << vertexID[ vertex ] << " degrees = " << degrees << " tanTheta = " << tanTheta << endl;
 #endif  // DEBUG
-
-            map< double, ForceGraph::edge_descriptor >::iterator itN = circM.begin();
+        
+            map< double, BoundaryGraph::edge_descriptor >::iterator itN = circM.begin();
             itN++;
-            for ( map< double, ForceGraph::edge_descriptor >::iterator it = circM.begin();
+            for ( map< double, BoundaryGraph::edge_descriptor >::iterator it = circM.begin();
                   it != circM.end(); it++ ) {
 
-                ForceGraph::edge_descriptor edC = it->second;
-                ForceGraph::edge_descriptor edN = itN->second;
-                ForceGraph::vertex_descriptor vS = source( edC, g );
-                ForceGraph::vertex_descriptor vTC = target( edC, g );
-                ForceGraph::vertex_descriptor vTN = target( edN, g );
+                BoundaryGraph::edge_descriptor edC = it->second;
+                BoundaryGraph::edge_descriptor edN = itN->second;
+                BoundaryGraph::vertex_descriptor vS = source( edC, g );
+                BoundaryGraph::vertex_descriptor vTC = target( edC, g );
+                BoundaryGraph::vertex_descriptor vTN = target( edN, g );
                 unsigned int idS = g[ vS ].id;
                 unsigned int idTC = g[ vTC ].id;
                 unsigned int idTN = g[ vTN ].id;
 
                 // x
-                _coef( nRows, idS ) = _w_angle;
-                _coef( nRows, idTC ) = -0.5 * _w_angle;
-                _coef( nRows, idTN ) = -0.5 * _w_angle;
-                _coef( nRows, idTC + _nVertices ) = -0.5 * _w_angle * tanTheta;
-                _coef( nRows, idTN + _nVertices ) =  0.5 * _w_angle * tanTheta;
+                _coef( nRows, idS ) = _w_angle;   
+                _coef( nRows, idTC ) = -0.5 * _w_angle;   
+                _coef( nRows, idTN ) = -0.5 * _w_angle;   
+                _coef( nRows, idTC + nVertices ) = -0.5 * _w_angle * tanTheta;   
+                _coef( nRows, idTN + nVertices ) =  0.5 * _w_angle * tanTheta;   
                 nRows++;
 
                 // y
-                _coef( nRows, idS + _nVertices ) = _w_angle;
-                _coef( nRows, idTC + _nVertices ) = -0.5 * _w_angle;
-                _coef( nRows, idTN + _nVertices ) = -0.5 * _w_angle;
-                _coef( nRows, idTC ) =  0.5 * _w_angle * tanTheta;
-                _coef( nRows, idTN ) = -0.5 * _w_angle * tanTheta;
+                _coef( nRows, idS + nVertices ) = _w_angle;   
+                _coef( nRows, idTC + nVertices ) = -0.5 * _w_angle;   
+                _coef( nRows, idTN + nVertices ) = -0.5 * _w_angle;   
+                _coef( nRows, idTC ) =  0.5 * _w_angle * tanTheta;   
+                _coef( nRows, idTN ) = -0.5 * _w_angle * tanTheta;   
                 nRows++;
 
                 itN++;
@@ -275,9 +336,8 @@ void Stress::_initCoefs( void )
                     itN = circM.begin();
                 }
             }
-        }
+        }   
     }
-#endif // SKIP
 
 #ifdef  SKIP
     cerr << "after angle" << endl;
@@ -286,23 +346,23 @@ void Stress::_initCoefs( void )
 #endif  // SKIP
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
-        unsigned int id = g[ vd ].id;
+        unsigned int id = g[ vertex ].id;
 
         // x
         _coef( nRows, id ) = _w_position;
         nRows++;
 
         // y
-        _coef( nRows, id + _nVertices ) = _w_position;
+        _coef( nRows, id + nVertices ) = _w_position;
         nRows++;
     }
 
-//#ifdef  DEBUG
+#ifdef  DEBUG
     cerr << "_coef:" << endl;
     cerr << _coef << endl;
-//vv#endif  // DEBUG
+#endif  // DEBUG
 }
 
 
@@ -317,24 +377,25 @@ void Stress::_initCoefs( void )
 //
 void Stress::_initVars( void )
 {
-    ForceGraph & g           = *_forceGraphPtr;
+    BoundaryGraph & g           = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
     // initialization
     _var.resize( _nVars );
 
     unsigned int nRows = 0;
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
-        _var( nRows, 0 )              = g[ vd ].coordPtr->x();
-        _var( nRows + _nVertices, 0 ) = g[ vd ].coordPtr->y();
+        _var( nRows, 0 ) = g[ vertex ].smoothPtr->x();
+        _var( nRows + nVertices, 0 ) = g[ vertex ].smoothPtr->y();
         nRows++;
     }
 
     assert( _nVars == 2*nRows );
-//#ifdef  DEBUG
+#ifdef  DEBUG
     cerr << "_initvar:" << endl;
-    cerr << _var << endl;
-//#endif  // DEBUG
+    cerr << _var << endl; 
+#endif  // DEBUG
 }
 
 //
@@ -348,7 +409,7 @@ void Stress::_initVars( void )
 //
 void Stress::_initOutputs( void )
 {
-    ForceGraph & g           = *_forceGraphPtr;
+    BoundaryGraph        & g            = _boundary->boundary();
 
     // initialization
     unsigned int nRows = 0;
@@ -356,21 +417,21 @@ void Stress::_initOutputs( void )
     _output << Eigen::VectorXd::Zero( _nConstrs );
 
     // Regular edge length
-    BGL_FORALL_EDGES( ed, g, ForceGraph )
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph )
     {
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
-        Coord2 vi = *g[ vdS ].coordPtr;
-        Coord2 vj = *g[ vdT ].coordPtr;
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
+        Coord2 vi = *g[ vdS ].geoPtr;
+        Coord2 vj = *g[ vdT ].geoPtr;
         Coord2 vji = vi - vj;
-        double s = _unit_length * g[ ed ].weight / vji.norm();
+        double s = _d_Alpha * g[ edge ].weight / vji.norm();
         double cosTheta = 1.0, sinTheta = 0.0;
         //double magnification = 1.0;
         //if( vertexSelectShift[ vdS ] == true || vertexSelectShift[ vdT ] == true ) magnification *= 2.0;
-        //if( edgeSelectCtrl[ ed ] == true ) magnification = 2.0;
+        //if( edgeSelectCtrl[ edge ] == true ) magnification = 2.0;
 
 #ifdef  DEBUG
-        cerr << "EID = " << edgeID[ ed ] << ", weight = " << edgeWeight[ ed ] << endl;
+        cerr << "EID = " << edgeID[ edge ] << ", weight = " << edgeWeight[ edge ] << endl;
 #endif  // DEBUG
 
         double wL = _w_contextlength;
@@ -384,17 +445,16 @@ void Stress::_initOutputs( void )
         nRows++;
     }
 
-#ifdef SKIP
     // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
-        ForceGraph::degree_size_type degrees = out_degree( vd, g );
+        BoundaryGraph::degree_size_type degrees = out_degree( vertex, g );
 
         if( degrees > 1 ){
 
             //double tanTheta = tan( (double)( degrees - 2 ) * M_PI / 2.0 / (double) degrees );
-            ForceGraph::out_edge_iterator eo_cur, eo_nxt, eo_end;
-            for( tie( eo_cur, eo_end ) = out_edges( vd, g ); eo_cur != eo_end; ++eo_cur ){
+            BoundaryGraph::out_edge_iterator eo_cur, eo_nxt, eo_end;
+            for( tie( eo_cur, eo_end ) = out_edges( vertex, g ); eo_cur != eo_end; ++eo_cur ){
 
                 // x
                 _output( nRows, 0 ) = 0.0;
@@ -406,21 +466,20 @@ void Stress::_initOutputs( void )
             }
         }
     }
-#endif // SKIP
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
-        _output( nRows, 0 ) = _w_position * g[ vd ].coordPtr->x();
+        _output( nRows, 0 ) = _w_position * g[ vertex ].geoPtr->x();
         nRows++;
-        _output( nRows, 0 ) = _w_position * g[ vd ].coordPtr->y();
+        _output( nRows, 0 ) = _w_position * g[ vertex ].geoPtr->y();
         nRows++;
     }
 
-//#ifdef  DEBUG
+#ifdef  DEBUG
     cerr << "_initOutput:" << endl;
     cerr << _output << endl;
-//#endif  // DEBUG
+#endif  // DEBUG
 }
 
 
@@ -435,30 +494,29 @@ void Stress::_initOutputs( void )
 //
 void Stress::_updateCoefs( void )
 {
-    ForceGraph & g                  = *_forceGraphPtr;
-    unsigned int        nVE         = 0;
-    unsigned int        nB          = 0;
-#ifdef SKIP
-    vector< double >    ratioR      = _boundary->ratioR();
-#endif // SKIP
+    BoundaryGraph               & g             = _boundary->boundary();
+    unsigned int        nVertices       = _boundary->nVertices();
+    unsigned int        nVE             = 0;
+    unsigned int        nB              = 0;
+    vector< double >    ratioR          = _boundary->ratioR();
 
     Eigen::MatrixXd     oldCoef;
     oldCoef = _coef.block( 0, 0, _nConstrs, _nVars );
-#ifdef  STRESS_CONFLICT
+#ifdef  Stress_CONFLICT
     nVE = _boundary->VEconflict().size();
-#endif  // STRESS_CONFLICT
-#ifdef  STRESS_BOUNDARY
-    BGL_FORALL_VERTICES( vd, g, ForceGraph )
+#endif  // Stress_CONFLICT
+#ifdef  Stress_BOUNDARY
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
     {
-        double minD = 1.0/2.0;
+        double minD = _d_Alpha/2.0;
         //if( vertexIsStation[ vd ] == false )
             //minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
-        if ( g[ vd ].stressPtr->x() <= -( _half_width - minD ) ) nB++;
-        if ( g[ vd ].stressPtr->x() >= ( _half_width - minD ) ) nB++;
-        if ( g[ vd ].stressPtr->y() <= -( _half_height - minD ) ) nB++;
-        if ( g[ vd ].stressPtr->y() >= ( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) nB++;
     }
-#endif  // STRESS_BOUNDARY
+#endif  // Stress_BOUNDARY
     _coef.resize( _nConstrs + nB + 2*nVE, _nVars );
     // _coef << Eigen::MatrixXd::Zero( _nConstrs + nB + 2*nVE, _nVars );
 
@@ -470,46 +528,46 @@ void Stress::_updateCoefs( void )
 
     unsigned int nRows = _nConstrs;
 
-#ifdef  STRESS_BOUNDARY
+#ifdef  Stress_BOUNDARY
     // add boundary coefficient
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph ){
 
         unsigned int id = g[ vd ].id;
-        double minD = _d_Beta/2.0;
+        double minD = _d_Alpha/2.0;
         //if( vertexIsStation[ vd ] == false )
-        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
+        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Alpha/2.0;
 
-        if ( g[ vd ].stressPtr->x() <= -( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) {
             _coef( nRows, id ) = _w_boundary;
             nRows++;
         }
-        if ( g[ vd ].stressPtr->x() >= ( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) {
             _coef( nRows, id ) = _w_boundary;
             nRows++;
         }
-        if ( g[ vd ].stressPtr->y() <= -( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) {
             _coef( nRows, id + nVertices ) = _w_boundary;
             nRows++;
         }
-        if ( g[ vd ].stressPtr->y() >= ( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) {
             _coef( nRows, id + nVertices ) = _w_boundary;
             nRows++;
         }
     }
-#endif  // STRESS_BOUNDARY
+#endif  // Stress_BOUNDARY
 
     // cerr << "_coef.rows = " << _coef.rows() << endl;
     // cerr << "_coef.cols = " << _coef.cols() << endl;
 
-#ifdef  STRESS_CONFLICT
+#ifdef  Stress_CONFLICT
     // add conflict coefficient
     unsigned int countVE = 0;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
           it != _boundary->VEconflict().end(); ++it ) {
-        ForceGraph::vertex_descriptor vdV = it->second.first;
-        ForceGraph::edge_descriptor ed = it->second.second;
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
+        BoundaryGraph::vertex_descriptor vdV = it->second.first;
+        BoundaryGraph::edge_descriptor ed = it->second.second;
+        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
         unsigned int idV = g[ vdV ].id;
         unsigned int idS = g[ vdS ].id;
         unsigned int idT = g[ vdT ].id;
@@ -526,17 +584,17 @@ void Stress::_updateCoefs( void )
         _coef( nRows, idS + nVertices ) = -r * _w_crossing;
         _coef( nRows, idT + nVertices ) = ( r - 1.0 ) * _w_crossing;
         nRows++;
-
+        
         countVE++;
-    }
-#endif  // STRESS_CONFLICT
+    } 
+#endif  // Stress_CONFLICT
 
-//#ifdef  DEBUG
+#ifdef  DEBUG
     cerr << "###############" << endl;
     cerr << "newCoef:" << endl;
     cerr << _coef << endl;
     cerr << "###############" << endl;
-//#endif  // DEBUG
+#endif  // DEBUG
 }
 
 //
@@ -550,64 +608,63 @@ void Stress::_updateCoefs( void )
 //
 void Stress::_updateOutputs( void )
 {
-    ForceGraph          & g             = *_forceGraphPtr;
+    BoundaryGraph       & g             = _boundary->boundary();
+    unsigned int        nVertices       = _boundary->nVertices();
     unsigned int        nVE             = 0;
     unsigned int        nB              = 0;
-#ifdef SKIP
     vector< double >    ratioR          = _boundary->ratioR();
-#endif // SKIP
 
     unsigned int nRows = 0;
     Eigen::VectorXd     oldOutput;
     oldOutput = _output;
-#ifdef  STRESS_CONFLICT
+#ifdef  Stress_CONFLICT
     nVE = _boundary->VEconflict().size();
-#endif  // STRESS_CONFLICT
-#ifdef  STRESS_BOUNDARY
-    BGL_FORALL_VERTICES( vd, g, ForceGraph )
+#endif  // Stress_CONFLICT
+#ifdef  Stress_BOUNDARY
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
     {
-        double minD = _d_Beta/2.0;
+        double minD = _d_Alpha/2.0;
         //if( vertexIsStation[ vd ] == false )
-        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
-        if ( g[ vd ].stressPtr->x() <= -( _half_width - minD ) ) nB++;
-        if ( g[ vd ].stressPtr->x() >= ( _half_width - minD ) ) nB++;
-        if ( g[ vd ].stressPtr->y() <= -( _half_height - minD ) ) nB++;
-        if ( g[ vd ].stressPtr->y() >= ( _half_height - minD ) ) nB++;
+        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Alpha/2.0;
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) nB++;
     }
-#endif  // STRESS_BOUNDARY
+#endif  // Stress_BOUNDARY
     _output.resize( _nConstrs + nB + 2*nVE );
     _output << Eigen::VectorXd::Zero( _nConstrs + nB + 2*nVE );
     //cerr << "_output.rows = " << _output.rows() << endl;
 
     // Regular edge length
-    BGL_FORALL_EDGES( ed, g, ForceGraph )
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph )
     {
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
-        Coord2 vi = *g[ vdS ].coordPtr;
-        Coord2 vj = *g[ vdT ].coordPtr;
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
+        Coord2 vi = *g[ vdS ].geoPtr;
+        Coord2 vj = *g[ vdT ].geoPtr;
         Coord2 vji = vi - vj;
-        Coord2 pi = *g[ vdS ].forcePtr;
-        Coord2 pj = *g[ vdT ].forcePtr;
+        Coord2 pi = *g[ vdS ].smoothPtr;
+        Coord2 pj = *g[ vdT ].smoothPtr;
         Coord2 pji = pi - pj;
-        double s = _unit_length * g[ ed ].weight / vji.norm();
+        double s = _d_Alpha * g[ edge ].weight / vji.norm();
         double angleV = atan2( vji.y(), vji.x() );
         double angleP = atan2( pji.y(), pji.x() );
         double diffTheta = angleP - angleV;
-        double cosTheta = cos( diffTheta );
+        double cosTheta = cos( diffTheta ); 
         double sinTheta = sin( diffTheta );
 #ifdef  DEBUG
         cerr << "idS = " << vertexID[ vdS ] << " idT = " << vertexID[ vdT ] << endl;
         cerr << "cosTheta = " << cosTheta << " sinTheta = " << sinTheta << endl;
         cerr << "angleP = " << angleP << " angleV = " << angleV << endl;
-        cerr << "EID = " << edgeID[ed] << " angleP = " << angleP << " angleV = " << angleV << " diffTheta = " << diffTheta << endl;
-        if( vertexID[ vdS ] == 3 && vertexID[ vdT ] == 15 )
+        cerr << "EID = " << edgeID[edge] << " angleP = " << angleP << " angleV = " << angleV << " diffTheta = " << diffTheta << endl;
+        if( vertexID[ vdS ] == 3 && vertexID[ vdT ] == 15 ) 
             cerr << "( " << vertexID[ vdS ] << ", " << vertexID[ vdT ] << ") angleP = " << angleP << " angleV = " << angleV << " diffTheta = " << diffTheta << endl;
 #endif  // DEBUG
 
         //double magnification = 1.0;
         //if( vertexSelectShift[ vdS ] == true || vertexSelectShift[ vdT ] == true ) magnification *= 2.0;
-        //if( edgeSelectCtrl[ ed ] == true ) magnification = 2.0;
+        //if( edgeSelectCtrl[ edge ] == true ) magnification = 2.0;
 
         double wL = _w_contextlength;
 
@@ -620,17 +677,17 @@ void Stress::_updateOutputs( void )
         nRows++;
     }
 
-#ifdef SKIP
-    // Maximal angles of incident edges
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
 
-        ForceGraph::degree_size_type degrees = out_degree( vd, g );
+    // Maximal angles of incident edges
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
+
+        BoundaryGraph::degree_size_type degrees = out_degree( vertex, g );
 
         if( degrees > 1 ){
 
             double tanTheta = tan( (double)( degrees - 2 ) * M_PI / 2.0 / (double) degrees );
-            ForceGraph::out_edge_iterator eo_cur, eo_nxt, eo_end;
-            for( tie( eo_cur, eo_end ) = out_edges( vd, g ); eo_cur != eo_end; ++eo_cur ){
+            BoundaryGraph::out_edge_iterator eo_cur, eo_nxt, eo_end;
+            for( tie( eo_cur, eo_end ) = out_edges( vertex, g ); eo_cur != eo_end; ++eo_cur ){
 
                 // x
                 _output( nRows, 0 ) = oldOutput( nRows, 0 );
@@ -642,58 +699,69 @@ void Stress::_updateOutputs( void )
             }
         }
     }
-#endif // SKIP
 
     // Positional constraints
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    double avgA = 4.0*_half_width * _half_height/(double)num_vertices( g );
+    // cerr << "avgA = " << avgA << endl;
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
+        double area = 0.0;
+        if( _seedVec.size() > 0 )
+            area = _seedVec[ g[ vertex ].id ].cellPolygon.area();
+        double ratio = area/avgA;
         // x
-        _output( nRows, 0 ) = oldOutput( nRows, 0 );
+        if( area > avgA )
+            _output( nRows, 0 ) = 0.2 * oldOutput( nRows, 0 ) + 0.8*g[ vertex ].centroidPtr->x();
+        else
+            _output( nRows, 0 ) = oldOutput( nRows, 0 );
         nRows++;
 
         // y
-        _output( nRows, 0 ) = oldOutput( nRows, 0 );
+        if( area > avgA )
+            _output( nRows, 0 ) = 0.2 * oldOutput( nRows, 0 ) + 0.8*g[ vertex ].centroidPtr->y();
+        else
+            _output( nRows, 0 ) = oldOutput( nRows, 0 );
         nRows++;
     }
 
-#ifdef  STRESS_BOUNDARY
+#ifdef  Stress_BOUNDARY
     // boundary constraints
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vd, g, BoundaryGraph ){
 
-        double minD = _d_Beta/2.0;
+        double minD = _d_Alpha/2.0;
         //if( vertexIsStation[ vd ] == false )
-        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
+        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Alpha/2.0;
 
-        if ( g[ vd ].stressPtr->x() <= -( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * -( _half_width - minD );
             nRows++;
         }
-        if ( g[ vd ].stressPtr->x() >= ( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * ( _half_width - minD );
             nRows++;
         }
-        if ( g[ vd ].stressPtr->y() <= -( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * -( _half_height - minD );
             nRows++;
         }
-        if ( g[ vd ].stressPtr->y() >= ( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * ( _half_height - minD );
             nRows++;
         }
     }
-#endif  // STRESS_BOUNDARY
+#endif  // Stress_BOUNDARY
 
     // cerr << "nRows = " << nRows << endl;
 
-#ifdef  STRESS_CONFLICT
+#ifdef  Stress_CONFLICT
     // conflict constraints
     unsigned int countVE = 0;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
           it != _boundary->VEconflict().end(); ++it ) {
-        ForceGraph::vertex_descriptor vdV = it->second.first;
-        ForceGraph::edge_descriptor ed = it->second.second;
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
+        BoundaryGraph::vertex_descriptor vdV = it->second.first;
+        BoundaryGraph::edge_descriptor ed = it->second.second;
+        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
         unsigned int idV = g[ vdV ].id;
         unsigned int idS = g[ vdS ].id;
         unsigned int idT = g[ vdT ].id;
@@ -701,9 +769,9 @@ void Stress::_updateOutputs( void )
 
         Coord2 v = *g[ vdV ].geoPtr;
         Coord2 p = r * *g[ vdS ].geoPtr + ( 1.0-r ) * *g[ vdT ].geoPtr;
-        double minD = _d_Beta;
+        double minD = _d_Alpha;
         //if( vertexIsStation[ vdV ] == false )
-        //    minD = vertexExternal[ vdV ].leaderWeight() * _d_Beta;
+        //    minD = vertexExternal[ vdV ].leaderWeight() * _d_Alpha;
         double delta = minD / ( v - p ).norm();
 
         // x
@@ -714,7 +782,7 @@ void Stress::_updateOutputs( void )
         _output( nRows, 0 ) = _w_crossing * delta * ( v - p ).y();
         nRows++;
     }
-#endif  // STRESS_CONFLICT
+#endif  // Stress_CONFLICT
 
 #ifdef  DEBUG
     cerr << "_updatedOutput:" << endl;
@@ -731,7 +799,7 @@ void Stress::_updateOutputs( void )
 //  Outputs
 //      none
 //
-double Stress::LeastSquare( unsigned long iter )
+double Stress::LeastSquare( unsigned int iter )
 {
     double mse = 0.0;
     for( int i = 0; i < iter; i++ ) {
@@ -771,7 +839,7 @@ double Stress::LeastSquare( unsigned long iter )
         time4 = clock() - start_time;
 #endif  // DEBUG_TIME
 
-        // node movement
+        // node movement 
         Eigen::VectorXd err = last_var - _var;
         mse = err.adjoint() * err;
 
@@ -797,6 +865,26 @@ double Stress::LeastSquare( unsigned long iter )
 }
 
 //
+//  Stress::initConjugateGradient --        optimization
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+void Stress::initConjugateGradient( void )
+{
+    // initialization, prepare the square matrix
+    _A = _coef.transpose() * _coef;
+    _b = _coef.transpose() * _output;
+
+    // initialization
+    _err = _b - _A * _var;
+    _p = _err;
+}
+
+//
 //  Stress::ConjugateGradient --        optimization
 //
 //  Inputs
@@ -805,48 +893,30 @@ double Stress::LeastSquare( unsigned long iter )
 //  Outputs
 //      none
 //
-double Stress::ConjugateGradient( unsigned long iter )
+double Stress::ConjugateGradient( unsigned int &iter )
 {
-    // initialization, prepare the square matrix
-    Eigen::MatrixXd A;
-    Eigen::VectorXd b, Ap;
-    A = _coef.transpose() * _coef;
-    b = _coef.transpose() * _output;
-
-    // initialization
-    Eigen::VectorXd err = b - A * _var;
-    Eigen::VectorXd p = err;
-    double rsold = err.adjoint() * err;
-
     // main algorithm
-    for( int i = 0; i < iter; i++ ) {
+    // prepare the square matrix
+    _A = _coef.transpose() * _coef;
+    _b = _coef.transpose() * _output;
+    _Ap = _A * _p;
 
-        // prepare the square matrix
-        A = _coef.transpose() * _coef;
-        b = _coef.transpose() * _output;
-        Ap = A * p;
+    double alpha = (double)( _p.transpose() * _err ) / (double)( _p.transpose() * _Ap );
+    _var = _var + alpha * _p;
+    _err = _b - _A * _var;
 
-        double alpha = (double)( p.transpose() * err ) / (double)( p.transpose() * Ap );
-        _var = _var + alpha * p;
-        err = b - A * _var;
+    double beta = -1.0 * (double)( _err.transpose() * _Ap ) / (double)( _p.transpose() * _Ap );
+    _p = _err + beta * _p;
 
-        if ( sqrt( err.adjoint() * err ) < 1e-10 ) {
-            cerr << "sqrterror(" << i << ") = " << sqrt( err.adjoint() * err ) << endl;
-            break;
-        }
-        else {
-            double beta = -1.0 * (double)( err.transpose() * Ap ) / (double)( p.transpose() * Ap );
-            p = err + beta * p;
-        }
+    // update
+    retrieve();
+    _computeVoronoi();
+    _updateCoefs();
+    _updateOutputs();
 
-        // update
-        retrieve();
-        _updateCoefs();
-        _updateOutputs();
-    }
+    cerr << "iter = " << iter << endl;
 
-    // cerr << "sqrterror = " << sqrt( err.adjoint() * err ) << endl;
-    return sqrt( err.adjoint() * err );
+    return sqrt( _err.adjoint() * _err );
 }
 
 
@@ -861,19 +931,19 @@ double Stress::ConjugateGradient( unsigned long iter )
 //
 void Stress::retrieve( void )
 {
-    ForceGraph        & g    = *_forceGraphPtr;
-    vector< vector< ForceGraph::vertex_descriptor > > vdMatrix;
+    BoundaryGraph        & g    = _boundary->boundary();
+    unsigned int nVertices      = _boundary->nVertices();
 
-#ifdef SKIP
+    vector< vector< BoundaryGraph::vertex_descriptor > > vdMatrix;
     // find the vertex that is too close to an edge
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
           it != _boundary->VEconflict().end(); ++it ) {
 
-        vector< ForceGraph::vertex_descriptor > vdVec;
-        ForceGraph::vertex_descriptor vdV = it->second.first;
-        ForceGraph::edge_descriptor ed = it->second.second;
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
+        vector< BoundaryGraph::vertex_descriptor > vdVec;
+        BoundaryGraph::vertex_descriptor vdV = it->second.first;
+        BoundaryGraph::edge_descriptor ed = it->second.second;
+        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
         vdVec.push_back( vdV );
         vdVec.push_back( vdS );
         vdVec.push_back( vdT );
@@ -882,30 +952,29 @@ void Stress::retrieve( void )
         //cerr << "V = " << vertexID[ vdV ] << " S = " << vertexID[ vdS ] << " T = " << vertexID[ vdT ] << endl;
     }
     //cerr << endl;
-#endif // SKIP
 
     unsigned int nRows = 0;
     double scale = 1.0;
     // update coordinates
     // but freeze the vertex that is too close to an edge
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         vector< int > rowVec;
         for( unsigned int i = 0; i < vdMatrix.size(); i++ ){
-            if( vd == vdMatrix[i][0] ) rowVec.push_back( i );
+            if( vertex == vdMatrix[i][0] ) rowVec.push_back( i );
         }
         if( rowVec.size() > 0 ){
 
-            Coord2 curCoord = *g[ vd ].forcePtr;
-            Coord2 newCoord( _var( nRows, 0 ), _var( nRows + _nVertices, 0 ) );
+            Coord2 curCoord = *g[ vertex ].smoothPtr;
+            Coord2 newCoord( _var( nRows, 0 ), _var( nRows + nVertices, 0 ) );
             for( unsigned int i = 0; i < rowVec.size(); i++ ){
 
-                ForceGraph::vertex_descriptor vdS = vdMatrix[ rowVec[i] ][ 1 ];
-                ForceGraph::vertex_descriptor vdT = vdMatrix[ rowVec[i] ][ 2 ];
-                //cerr << "V = " << vertexID[ vd ] << " S = " << vertexID[ vdS ] << " T = " << vertexID[ vdT ]
+                BoundaryGraph::vertex_descriptor vdS = vdMatrix[ rowVec[i] ][ 1 ];
+                BoundaryGraph::vertex_descriptor vdT = vdMatrix[ rowVec[i] ][ 2 ];
+                //cerr << "V = " << vertexID[ vertex ] << " S = " << vertexID[ vdS ] << " T = " << vertexID[ vdT ]
                 //     << " dist = " << (newCoord - curCoord).norm() << endl;
-                Coord2 coordS = *g[ vdS ].forcePtr;
-                Coord2 coordT = *g[ vdT ].forcePtr;
+                Coord2 coordS = *g[ vdS ].smoothPtr;
+                Coord2 coordT = *g[ vdT ].smoothPtr;
                 double m = ( coordS.y() - coordT.y() ) / ( coordS.x() - coordT.x() );
                 double k = coordS.y() - m * coordS.x();
                 double tmpS = 1.0;
@@ -915,63 +984,155 @@ void Stress::retrieve( void )
                     //cerr << "diff = " << diff << "new = " << newCoord << "cur = " << curCoord << endl;
                     newCoord = diff/2.0 + curCoord;
                     tmpS = tmpS/2.0;
-                    //cerr << vertexID[ vd ] << " == ( " << vertexID[ vdS ] << ", " << vertexID[ vdT ] << " )" << endl;
+                    //cerr << g[ vertex ].id << " == ( " << g[ vdS ].id << ", " << g[ vdT ].id << " )" << endl;
                 }
                 if( tmpS < scale ) scale = tmpS;
             }
         }
     }
     //cerr << "scale = " << scale << endl;
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
-        Coord2 curCoord = *g[ vd ].forcePtr;
-        g[ vd ].coordPtr->x() = g[ vd ].forcePtr->x() = _var( nRows, 0 );
-        g[ vd ].coordPtr->y() = g[ vd ].forcePtr->y() = _var( nRows + _nVertices, 0 );
-        assert( g[ vd ].id == nRows );
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
+
+        // Coord2 curCoord = *g[ vertex ].smoothPtr;
+        double x = _var( nRows, 0 );
+        double y = _var( nRows + nVertices, 0 );
+        if( isnan( x ) || isnan( y ) ){
+            cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+            assert( false );
+        }
+        else{
+            g[ vertex ].coordPtr->x() = g[ vertex ].smoothPtr->x() = x;
+            g[ vertex ].coordPtr->y() = g[ vertex ].smoothPtr->y() = y;
+        }
+
+        // cerr << g[ vertex ].id << " = " << *g[ vertex ].smoothPtr;
+        assert( g[ vertex ].id == nRows );
         nRows++;
     }
 
-#ifdef SKIP
-    // update stress angle
-    BGL_FORALL_EDGES( ed, g, ForceGraph ){
+    // update Stress angle
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
 
-        ForceGraph::vertex_descriptor vdS = source( ed, g );
-        ForceGraph::vertex_descriptor vdT = target( ed, g );
+        BoundaryGraph::vertex_descriptor vdS = source( edge, g );
+        BoundaryGraph::vertex_descriptor vdT = target( edge, g );
 
         Coord2 coordO;
         Coord2 coordD;
         if( g[ vdS ].id < g[ vdT ].id ){
-            coordO = *g[ vdS ].stressPtr;
-            coordD = *g[ vdT ].stressPtr;
+            coordO = *g[ vdS ].smoothPtr;
+            coordD = *g[ vdT ].smoothPtr;
         }
         else{
-            coordO = *g[ vdT ].stressPtr;
-            coordD = *g[ vdS ].stressPtr;
+            coordO = *g[ vdT ].smoothPtr;
+            coordD = *g[ vdS ].smoothPtr;
         }
         double diffX = coordD.x() - coordO.x();
         double diffY = coordD.y() - coordO.y();
         double angle = atan2( diffY, diffX );
 
-        g[ ed ].stressAngle = angle;
-        g[ ed ].angle = angle;
+        g[ edge ].smoothAngle = angle;
+        g[ edge ].angle = angle;
     }
-#endif // SKIP
 
-#ifdef SKIP
     // check possible conflict
     _boundary->checkVEConflicts();
-#endif // SKIP
 
-    cerr << "retrieve:" << endl;
-    BGL_FORALL_VERTICES( vd, g, ForceGraph ){
-        cerr << "V(" << g[ vd ].id << ") = " << *g[ vd ].coordPtr;
-    }
 #ifdef  DEBUG
-    BGL_FORALL_EDGES( ed, g, ForceGraph ){
-        cerr << "E(" << edgeID[ ed ] << ") : smoAngle= " << edgeSmoAngle[ ed ] << endl;
+    cerr << "retrieve:" << endl;
+    BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
+        cerr << "V(" << vertexID[ vertex ] << ") = " << vertexStress[ vertex ];
+    }
+    BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
+        cerr << "E(" << edgeID[ edge ] << ") : smoAngle= " << edgeSmoAngle[ edge ] << endl;
     }
 #endif  // DEBUG
 }
 
+//
+//  Stress::initSeed --	init voronoi seed
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Stress::_initStressSeed( void )
+{
+    _seedVec.clear();
+    BoundaryGraph &bg = _boundary->boundary();
+
+    BGL_FORALL_VERTICES( vd, bg, BoundaryGraph ) {
+
+        Seed seed;
+        seed.id = bg[vd].id;
+        seed.weight = bg[vd].weight;
+        seed.coord = *bg[vd].coordPtr;
+        _seedVec.push_back( seed );
+
+        // cerr << seed.coord;
+    }
+}
+
+//
+//  Stress::_computeVoronoi --        compute voronoi
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+void Stress::_computeVoronoi( void )
+{
+    BoundaryGraph &bg = _boundary->boundary();
+
+    // initialization
+    _initStressSeed();
+
+    _voronoi.id() = 0;
+    _voronoi.init( _seedVec, _contour );
+
+    //cerr << "_seedVec.size() = " << _voronoi.seedVec()->size() << endl;
+    //cerr << "contour = " << _contour;
+    _voronoi.createVoronoiDiagram( false );  // true: weighted, false: uniformed
+
+    BGL_FORALL_VERTICES( vd, bg, BoundaryGraph ) {
+
+        // initialization
+        bg[ vd ].centroidPtr->zero();
+
+        // Find the average pixel coordinates of each vertex
+        if ( _seedVec[ bg[vd].id ].cellPolygon.area() != 0 ) {
+#ifdef DEBUG
+            cerr << "vid = " << bg[vd].id
+             << " element = " << _seedVec[ bg[vd].id ].cellPolygon.elements().size()
+             << " area = " << _seedVec[ bg[vd].id ].cellPolygon.area()
+             << " center = " << _seedVec[ bg[vd].id ].cellPolygon.center() << endl;
+#endif // DEBUG
+            //Coord2 dest = _seedVec[ bg[vd].id ].cellPolygon.center();
+            //*bg[ vd ].centroidPtr = dest - *bg[ vd ].coordPtr;
+            *bg[ vd ].centroidPtr = _seedVec[ bg[vd].id ].cellPolygon.center();
+        }
+        else {
+            cerr << "%%%%%%%%%% Number of pixels vanishes!!!" << endl;
+            bg[ vd ].centroidPtr->zero();
+        }
+    }
+}
+
+//
+//  Stress::run --        run optimization
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+void Stress::run( void )
+{
+}
 
 //
 //  Stress::clear --        memory management

@@ -62,6 +62,7 @@ private:
     int                 _clonedThreshold;           // if == 0, cloned by type, else by threshold value
     string 				_inputpath, _tmppath,       // input output files
                         _fileFreq, _fileType;       // metabolite frequency
+    ENERGYTYPE          _energyType;
 
     // ui
     int                 _font_size;
@@ -111,6 +112,8 @@ public:
     const string &  fileFreq( void ) const          { return _fileFreq; }
     string &        fileType( void )                { return _fileType; }
     const string &  fileType( void ) const          { return _fileType; }
+    ENERGYTYPE &        energyType( void )          { return _energyType; }
+    const ENERGYTYPE &  energyType( void ) const    { return _energyType; }
 
     int &           fontSize( void )                { return _font_size; }
     const int &     fontSize( void ) const          { return _font_size; }

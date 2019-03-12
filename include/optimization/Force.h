@@ -18,7 +18,7 @@
 #include "base/Polygon2.h"
 #include "base/QuardTree.h"
 #include "base/Config.h"
-#include "optimization/Voronoi.h"
+#include "optimization/Stress.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -28,20 +28,20 @@
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class Force : public Common
+class Force : public Stress
 {
 
   private:
 
     unsigned int    _id;
     string          _configFilePath;        // config file path
-    Polygon2        _contour;               // outer boundary
     Coord2          _boxCenter;             // bounding box center of the contour
     double			_width, _height;        // bounding box of the contour
-
     ForceGraph     *_forceGraphPtr;
-    vector< Seed >  _seedVec;               // seeds of the voronoi diagram
-    Voronoi         _voronoi;               // geometric voronoi diagram
+
+    //vector< Seed >  _seedVec;               // seeds of the voronoi diagram
+    //Voronoi         _voronoi;               // geometric voronoi diagram
+    //Polygon2        _contour;               // outer boundary
     QImage *		_diagram;               // image for computing GPU base voronoi diagram
 
     QuardTree       _quardTree;
@@ -73,7 +73,7 @@ class Force : public Common
     void		    _force		        ( void );
     void		    _BarnesHut  		( void );
 
-    void            _initSeed           ( void );
+    void            _initForceSeed      ( void );
     void		    _centroidGeometry   ( void );
 
     double		    _gap		        ( void );

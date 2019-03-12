@@ -16,7 +16,13 @@ WorkerLevelMiddle::~WorkerLevelMiddle()
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerLevelMiddle::onTimeout( void )
+void WorkerLevelMiddle::onTimeoutStress( void )
+{
+    QCoreApplication::processEvents();
+    Q_EMIT updateProcess();
+}
+
+void WorkerLevelMiddle::onTimeoutForce( void )
 {
     double err = 0.0;
 
@@ -78,7 +84,12 @@ void WorkerLevelMiddle::process( const QString &parameter )
     // cerr << "WorkerLevelMiddle::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeout );
+    if( _energyType == ENERGY_FORCE ){
+        QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeoutForce );
+    }
+    else{
+        QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeoutStress );
+    }
 
     start( TIMER_INTERVAL );
 }

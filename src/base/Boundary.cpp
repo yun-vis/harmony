@@ -34,6 +34,22 @@
 //
 void Boundary::_init( void )
 {
+    double sumL = 0.0;
+
+    // compute distanceBeta
+    BGL_FORALL_EDGES( ed, _boundary, BoundaryGraph )
+    {
+        BoundaryGraph::vertex_descriptor vdS = source( ed, _boundary );
+        BoundaryGraph::vertex_descriptor vdT = target( ed, _boundary );
+
+        double dist = ( *_boundary[vdS].coordPtr - *_boundary[vdT].coordPtr ).norm();
+        sumL += dist;
+    }
+
+    _distAlpha = sumL / (double) num_edges( _boundary );
+
+    _nVertices = num_vertices( _boundary );
+    _nEdges = num_edges( _boundary );
 }
 
 //

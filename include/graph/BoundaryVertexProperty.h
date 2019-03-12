@@ -59,9 +59,11 @@ class BoundaryVertexProperty: public BaseVertexProperty {
     vector< unsigned int >      lineID;
     bool                        isFixed;
 
-    Coord2 *                    geoPtr;
+    Coord2 *                    geoPtr;         // initial position
     Coord2 *                    smoothPtr;
-    Coord2 *                    forcePtr;
+    Coord2 *                    centroidPtr;
+    // Coord2 *                    stressPtr;
+    // Coord2 *                    octilinearPtr;
 
 //------------------------------------------------------------------------------
 //	Special functions

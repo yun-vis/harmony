@@ -27,7 +27,8 @@ public:
 
 public Q_SLOTS:
 
-    void onTimeout( void );
+    void onTimeoutForce( void );
+    void onTimeoutStress( void );
     void process( const QString &parameter );
 
 Q_SIGNALS:

@@ -20,7 +20,7 @@ using namespace std;
 
 #include "base/Coord2.h"
 #include "base/Common.h"
-#include "graph/BaseGraphProperty.h"
+#include "graph/BoundaryGraphProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -31,7 +31,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceGraphProperty: public BaseGraphProperty {
+class ForceGraphProperty: public BoundaryGraphProperty {
 
   protected:
 
@@ -43,7 +43,8 @@ class ForceGraphProperty: public BaseGraphProperty {
 //	Constructors
 //------------------------------------------------------------------------------
     ForceGraphProperty();				// constructor (default)
-    ForceGraphProperty( const ForceGraphProperty & v ) {
+    ForceGraphProperty( const ForceGraphProperty & g )
+            : BoundaryGraphProperty ( g ) {
     }					// copy constructor
     virtual ~ForceGraphProperty() {}		// destructor
 

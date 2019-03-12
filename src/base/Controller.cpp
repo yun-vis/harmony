@@ -63,5 +63,8 @@ void Controller::init( vector < unsigned int > indexVec, WORKERTYPE type )
     _workerPtr->setRegionData( _levelhighPtr,
                                _boundaryPtr, _simplifiedBoundaryPtr,
                                _cellPtr, _roadPtr, _lanePtr );
+    //_workerPtr->setStressData( _stress );
     _workerPtr->init( indexVec );
+
+    // cerr << "Controller::size = " << _workerPtr->stressSize() << endl;
 }

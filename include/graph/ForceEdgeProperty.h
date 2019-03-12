@@ -20,7 +20,7 @@
 using namespace std;
 
 #include "base/Coord2.h"
-#include "graph/BaseEdgeProperty.h"
+#include "graph/BoundaryEdgeProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -31,7 +31,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceEdgeProperty: public BaseEdgeProperty {
+class ForceEdgeProperty: public BoundaryEdgeProperty {
 
   protected:
 
@@ -45,7 +45,7 @@ class ForceEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
     ForceEdgeProperty();				// constructor (default)
     ForceEdgeProperty( const ForceEdgeProperty & e )
-        : BaseEdgeProperty ( e ) {
+        : BoundaryEdgeProperty ( e ) {
     }					                // copy constructor
     virtual ~ForceEdgeProperty() {}		// destructor
 

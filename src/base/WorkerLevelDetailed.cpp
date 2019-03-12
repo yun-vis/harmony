@@ -16,7 +16,13 @@ WorkerLevelDetailed::~WorkerLevelDetailed()
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerLevelDetailed::onTimeout( void )
+void WorkerLevelDetailed::onTimeoutStress( void )
+{
+    QCoreApplication::processEvents();
+    Q_EMIT updateProcess();
+}
+
+void WorkerLevelDetailed::onTimeoutForce( void )
 {
     // cerr << "WorkerLevelDetailed::timeout =  " << QThread::currentThreadId() << endl;
 
@@ -83,7 +89,12 @@ void WorkerLevelDetailed::process( const QString &parameter )
     // cerr << "WorkerLevelDetailed::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeout );
+    if( _energyType == ENERGY_FORCE ){
+        QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeoutForce );
+    }
+    else{
+        QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeoutStress );
+    }
 
     start( 500 );
 }

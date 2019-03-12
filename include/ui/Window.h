@@ -96,16 +96,20 @@ private:
 
     // thread controller
     // boundary
-    void processBoundary( void );
+    void processBoundaryForce( void );
+    void processBoundaryStress( void );
     void stopProcessBoundary( void );
     // cell
-    void processCell( void );
+    void processCellForce( void );
+    void processCellStress( void );
     void stopProcessCell( void );
     // bone
-    void processBone( void );
+    void processBoneForce( void );
+    void processBoneStress( void );
     void stopProcessBone( void );
     // pathway
-    void processDetailedPathway( void );
+    void processDetailedPathwayForce( void );
+    void processDetailedPathwayStress( void );
     void stopProcessDetailedPathway( void );
     void steinertree( void );
 

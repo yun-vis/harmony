@@ -140,7 +140,7 @@ bool Bone::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
 void Bone::_clear( void )
 {
     _forceBone.clear();
-    _stressBone.clear();
+    //_stressBone.clear();
 }
 
 

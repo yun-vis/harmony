@@ -214,6 +214,8 @@ void Polygon2::updateCentroid( void )
     double y = CGAL::to_double( (ORIGIN + center).y() );
     _centroid.x() = x;
     _centroid.y() = y;
+
+    _area = CGAL::to_double( polygon.area() );
 }
 
 

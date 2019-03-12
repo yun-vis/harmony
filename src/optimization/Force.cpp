@@ -301,7 +301,7 @@ void Force::_force( void )
 //  Outputs
 //	none
 //
-void Force::_initSeed( void )
+void Force::_initForceSeed( void )
 {
     _seedVec.clear();
     BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
@@ -324,7 +324,7 @@ void Force::_initSeed( void )
 //
 void Force::_centroidGeometry( void )
 {
-    _initSeed();
+    _initForceSeed();
     //_voronoi.init( _seedVec, _contour );
     //_voronoi.createWeightedVoronoiDiagram();
     _voronoi.id() = _id;

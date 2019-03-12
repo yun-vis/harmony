@@ -365,7 +365,7 @@ void Voronoi::mapSeedsandPolygons( void )
 
                 //cerr << "poly.coords = " << poly.elements()[0];
                 //cerr << "test = " << (*_seedVecPtr)[i].cellPolygon.elements()[0];
-                // cerr << "area = " << (*_seedVecPtr)[i].cellPolygon.area() << " c = " << (*_seedVecPtr)[i].cellPolygon.center();
+                //cerr << "area = " << (*_seedVecPtr)[i].cellPolygon.area() << " c = " << (*_seedVecPtr)[i].cellPolygon.center();
 #ifdef  DEBUG
                 cerr << "area = " << itP->second.area() << endl;
                 cerr << "pgon_area = " << poly.area() << endl;

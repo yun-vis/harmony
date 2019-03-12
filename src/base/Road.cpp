@@ -275,6 +275,7 @@ void Road::_initLane( unsigned int gid,
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
+            vector < UndirectedBaseGraph::vertex_descriptor > polygons;
             Polygon2 &p = seedVec[i].cellPolygon;
             unsigned int size =  p.elements().size();
 
@@ -291,6 +292,58 @@ void Road::_initLane( unsigned int gid,
                     _road[ vdNew ].id = nVertices;
                     _road[ vdNew ].coordPtr = new Coord2( coord.x(), coord.y() );
                     nVertices++;
+
+                    polygons.push_back( vdNew );
+                }
+                else{
+                    polygons.push_back( vd );
+                }
+            }
+            ForceGraph &fg = itC->second.detail.bone();
+            ForceGraph::vertex_descriptor vd = vertex( i, fg );
+            // cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
+            polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
+        }
+    }
+
+    // add intermediate vertices
+    vector< vector< UndirectedBaseGraph::vertex_descriptor > > gatesVD;
+    gatesVD.resize( gates.size() );
+    for( unsigned int i = 0; i < gates.size(); i++ ){
+
+        Coord2 &coord = *_road[ gates[i] ].coordPtr;
+
+        unsigned int id = _road[ gates[i] ].initID;
+        map < unsigned int , vector < UndirectedBaseGraph::vertex_descriptor > > ::iterator itV = polygonVD.begin();
+        advance( itV, id );
+        vector < UndirectedBaseGraph::vertex_descriptor > &vdVec = itV->second;
+        // cerr << "vdVec.size() = " << vdVec.size() << endl;
+        for( unsigned int j = 0; j < vdVec.size(); j++ ){
+
+            Coord2 &coordM = *_road[ vdVec[j] ].coordPtr;
+            Coord2 &coordN = *_road[ vdVec[(j+1)%vdVec.size()] ].coordPtr;
+            Coord2 mnVec = coordN - coordM;
+            Coord2 cmVec = coord - coordM;
+            double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
+            Coord2 coordD = coordM + D*mnVec;
+
+            if( Line2::isOnLine( coordD, coordM, coordN )){
+
+                // check if exist
+                UndirectedBaseGraph::vertex_descriptor vd = NULL;
+                bool isFound = _findVertexInRoad( coordD, vd );
+
+                if( isFound ){
+                    gatesVD[i].push_back( vd );
+                }
+                else {
+
+                    // add intermediate vertices
+                    UndirectedBaseGraph::vertex_descriptor vdNew = add_vertex( _road );
+                    _road[ vdNew ].id = nVertices;
+                    _road[ vdNew ].coordPtr = new Coord2( coordD.x(), coordD.y() );
+                    nVertices++;
+                    gatesVD[i].push_back( vdNew );
                 }
             }
         }
@@ -395,9 +448,11 @@ void Road::_initLane( unsigned int gid,
             edVec.push_back( ed );
         }
     }
+/*
     for( unsigned int i = 0; i < edVec.size(); i++ ){
-        //remove_edge( edVec[i], _road );
+        remove_edge( edVec[i], _road );
     }
+*/
     // reorder edge id
     nEdges = 0;
     BGL_FORALL_EDGES( ed, _road, UndirectedBaseGraph ){
@@ -435,8 +490,24 @@ void Road::_initLane( unsigned int gid,
     // connect gates and lane
     for( unsigned int i = 0; i < gates.size(); i++ ){
 
-        Coord2 &coord = *_road[ gates[i] ].coordPtr;
+        UndirectedBaseGraph::vertex_descriptor &vdG = gates[i];
+        Coord2 &coordG = *_road[ vdG ].coordPtr;
+        for( unsigned int j = 0; j < gatesVD[i].size(); j++ ){
 
+            UndirectedBaseGraph::vertex_descriptor &vdI = gatesVD[i][j];
+            Coord2 &coordI = *_road[ vdI ].coordPtr;
+
+            // add edges
+            pair< UndirectedBaseGraph::edge_descriptor, unsigned int > foreE = add_edge( vdG, vdI, _road );
+            UndirectedBaseGraph::edge_descriptor foreED = foreE.first;
+            _road[ foreED ].id = nEdges;
+            _road[ foreED ].weight = (coordG - coordI).norm();
+            _road[ foreED ].visitedTimes = 0;
+
+            nEdges++;
+        }
+
+/*
         UndirectedBaseGraph::vertex_descriptor minVD;
         unsigned int id = _road[ gates[i] ].initID;
         map < unsigned int , vector < UndirectedBaseGraph::vertex_descriptor > > ::iterator itV = polygonVD.begin();
@@ -502,6 +573,7 @@ void Road::_initLane( unsigned int gid,
                 }
             }
         }
+*/
     }
 }
 

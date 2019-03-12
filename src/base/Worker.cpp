@@ -6,7 +6,8 @@
 //----------------------------------------------------------
 Worker::Worker( void )
 {
-    cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
+    // cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
+    _energyType = ENERGY_FORCE;
 }
 
 Worker::~Worker()

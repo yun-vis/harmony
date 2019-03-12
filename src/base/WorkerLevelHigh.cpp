@@ -16,7 +16,28 @@ WorkerLevelHigh::~WorkerLevelHigh()
 //----------------------------------------------------------
 // Slots
 //----------------------------------------------------------
-void WorkerLevelHigh::onTimeout( void )
+void WorkerLevelHigh::onTimeoutStress( void )
+{
+    double err = 0.0;
+
+    if ( _iterCG > 3*num_vertices( _levelhighPtr->bone() ) ) {
+        stop();
+    }
+    else{
+
+        // cerr << "WorkerLevelHigh::size = " << (*_stress).size() << endl;
+        err = _levelhighPtr->forceBone().ConjugateGradient( _iterCG );
+        _levelhighPtr->forceBone().retrieve();
+
+        cerr << "_iterCG = " << _iterCG << " err = " << err << endl;
+        _iterCG++;
+    }
+
+    QCoreApplication::processEvents();
+    Q_EMIT updateProcess();
+}
+
+void WorkerLevelHigh::onTimeoutForce( void )
 {
     double err = 0.0;
     switch ( _levelhighPtr->forceBone().mode() ) {
@@ -73,9 +94,18 @@ void WorkerLevelHigh::process( const QString &parameter )
     // signal and slot should be thread safe
 
     // cerr << "WorkerLevelHigh::process =  " << QThread::currentThreadId() << endl;
-
+    //cerr << "WorkerLevelHigh::stresssize = " << (*_stress).size() << endl;
+    //cerr << "WorkerLevelHigh::pathway = " << _pathway->nSubsys() << endl;
     _timerPtr = new QTimer;
-    QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelHigh::onTimeout );
+    if( _energyType == ENERGY_FORCE ){
+        QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelHigh::onTimeoutForce );
+    }
+    else{
+
+        _iterCG = 0;
+        _levelhighPtr->forceBone().initConjugateGradient();
+        QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelHigh::onTimeoutStress );
+    }
 
     start( TIMER_INTERVAL );
 }

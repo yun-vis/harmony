@@ -13,14 +13,14 @@
 #include <QtGui/QPainter>
 #include <QtCore/QString>
 
-#include "Pathway.h"
-
+#include "base/Pathway.h"
+#include "optimization/Stress.h"
 
 class PathwayData
 {
 protected:
 
-	Pathway             *_pathway;
+	Pathway             		*_pathway;
 
     void _pickColor( COLORTYPE colorScheme, unsigned int id, vector< double > &rgb );
 	void _pickPredefinedColor( unsigned int id, vector< double > &rgb );

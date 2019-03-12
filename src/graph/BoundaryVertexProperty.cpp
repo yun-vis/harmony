@@ -48,6 +48,10 @@ void BoundaryVertexProperty::_init( void )
     initID = 0;
     lineID.clear();
     isFixed    = false;
+
+    geoPtr = NULL;
+    smoothPtr = NULL;
+    centroidPtr = NULL;
 }
 
 //------------------------------------------------------------------------------

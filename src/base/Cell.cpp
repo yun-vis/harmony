@@ -705,6 +705,7 @@ void Cell::createPolygonComplexFromDetailGraph( void )
                 for( unsigned int j = 0; j < cSize; j++ ) {
                     pVec.push_back( (*f.voronoi().seedVec())[j].cellPolygon );
                 }
+
                 contour.init( idC, pVec );
                 contour.createContour();
                 c.contour = contour.contour();

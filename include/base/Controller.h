@@ -8,6 +8,7 @@
 #include <iostream>
 
 #ifndef Q_MOC_RUN
+#include "base/Worker.h"
 #include "base/WorkerLevelHigh.h"
 #include "base/WorkerLevelMiddle.h"
 #include "base/WorkerLevelLow.h"
@@ -33,6 +34,8 @@ public:
 //------------------------------------------------------------------------------
     const QThread &         wt( void ) const 	 { return _workerThread; }
     QThread &               wt( void )           { return _workerThread; }
+
+    void    setEnergyType( ENERGYTYPE __type ) { _workerPtr->energyType() = __type; }
 
 //------------------------------------------------------------------------------
 //  	Specific functions

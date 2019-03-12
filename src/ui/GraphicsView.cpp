@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 void GraphicsView::_item_seeds( void )
 {
+/*
     ForceGraph &c = _levelhighPtr->bone();
 
     BGL_FORALL_VERTICES( vd, c, ForceGraph ) {
@@ -27,6 +28,23 @@ void GraphicsView::_item_seeds( void )
         _scene->addItem( itemptr );
     }
     cerr << "seeds.size() = " << num_vertices( c ) << endl;
+*/
+    BoundaryGraph &b = _levelhighPtr->forceBone().boundary().boundary();
+
+    BGL_FORALL_VERTICES( vd, b, ForceGraph ) {
+
+        GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
+        //itemptr->setPen( Qt::NoPen );
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
+        itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
+        itemptr->id() = b[vd].id;
+
+        //cerr << vertexCoord[vd];
+        _scene->addItem( itemptr );
+    }
+
 }
 
 void GraphicsView::_item_skeleton( void )
@@ -802,7 +820,6 @@ void GraphicsView::_item_lane( void )
         }
     }
 */
-
 /*
     // draw routers
     //for( unsigned int i = 0; i < 1; i++ ){
@@ -861,6 +878,7 @@ void GraphicsView::_item_lane( void )
             }
         }
     }
+
 }
 
 //------------------------------------------------------------------------------
@@ -875,7 +893,7 @@ void GraphicsView::initSceneItems ( void )
     if( _is_polygonComplexFlag == true ) _item_polygonComplex();
     if( _is_compositeFlag == true ) _item_composite();
     if( _is_skeletonFlag == true ) _item_skeleton();
-    // if( _is_polygonFlag == true ) _item_seeds();
+    if( _is_polygonFlag == true ) _item_seeds();
     if( _is_cellFlag == true ) {
         _item_cells();
         _item_interCellComponents();
@@ -986,6 +1004,15 @@ GraphicsView::GraphicsView( QWidget *parent )
         string paramFileFreq = conf.gets( "file_freq" );
         _fileFreq = paramFileFreq;
     }
+    if ( conf.has( "energy_type" ) ){
+        string paramEnergyType = conf.gets( "energy_type" );
+        if( paramEnergyType == "ENERGY_FORCE" )
+            _energyType = ENERGY_FORCE;
+        else if ( paramEnergyType == "ENERGY_STRESS" )
+            _energyType = ENERGY_STRESS;
+        else
+            cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+    }
 
     cerr << "filepath: " << configFilePath << endl;
     cerr << "font_size: " << _font_size << endl;
@@ -996,7 +1023,8 @@ GraphicsView::GraphicsView( QWidget *parent )
     cerr << "input_path: " << _inputpath << endl;
     cerr << "tmp_path: " << _tmppath << endl;
     cerr << "file_type: " << _fileFreq << endl;
-    cerr << "file_Freq: " << _fileType << endl;
+    cerr << "file_freq: " << _fileType << endl;
+    cerr << "energy_type: " << _energyType << endl;
 
     setAutoFillBackground( true );
     setBackgroundBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );

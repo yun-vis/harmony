@@ -64,20 +64,36 @@ PathwayData::~PathwayData( void )
 //  Specific functions
 //------------------------------------------------------------------------------
 //
-//  PathwayData::init --    initialization
+//  PathwayData::setPathwayData --    set pathway data
 //
 //  Inputs
-//  pathname: name of the main path
+//  pathway: pointer of the pathway
 //
 //  Outputs
 //  node
 //
 void PathwayData::setPathwayData( Pathway *pathway, double &width, double &height )
 {
-	_pathway        = pathway;
+    _pathway        = pathway;
     *_pathway->width() = width;
     *_pathway->height() = height;
 }
+
+/*
+//
+//  PathwayData::setStressData --    set stress data
+//
+//  Inputs
+//  stress: pointer of the stress vector
+//
+//  Outputs
+//  node
+//
+void PathwayData::setStressData( vector< vector< Stress > > *stress )
+{
+	_stress     = stress;
+}
+*/
 
 void PathwayData::_pickPredefinedColor( unsigned int id, vector< double > &rgb )
 {

@@ -21,7 +21,7 @@ using namespace std;
 
 #include "base/Coord2.h"
 #include "base/Common.h"
-#include "graph/BaseVertexProperty.h"
+#include "graph/BoundaryVertexProperty.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -32,7 +32,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceVertexProperty: public BaseVertexProperty {
+class ForceVertexProperty: public BoundaryVertexProperty {
 
   protected:
 
@@ -44,7 +44,8 @@ class ForceVertexProperty: public BaseVertexProperty {
 //	Constructors
 //------------------------------------------------------------------------------
     ForceVertexProperty();				// constructor (default)
-    ForceVertexProperty( const ForceVertexProperty & v ) {
+    ForceVertexProperty( const ForceVertexProperty & v )
+        : BoundaryVertexProperty ( v ) {
     }					// copy constructor
     virtual ~ForceVertexProperty() {}		// destructor
 

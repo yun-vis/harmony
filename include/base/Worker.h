@@ -21,8 +21,10 @@ class Worker : public QObject, public PathwayData, public RegionData
 
 protected:
 
+    unsigned int _iterCG;
     vector < unsigned int > _indexVec;
     QTimer * _timerPtr;
+    ENERGYTYPE  _energyType;
 
 public:
 
@@ -33,6 +35,9 @@ public:
         _indexVec = indexVec;
     }
 
+    const ENERGYTYPE &		    energyType( void ) const   { return _energyType; }
+    ENERGYTYPE &			    energyType( void )	       { return _energyType; }
+
 protected:
 
     void start( int interval );
@@ -40,7 +45,8 @@ protected:
 
 public Q_SLOTS:
 
-    virtual void onTimeout( void ) {;}
+    virtual void onTimeoutForce( void ) {;}
+    virtual void onTimeoutStress( void ) {;}
     virtual void process( const QString &parameter ) {;}
 
 Q_SIGNALS:

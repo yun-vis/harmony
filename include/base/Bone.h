@@ -45,7 +45,7 @@ protected:
 
     // optimization
     Force                       _forceBone;     // force layout
-    Stress                      _stressBone;    // stress layout
+    //Stress                      _stressBone;    // stress layout
 
     map< unsigned int, Polygon2 >           _polygonComplex;    // for composite graph
     map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;  // for graph bound
@@ -72,8 +72,8 @@ public:
 
     const Force &		        forceBone( void ) const     { return _forceBone; }
     Force &			            forceBone( void )	        { return _forceBone; }
-    const Stress &		        stressBone( void ) const    { return _stressBone; }
-    Stress &			        stressBone( void )	        { return _stressBone; }
+    //const Stress &		        stressBone( void ) const    { return _stressBone; }
+    //Stress &			        stressBone( void )	        { return _stressBone; }
 
     const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
     map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }

@@ -305,6 +305,9 @@ void Contour2::createContour( void )
         double cosTheta = vecA*vecB/(vecA.norm()*vecB.norm());
         if( fabs( M_PI-acos( cosTheta ) ) > 0.1 ){
             //cerr << "acos = " << acos( cosTheta ) << endl;
+
+            //Coord2 &prev = polygon.elements()[ (i-1+polygon.elements().size())%polygon.elements().size() ];
+            //if( (prev-polygon.elements()[i]).norm() > 1 )
             _contour.elements().push_back( polygon.elements()[i] );
         }
     }

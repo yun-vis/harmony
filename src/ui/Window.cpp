@@ -457,6 +457,7 @@ void Window::selectStressSmall( void )
 
 void Window::selectStress( void )
 {
+/*
     OPTTYPE opttype = _levelhighPtr->stressBone().opttype();
 
     // run smooth optimization
@@ -473,7 +474,7 @@ void Window::selectStress( void )
         {
             unsigned int long iter = _levelhighPtr->stressBone().nVertices();
             //_stressPtr->ConjugateGradient( iter );
-            _levelhighPtr->stressBone().ConjugateGradient( 1 );
+            //_levelhighPtr->stressBone().ConjugateGradient( 1 );
             break;
         }
         default:
@@ -483,6 +484,7 @@ void Window::selectStress( void )
     _levelhighPtr->stressBone().clear();
 
     redrawAllScene();
+*/
 }
 
 
@@ -530,7 +532,7 @@ void Window::listenProcessBoundary( void )
     }
 }
 
-void Window::processBoundary( void )
+void Window::processBoundaryForce( void )
 {
     Controller * conPtr = new Controller;
     conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
@@ -546,7 +548,31 @@ void Window::processBoundary( void )
 
     _gv->isPolygonFlag() = true;
 
-    QString text = "processBoundary";
+    QString text = "processBoundaryForce";
+    Q_EMIT conPtr->operate( text );
+}
+
+void Window::processBoundaryStress( void )
+{
+    _levelhighPtr->forceBone().prepare( &_levelhighPtr->bone(), _content_width/2, _content_height/2 );
+
+    Controller * conPtr = new Controller;
+    conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+    conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
+                           _cellPtr, _roadPtr, _lanePtr );
+    //conPtr->setStressData( _stress );
+
+    vector < unsigned int > indexVec;
+    conPtr->init( indexVec, WORKER_BOUNDARY );
+    conPtr->setEnergyType( _gv->energyType() );
+    controllers.push_back( conPtr );
+
+    connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
+    connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
+
+    _gv->isPolygonFlag() = true;
+
+    QString text = "processBoundaryStress";
     Q_EMIT conPtr->operate( text );
 }
 
@@ -580,7 +606,7 @@ void Window::listenProcessCell( void )
     }
 }
 
-void Window::processCell( void )
+void Window::processCellForce( void )
 {
     _gv->isCellPolygonFlag() = true;
     _gv->isCellFlag() = true;
@@ -599,9 +625,13 @@ void Window::processCell( void )
         connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
         connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
 
-        QString test;
-        Q_EMIT conPtr->operate( test );
+        QString text = "processCellForce";
+        Q_EMIT conPtr->operate( text );
     }
+}
+
+void Window::processCellStress( void )
+{
 }
 
 void Window::stopProcessCell( void )
@@ -637,7 +667,7 @@ void Window::listenProcessBone( void )
     }
 }
 
-void Window::processBone( void )
+void Window::processBoneForce( void )
 {
     vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
 
@@ -668,10 +698,14 @@ void Window::processBone( void )
             connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
             connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
 
-            QString text = "processBone";
+            QString text = "processBoneForce";
             Q_EMIT conPtr->operate( text );
         }
     }
+}
+
+void Window::processBoneStress( void )
+{
 }
 
 void Window::stopProcessBone( void )
@@ -702,7 +736,7 @@ void Window::listenProcessDetailedPathway( void )
     }
 }
 
-void Window::processDetailedPathway( void )
+void Window::processDetailedPathwayForce( void )
 {
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
 
@@ -735,11 +769,11 @@ void Window::processDetailedPathway( void )
                 bg[ curVD ].smoothPtr   = new Coord2( cg[ vd ].coordPtr->x(), cg[ vd ].coordPtr->y() );
                 bg[ curVD ].coordPtr    = cg[ vd ].coordPtr;
 
+#ifdef DEBUG
                 if( i == 0 ){
-
                     cerr << "i = " << i << " vid = " << cg[ vd ].id << " cg[ vd ].coordPtr = " << *cg[ vd ].coordPtr;
-
                 }
+#endif // DEBUG
 
                 bg[ curVD ].id = bg[ curVD ].initID = nVertices;
                 bg[ curVD ].namePtr = new string( to_string( bg[ curVD ].id ) );
@@ -868,10 +902,15 @@ void Window::processDetailedPathway( void )
             connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessDetailedPathway );
 
             idC++;
-            QString text = "processDetailedPathway";
+            QString text = "processDetailedPathwayForce";
             Q_EMIT conPtr->operate( text );
         }
     }
+}
+
+void Window::processDetailedPathwayStress( void )
+{
+
 }
 
 void Window::steinertree( void )
@@ -1581,6 +1620,9 @@ void Window::updateLevelMiddlePolygonComplex( void )
             for( unsigned int i = 0; i < polygonComplexVD.size(); i++ ){
                 itC->second.contour.elements()[i].x() = bg[ polygonComplexVD[i] ].coordPtr->x();
                 itC->second.contour.elements()[i].y() = bg[ polygonComplexVD[i] ].coordPtr->y();
+
+                cerr << "i = " << i << " " << itC->second.contour.elements()[i];
+
             }
         }
     }
@@ -1620,6 +1662,7 @@ void Window::updateLevelDetailPolygonComplex( void )
                 for( unsigned int j = 0; j < polygon.elements().size(); j++ ){
                     polygon.elements()[j].x() = bg[ itP->second[j] ].coordPtr->x();
                     polygon.elements()[j].y() = bg[ itP->second[j] ].coordPtr->y();
+                    cerr << "i = " << i << " j = " << j << " " << polygon.elements()[j];
                 }
             }
         }
@@ -1655,7 +1698,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            processBoundary();
+            if( _gv->energyType() == ENERGY_FORCE )
+                processBoundaryForce();
+            else if( _gv->energyType() == ENERGY_STRESS )
+                processBoundaryStress();
             break;
         }
         case Qt::Key_2:
@@ -1672,7 +1718,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            processCell();
+            if( _gv->energyType() == ENERGY_FORCE )
+                processCellForce();
+            else if( _gv->energyType() == ENERGY_STRESS )
+                processCellStress();
             break;
         }
         case Qt::Key_W:
@@ -1706,7 +1755,10 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            processBone();
+            if( _gv->energyType() == ENERGY_FORCE )
+                processBoneForce();
+            else if( _gv->energyType() == ENERGY_STRESS )
+                processBoneStress();
             _gv->isCellPolygonFlag() = false;
             _gv->isCellPolygonComplexFlag() = true;
             _gv->isMCLPolygonFlag() = true;
@@ -1728,7 +1780,11 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            processDetailedPathway();
+
+            if( _gv->energyType() == ENERGY_FORCE )
+                processDetailedPathwayForce();
+            else if( _gv->energyType() == ENERGY_STRESS )
+                processDetailedPathwayStress();
             _gv->isCellPolygonComplexFlag() = false;
             _gv->isPathwayPolygonFlag() = true;
             _gv->isMCLPolygonFlag() = false;
@@ -1927,7 +1983,7 @@ void Window::keyPressEvent( QKeyEvent *event )
                  << " veCoverage = " << _gv->veCoverage() << endl;
 #endif // DEBUG
 
-            double ratio = 5.0;
+            double ratio = 1.0;
             double x = ratio * sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / 12.0 );
             _content_width = 4.0 * x;
             _content_height = 3.0 * x;

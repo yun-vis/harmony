@@ -18,14 +18,16 @@
 
 using namespace std;
 
-#include "graph/ForceGraph.h"
+#include "base/Boundary.h"
 #include "base/Config.h"
+#include "graph/SkeletonGraph.h"
+#include "optimization/Voronoi.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
 //------------------------------------------------------------------------------
-//#define STRESS_CONFLICT
-//#define STRESS_BOUNDARY
+#define Stress_CONFLICT
+#define Stress_BOUNDARY
 
 //----------------------------------------------------------------------
 //	Defining macros
@@ -35,46 +37,45 @@ class Stress : public Common
 {
 private:
 
-    OPTTYPE         _opttype;
+    OPTTYPE         _opttype;       // Least square or Conjugate Gradient
 
-    // Graph
-    ForceGraph     *_forceGraphPtr;
-    unsigned long   _nVertices;
-    unsigned long   _nEdges;
-
-
-    // Matrix
     Eigen::VectorXd _var;           // x
     Eigen::VectorXd _output;        // b
     Eigen::MatrixXd _coef;          // A
     double          _half_width;    // window_width
     double          _half_height;   // window_height
 
-    // variables
     unsigned int    _nVars;
     unsigned int    _nConstrs;
-    
-    // weight of constraints
     double          _w_angle, _w_position;
     double          _w_contextlength;
     double          _w_boundary, _w_crossing;
     double          _w_labelangle;
+    double          _d_Alpha;       // focus edge length
+    // double          _d_Beta;        // context region length
 
-    double          _unit_length;
-    // double          _d_Alpha;
-    // double          _d_Beta;
+    // Conjugate Gradient
+    Eigen::MatrixXd _A;
+    Eigen::VectorXd _b, _Ap;
+    Eigen::VectorXd _err, _p;
 
 protected:
+
+    Boundary        * _boundary;
+    vector< Seed >  _seedVec;               // seeds of the voronoi diagram
+    Voronoi         _voronoi;               // geometric voronoi diagram
+    Polygon2        _contour;               // boundary of voronoi diagram
 
     void            _setVars        ( unsigned int & nRows );
     void            _setConstraints ( unsigned int & nRows );
     void            _initVars       ( void );
     void            _initCoefs      ( void );
     void            _initOutputs    ( void );
+    void            _computeVoronoi ( void );
+    void            _initStressSeed ( void );
     void            _updateCoefs    ( void );
     void            _updateOutputs  ( void );
-    virtual void    _init           ( ForceGraph     *__forceGraphPtr,
-                                      double __half_width, double __half_height );
+    virtual void    _initStress     ( ForceGraph *__forceGraphPtr, double __width, double __height );
 
 public:
 
@@ -85,24 +86,28 @@ public:
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
-    const unsigned long &			nVertices( void ) const { return _nVertices; }
-    const unsigned long &			nEdges( void ) const { return _nEdges; }
-
     const OPTTYPE &		    opttype( void ) const   { return _opttype; }
     OPTTYPE &			    opttype( void )	        { return _opttype; }
+
+    const unsigned int &	nVertices( void ) const { return _boundary->nVertices(); }
+    const unsigned int &	nEdges( void ) const    { return _boundary->nEdges(); }
+
+    const Boundary &		boundary( void ) const  { return *_boundary; }
+    Boundary &			    boundary( void )	    { return *_boundary; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    double LeastSquare( unsigned long iter );
-    double ConjugateGradient( unsigned long iter );
+    double LeastSquare( unsigned int iter );
+    void initConjugateGradient( void );
+    double ConjugateGradient( unsigned int &iter );
+    void run( void );
 
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-    void prepare( ForceGraph     *__forceGraphPtr,
-                  double __half_width, double __half_height ) {
-        _init( __forceGraphPtr, __half_width, __half_height );
+    void prepare( ForceGraph *__forceGraphPtr, double __width, double __height ) {
+        _initStress( __forceGraphPtr, __width, __height );
     }
 
 //------------------------------------------------------------------------------
