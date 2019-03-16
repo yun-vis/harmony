@@ -20,12 +20,13 @@ void WorkerLevelHigh::onTimeoutStress( void )
 {
     double err = 0.0;
 
-    if ( _iterCG > 3*num_vertices( _levelhighPtr->bone() ) ) {
+    //if ( _iterCG > 5 ) {
+    if ( false ) {
+    //if ( _iterCG > 10*num_vertices( _levelhighPtr->bone() ) ) {
         stop();
     }
     else{
 
-        // cerr << "WorkerLevelHigh::size = " << (*_stress).size() << endl;
         err = _levelhighPtr->forceBone().ConjugateGradient( _iterCG );
         _levelhighPtr->forceBone().retrieve();
 

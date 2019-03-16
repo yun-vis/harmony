@@ -39,11 +39,10 @@ class Force : public Stress
     double			_width, _height;        // bounding box of the contour
     ForceGraph     *_forceGraphPtr;
 
-    //vector< Seed >  _seedVec;               // seeds of the voronoi diagram
-    //Voronoi         _voronoi;               // geometric voronoi diagram
-    //Polygon2        _contour;               // outer boundary
+    //vector< Seed >  _seedVec;             // seeds of the voronoi diagram
+    //Voronoi         _voronoi;             // geometric voronoi diagram
+    //Polygon2        _contour;             // outer boundary
     QImage *		_diagram;               // image for computing GPU base voronoi diagram
-
     QuardTree       _quardTree;
     unsigned int    _iteration;             // iteration of the simulation
     double          _temperatureDecay;      // decay of the temperature (simulated annealing)
@@ -65,7 +64,7 @@ class Force : public Stress
 
   protected:
 
-    void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 &__contour,
+    void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 *__contourPtr,
                               string __configFilePath );
     void            _clear  ( void );
     void		    _random	( void );
@@ -101,8 +100,6 @@ class Force : public Stress
     const unsigned int &    id( void )      const   { return _id; }
     unsigned int &          id( void )              { return _id; }
 
-    const Polygon2 &	    contour ( void )const	{ return _contour; }
-    Polygon2 &	    	    contour ( void )	    { return _contour; }
     const double &		    width ( void )	const	{ return _width; }
     double &			    width ( void )		    { return _width; }
     const double &			height( void )	const	{ return _height; }
@@ -113,9 +110,6 @@ class Force : public Stress
 
     const double &			finalEpsilon ( void )	const	{ return _paramFinalEpsilon; }
     double &			    finalEpsilon ( void )		    { return _paramFinalEpsilon; }
-
-    const Voronoi &         voronoi( void )         const   { return _voronoi; }
-    Voronoi &               voronoi( void )                 { return _voronoi; }
 
     const QImage *          diagram( void )         const   { return _diagram; }
     QImage *                diagram( void )                 { return _diagram; }
@@ -129,9 +123,9 @@ class Force : public Stress
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
-    void init( ForceGraph * __forceGraphPtr, Polygon2 &__contour,
+    void init( ForceGraph * __forceGraphPtr, Polygon2 *__contourPtr,
                string __configFilePath ) {
-        _init( __forceGraphPtr, __contour, __configFilePath );
+        _init( __forceGraphPtr, __contourPtr, __configFilePath );
     }
     void clear( void )				{ _clear(); }
     void random( void )				{ _random(); }

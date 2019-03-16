@@ -29,22 +29,24 @@ void GraphicsView::_item_seeds( void )
     }
     cerr << "seeds.size() = " << num_vertices( c ) << endl;
 */
-    BoundaryGraph &b = _levelhighPtr->forceBone().boundary().boundary();
 
-    BGL_FORALL_VERTICES( vd, b, ForceGraph ) {
+    if( _energyType == ENERGY_STRESS ){
 
-        GraphicsBallItem *itemptr = new GraphicsBallItem;
-        itemptr->fontSize() = _font_size;
-        //itemptr->setPen( Qt::NoPen );
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
-        itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
-        itemptr->id() = b[vd].id;
+        BoundaryGraph &b = _levelhighPtr->forceBone().boundary().boundary();
+        BGL_FORALL_VERTICES( vd, b, BoundaryGraph ) {
 
-        //cerr << vertexCoord[vd];
-        _scene->addItem( itemptr );
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            //itemptr->setPen( Qt::NoPen );
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
+            itemptr->id() = b[vd].id;
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
     }
-
 }
 
 void GraphicsView::_item_skeleton( void )
@@ -111,6 +113,7 @@ void GraphicsView::_item_composite( void )
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
         itemptr->id() = s[vd].id;
+        itemptr->textOn() = true;
 
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
@@ -125,7 +128,7 @@ void GraphicsView::_item_polygonComplex( void )
     map< unsigned int, Polygon2 >::iterator itP = p.begin();
     for( ; itP != p.end(); itP++ ){
 
-        //cerr << "t area = " << itP->second.area() << endl;
+        //cerr << " area = " << itP->second.area() << endl;
         QPolygonF polygon;
         for( unsigned int j = 0; j < itP->second.elements().size(); j++ ){
             polygon.append( QPointF( itP->second.elements()[j].x(), -itP->second.elements()[j].y() ) );
@@ -383,9 +386,53 @@ void GraphicsView::_item_cells( void )
             itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = cellVec[i].bone()[vd].id;
+            itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
+        }
+
+#ifdef DEBUG
+        // bounding box
+        Polygon2 &contour = cellVec[i].forceBone().contour();
+        Coord2 &boundingBox = contour.boundingBox();
+        QPainterPath path;
+        path.moveTo( contour.boxCenter().x() - 0.5*boundingBox.x(), -contour.boxCenter().y() + 0.5*boundingBox.y() );
+        path.lineTo( contour.boxCenter().x() + 0.5*boundingBox.x(), -contour.boxCenter().y() + 0.5*boundingBox.y() );
+        path.lineTo( contour.boxCenter().x() + 0.5*boundingBox.x(), -contour.boxCenter().y() - 0.5*boundingBox.y() );
+        path.lineTo( contour.boxCenter().x() - 0.5*boundingBox.x(), -contour.boxCenter().y() - 0.5*boundingBox.y() );
+        path.moveTo( contour.boxCenter().x() - 0.5*boundingBox.x(), -contour.boxCenter().y() + 0.5*boundingBox.y() );
+
+        // add path
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 3 ) );
+        //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+        itemptr->setPath( path );
+        _scene->addItem( itemptr );
+#endif // DEBUG
+    }
+
+
+    // vironoi seeds
+    if( _energyType == ENERGY_STRESS ){
+
+        for( unsigned int i = 0; i < cellVec.size(); i++ ) {
+            BoundaryGraph &b = cellVec[i].forceBone().boundary().boundary();
+
+            BGL_FORALL_VERTICES( vd, b, BoundaryGraph ) {
+
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = _font_size;
+                //itemptr->setPen( Qt::NoPen );
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
+                itemptr->id() = b[vd].id;
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
         }
     }
 }
@@ -530,29 +577,31 @@ void GraphicsView::_item_mclPolygons( void )
 
             // draw polygons
             Force &f = itC->second.mcl.forceBone();
-            vector< Seed > &seedVec = *f.voronoi().seedVec();
 
-            for( unsigned int i = 0; i < seedVec.size(); i++ ) {
+            if( f.voronoi().seedVec() != NULL ){
+                vector< Seed > &seedVec = *f.voronoi().seedVec();
+                for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 
-                Polygon2 &p = seedVec[i].cellPolygon;
+                    Polygon2 &p = seedVec[i].cellPolygon;
 
-                QPolygonF polygon;
-                for( unsigned int j = 0; j < p.elements().size(); j++ ){
-                    polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
-                    // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+                    QPolygonF polygon;
+                    for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                        polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                        // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+                    }
+
+                    GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+                    vector< double > rgb;
+
+                    pickBrewerColor( k, rgb );
+                    QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                    itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+                    itemptr->setPolygon( polygon );
+
+                    //cerr << vertexCoord[vd];
+                    _scene->addItem( itemptr );
                 }
-
-                GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
-                vector< double > rgb;
-
-                pickBrewerColor( k, rgb );
-                QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
-                itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
-                itemptr->setPolygon( polygon );
-
-                //cerr << vertexCoord[vd];
-                _scene->addItem( itemptr );
             }
         }
     }
@@ -573,30 +622,31 @@ void GraphicsView::_item_pathwayPolygons( void )
 
             Force &f = itC->second.detail.forceBone();
 
-            // draw polygons
-            vector< Seed > &seedVec = *f.voronoi().seedVec();
+            if( f.voronoi().seedVec() != NULL ){
+                // draw polygons
+                vector< Seed > &seedVec = *f.voronoi().seedVec();
+                for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 
-            for( unsigned int i = 0; i < seedVec.size(); i++ ) {
+                    Polygon2 &p = seedVec[i].cellPolygon;
 
-                Polygon2 &p = seedVec[i].cellPolygon;
+                    QPolygonF polygon;
+                    for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                        polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                        // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+                    }
 
-                QPolygonF polygon;
-                for( unsigned int j = 0; j < p.elements().size(); j++ ){
-                    polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
-                    // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+                    GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+                    vector< double > rgb;
+
+                    pickBrewerColor( k, rgb );
+                    QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                    itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+                    itemptr->setPolygon( polygon );
+
+                    //cerr << vertexCoord[vd];
+                    _scene->addItem( itemptr );
                 }
-
-                GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
-                vector< double > rgb;
-
-                pickBrewerColor( k, rgb );
-                QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
-                itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
-                itemptr->setPolygon( polygon );
-
-                //cerr << vertexCoord[vd];
-                _scene->addItem( itemptr );
             }
         }
     }

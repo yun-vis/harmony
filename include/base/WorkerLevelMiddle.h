@@ -25,6 +25,8 @@ public:
     explicit WorkerLevelMiddle( void );
     virtual ~WorkerLevelMiddle();
 
+    virtual const char * className( void ) const { return "WorkerLevelMiddle"; }
+
 public Q_SLOTS:
 
     void onTimeoutForce( void );

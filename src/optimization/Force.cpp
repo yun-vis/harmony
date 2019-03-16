@@ -41,15 +41,18 @@ using namespace std;
 //  Outputs
 //	none
 //
-void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour, string __configFilePath )
+void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour, string __configFilePath )
 {
     // srand48( time( NULL ) );
     srand48( 3 );
 
     _forceGraphPtr = __forceGraphPtr;
-    _contour = __contour;
+    _contour = *__contour;
 
-    _contour.boundingBox( _boxCenter, _width, _height );
+    _contour.computeBoundingBox();
+    _boxCenter = _contour.boxCenter();
+    _width = _contour.boundingBox().x();
+    _height = _contour.boundingBox().y();
 
     cerr << "contour: _width = " << _width << " _height = " << _height << endl;
 
@@ -160,6 +163,7 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 &__contour, string __c
 //
 void Force::_clear( void )
 {
+    Stress::_clear();
     _quardTree.clear();
 }
 

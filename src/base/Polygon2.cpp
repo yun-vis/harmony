@@ -78,6 +78,14 @@ void Polygon2::_clear( void )
 Polygon2::Polygon2()
 {
     _clear();
+
+    _id = 0;
+    _gid = 0;
+    _area = 0.0;
+    _center.zero();        // average of the elements
+    _centroid.zero();      // centroid of the elements
+    _boundingBox.zero();   // width and height of the bounding box
+    _boxCenter.zero();     // center of the bounding box
 }
 
 //
@@ -111,6 +119,8 @@ Polygon2::Polygon2( const Polygon2 & v )
     _center = v._center;
     _centroid = v._centroid;
     _elements = v._elements;
+    _boundingBox = v._boundingBox;
+    _boxCenter = v._boxCenter;
 }
 
 
@@ -136,7 +146,9 @@ Polygon2 & Polygon2::operator = ( const Polygon2 & p )
         _center = p._center;
         _centroid = p._centroid;
         _elements = p._elements;
-    } 
+        _boundingBox = p._boundingBox;
+        _boxCenter = p._boxCenter;
+    }
     return *this;
 }
 
@@ -154,7 +166,7 @@ Polygon2 & Polygon2::operator = ( const Polygon2 & p )
 //  Outputs
 //  none
 //
-void Polygon2::boundingBox( Coord2 &center, double &width, double &height )
+void Polygon2::computeBoundingBox( void )
 {
     double minX = INFINITY, maxX = -INFINITY, minY = INFINITY, maxY = -INFINITY;
     for( unsigned int i = 0; i < _elements.size(); i++ ){
@@ -164,10 +176,10 @@ void Polygon2::boundingBox( Coord2 &center, double &width, double &height )
         if( maxY < _elements[i].y() ) maxY = _elements[i].y();
     }
 
-    center.x() = ( minX + maxX )/2.0;
-    center.y() = ( minY + maxY )/2.0;
-    width = maxX - minX;
-    height = maxY - minY;
+    _boxCenter.x() = ( minX + maxX )/2.0;
+    _boxCenter.y() = ( minY + maxY )/2.0;
+    _boundingBox.x() = maxX - minX;
+    _boundingBox.y() = maxY - minY;
 }
 
 
@@ -247,7 +259,7 @@ void Polygon2::updateOrientation( void )
 }
 
 //
-//  Polygon2::updateOrientation --    update polygon elements if they are not counterclockwise
+//  Polygon2::inPolygon --    check if the coordinate is in the polygon
 //
 //  Inputs
 //  none
@@ -271,6 +283,38 @@ bool Polygon2::inPolygon( const Coord2 &coord )
     }
 
     return false;
+}
+
+//
+//  Polygon2::minDistToPolygon --    find the minimum distance of a vertex to the polygon boundary
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+double Polygon2::minDistToPolygon( const Coord2 &coord )
+{
+    double minDist = INFINITY;
+
+    for( unsigned int i = 0; i < _elements.size(); i++ ){
+
+        Coord2 &coordM = _elements[ i ];
+        Coord2 &coordN = _elements[ (i+1)%_elements.size() ];
+        Coord2 mnVec = coordN - coordM;
+        Coord2 cmVec = coord - coordM;
+        double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
+        Coord2 coordD = coordM + D*mnVec;
+
+        if( Line2::isOnLine( coordD, coordM, coordN )){
+
+            double dist = ( coord - coordD ).norm();
+            if( dist < minDist ) minDist = dist;
+        }
+    }
+
+    return minDist;
 }
 
 //------------------------------------------------------------------------------

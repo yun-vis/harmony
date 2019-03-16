@@ -69,7 +69,7 @@ void Cell::_init( double *veCoveragePtr, map< unsigned int, Polygon2 > * polygon
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
         map< unsigned int, Polygon2 >::iterator itP = polygonComplexPtr->begin();
         advance( itP, i );
-        _cellVec[i].forceBone().init( &_cellVec[i].bone(), itP->second, "../configs/cell.conf" );
+        _cellVec[i].forceBone().init( &_cellVec[i].bone(), &itP->second, "../configs/cell.conf" );
         _cellVec[i].forceBone().id() = i;
         _cellVec[i].forceBone().contour() = itP->second;
     }
@@ -306,9 +306,10 @@ void Cell::_buildCellGraphs( void )
             for (unsigned int k = 0; k < multiple; k++) {
 
                 // add vertex
+                int length = 100;
                 ForceGraph::vertex_descriptor vdNew = add_vertex(  _cellVec[i].bone() );
-                double x = contour.centroid().x() + rand() % 100 - 50;
-                double y = contour.centroid().y() + rand() % 100 - 50;
+                double x = contour.centroid().x() + rand() % length - 0.5*length;
+                double y = contour.centroid().y() + rand() % length - 0.5*length;
 
                 _cellVec[i].bone()[vdNew].id = idV;
                 _cellVec[i].bone()[vdNew].groupID = i;
@@ -343,11 +344,18 @@ void Cell::_buildCellGraphs( void )
                     ForceGraph::vertex_descriptor vdS = vdVec[k];
                     ForceGraph::vertex_descriptor vdT = vdVec[(k + 1) % vdVec.size()];
 
-                    pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge(vdS, vdT, _cellVec[i].bone());
-                    ForceGraph::edge_descriptor foreED = foreE.first;
-                    _cellVec[i].bone()[foreED].id = idE;
+                    bool isFound = false;
+                    ForceGraph::edge_descriptor oldED;
+                    tie( oldED, isFound ) = edge( vdS, vdT, _cellVec[i].bone() );
+                    // cerr << "degreeS = " << degreeS << " degreeT = " << degreeT << endl;
+                    if( isFound == false ){
 
-                    idE++;
+                        pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge(vdS, vdT, _cellVec[i].bone());
+                        ForceGraph::edge_descriptor foreED = foreE.first;
+                        _cellVec[i].bone()[foreED].id = idE;
+
+                        idE++;
+                    }
                 }
             }
 
@@ -499,14 +507,15 @@ void Cell::_buildCellGraphs( void )
         unsigned int total = mergeVec.size() + setMap.size() + unique.size();
         double x = contourI.centroid().x(); // + rand()%100 - 50;
         double y = contourI.centroid().y(); // + rand()%100 - 50;
-        double mainRadius = 50.0, secondRadius = 10.0;
+        double mainRadius = 50.0, secondRadius = 30.0;
+        double shiftAngle = 0.0;
 
         // initialize cell position
         unsigned int index = 0;
         for( unsigned int m = 0; m < mergeVec.size(); m++ ){
 
-            double cosTheta = mainRadius * cos( 2.0*M_PI*(double)index/(double)total );
-            double sinTheta = mainRadius * sin( 2.0*M_PI*(double)index/(double)total );
+            double cosTheta = mainRadius * cos( 2.0*M_PI*(double)index/(double)total + shiftAngle );
+            double sinTheta = mainRadius * sin( 2.0*M_PI*(double)index/(double)total + shiftAngle );
             double cx = x + cosTheta;
             double cy = y + sinTheta;
 
@@ -562,8 +571,8 @@ void Cell::_buildCellGraphs( void )
                 cerr << endl << endl;
 #endif // DEBUG
 
-                double cosValue = secondRadius * cos( 2.0*M_PI*(double)n/(double)mergeVec[m].size() );
-                double sinValue = secondRadius * sin( 2.0*M_PI*(double)n/(double)mergeVec[m].size() );
+                double cosValue = secondRadius * cos( 2.0*M_PI*(double)n/(double)mergeVec[m].size() + shiftAngle );
+                double sinValue = secondRadius * sin( 2.0*M_PI*(double)n/(double)mergeVec[m].size() + shiftAngle );
                 _cellVec[i].bone()[vd].coordPtr->x() = cx + cosValue;
                 _cellVec[i].bone()[vd].coordPtr->y() = cy + sinValue;
                 _cellVec[i].bone()[vd].prevCoordPtr->x() = cx + cosValue;
@@ -579,8 +588,8 @@ void Cell::_buildCellGraphs( void )
             map< unsigned int, vector< unsigned int > >::iterator itM = setMap.begin();
             advance( itM, m );
 
-            double cosTheta = mainRadius * cos( 2.0*M_PI*(double)index/(double)total );
-            double sinTheta = mainRadius * sin( 2.0*M_PI*(double)index/(double)total );
+            double cosTheta = mainRadius * cos( 2.0*M_PI*(double)index/(double)total + shiftAngle );
+            double sinTheta = mainRadius * sin( 2.0*M_PI*(double)index/(double)total + shiftAngle );
 
 
             int targetID = -1;
@@ -616,8 +625,8 @@ void Cell::_buildCellGraphs( void )
                     cy += (targetCoords[ targetID ].y() - cy )/2.0;
                 }
 
-                double cosValue = secondRadius * cos( 2.0*M_PI*(double)n/(double)itM->second.size() );
-                double sinValue = secondRadius * sin( 2.0*M_PI*(double)n/(double)itM->second.size() );
+                double cosValue = secondRadius * cos( 2.0*M_PI*(double)n/(double)itM->second.size() + shiftAngle );
+                double sinValue = secondRadius * sin( 2.0*M_PI*(double)n/(double)itM->second.size() + shiftAngle );
 
                 _cellVec[i].bone()[vd].coordPtr->x() = cx + cosValue;
                 _cellVec[i].bone()[vd].coordPtr->y() = cy + sinValue;

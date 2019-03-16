@@ -46,7 +46,7 @@ private:
 protected:
     
     void                        _init( double *widthPtr, double *heightPtr, double *veCoveragePtr,
-                                       SkeletonGraph & skeletonGraph, Polygon2 &contour );
+                                       SkeletonGraph & skeletonGraph, Polygon2 *contourPtr );
 
 public:
     
@@ -76,9 +76,9 @@ public:
 //  File I/O
 //------------------------------------------------------------------------------
     void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr,
-               SkeletonGraph &__skeletonGraph, Polygon2 &__contour ) {
+               SkeletonGraph &__skeletonGraph, Polygon2 *__contourPtr ) {
         _init( __widthPtr, __heightPtr, __veCoveragePtr,
-               __skeletonGraph, __contour );
+               __skeletonGraph, __contourPtr );
     }
     void clear( void );
 

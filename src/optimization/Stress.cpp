@@ -34,22 +34,30 @@ using namespace std;
 //  Outputs
 //      none
 //
-void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double __half_height )
+void Stress::_initStress( ForceGraph *forceGraphPtr,
+                          Polygon2 *contourPtr )
 {
-    _boundary                   = new Boundary;
     BoundaryGraph & g           = _boundary->boundary();
     unsigned int &nVertices     = _boundary->nVertices();
     unsigned int &nEdges        = _boundary->nEdges();
     unsigned int &nLines        = _boundary->nLines();
-    _half_width                 = __half_width;
-    _half_height                = __half_height;
+    //_half_width                 = __half_width;
+    //_half_height                = __half_height;
 
     // initialization
-    _contour.elements().clear();
-    _contour.elements().push_back( Coord2( - _half_width, - _half_height ) );
-    _contour.elements().push_back( Coord2( + _half_width, - _half_height ) );
-    _contour.elements().push_back( Coord2( + _half_width, + _half_height ) );
-    _contour.elements().push_back( Coord2( - _half_width, + _half_height ) );
+    _contour = *contourPtr;
+    _contour.updateCentroid();
+    _contour.computeBoundingBox();
+    _half_width                 = 0.5*_contour.boundingBox().x();
+    _half_height                = 0.5*_contour.boundingBox().y();
+
+//#ifdef DEBUG
+    cerr << "num_vertices( *forceGraphPtr ) = " << num_vertices( *forceGraphPtr ) << endl;
+    cerr << "_contour = " << _contour;
+    cerr << "_half_width = " << _half_width << endl;
+    cerr << "_half_height = " << _half_height << endl;
+    cerr << "_contour.area() = " << _contour.area() << endl;
+//#endif // DEBUG
 
     // copy the graph
     BGL_FORALL_VERTICES( vd, *forceGraphPtr, ForceGraph ) {
@@ -93,6 +101,7 @@ void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double
         g[ addED ].weight = 1.0;
         g[ addED ].geoAngle = angle;
         g[ addED ].smoothAngle = angle;
+        g[ addED ].targetAngle = 0;
         g[ addED ].angle = angle;
         g[ addED ].lineID.push_back( nLines );
         g[ addED ].visitedTimes = 0;
@@ -100,8 +109,9 @@ void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double
 
     // initialization
     _boundary->init();
-    _d_Alpha                    = 1.5*_boundary->dAlpha();
-
+    double aspectRatio = _half_width/_half_height;
+    _d_Alpha                      = sqrt( _contour.area()/num_vertices( g ) );
+    //_d_Alpha                    = _boundary->dAlpha();
     //_d_Beta                     = _boundary->dBeta();
 
     // initialization
@@ -115,7 +125,7 @@ void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double
     //_w_crossing         = sqrt( 60.0  ); // <- 15.0
     //_w_labelangle       = sqrt( 20.0  ); // <- 1.0
 
-    string configFilePath = "../configs/Stress.conf";
+    string configFilePath = "../configs/stress.conf";
 
     //read config file
     Base::Config conf( configFilePath );
@@ -148,9 +158,24 @@ void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double
     if ( conf.has( "opttype" ) ){
         string paramType = conf.gets( "opttype" );
         if( paramType == "LEAST_SQUARE" )
-            _opttype = LEAST_SQUARE;
+            _paramOptType = LEAST_SQUARE;
         if( paramType == "CONJUGATE_GRADIENT" )
-            _opttype = CONJUGATE_GRADIENT;
+            _paramOptType = CONJUGATE_GRADIENT;
+    }
+
+    if ( conf.has( "voronoi_frequency" ) ){
+        string paramVoronoiFreq = conf.gets( "voronoi_frequency" );
+        _paramVoronoiFreq = stoi( paramVoronoiFreq );
+    }
+
+    if ( conf.has( "ratio_position" ) ){
+        string paramRatioPosition = conf.gets( "ratio_position" );
+        _paramRatioPosition = stringToDouble( paramRatioPosition );
+    }
+
+    if ( conf.has( "ratio_voronoi" ) ){
+        string paramRatioVoronoi = conf.gets( "ratio_voronoi" );
+        _paramRatioVoronoi = stringToDouble( paramRatioVoronoi );
     }
 
 //#ifdef  DEBUG
@@ -163,7 +188,11 @@ void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double
          << "_w_position = " << _w_position << endl
          << "_w_boundary = " << _w_boundary << endl
          << "_w_crossing = " << _w_crossing << endl;
-    cerr << "_opttype = " << _opttype << endl;
+    cerr << "_opttype = " << _paramOptType << endl
+         << "_voronoi_frequency = " << _paramVoronoiFreq << endl
+         << "_ratio_position = " << _paramRatioPosition << endl
+         << "_ratio_voronoi = " << _paramRatioVoronoi << endl;
+    cerr << "_contour.size() = " << _contour.elements().size() << endl;
 //#endif  // DEBUG
 
 //------------------------------------------------------------------------------
@@ -219,7 +248,7 @@ void Stress::_initStress( ForceGraph *forceGraphPtr, double __half_width, double
 void Stress::_initCoefs( void )
 {
     BoundaryGraph  & g            = _boundary->boundary();
-    unsigned int nVertices              = _boundary->nVertices();
+    unsigned int nVertices        = _boundary->nVertices();
 
     //cerr<< "nVertices = " << nVertices << endl;
 
@@ -227,6 +256,8 @@ void Stress::_initCoefs( void )
     unsigned int nRows = 0;
     _coef.resize( _nConstrs, _nVars );
     _coef << Eigen::MatrixXd::Zero( _nConstrs, _nVars );
+
+    printGraph( g );
 
     // Regular edge length
     BGL_FORALL_EDGES( edge, g, BoundaryGraph )
@@ -273,11 +304,10 @@ void Stress::_initCoefs( void )
                     else angle = M_PI + g[ ed ].geoAngle;
                 }
 #ifdef  DEBUG
-                cerr << vertexID[ vS ] << endl;
-                cerr << vertexID[ vT ] << ", " 
-                     << vertexCoord[ vT ] << ", " 
-                     << vertexGeo[ vT ] << endl;
-                cerr << "EIA = " << edgeID[ ed ] << setw(10) << " angle = " << angle << endl;
+                cerr << g[ vS ].id << endl;
+                cerr << g[ vT ].id << ", "
+                     << *g[ vT ].coordPtr << *g[ vT ].geoPtr << endl;
+                cerr << "EIA = " << g[ ed ].id << setw(10) << " angle = " << angle << endl;
 #endif  // DEBUG
                 circM.insert( pair< double, BoundaryGraph::edge_descriptor >( angle, ed ) );
             }
@@ -361,7 +391,7 @@ void Stress::_initCoefs( void )
 
 #ifdef  DEBUG
     cerr << "_coef:" << endl;
-    cerr << _coef << endl;
+    cerr << setprecision(5) << _coef << endl;
 #endif  // DEBUG
 }
 
@@ -502,21 +532,46 @@ void Stress::_updateCoefs( void )
 
     Eigen::MatrixXd     oldCoef;
     oldCoef = _coef.block( 0, 0, _nConstrs, _nVars );
-#ifdef  Stress_CONFLICT
+#ifdef  STRESS_CONFLICT
     nVE = _boundary->VEconflict().size();
 #endif  // Stress_CONFLICT
-#ifdef  Stress_BOUNDARY
+
+
+#ifdef  STRESS_BOUNDARY
+    Coord2 &boxCenter = _contour.boxCenter();
+#ifdef DEBUG
+    cerr << "_half_width = " << _half_width << " _half_height = " << _half_height << endl;
+    cerr << "boxCenter = " << boxCenter;
+#endif // DEBUG
+    // double minD = _d_Alpha/2.0;
+    double minD = 10.0;
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
     {
-        double minD = _d_Alpha/2.0;
-        //if( vertexIsStation[ vd ] == false )
-            //minD = vertexExternal[ vd ].leaderWeight() * _d_Beta/2.0;
-        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) nB++;
-        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) nB++;
-        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) nB++;
-        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) nB++;
+        if( !_contour.inPolygon( *g[ vd ].smoothPtr ) ) nB++;
+
+#ifdef SKIP
+        for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
+
+            Coord2 &coordA = _contour.elements()[i];
+            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+            double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+
+            if ( geoL * smoothL <= 0.0 ) nB++;
+        }
+#endif // SKIP
+
+#ifdef SKIP
+        if ( g[ vd ].smoothPtr->x() <= boxCenter.x() - ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() >= boxCenter.x() + ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() <= boxCenter.y() - ( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() >= boxCenter.y() + ( _half_height - minD ) ) nB++;
+#endif // SKIP
     }
-#endif  // Stress_BOUNDARY
+#endif  // STRESS_BOUNDARY
+
+    cerr << "_nConstrs = " << _nConstrs << " nB = " << nB << " nVE = " << nVE << " _nVars = " << _nVars << endl;
+
     _coef.resize( _nConstrs + nB + 2*nVE, _nVars );
     // _coef << Eigen::MatrixXd::Zero( _nConstrs + nB + 2*nVE, _nVars );
 
@@ -528,38 +583,56 @@ void Stress::_updateCoefs( void )
 
     unsigned int nRows = _nConstrs;
 
-#ifdef  Stress_BOUNDARY
+#ifdef  STRESS_BOUNDARY
     // add boundary coefficient
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph ){
 
         unsigned int id = g[ vd ].id;
-        double minD = _d_Alpha/2.0;
-        //if( vertexIsStation[ vd ] == false )
-        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Alpha/2.0;
+        if( !_contour.inPolygon( *g[ vd ].smoothPtr ) ){
+            cerr << "vid = " << id << endl;
+            _coef( nRows, id ) = _w_boundary;
+            nRows++;
+        }
+#ifdef SKIP
+        for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
 
-        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) {
+            Coord2 &coordA = _contour.elements()[i];
+            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+            double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+
+            if ( geoL * smoothL <= 0.0 ) {
+                cerr << "vid = " << id << endl;
+                _coef( nRows, id ) = _w_boundary;
+                nRows++;
+            }
+        }
+#endif // SKIP
+#ifdef SKIP
+        if ( g[ vd ].smoothPtr->x() <= boxCenter.x() - ( _half_width - minD ) ) {
             _coef( nRows, id ) = _w_boundary;
             nRows++;
         }
-        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() >= boxCenter.x() + ( _half_width - minD ) ) {
             _coef( nRows, id ) = _w_boundary;
             nRows++;
         }
-        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() <= boxCenter.y() - ( _half_height - minD ) ) {
             _coef( nRows, id + nVertices ) = _w_boundary;
             nRows++;
         }
-        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() >= boxCenter.y() + ( _half_height - minD ) ) {
             _coef( nRows, id + nVertices ) = _w_boundary;
             nRows++;
         }
+#endif // SKIP
     }
-#endif  // Stress_BOUNDARY
+#endif  // STRESS_BOUNDARY
 
     // cerr << "_coef.rows = " << _coef.rows() << endl;
     // cerr << "_coef.cols = " << _coef.cols() << endl;
 
-#ifdef  Stress_CONFLICT
+#ifdef  STRESS_CONFLICT
     // add conflict coefficient
     unsigned int countVE = 0;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
@@ -587,7 +660,7 @@ void Stress::_updateCoefs( void )
         
         countVE++;
     } 
-#endif  // Stress_CONFLICT
+#endif  // STRESS_CONFLICT
 
 #ifdef  DEBUG
     cerr << "###############" << endl;
@@ -617,21 +690,36 @@ void Stress::_updateOutputs( void )
     unsigned int nRows = 0;
     Eigen::VectorXd     oldOutput;
     oldOutput = _output;
-#ifdef  Stress_CONFLICT
+#ifdef  STRESS_CONFLICT
     nVE = _boundary->VEconflict().size();
-#endif  // Stress_CONFLICT
-#ifdef  Stress_BOUNDARY
+#endif  // STRESS_CONFLICT
+#ifdef  STRESS_BOUNDARY
+    Coord2 &boxCenter = _contour.boxCenter();
+    // double minD = _d_Alpha/2.0;
+    double minD = 10.0;
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
     {
-        double minD = _d_Alpha/2.0;
-        //if( vertexIsStation[ vd ] == false )
-        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Alpha/2.0;
-        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) nB++;
-        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) nB++;
-        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) nB++;
-        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) nB++;
+        if( !_contour.inPolygon( *g[ vd ].smoothPtr ) ) nB++;
+
+#ifdef SKIP
+        for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
+
+            Coord2 &coordA = _contour.elements()[i];
+            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+            double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+
+            if ( geoL * smoothL <= 0.0 ) nB++;
+        }
+#endif // SKIP
+#ifdef SKIP
+        if ( g[ vd ].smoothPtr->x() <= boxCenter.x() - ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->x() >= boxCenter.x() + ( _half_width - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() <= boxCenter.y() - ( _half_height - minD ) ) nB++;
+        if ( g[ vd ].smoothPtr->y() >= boxCenter.y() + ( _half_height - minD ) ) nB++;
+#endif // SKIP
     }
-#endif  // Stress_BOUNDARY
+#endif  // STRESS_BOUNDARY
     _output.resize( _nConstrs + nB + 2*nVE );
     _output << Eigen::VectorXd::Zero( _nConstrs + nB + 2*nVE );
     //cerr << "_output.rows = " << _output.rows() << endl;
@@ -701,59 +789,85 @@ void Stress::_updateOutputs( void )
     }
 
     // Positional constraints
-    double avgA = 4.0*_half_width * _half_height/(double)num_vertices( g );
+    double avgA = 0.5*_contour.area()/(double)num_vertices( g );
     // cerr << "avgA = " << avgA << endl;
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         double area = 0.0;
-        if( _seedVec.size() > 0 )
+        if( _seedVec.size() > 0 ){
             area = _seedVec[ g[ vertex ].id ].cellPolygon.area();
+            // cerr << "area = " << area << " avgA = " << avgA << endl;
+        }
         double ratio = area/avgA;
+        //Coord2 vecVC = *g[ vertex ].centroidPtr - Coord2( oldOutput( nRows, 0 ), oldOutput( nRows+1, 0 ) );
         // x
-        if( area > avgA )
-            _output( nRows, 0 ) = 0.2 * oldOutput( nRows, 0 ) + 0.8*g[ vertex ].centroidPtr->x();
+        if( area > avgA ){
+            //_output( nRows, 0 ) = oldOutput( nRows, 0 ) + _paramRatioVoronoi* ( vecVC/vecVC.norm() ).x();
+            _output( nRows, 0 ) = _paramRatioPosition * oldOutput( nRows, 0 ) + _paramRatioVoronoi*g[ vertex ].centroidPtr->x();
+        }
         else
             _output( nRows, 0 ) = oldOutput( nRows, 0 );
         nRows++;
 
         // y
-        if( area > avgA )
-            _output( nRows, 0 ) = 0.2 * oldOutput( nRows, 0 ) + 0.8*g[ vertex ].centroidPtr->y();
+        if( area > avgA ){
+            //_output( nRows, 0 ) = oldOutput( nRows, 0 ) + _paramRatioVoronoi* ( vecVC/vecVC.norm() ).y();
+            _output( nRows, 0 ) = _paramRatioPosition * oldOutput( nRows, 0 ) + _paramRatioVoronoi*g[ vertex ].centroidPtr->y();
+        }
         else
             _output( nRows, 0 ) = oldOutput( nRows, 0 );
         nRows++;
     }
 
-#ifdef  Stress_BOUNDARY
+#ifdef  STRESS_BOUNDARY
     // boundary constraints
     BGL_FORALL_VERTICES( vd, g, BoundaryGraph ){
 
-        double minD = _d_Alpha/2.0;
-        //if( vertexIsStation[ vd ] == false )
-        //    minD = vertexExternal[ vd ].leaderWeight() * _d_Alpha/2.0;
+        if( !_contour.inPolygon( *g[ vd ].smoothPtr ) ){
 
-        if ( g[ vd ].smoothPtr->x() <= -( _half_width - minD ) ) {
+            _output( nRows, 0 ) = _w_boundary * _contour.minDistToPolygon( *g[ vd ].smoothPtr );
+            nRows++;
+        }
+
+#ifdef SKIP
+        for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
+
+            Coord2 &coordA = _contour.elements()[i];
+            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+            double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
+
+            if ( geoL * smoothL <= 0.0 ) {
+                _output( nRows, 0 ) = _w_boundary * fabs( smoothL/(coordB-coordA).norm() );
+                nRows++;
+            }
+        }
+#endif // SKIP
+
+#ifdef SKIP
+        if ( g[ vd ].smoothPtr->x() <= boxCenter.x() - ( _half_width - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * -( _half_width - minD );
             nRows++;
         }
-        if ( g[ vd ].smoothPtr->x() >= ( _half_width - minD ) ) {
+        if ( g[ vd ].smoothPtr->x() >= boxCenter.x() + ( _half_width - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * ( _half_width - minD );
             nRows++;
         }
-        if ( g[ vd ].smoothPtr->y() <= -( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() <= boxCenter.y() - ( _half_height - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * -( _half_height - minD );
             nRows++;
         }
-        if ( g[ vd ].smoothPtr->y() >= ( _half_height - minD ) ) {
+        if ( g[ vd ].smoothPtr->y() >= boxCenter.y() + ( _half_height - minD ) ) {
             _output( nRows, 0 ) = _w_boundary * ( _half_height - minD );
             nRows++;
         }
+#endif // SKIP
     }
-#endif  // Stress_BOUNDARY
+#endif  // STRESS_BOUNDARY
 
     // cerr << "nRows = " << nRows << endl;
 
-#ifdef  Stress_CONFLICT
+#ifdef  STRESS_CONFLICT
     // conflict constraints
     unsigned int countVE = 0;
     for ( VEMap::iterator it = _boundary->VEconflict().begin();
@@ -782,7 +896,7 @@ void Stress::_updateOutputs( void )
         _output( nRows, 0 ) = _w_crossing * delta * ( v - p ).y();
         nRows++;
     }
-#endif  // Stress_CONFLICT
+#endif  // STRESS_CONFLICT
 
 #ifdef  DEBUG
     cerr << "_updatedOutput:" << endl;
@@ -910,11 +1024,17 @@ double Stress::ConjugateGradient( unsigned int &iter )
 
     // update
     retrieve();
-    _computeVoronoi();
+    //if( ( iter % _paramVoronoiFreq == 1 ) ){
+    //if( ( iter/_paramVoronoiFreq > 0 ) && ( iter % _paramVoronoiFreq == 0 ) ){
+        //cerr << "computing Voronoi..." << endl;
+        //cerr << "contour = " << _contour;
+        //if( _workerName != "WorkerLevelMiddle" )
+            _computeVoronoi();
+    //}
     _updateCoefs();
     _updateOutputs();
 
-    cerr << "iter = " << iter << endl;
+    // cerr << "iter = " << iter << endl;
 
     return sqrt( _err.adjoint() * _err );
 }
@@ -955,6 +1075,7 @@ void Stress::retrieve( void )
 
     unsigned int nRows = 0;
     double scale = 1.0;
+#ifdef SKIP
     // update coordinates
     // but freeze the vertex that is too close to an edge
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
@@ -990,17 +1111,21 @@ void Stress::retrieve( void )
             }
         }
     }
+#endif // SKIP
+
     //cerr << "scale = " << scale << endl;
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
 
         // Coord2 curCoord = *g[ vertex ].smoothPtr;
         double x = _var( nRows, 0 );
         double y = _var( nRows + nVertices, 0 );
+        Coord2 c( x, y );
         if( isnan( x ) || isnan( y ) ){
             cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
             assert( false );
         }
-        else{
+        //else {
+        else if( _contour.inPolygon( c ) ) { // update only if the coordinates are in the contour
             g[ vertex ].coordPtr->x() = g[ vertex ].smoothPtr->x() = x;
             g[ vertex ].coordPtr->y() = g[ vertex ].smoothPtr->y() = y;
         }
@@ -1143,8 +1268,35 @@ void Stress::run( void )
 //  Outputs
 //      none
 //
-void Stress::clear( void )
+void Stress::_clear( void )
 {
+    _var.resize( 0 );           // x
+    _output.resize( 0 );        // b
+    _coef.resize( 0, 0 );       // A
+    _half_width = 0.0;
+    _half_height = 0.0;
+
+    _nVars = 0.0;
+    _nConstrs = 0.0;
+    _w_angle = 0.0;
+    _w_position = 0.0;
+    _w_contextlength = 0.0;
+    _w_boundary = 0.0;
+    _w_crossing = 0.0;
+    _w_labelangle = 0.0;
+    _d_Alpha = 0.0;           // focus edge length
+
+    _paramOptType = LEAST_SQUARE;
+    _paramVoronoiFreq = 0;
+    _paramRatioPosition = 0.0;
+    _paramRatioVoronoi = 0.0;
+
+    // Conjugate Gradient
+    _A.resize( 0, 0 );
+    _b.resize( 0 );
+    _Ap.resize( 0 );
+    _err.resize( 0 );
+    _p.resize( 0 );
 }
 
 //------------------------------------------------------------------------------
@@ -1161,7 +1313,8 @@ void Stress::clear( void )
 //  none
 //
 Stress::Stress( void )
-{   
+{
+    _boundary                   = new Boundary;
 }
 
 //

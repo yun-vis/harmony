@@ -30,6 +30,7 @@ typedef CGAL::Polygon_2< K >::Vertex_circulator           Vertex_circulator;
 using CGAL::ORIGIN;
 
 #include "base/Coord2.h"
+#include "base/Line2.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -50,6 +51,8 @@ class Polygon2 {
     Coord2              _center;        // average of the elements
     Coord2              _centroid;      // centroid of the elements
     vector< Coord2 >    _elements;      // coordinates of end points
+    Coord2              _boundingBox;   // width and height of the bounding box
+    Coord2              _boxCenter;     // center of the bounding box
     CGAL::Polygon_2< K > _polygon;
     virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
     void                _clear( void );
@@ -100,14 +103,22 @@ class Polygon2 {
     vector< Coord2 > &	        elements( void )	    { return _elements; }
     const vector< Coord2 > &	elements( void ) const	{ return _elements; }
 
+    // width and height of the bounding box
+    Coord2 &	                boundingBox( void )	        { return _boundingBox; }
+    const Coord2 &	            boundingBox( void ) const	{ return _boundingBox; }
+
+    // center of the bounding box
+    Coord2 &	                boxCenter( void )	        { return _boxCenter; }
+    const Coord2 &	            boxCenter( void ) const	    { return _boxCenter; }
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-    void boundingBox( Coord2 &center, double &width, double &height );
+    void computeBoundingBox( void );
     void updateCentroid( void );
     void updateOrientation( void );
     bool inPolygon( const Coord2 &cood );
+    double minDistToPolygon( const Coord2 &cood );
 
 //------------------------------------------------------------------------------
 //	Intersection check

@@ -18,6 +18,29 @@ WorkerLevelMiddle::~WorkerLevelMiddle()
 //----------------------------------------------------------
 void WorkerLevelMiddle::onTimeoutStress( void )
 {
+    double err = 0.0;
+
+    //if ( _iterCG > 50 ) {
+    if ( false ) {
+    //if ( _iterCG > 10*num_vertices( _cellPtr->cellVec()[ _indexVec[0] ].bone() ) ) {
+        stop();
+    }
+    else{
+
+        err = _cellPtr->cellVec()[ _indexVec[0] ].forceBone().ConjugateGradient( _iterCG );
+        _cellPtr->cellVec()[ _indexVec[0] ].forceBone().retrieve();
+
+        // cerr << "WorkerLevelMiddle::i = " << _iterCG << " subID = " << _indexVec[0] << " err = " << err << endl;
+#ifdef DEBUG
+        //cerr << "i = " << _indexVec[0] << " _iterCG = " << _iterCG << " err = " << err << endl;
+        //cerr << "_contour = " << *_cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour() << endl;
+        cerr << "_id = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().id() << endl;
+        cerr << "_contour.size() = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour().elements().size() << endl;
+        cerr << "_seedVec.size() = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().voronoi().seedVec()->size() << endl;
+#endif // DEBUG
+        _iterCG++;
+    }
+
     QCoreApplication::processEvents();
     Q_EMIT updateProcess();
 }
@@ -80,7 +103,6 @@ void WorkerLevelMiddle::process( const QString &parameter )
 {
     // here is the expensive or blocking operation
     // signal and slot should be thread safe
-
     // cerr << "WorkerLevelMiddle::process =  " << QThread::currentThreadId() << endl;
 
     _timerPtr = new QTimer;
@@ -88,6 +110,15 @@ void WorkerLevelMiddle::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeoutForce );
     }
     else{
+        _iterCG = 0;
+        _cellPtr->cellVec()[ _indexVec[0] ].forceBone().workerName() = "WorkerLevelMiddle";
+        _cellPtr->cellVec()[ _indexVec[0] ].forceBone().initConjugateGradient();
+
+#ifdef DEBUG
+        cerr << "process::_id() = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().id() << endl;
+        cerr << "process::_contour.size() = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour().elements().size() << endl;
+        // cerr << "_contour = " << *_cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour() << endl;
+#endif // DEBUG
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeoutStress );
     }
 

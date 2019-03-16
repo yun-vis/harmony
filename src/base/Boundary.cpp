@@ -48,6 +48,8 @@ void Boundary::_init( void )
 
     _distAlpha = sumL / (double) num_edges( _boundary );
 
+    _contour->area();
+
     _nVertices = num_vertices( _boundary );
     _nEdges = num_edges( _boundary );
 }

@@ -53,6 +53,7 @@ private:
     // display
     double             _content_width;
     double             _content_height;
+    Polygon2           _contour;
 
     // menu
     // load

@@ -18,6 +18,35 @@ WorkerLevelDetailed::~WorkerLevelDetailed()
 //----------------------------------------------------------
 void WorkerLevelDetailed::onTimeoutStress( void )
 {
+    double err = 0.0;
+
+    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
+
+    multimap< int, CellComponent > & cellComponentMap = cellComponentVec[ _indexVec[0] ];
+    multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+    advance( itC, _indexVec[1] );
+    CellComponent &cell = itC->second;
+
+    //if ( _iterCG > 50 ) {
+    if ( false ) {
+        //if ( _iterCG > 10*num_vertices( _cellPtr->cellVec()[ _indexVec[0] ].bone() ) ) {
+        stop();
+    }
+    else{
+
+        err = cell.detail.forceBone().ConjugateGradient( _iterCG );
+        cell.detail.forceBone().retrieve();
+
+#ifdef DEBUG
+        //cerr << "i = " << _indexVec[0] << " _iterCG = " << _iterCG << " err = " << err << endl;
+        //cerr << "_contour = " << *_cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour() << endl;
+        cerr << "_id = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().id() << endl;
+        cerr << "_contour.size() = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour().elements().size() << endl;
+        cerr << "_seedVec.size() = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().voronoi().seedVec()->size() << endl;
+#endif // DEBUG
+        _iterCG++;
+    }
+
     QCoreApplication::processEvents();
     Q_EMIT updateProcess();
 }
@@ -93,6 +122,20 @@ void WorkerLevelDetailed::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeoutForce );
     }
     else{
+        _iterCG = 0;
+
+        vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
+
+        multimap< int, CellComponent > & cellComponentMap = cellComponentVec[ _indexVec[0] ];
+        multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+        advance( itC, _indexVec[1] );
+        CellComponent &cell = itC->second;
+
+        cell.detail.forceBone().workerName() = "WorkerLevelDetailed";
+        cell.detail.forceBone().initConjugateGradient();
+
+        //cerr << "_contour = " << _cellPtr->cellVec()[ _indexVec[0] ].forceBone().contour() << endl;
+
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeoutStress );
     }
 

@@ -312,10 +312,10 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
 
         //Print the polygon as a WKT polygon
         vector< K::Point_2 > p;
-        //cout << fnum << ", ""\"POLYGON ((" ;
+        //cerr << fnum << ", ""\"POLYGON ((" << endl;
         for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
 
-            // cerr << setprecision(20) << "x = " << x << " y = " << y << endl;
+            //cerr << setprecision(20) << "x = " << v->x() << " y = " << v->y() << endl;
             p.push_back( K::Point_2( CGAL::to_double( v->x() ), CGAL::to_double( v->y() ) ) );
         }
 

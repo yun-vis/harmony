@@ -25,6 +25,8 @@ public:
     explicit WorkerLevelHigh( void );
     virtual ~WorkerLevelHigh();
 
+    virtual const char * className( void ) const { return "WorkerLevelHigh"; }
+
 public Q_SLOTS:
 
     void onTimeoutForce( void );

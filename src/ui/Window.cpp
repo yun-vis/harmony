@@ -534,12 +534,15 @@ void Window::listenProcessBoundary( void )
 
 void Window::processBoundaryForce( void )
 {
+    // create a new thread
     Controller * conPtr = new Controller;
     conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                            _cellPtr, _roadPtr, _lanePtr );
 
     vector < unsigned int > indexVec;
+    // set energy type
+    conPtr->setEnergyType( _gv->energyType() );
     conPtr->init( indexVec, WORKER_BOUNDARY );
     controllers.push_back( conPtr );
 
@@ -554,16 +557,17 @@ void Window::processBoundaryForce( void )
 
 void Window::processBoundaryStress( void )
 {
-    _levelhighPtr->forceBone().prepare( &_levelhighPtr->bone(), _content_width/2, _content_height/2 );
+    _levelhighPtr->forceBone().prepare( &_levelhighPtr->bone(), &_contour );
 
+    // create a new thread
     Controller * conPtr = new Controller;
     conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                            _cellPtr, _roadPtr, _lanePtr );
-    //conPtr->setStressData( _stress );
 
     vector < unsigned int > indexVec;
     conPtr->init( indexVec, WORKER_BOUNDARY );
+    // set energy type
     conPtr->setEnergyType( _gv->energyType() );
     controllers.push_back( conPtr );
 
@@ -602,7 +606,7 @@ void Window::listenProcessCell( void )
 
 
     if( ( allFinished == true ) && ( controllers.size() != 0 ) ){
-        simulateKey( Qt::Key_W );
+        //simulateKey( Qt::Key_W );
     }
 }
 
@@ -620,6 +624,8 @@ void Window::processCellForce( void )
         vector < unsigned int > indexVec;
         indexVec.push_back( i );
         conPtr->init( indexVec, WORKER_CELL );
+        // set energy type
+        conPtr->setEnergyType( _gv->energyType() );
         controllers.push_back( conPtr );
 
         connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
@@ -632,6 +638,54 @@ void Window::processCellForce( void )
 
 void Window::processCellStress( void )
 {
+    _gv->isCellPolygonFlag() = true;
+    _gv->isCellFlag() = true;
+
+    map< unsigned int, Polygon2 >  p = _levelhighPtr->polygonComplex();
+    //for( unsigned int i = 0; i < 1; i++ ){
+    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
+
+#ifdef DEBUG
+        ForceGraph &g = _cellPtr->cellVec()[i].bone();
+        unsigned int nEdges = num_edges( g );
+        {
+            ForceGraph::vertex_descriptor vdBS = vertex( 1, g );
+            ForceGraph::vertex_descriptor vdBT = vertex( 2, g );
+
+            pair< BoundaryGraph::edge_descriptor, unsigned int > addE = add_edge( vdBS, vdBT, g );
+            BoundaryGraph::edge_descriptor addED = addE.first;
+
+            g[ addED ].id = nEdges;
+            g[ addED ].initID = nEdges;
+            g[ addED ].weight = 1.0;
+        }
+#endif // DEBUG
+
+        // for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
+
+        map< unsigned int, Polygon2 >::iterator itP = p.begin();
+        advance( itP, i );
+        // cerr << "cell::contour = " << itP->second.elements().size() << endl;
+        _cellPtr->cellVec()[i].forceBone().prepare( &_cellPtr->cellVec()[i].bone(), &itP->second );
+        //cerr << "cell::contour = " << _cellPtr->cellVec()[i].forceBone().contour()->elements().size() << endl;
+
+        Controller * conPtr = new Controller;
+        conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
+                               _cellPtr, _roadPtr, _lanePtr );
+        vector < unsigned int > indexVec;
+        indexVec.push_back( i );
+        conPtr->init( indexVec, WORKER_CELL );
+        // set energy type
+        conPtr->setEnergyType( _gv->energyType() );
+        controllers.push_back( conPtr );
+
+        connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
+        connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
+
+        QString text = "processCellForce";
+        Q_EMIT conPtr->operate( text );
+    }
 }
 
 void Window::stopProcessCell( void )
@@ -682,7 +736,7 @@ void Window::processBoneForce( void )
             CellComponent &c = itC->second;
 
             // create mcl force
-            c.mcl.forceBone().init( &itC->second.mcl.bone(), itC->second.contour, "../configs/mcl.conf" );
+            c.mcl.forceBone().init( &itC->second.mcl.bone(), &itC->second.contour, "../configs/mcl.conf" );
             c.mcl.forceBone().id() = 0;
 
             Controller * conPtr = new Controller;
@@ -706,6 +760,44 @@ void Window::processBoneForce( void )
 
 void Window::processBoneStress( void )
 {
+    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
+
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
+
+        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
+
+            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+            advance( itC, j );
+            CellComponent &c = itC->second;
+
+            if( num_vertices( itC->second.mcl.bone() ) > 0 ){
+
+                // create mcl force
+                c.mcl.forceBone().prepare( &itC->second.mcl.bone(), &itC->second.contour );
+                c.mcl.forceBone().id() = 0;
+
+                Controller * conPtr = new Controller;
+                conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+                conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
+                                       _cellPtr, _roadPtr, _lanePtr );
+                vector < unsigned int > indexVec;
+                indexVec.push_back( i );
+                indexVec.push_back( j );
+                conPtr->init( indexVec, WORKER_BONE );
+                // set energy type
+                conPtr->setEnergyType( _gv->energyType() );
+                controllers.push_back( conPtr );
+
+                connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
+                connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
+
+                QString text = "processBoneStress";
+                Q_EMIT conPtr->operate( text );
+            }
+        }
+    }
 }
 
 void Window::stopProcessBone( void )
@@ -884,7 +976,7 @@ void Window::processDetailedPathwayForce( void )
             advance( itC, j );
             CellComponent &c = itC->second;
 
-            c.detail.forceBone().init( &c.detail.bone(), c.contour, "../configs/pathway.conf" );
+            c.detail.forceBone().init( &c.detail.bone(), &c.contour, "../configs/pathway.conf" );
             c.detail.forceBone().id() = idC;
 
             // cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
@@ -910,7 +1002,59 @@ void Window::processDetailedPathwayForce( void )
 
 void Window::processDetailedPathwayStress( void )
 {
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
 
+    vector< vector< unsigned int > > idMat;
+    idMat.resize( cellComponentVec.size() );
+    unsigned int idD = 0;
+    for( unsigned int i = 0; i < idMat.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
+        idMat[i].resize( cellComponentMap.size() );
+        for( unsigned int j = 0; j < idMat[i].size(); j++ ){
+
+            idMat[i][j] = idD;
+            idD++;
+        }
+    }
+
+    // cerr << "idD = " << idD << endl;
+    // cerr << "From main thread: " << QThread::currentThreadId() << endl;
+    unsigned int idC = 0;
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
+
+        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
+
+            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+            advance( itC, j );
+            CellComponent &c = itC->second;
+
+            c.detail.forceBone().prepare( &c.detail.bone(), &c.contour );
+            c.detail.forceBone().id() = idC;
+
+            // cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
+            Controller * conPtr = new Controller;
+            conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+            conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
+                                   _cellPtr, _roadPtr, _lanePtr );
+            vector < unsigned int > indexVec;
+            indexVec.push_back( i );
+            indexVec.push_back( j );
+            conPtr->init( indexVec, WORKER_PATHWAY );
+            // set energy type
+            conPtr->setEnergyType( _gv->energyType() );
+            controllers.push_back( conPtr );
+
+            connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
+            connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessDetailedPathway );
+
+            idC++;
+            QString text = "processDetailedPathwayStress";
+            Q_EMIT conPtr->operate( text );
+        }
+    }
 }
 
 void Window::steinertree( void )
@@ -1621,8 +1765,7 @@ void Window::updateLevelMiddlePolygonComplex( void )
                 itC->second.contour.elements()[i].x() = bg[ polygonComplexVD[i] ].coordPtr->x();
                 itC->second.contour.elements()[i].y() = bg[ polygonComplexVD[i] ].coordPtr->y();
 
-                cerr << "i = " << i << " " << itC->second.contour.elements()[i];
-
+                //cerr << "i = " << i << " " << itC->second.contour.elements()[i];
             }
         }
     }
@@ -1714,6 +1857,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_Q:
         {
             simulateKey( Qt::Key_L );
+
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
@@ -1722,6 +1866,7 @@ void Window::keyPressEvent( QKeyEvent *event )
                 processCellForce();
             else if( _gv->energyType() == ENERGY_STRESS )
                 processCellStress();
+
             break;
         }
         case Qt::Key_W:
@@ -1992,13 +2137,16 @@ void Window::keyPressEvent( QKeyEvent *event )
                 _content_height = height()/2.0;
             }
 
-            Polygon2 contour;
-            contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
-            contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
-            contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
-            contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
+            _contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
+            _contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
+            _contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
+            _contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
+            _contour.boundingBox() = Coord2( _content_width, _content_height );
+            _contour.boxCenter().x() = 0.0;
+            _contour.boxCenter().y() = 0.0;
+            _contour.area() = _content_width * _content_height;
             _levelhighPtr->init( &_content_width, &_content_height, &_gv->veCoverage(),
-                                 _pathway->skeletonG(), contour );
+                                 _pathway->skeletonG(), &_contour );
 #ifdef DEBUG
             cerr << "width x height = " << width() * height() << endl;
             cerr << "label sum = " << sum << endl;

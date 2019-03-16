@@ -21,7 +21,7 @@
 using namespace std;
 
 #include "base/Grid2.h"
-#include "base/Contour2.h"
+#include "base/Polygon2.h"
 #include "graph/BoundaryGraph.h"
 #include "graph/ForceGraph.h"
 
@@ -37,7 +37,10 @@ class Boundary : public Common
 protected:
 
     // skeleton
-    BoundaryGraph               _boundary;      // inner + outer boundary
+    BoundaryGraph               _boundary;          // inner + outer boundary
+    Polygon2                    *_contour;          // boundary of the graph
+    double                      *_content_width;    // content width
+    double                      *_content_height;    // content height
 
     // boundary graph
     vector< vector< BoundaryGraph::edge_descriptor > >	    _line;
@@ -76,8 +79,14 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    const BoundaryGraph &       boundary( void ) const      { return _boundary; }
-    BoundaryGraph &			    boundary( void )	        { return _boundary; }
+    const BoundaryGraph &       boundary( void ) const  { return _boundary; }
+    BoundaryGraph &			    boundary( void )	    { return _boundary; }
+    const Polygon2 *		    contour( void ) const   { return _contour; }
+    Polygon2 *		            contour( void )         { return _contour; }
+    const double *		        contentWidth( void ) const   { return _content_width; }
+    double *		            contentWidth( void )         { return _content_width; }
+    const double *		        contentHeight( void ) const  { return _content_height; }
+    double *		            contentHeight( void )        { return _content_height; }
 
     // boundary graph
     const unsigned int &		nVertices( void ) const { return _nVertices; }
