@@ -36,6 +36,8 @@ class GraphicsPolygonItem : public QGraphicsPolygonItem
 {
 private:
 
+    unsigned int    _id;
+    bool            _textOn;
 
 protected:
 
@@ -67,6 +69,11 @@ public:
 //      Reference to members
 //------------------------------------------------------------------------------
 
+    unsigned int &	        id( void ) 	        { return _id; }
+    const unsigned int &	id( void ) const	{ return _id; }
+
+    bool &	                textOn( void ) 	    { return _textOn; }
+    const bool &	        textOn( void ) const{ return _textOn; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

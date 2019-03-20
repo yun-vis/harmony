@@ -53,8 +53,12 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour, string __c
     _boxCenter = _contour.boxCenter();
     _width = _contour.boundingBox().x();
     _height = _contour.boundingBox().y();
+    _normalizeWeight();
 
+#ifdef DEBUG
     cerr << "contour: _width = " << _width << " _height = " << _height << endl;
+    cerr << "nV = " << num_vertices( *__forceGraphPtr ) << " nE = " << num_edges( *__forceGraphPtr ) << endl;
+#endif // DEBUG
 
     _iteration = 1;
     _temperatureDecay = 1.0;
@@ -73,6 +77,21 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour, string __c
     if ( conf.has( "kr" ) ){
         string paramKr = conf.gets( "kr" );
         _paramKr = stringToDouble( paramKr );
+    }
+
+    if ( conf.has( "kc" ) ){
+        string paramKc = conf.gets( "kc" );
+        _paramKc = stringToDouble( paramKc );
+    }
+
+    if ( conf.has( "kd" ) ){
+        string paramKd = conf.gets( "kd" );
+        _paramKd = stringToDouble( paramKd );
+    }
+
+    if ( conf.has( "ke" ) ){
+        string paramKe = conf.gets( "ke" );
+        _paramKe = stringToDouble( paramKe );
     }
 
     if ( conf.has( "ratio_force" ) ){
@@ -153,6 +172,53 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour, string __c
 }
 
 //
+//  Force::_normalize weight --	normalize weight value
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Force::_normalizeWeight( void )
+{
+    ForceGraph &fg = *_forceGraphPtr;
+    double minW = INFINITY, maxW = 0;
+
+    // normalize vertex weight
+    BGL_FORALL_VERTICES( vd, fg, ForceGraph ) {
+        //cerr << "fg[ vd ].w = " << fg[ vd ].weight << endl;
+        if( fg[ vd ].weight < minW ) minW = fg[ vd ].weight;
+        if( fg[ vd ].weight > maxW ) maxW = fg[ vd ].weight;
+    }
+
+    //normalization
+    double minValue = 0.5;
+    BGL_FORALL_VERTICES( vd, fg, ForceGraph ) {
+        fg[ vd ].weight = minValue + ( 1.0-minValue ) * ( fg[ vd ].weight - minW )/( maxW - minW );
+        //cerr << "fg[ vd ].weight = " << fg[ vd ].weight << endl;
+    }
+
+
+    minW = INFINITY;
+    maxW = 0;
+    // normalize edge weight
+    BGL_FORALL_EDGES( ed, fg, ForceGraph ) {
+        //cerr << "fg[ ed ].w = " << fg[ ed ].weight << endl;
+        if( fg[ ed ].weight < minW ) minW = fg[ ed ].weight;
+        if( fg[ ed ].weight > maxW ) maxW = fg[ ed ].weight;
+    }
+
+    //cerr << "minW = " << minW << " maxW = " << maxW << endl;
+
+    //normalization
+    BGL_FORALL_EDGES( ed, fg, ForceGraph ) {
+        fg[ ed ].weight = minValue + ( 1.0-minValue ) * ( fg[ ed ].weight - minW )/( maxW - minW );
+        //cerr << "fg[ ed ].weight = " << fg[ ed ].weight << endl;
+    }
+}
+
+//
 //  Force::_clear --	clear the force object
 //
 //  Inputs
@@ -191,6 +257,8 @@ bool Force::_inContour( Coord2 &coord )
     cerr << endl;
 #endif // DEBUG
 
+    // cerr << __LINE__ << ": coord = " << coord << endl;
+    // cerr << "_contour = " << _contour << endl;
     K::Point_2 pt( coord.x(), coord.y() );
     K::Point_2 *points = new K::Point_2[ coordVec.size() ];
     for( unsigned int n = 0; n < coordVec.size(); n++ ) {
@@ -274,7 +342,11 @@ void Force::_force( void )
 
                 if ( isExisted ) {
                     // Drawing force by the spring
-                    *g[ vdi ].forcePtr += _paramKa * ( dist - L ) * unit;
+                    // double l = L * g[ed].weight;
+                    double l = L;
+
+                    *g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
+                    // cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
                 }
                 // Replusive force by Couloum's power
                 if( dist > 0 ){
@@ -284,6 +356,69 @@ void Force::_force( void )
                 cerr << "idi = " << g[vdi].id << " idj = " <<  g[vdj].id
                      << " dist = " << dist << " dist > 0 = " << (dist > 0) << endl
                      << " diff = " << diff << " *g[ vdi ].forcePtr = " << *g[ vdi ].forcePtr;
+#endif // DEBUG
+            }
+        }
+    }
+
+    BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+
+        ForceGraph::out_edge_iterator eo, eo_end;
+        map< double, ForceGraph::vertex_descriptor > vdMap;
+        for( tie( eo, eo_end ) = out_edges( vd, g ); eo != eo_end; ++eo ){
+
+            ForceGraph::edge_descriptor ed = *eo;
+            ForceGraph::vertex_descriptor vdS = source( ed, g );
+            ForceGraph::vertex_descriptor vdT = target( ed, g);
+
+            // calculate geographical angle
+            Coord2 coordO = *g[ vdS ].coordPtr;
+            Coord2 coordD = *g[ vdT ].coordPtr;
+            double diffX = coordD.x() - coordO.x();
+            double diffY = coordD.y() - coordO.y();
+            double angle = atan2( diffY, diffX );
+
+            vdMap.insert( pair< double, ForceGraph::vertex_descriptor >( angle, vdT ) );
+        }
+
+#ifdef DEBUG
+        cerr << "vd = " << g[ vd ].id << " ";
+        for( unsigned int i = 0; i < vdMap.size(); i++ ){
+            map< double, ForceGraph::vertex_descriptor >::iterator itC = vdMap.begin();
+            advance( itC, i );
+            cerr << g[ itC->second ].id << ", ";
+        }
+        cerr << endl;
+#endif // DEBUG
+
+        if( vdMap.size() > 1 ){
+            for( unsigned int i = 0; i < vdMap.size(); i++ ){
+
+                map< double, ForceGraph::vertex_descriptor >::iterator itC = vdMap.begin();
+                map< double, ForceGraph::vertex_descriptor >::iterator itN = vdMap.begin();
+                advance( itC, i );
+                advance( itN, (i+1)%vdMap.size() );
+
+                Coord2 dc = *g[ itC->second ].coordPtr - *g[ vd ].coordPtr;
+                Coord2 dn = *g[ itN->second ].coordPtr - *g[ vd ].coordPtr;
+                Coord2 cn = *g[ itN->second ].coordPtr - *g[ itC->second ].coordPtr;
+                double theta = acos( ( dc.squaredNorm() + dn.squaredNorm() - cn.squaredNorm() )/(2.0*dc.norm()*dn.norm()) );
+                double force = _paramKc * atan( dc.norm()/_paramKd ) + atan( dn.norm()/_paramKd ) + _paramKe * cos( theta/2.0 )/sin( theta/2.0 );
+                // if( !isnan( theta ) ) *g[ vd ].forcePtr += Coord2( -force, force );
+
+#ifdef DEBUG
+                if( isnan( theta ) ){
+                    cerr << "vid = " << g[ vd ].id << " theta = " << theta << " force = " << force << endl;
+                    cerr << "vd = " << g[ vd ].id << " " << *g[ vd ].coordPtr;
+                    cerr << "vdC = " << g[ itC->second ].id << " " << *g[ itC->second ].coordPtr;
+                    cerr << "vdN = " << g[ itN->second ].id << " " << *g[ itN->second ].coordPtr;
+                }
+                else{
+                    cerr << "vid = " << g[ vd ].id << " theta = " << theta << " force = " << force << endl;
+                    //cerr << " dc.norm() = " << dc.norm()
+                    //     << " dn.norm() = " << dn.norm()
+                    //     << " cn.norm() = " << cn.norm() << endl;
+                }
 #endif // DEBUG
             }
         }
@@ -416,17 +551,20 @@ void Force::_BarnesHut( void )
         ForceGraph::vertex_descriptor vdT = target( ed, g );
 
         Coord2 diff, unit;
-        double dist, strength;
+        double dist = 0.0, strength = 1.0;
 
         diff = *g[ vdT ].coordPtr - *g[ vdS ].coordPtr;
         dist = diff.norm();
         if( dist == 0 ) unit.zero();
         else unit = diff.unit();
 
-        strength = 1.0/ out_degree( vdS, g );
+        // strength = g[ed].weight;
+        // strength = 1.0/ out_degree( vdS, g );
+        //double l = L * g[ed].weight;
+        double l = L;
 
-        *g[ vdS ].forcePtr += _paramKa * strength * ( dist - L ) * unit;
-        *g[ vdT ].forcePtr -= _paramKa * strength * ( dist - L ) * unit;
+        *g[ vdS ].forcePtr += _paramKa * strength * ( dist - l ) * unit;
+        *g[ vdT ].forcePtr -= _paramKa * strength * ( dist - l ) * unit;
     }
 
 
@@ -688,8 +826,7 @@ double Force::_verletIntegreation( void )
         Coord2 coordNew = *g[ vd ].coordPtr + *g[ vd ].shiftPtr;
 
         if( !_inContour( coordNew ) ){
-            g[ vd ].shiftPtr->x() = 0.0;
-            g[ vd ].shiftPtr->y() = 0.0;
+            g[ vd ].shiftPtr->zero();
         }
     }
 

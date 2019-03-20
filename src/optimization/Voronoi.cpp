@@ -65,10 +65,11 @@ K::Segment_2 Voronoi::_convertToSeg( const CGAL::Object seg_obj, bool outgoing,
     const K::Ray_2     *dray = CGAL::object_cast< K::Ray_2 >( &seg_obj );
 
     if ( dseg != NULL ) { //Okay, we have a segment
-        // cerr << "dseg = " << *dseg << endl;
+        //cerr << "dseg = " << *dseg << endl;
         return *dseg;
     }
     else if ( dray != NULL ){    //Must be a ray
+        //cerr << "ray" << endl;
         const auto &source = dray->source();
         const auto dsx     = source.x();
         const auto dsy     = source.y();
@@ -85,7 +86,7 @@ K::Segment_2 Voronoi::_convertToSeg( const CGAL::Object seg_obj, bool outgoing,
     else if ( line != NULL ) {    //Must be a line
 
         isLine = true;
-
+        //cerr << "line" << endl;
         //cerr << "a = " << line->a() << " b = " << line->b() << " c = " << line->c() << endl;
         double m;
         if( line->b() == 0.0 )
@@ -119,6 +120,7 @@ K::Segment_2 Voronoi::_convertToSeg( const CGAL::Object seg_obj, bool outgoing,
         cerr << "Something is wong here at " << __LINE__ << " in " << __FILE__ << endl;
     }
 
+    // cerr << "myslope = " << slope << endl;
     return K::Segment_2( K::Point_2( 0.0, 0.0 ), K::Point_2( 0.0, 0.0 ) ); // should never happens
 }
 
@@ -141,21 +143,22 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
     wpoints.clear();
 
     // copy points
-    // cerr << "id = " << _id << " size = " << _seedVecPtr->size() << " points:" << endl;
+    //cerr << "id = " << _id << " size = " << _seedVecPtr->size() << " points:" << endl;
     for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ){
 
+        // cerr << "w(" << i << ") = " << (*_seedVecPtr)[i].weight << endl;
         if( isWeighted ){
             //if ( _seedVecPtr->size() == 2 ) cerr << "w = " << ((*_seedVecPtr)[i].weight ) << endl;
             wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(),
                                                                 (*_seedVecPtr)[i].coord.y() ),
-                                                    ((*_seedVecPtr)[i].weight )) );
+                                                    10.0*((*_seedVecPtr)[i].weight )) );
         }
         else{
             wpoints.push_back( RT2::Weighted_point( K::Point_2( (*_seedVecPtr)[i].coord.x(),
                                                                 (*_seedVecPtr)[i].coord.y() ),
                                                     0 ) );
         }
-        // cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
+        //cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
     }
 
     //Find the bounding box of the points. This will be used to crop the Voronoi
@@ -219,7 +222,7 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
 
         if( isLine ) {
 
-            // cerr << "fnum = " << fnum << endl;
+            //cerr << "fnum = " << fnum << endl;
             auto end = pgon.vertices_end();
             end--;
             K::Point_2 source( pgon.vertices_begin()->x(), pgon.vertices_begin()->y() ),
@@ -273,11 +276,12 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
             //cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
         }
 
+        // cerr << "slope = " << slope << endl;
+
         if( pgon.orientation() == -1 ){     // special case of Line_2
 
             pgon.reverse_orientation();
 #ifdef DEBUG
-            cerr << "slope = " << slope << endl;
             for( auto v=pgon.vertices_begin(); v!=pgon.vertices_end(); v++ ) {
                 cerr << "pgon = " << v->x() << " " << v->y() << endl;
             }
@@ -300,27 +304,44 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
         //Perform the intersection. Since CGAL is very general, it believes the
         //result might be multiple polygons with holes.
         std::list<CGAL::Polygon_with_holes_2< K >> isect;
-        CGAL::intersection( pgon, bpoly, std::back_inserter(isect) );
+        CGAL::intersection( pgon, bpoly, std::back_inserter( isect ) );
 
         //But we know better. The intersection of a convex polygon and a box is
         //always a single polygon without holes. Let's assert this.
-        //assert( isect.size()==1 );
+        if ( isect.size() == 0 ) {
 
-        //And recover the polygon of interest
-        auto &poly_w_holes = isect.front();
-        auto &poly_outer   = poly_w_holes.outer_boundary();
-
-        //Print the polygon as a WKT polygon
-        vector< K::Point_2 > p;
-        //cerr << fnum << ", ""\"POLYGON ((" << endl;
-        for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
-
-            //cerr << setprecision(20) << "x = " << v->x() << " y = " << v->y() << endl;
-            p.push_back( K::Point_2( CGAL::to_double( v->x() ), CGAL::to_double( v->y() ) ) );
+            // skip small fragments
+#ifdef DEBUG
+            cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+            cerr << "isect.size() = " << isect.size() << endl;
+            cerr << "pgon: " << pgon.size() << endl;
+            cerr << "pgon: " << pgon << endl << endl;
+            cerr << "bpoly: " << bpoly << endl << endl;
+#endif // DEBUG
+            //assert( isect.size() == 1 );
         }
+        else if( isect.size() >= 1 ){
 
-        // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
-        _polyVec2D.push_back( p );
+            if( isect.size() > 1 ){
+                cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+                cerr << "isect.size() = " << isect.size() << endl;
+            }
+            //And recover the polygon of interest
+            auto &poly_w_holes = isect.front();
+            auto &poly_outer   = poly_w_holes.outer_boundary();
+
+            //Print the polygon as a WKT polygon
+            vector< K::Point_2 > p;
+            //cerr << fnum << ", ""\"POLYGON ((" << endl;
+            for( auto v=poly_outer.vertices_begin(); v!=poly_outer.vertices_end(); v++ ){
+
+                //cerr << setprecision(20) << "x = " << v->x() << " y = " << v->y() << endl;
+                p.push_back( K::Point_2( CGAL::to_double( v->x() ), CGAL::to_double( v->y() ) ) );
+            }
+
+            // std::cout<<poly_outer.vertices_begin()->x()<<" "<<poly_outer.vertices_begin()->y()<<"))\"\n";
+            _polyVec2D.push_back( p );
+        }
     }
     mapSeedsandPolygons();
 }

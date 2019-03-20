@@ -362,10 +362,12 @@ void Window::selectOctilinearSmall( void )
 
 void Window::selectOctilinear( void )
 {
-    cerr << "select octilinear ..." << endl;
+    cerr << "select octilinear ..." << " _boundaryPtr->nVertices() = "<< _boundaryPtr->nVertices() << endl;
 
     // initialization
-    int iter = _boundaryPtr->nVertices();
+    int iter = 200;
+    //int iter = 2*_boundaryPtr->nVertices();
+    // int iter = 2*sqrt( _boundaryPtr->nVertices() );
     _octilinearPtr->clear();
     _octilinearPtr->prepare( _simplifiedBoundaryPtr, _content_width/2.0, _content_height/2.0 );
 
@@ -393,6 +395,9 @@ void Window::selectOctilinear( void )
             break;
     }
     _octilinearPtr->retrieve();
+
+    cerr << "BoundaryGraph:" << endl;
+    printGraph( _boundaryPtr->boundary() );
 
     redrawAllScene();
 }
@@ -535,15 +540,17 @@ void Window::listenProcessBoundary( void )
 void Window::processBoundaryForce( void )
 {
     // create a new thread
+    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, "../configs/boundary.conf" );
+
     Controller * conPtr = new Controller;
     conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     conPtr->setRegionData( _levelhighPtr, _boundaryPtr, _simplifiedBoundaryPtr,
                            _cellPtr, _roadPtr, _lanePtr );
 
     vector < unsigned int > indexVec;
+    conPtr->init( indexVec, WORKER_BOUNDARY );
     // set energy type
     conPtr->setEnergyType( _gv->energyType() );
-    conPtr->init( indexVec, WORKER_BOUNDARY );
     controllers.push_back( conPtr );
 
     connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
@@ -615,6 +622,7 @@ void Window::processCellForce( void )
     _gv->isCellPolygonFlag() = true;
     _gv->isCellFlag() = true;
 
+    //for( unsigned int i = 0; i < 2; i++ ){
     for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
 
         Controller * conPtr = new Controller;
@@ -831,7 +839,7 @@ void Window::listenProcessDetailedPathway( void )
 void Window::processDetailedPathwayForce( void )
 {
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
-
+/*
     for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
@@ -948,7 +956,7 @@ void Window::processDetailedPathwayForce( void )
             // ofs << "Total Time CG = " << clock() - start_time << endl;
         }
     }
-
+*/
     vector< vector< unsigned int > > idMat;
     idMat.resize( cellComponentVec.size() );
     unsigned int idD = 0;
@@ -1067,6 +1075,7 @@ void Window::steinertree( void )
     // cerr << "road built..." << endl;
     _gv->isRoadFlag() = true;
 
+
     cerr << "/***************" << endl;
     cerr << "/* Steiner tree" << endl;
     cerr << "/***************" << endl;
@@ -1097,7 +1106,6 @@ void Window::steinertree( void )
         (*_lanePtr)[i].steinerTree();
     }
     _gv->isLaneFlag() = true;
-
 }
 
 void Window::stopProcessDetailedPathway( void )
@@ -1761,11 +1769,12 @@ void Window::updateLevelMiddlePolygonComplex( void )
              itC != _cellPtr->cellComponentVec()[m].end(); itC++ ){
 
             vector< ForceGraph::vertex_descriptor > &polygonComplexVD = itC->second.polygonComplexVD;
+
             for( unsigned int i = 0; i < polygonComplexVD.size(); i++ ){
                 itC->second.contour.elements()[i].x() = bg[ polygonComplexVD[i] ].coordPtr->x();
                 itC->second.contour.elements()[i].y() = bg[ polygonComplexVD[i] ].coordPtr->y();
 
-                //cerr << "i = " << i << " " << itC->second.contour.elements()[i];
+                cerr << "i = " << i << " " << itC->second.contour.elements()[i];
             }
         }
     }
@@ -1805,7 +1814,7 @@ void Window::updateLevelDetailPolygonComplex( void )
                 for( unsigned int j = 0; j < polygon.elements().size(); j++ ){
                     polygon.elements()[j].x() = bg[ itP->second[j] ].coordPtr->x();
                     polygon.elements()[j].y() = bg[ itP->second[j] ].coordPtr->y();
-                    cerr << "i = " << i << " j = " << j << " " << polygon.elements()[j];
+                    // cerr << "i = " << i << " j = " << j << " " << polygon.elements()[j];
                 }
             }
         }
@@ -1945,12 +1954,13 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // initialization and build the boundary
             selectLevelDetailBuildBoundary();
-/*
+
             // boundary optimization
             selectCloneGraph();
             selectOctilinear();
+
             updateLevelDetailPolygonComplex();
-*/
+
             // steiner tree
             steinertree();
 
@@ -2128,14 +2138,17 @@ void Window::keyPressEvent( QKeyEvent *event )
                  << " veCoverage = " << _gv->veCoverage() << endl;
 #endif // DEBUG
 
-            double ratio = 1.0;
-            double x = ratio * sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / 12.0 );
-            _content_width = 4.0 * x;
-            _content_height = 3.0 * x;
+            double ratio = (double)width()/(double)height();
+            double x = sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / ratio );
+            _content_width = ratio * x;
+            _content_height = x;
+
+#ifdef SKIP
             if( 2.0 * _content_width < width() ){
                 _content_width = width()/2.0;
                 _content_height = height()/2.0;
             }
+#endif // SKIP
 
             _contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
             _contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
@@ -2147,13 +2160,13 @@ void Window::keyPressEvent( QKeyEvent *event )
             _contour.area() = _content_width * _content_height;
             _levelhighPtr->init( &_content_width, &_content_height, &_gv->veCoverage(),
                                  _pathway->skeletonG(), &_contour );
-#ifdef DEBUG
-            cerr << "width x height = " << width() * height() << endl;
-            cerr << "label sum = " << sum << endl;
-            cerr << "ratio = " << width() * height() / sum << endl;
+//#ifdef DEBUG
+            //cerr << "width x height = " << width() * height() << endl;
+            //cerr << "label sum = " << sum << endl;
+            //cerr << "ratio = " << width() * height() / sum << endl;
             cerr << "new_content_width = " << _content_width
                  << " new_content_height = " << _content_height << endl;
-#endif // DEBUG
+//#endif // DEBUG
             _gv->setSceneRect( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
 

@@ -101,6 +101,9 @@ void GraphicsView::_item_composite( void )
         itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setPath( path );
+        itemptr->id() = s[ed].id;
+        itemptr->weight() = s[ed].weight;
+        //itemptr->textOn() = true;
 
         _scene->addItem( itemptr );
     }
@@ -113,7 +116,7 @@ void GraphicsView::_item_composite( void )
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
         itemptr->id() = s[vd].id;
-        itemptr->textOn() = true;
+        //itemptr->textOn() = true;
 
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
@@ -381,7 +384,7 @@ void GraphicsView::_item_cells( void )
             ForceGraph::degree_size_type degrees = out_degree( vd, cellVec[i].bone() );
 
             GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->fontSize() = _font_size;
+            itemptr->fontSize() = 2*_font_size;
             itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
@@ -435,6 +438,56 @@ void GraphicsView::_item_cells( void )
             }
         }
     }
+
+#ifdef DEBUG
+    for( unsigned int i = 0; i < cellVec.size(); i++ ) {
+        Coord2 &center = _cellPtr->center[i];
+        double &r = _cellPtr->radius[i];
+
+        {
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            //itemptr->setPen( Qt::NoPen );
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 100, 0, 0, 0 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( center.x(), -center.y(), r, r ) );
+            itemptr->radius() = r;
+            itemptr->id() = i;
+            _scene->addItem( itemptr );
+        }
+
+        {
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            //itemptr->setPen( Qt::NoPen );
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 100, 0, 0, 0 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( center.x(), -center.y(), r, r ) );
+            itemptr->radius() = 2.0*r/3.0;
+            itemptr->id() = i;
+            _scene->addItem( itemptr );
+        }
+
+        {
+            QPolygonF polygon;
+            for( unsigned int j = 0; j < _cellPtr->con[i].elements().size(); j++ ){
+                polygon.append( QPointF( _cellPtr->con[i].elements()[j].x(), -_cellPtr->con[i].elements()[j].y() ) );
+                // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+            }
+
+            GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+            vector< double > rgb;
+
+            QColor color( 0, 0, 0, 100 );
+            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 0 ), Qt::SolidPattern ) );
+            itemptr->setPolygon( polygon );
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+#endif // DEBUG
 }
 
 void GraphicsView::_item_interCellComponents( void )
@@ -542,6 +595,8 @@ void GraphicsView::_item_cellPolygonComplex( void )
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
             itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
             itemptr->setPolygon( polygon );
+            //itemptr->id() = cellVec[k].bone()[vd].id;
+            //itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
@@ -640,7 +695,8 @@ void GraphicsView::_item_pathwayPolygons( void )
 
                     pickBrewerColor( k, rgb );
                     QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 0 ), 2 ) );
+                    //itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
                     itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
                     itemptr->setPolygon( polygon );
 
@@ -957,6 +1013,55 @@ void GraphicsView::initSceneItems ( void )
     if( _is_boundaryFlag == true ) _item_boundary();
     if( _is_subPathwayFlag == true ) _item_subpathways();
     // cerr << "_scene.size = " << _scene->items().size() << endl;
+
+#ifdef DEBUG
+    QPolygonF polygon;
+    polygon.append( QPointF( 44.0527, 337.856 ) );
+    polygon.append( QPointF( 44.3551, 336.94 ) );
+    polygon.append( QPointF( 44.1118, 336.206 ) );
+    polygon.append( QPointF( 41.3332, 335.823 ) );
+    polygon.append( QPointF( 40.8823, 207.968 ) );
+    polygon.append( QPointF( 42.2745, 205.987 ) );
+    polygon.append( QPointF( 41.1741, 207.887 ) );
+    polygon.append( QPointF( 41.4198, 56.8788 ) );
+    polygon.append( QPointF( 42.1249, 54.7245 ) );
+    polygon.append( QPointF( 43.6903, 52.155 ) );
+    polygon.append( QPointF( 44.7844, 49.2386 ) );
+    polygon.append( QPointF( 40.8283, 46.5611 ) );
+
+
+/*
+    polygon.append( QPointF( 666.645, 134.033 ) );
+    polygon.append( QPointF( 666.645, 341.81 ) );
+    polygon.append( QPointF( -341.116, 341.876 ) );
+    polygon.append( QPointF( -341.115, 218.802 ) );
+    polygon.append( QPointF( -289.538, 167.228 ) );
+    polygon.append( QPointF( -289.534, 148.552 ) );
+    polygon.append( QPointF( -174.029, 33.0573 ) );
+    polygon.append( QPointF( -174.023, 28.4049 ) );
+    polygon.append( QPointF( -145.428, -0.175128 ) );
+    polygon.append( QPointF( 118.628, 118.113 ) );
+    polygon.append( QPointF( 118.921, 118.35 ) );
+    polygon.append( QPointF( 162.1, 161.49 ) );
+    polygon.append( QPointF( 0.0779665, -0.152638 ) );
+    polygon.append( QPointF( 41.8945, -41.9938 ) );
+    polygon.append( QPointF( 137.811, -42.0177 ) );
+    polygon.append( QPointF( 233.879, -138.108 ) );
+    polygon.append( QPointF( 233.878, -340.788 ) );
+    polygon.append( QPointF( 567.486, -341.154 ) );
+    polygon.append( QPointF( 585.143, 52.5197 ) );
+*/
+    GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+    vector< double > rgb;
+
+    QColor color( 0, 0, 0, 100 );
+    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+    itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+    itemptr->setPolygon( polygon );
+
+    //cerr << vertexCoord[vd];
+    _scene->addItem( itemptr );
+#endif // DEBUG
 }
 
 //------------------------------------------------------------------------------

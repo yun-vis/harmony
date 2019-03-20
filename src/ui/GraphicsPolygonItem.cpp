@@ -27,6 +27,16 @@ void GraphicsPolygonItem::paint( QPainter *painter, const QStyleOptionGraphicsIt
 	painter->setBrush( brush() );
     painter->drawPolygon( polygon() );
 
+    const QPolygonF &p = polygon();
+    if( _textOn == true ){
+
+        painter->setPen( QPen( QColor( 0 ,0, 0, 255 ), 4 ) );
+        for( unsigned int i = 0; i < p.size(); i++ ){
+            painter->drawText( p.at(i).x()+5, p.at(i).y()-5, QString::fromStdString( to_string( _id ) ) );
+        }
+        //painter->drawText( rect().x()+10, rect().y()-10, _name );
+    }
+
 #ifdef SKIP
     const QPolygonF &p = polygon();
     for( unsigned int i = 0; i < p.size(); i++ ){
@@ -60,6 +70,7 @@ GraphicsPolygonItem::GraphicsPolygonItem( QGraphicsItem *parent )
 
     //pen().setJoinStyle( Qt::MiterJoin );
     pen().setJoinStyle( Qt::RoundJoin );
+    _textOn = false;
 }
 
 

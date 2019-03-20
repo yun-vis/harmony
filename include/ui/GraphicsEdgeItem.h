@@ -37,6 +37,7 @@ class GraphicsEdgeItem : public  QGraphicsPathItem
 private:
 
     unsigned int    _id;
+    double          _weight;
     QString         _name;
     bool            _textOn;
 
@@ -72,6 +73,9 @@ public:
 
     unsigned int &	        id( void ) 	        { return _id; }
     const unsigned int &	id( void ) const	{ return _id; }
+
+    double &	            weight( void ) 	    { return _weight; }
+    const double &	        weight( void ) const{ return _weight; }
 
     QString &	            name( void )        { return _name; }
     const QString &	        name( void ) const	{ return _name; }

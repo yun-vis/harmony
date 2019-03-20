@@ -204,7 +204,11 @@ void Polygon2::updateCentroid( void )
     }
 
     // check if the polygon has at least three vertices
-    assert( polygon.size() >= 3 );
+    if( !(polygon.size() >= 3) ){
+        cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+        cerr << "polygon.size() = " << polygon.size() << endl;
+        assert( polygon.size() >= 3 );
+    }
     Vertex_circulator start = polygon.vertices_circulator();
     Vertex_circulator cur = start;
     Vertex_circulator next = cur;
@@ -244,8 +248,27 @@ void Polygon2::updateOrientation( void )
 {
     CGAL::Polygon_2< K > p;
 
+
+    map< pair< double, double >, unsigned int > elementMap;
     for( unsigned int i = 0; i < _elements.size(); i++ ){
-        p.push_back( K::Point_2( _elements[i].x(), _elements[i].y() ) );
+        double x =_elements[i].x();
+        double y =_elements[i].y();
+        double nx =_elements[(i+1)%_elements.size()].x();
+        double ny =_elements[(i+1)%_elements.size()].y();
+        if( (_elements[i]-_elements[(i+1)%_elements.size()] ).norm() > 0.1 ){
+            p.push_back( K::Point_2( x, y ) );
+            elementMap.insert( pair< pair< double, double >, unsigned int >(
+                    pair< double, double >( x, y ), i ) );
+        }
+        //cerr << "(x, y) = " << x << ", " << y << endl;
+    }
+    //cerr << endl;
+    //cerr << "element.size() = " << _elements.size() << " eleMap.size() = " << elementMap.size() << endl;
+    // assert( _elements.size() == elementMap.size() );
+    if( p.is_simple() == false ){
+        cerr << "polygon is not simple..." << endl
+             << p << endl;
+        assert( false );
     }
 
     if( p.orientation() == -1 ){
@@ -315,6 +338,47 @@ double Polygon2::minDistToPolygon( const Coord2 &coord )
     }
 
     return minDist;
+}
+
+//
+//  Polygon2::maxRadiusInPolygon --    find the maximun radius in the polygon
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+double Polygon2::maxRadiusInPolygon( const Coord2 &coord )
+{
+    double maxR = INFINITY;
+
+    for( unsigned int i = 0; i < _elements.size(); i++ ){
+
+        Coord2 &coordM = _elements[ i ];
+        double dist = (coordM-coord).norm();
+        // cerr << " dist = " << dist;
+        if( dist < maxR ) maxR = dist;
+    }
+    // cerr << " return " << maxR << endl;
+
+    for( unsigned int i = 0; i < _elements.size(); i++ ){
+
+        Coord2 &coordM = _elements[ i ];
+        Coord2 &coordN = _elements[ (i+1)%_elements.size() ];
+        Coord2 mnVec = coordN - coordM;
+        Coord2 cmVec = coord - coordM;
+        double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
+        Coord2 coordD = coordM + D*mnVec;
+
+        if( Line2::isOnLine( coordD, coordM, coordN )){
+
+            double dist = ( coord - coordD ).norm();
+            if( dist < maxR ) maxR = dist;
+        }
+    }
+
+    return maxR;
 }
 
 //------------------------------------------------------------------------------

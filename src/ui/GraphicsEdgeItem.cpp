@@ -32,7 +32,7 @@ void GraphicsEdgeItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
         painter->setFont( QFont( "Arial", 12, QFont::Bold, false ) );
         painter->drawText( path().boundingRect().x()+0.5*( path().boundingRect().width() ),
                            path().boundingRect().y()+0.5*( path().boundingRect().height() ),
-                           QString::fromStdString( to_string( _id ) ) );
+                           QString::fromStdString( to_string( _weight ) ) );
     }
 
     //cerr << "paint x = " << pos().x() << " y = " << pos().y() << endl;
@@ -61,6 +61,7 @@ GraphicsEdgeItem::GraphicsEdgeItem( QGraphicsItem *parent )
     pen().setJoinStyle( Qt::RoundJoin );
 
     _id = 0;
+    _weight = 0;
     _name = "";
     _textOn = false;
 }

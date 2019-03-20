@@ -44,7 +44,8 @@ void printGraph( ForceGraph & graph )
 
         ForceGraph::degree_size_type      degrees         = out_degree( vd, graph );
 		cerr << " vid = " << graph[vd].id
-			 << " ( " << *graph[vd].namePtr << " ) " << endl;
+			 //<< " ( " << *graph[vd].namePtr << " ) "
+			 << " w = " << graph[vd].weight << endl;
     }
 //#endif  // DEBUG
 
@@ -58,8 +59,8 @@ void printGraph( ForceGraph & graph )
 		cerr << " eid = " << graph[ed].id
 			 << " ( " << graph[vdS].id
 			 << ", " << graph[vdT].id << " )"
-			 << " ( " << *graph[vdS].namePtr
-			 << ", " << *graph[vdT].namePtr << " )"
+			 //<< " ( " << *graph[vdS].namePtr
+			 //<< ", " << *graph[vdT].namePtr << " )"
 			 << " w = " << graph[ed].weight
 			 << endl;
 	}

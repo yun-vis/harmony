@@ -29,10 +29,10 @@ void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
     //rect().setX( rect().x() - sx );
     //rect().setY( rect().y() - sy );
     QRectF fineRect( rect() );
-    fineRect.setX( fineRect.x()-_radius/2.0 );
-    fineRect.setY( fineRect.y()-_radius/2.0 );
-    fineRect.setWidth( _radius );
-    fineRect.setHeight( _radius );
+    fineRect.setX( fineRect.x()-_radius );
+    fineRect.setY( fineRect.y()-_radius );
+    fineRect.setWidth( 2.0*_radius );
+    fineRect.setHeight( 2.0*_radius );
 	painter->setRenderHints( QPainter::Antialiasing );
 	painter->setPen( pen() );
 	painter->setBrush( brush() );
@@ -65,7 +65,7 @@ GraphicsBallItem::GraphicsBallItem( QGraphicsItem *parent )
 	//setAcceptDrops( true );
 
 	_textOn = false;
-	_radius = 10;
+	_radius = 5;
 }
 
 GraphicsBallItem::GraphicsBallItem( const QRectF &rect, QGraphicsItem *parent )

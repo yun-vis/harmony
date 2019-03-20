@@ -24,8 +24,8 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Defining data types
 //------------------------------------------------------------------------------
-#define OCTILINEAR_CONFLICT
-#define OCTILINEAR_BOUNDARY
+//#define OCTILINEAR_CONFLICT
+//#define OCTILINEAR_BOUNDARY
 
 //------------------------------------------------------------------------------
 //	Defining macros

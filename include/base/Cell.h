@@ -97,6 +97,10 @@ public:
     Cell( const Cell & obj );       // Copy constructor
     virtual ~Cell();                // Destructor
 
+    //vector< Coord2 > center;
+    //vector< double > radius;
+    //vector< Polygon2 > con;
+
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------

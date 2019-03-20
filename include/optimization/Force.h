@@ -50,6 +50,10 @@ class Force : public Stress
     // configuration parameter
     double          _paramKa;               // attractive force
     double          _paramKr;               // repulsive force
+    double          _paramKc;               // k1 force
+    double          _paramKd;               // k2 force
+    double          _paramKe;               // k3 force
+
     double          _paramRatioForce;
     double          _paramRatioVoronoi;
     double          _paramTransformationStep;
@@ -79,6 +83,7 @@ class Force : public Stress
     double		    _verletIntegreation ( void );
 
     bool            _inContour( Coord2 &coord );
+    void            _normalizeWeight();
 
   public:
 

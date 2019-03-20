@@ -89,6 +89,9 @@ public:
     bool &	                textOn( void ) 	    { return _textOn; }
     const bool &	        textOn( void ) const{ return _textOn; }
 
+    double &	            radius( void ) 	    { return _radius; }
+    const double &	        radius( void ) const{ return _radius; }
+
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------

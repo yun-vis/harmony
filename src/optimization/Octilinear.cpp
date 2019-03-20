@@ -128,29 +128,6 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
 #endif  // DEBUG
 }
 
-/*
-//
-//  Octilinear::_isOnLine --        check if point a lies on line segment [b,c]
-//
-//  Inputs
-//      Coord2 &a, &b, &c
-//
-//  Outputs
-//      bool
-//
-bool Octilinear::_isOnLine( Coord2 &a, Coord2 &b, Coord2 &c )
-{
-    bool isOnLine = false;
-
-    Coord2 ab = b - a;
-    Coord2 ac = c - a;
-
-    double cross = ab.x() * ac.y() - ab.y() * ac.x();
-    if( fabs( cross ) < 1e-2 ) isOnLine = true;
-
-    return isOnLine;
-}
-*/
 
 //
 //  Octilinear::_initCoefs --        initialize the coefficient
@@ -325,7 +302,7 @@ void Octilinear::_setTargetAngle( void )
         double targetAngle = 2.0*M_PI;
         double minDist = 2.0*M_PI + 1.0;
         for( unsigned int i = 0; i < 9; i++ ){
-            double dist = fabs( g[ edge ].angle - sector[i] );
+            double dist = fabs( g[ edge ].geoAngle - sector[i] );
             if( dist < minDist ){
                 minDist = dist;
                 targetAngle = sector[i];
@@ -933,7 +910,11 @@ double Octilinear::ConjugateGradient( unsigned int iter )
     double rsold = err.adjoint() * err;
 
     // main algorithm
+    cerr << "iter = " << iter << endl;
+
     for( int i = 0; i < iter; i++ ) {
+
+        cerr << "i = " << i << endl;
 
         // prepare the square matrix
         A = _coef.transpose() * _coef;
@@ -995,16 +976,21 @@ void Octilinear::retrieve( void )
             if( vertex == vdVec[i] ) doClose = true;
         }
 
-        if( _boundary->VEconflict().size() > 0 ){
-            Coord2 downscale;
-            downscale.x() = ( _var( nRows, 0 ) - g[ vertex ].coordPtr->x() )/2.0 + g[ vertex ].coordPtr->x();
-            downscale.y() = ( _var( nRows + nVertices, 0 ) - g[ vertex ].coordPtr->y() )/2.0 + g[ vertex ].coordPtr->y();
-            g[ vertex ].coordPtr->x() = downscale.x();
-            g[ vertex ].coordPtr->y() = downscale.y();
-        }
-        else{
-            g[ vertex ].coordPtr->x() = _var( nRows, 0 );
-            g[ vertex ].coordPtr->y() = _var( nRows + nVertices, 0 );
+        double x = _var( nRows, 0 );
+        double y = _var( nRows + nVertices, 0 );
+        if( !isnan( x ) && !isnan( y ) ){
+            if( _boundary->VEconflict().size() > 0 ){
+                Coord2 downscale;
+                downscale.x() = ( x - g[ vertex ].coordPtr->x() )/2.0 + g[ vertex ].coordPtr->x();
+                downscale.y() = ( y - g[ vertex ].coordPtr->y() )/2.0 + g[ vertex ].coordPtr->y();
+                g[ vertex ].coordPtr->x() = downscale.x();
+                g[ vertex ].coordPtr->y() = downscale.y();
+                //cerr << "x = " << x << " y = " << y << endl;
+            }
+            else {
+                g[ vertex ].coordPtr->x() = x;
+                g[ vertex ].coordPtr->y() = y;
+            }
         }
         nRows++;
     }

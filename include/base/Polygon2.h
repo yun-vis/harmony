@@ -119,6 +119,7 @@ class Polygon2 {
     void updateOrientation( void );
     bool inPolygon( const Coord2 &cood );
     double minDistToPolygon( const Coord2 &cood );
+    double maxRadiusInPolygon( const Coord2 &coord );
 
 //------------------------------------------------------------------------------
 //	Intersection check

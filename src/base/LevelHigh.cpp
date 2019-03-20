@@ -257,65 +257,6 @@ void LevelHigh::decomposeSkeleton( void )
 {
     double labelArea = 0.0;
     unsigned int index = num_vertices( _skeleton );
-/*
-    for( unsigned int i = 0; i < 5; i++ ){
-        ForceGraph::vertex_descriptor vdNew = add_vertex( _bone );
-
-        _bone[ vdNew ].id           = i;
-        _bone[ vdNew ].initID       = i;
-
-        _bone[ vdNew ].coordPtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].prevCoordPtr = new Coord2( 0, 0 );
-        _bone[ vdNew ].forcePtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].placePtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].weight       = 0.0;
-
-        _bone[ vdNew ].widthPtr = new double( 10 );
-        _bone[ vdNew ].heightPtr = new double( 10 );
-        _bone[ vdNew ].areaPtr = new double( 10 );
-    }
-
-    ForceGraph::vertex_descriptor vd0 = vertex( 0, _bone );
-    *_bone[ vd0 ].coordPtr          = Coord2( 13.92 , 79.53 );
-    *_bone[ vd0 ].prevCoordPtr      = Coord2( 13.92 , 79.53 );
-
-    ForceGraph::vertex_descriptor vd1 = vertex( 1, _bone );
-    *_bone[ vd1 ].coordPtr          = Coord2( -126.076 , 79.531 );
-    *_bone[ vd1 ].prevCoordPtr      = Coord2( -126.076 , 79.531 );
-
-    ForceGraph::vertex_descriptor vd2 = vertex( 2, _bone );
-    *_bone[ vd2 ].coordPtr          = Coord2( -46.28, 86.002 );
-    *_bone[ vd2 ].prevCoordPtr      = Coord2( -46.28, 86.002 );
-
-    ForceGraph::vertex_descriptor vd3 = vertex( 3, _bone );
-    *_bone[ vd3 ].coordPtr          = Coord2( -151.28, 146.624 );
-    *_bone[ vd3 ].prevCoordPtr      = Coord2( -151.28, 146.624 );
-
-    ForceGraph::vertex_descriptor vd4 = vertex( 4, _bone );
-    *_bone[ vd4 ].coordPtr          = Coord2( -151.28, 35.38 );
-    *_bone[ vd4 ].prevCoordPtr      = Coord2( -151.28, 35.38 );
-
-    pair< ForceGraph::edge_descriptor, unsigned int > foreE0 = add_edge( vd0, vd1, _bone );
-    BoundaryGraph::edge_descriptor foreED0 = foreE0.first;
-    _bone[ foreED0 ].id = 0;
-
-    pair< ForceGraph::edge_descriptor, unsigned int > foreE1 = add_edge( vd2, vd3, _bone );
-    BoundaryGraph::edge_descriptor foreED1 = foreE1.first;
-    _bone[ foreED1 ].id = 1;
-
-    pair< ForceGraph::edge_descriptor, unsigned int > foreE2 = add_edge( vd3, vd4, _bone );
-    BoundaryGraph::edge_descriptor foreED2 = foreE2.first;
-    _bone[ foreED2 ].id = 2;
-
-    pair< ForceGraph::edge_descriptor, unsigned int > foreE3 = add_edge( vd4, vd2, _bone );
-    BoundaryGraph::edge_descriptor foreED3 = foreE3.first;
-    _bone[ foreED3 ].id = 3;
-
-    pair< ForceGraph::edge_descriptor, unsigned int > foreE4 = add_edge( vd1, vd2, _bone );
-    BoundaryGraph::edge_descriptor foreED4 = foreE4.first;
-    _bone[ foreED4 ].id = 4;
-*/
 
     // copy skeleton to composite
     BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
@@ -351,27 +292,26 @@ void LevelHigh::decomposeSkeleton( void )
         _bone[ foreED ].id = _skeleton[ed].id;
     }
 
-#ifdef DEBUG
-    BGL_FORALL_EDGES( ed, _bone, ForceGraph )
-    {
-        cerr << "eID = " << _bone[ed].id << endl;
-    }
-#endif // DEBUG
-
     // split large vertices
     double unit = labelArea/40.0;
     // double unit = 8000.0;
+
 #ifdef DEBUG
     cerr << "labelArea = " << labelArea
          << " veCoverage = " << *_veCoveragePtr << " unit = " << unit << endl;
+    cerr << "nV = " << num_vertices( _bone ) << " nE = " << num_edges( _bone ) << endl;
 #endif // DEBUG
+
     BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
     {
         int mag = round( *_bone[ vd ].areaPtr/unit );
         // int mag = round((*_bone[ vd ].widthPtr) * (*_bone[ vd ].heightPtr)/unit);
 
+        // avoid from looping over the size of _skeleton
+        if( _bone[ vd ].id >= num_vertices( _skeleton ) ) break;
+
 #ifdef DEBUG
-            cerr << "area = " << *_bone[ vd ].areaPtr << " mag = " << mag << endl;
+            cerr << "area = " << *_bone[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
 #endif // DEBUG
 
         vector< ForceGraph::edge_descriptor > removeEVec;
@@ -407,11 +347,14 @@ void LevelHigh::decomposeSkeleton( void )
 
                     _bone[ vd ].coordPtr->x() = x;
                     _bone[ vd ].coordPtr->y() = y;
+                    _bone[ vd ].weight          = *_bone[ vd ].areaPtr;
 
                     // post processing
                     extendVD.push_back( vdC );
                 }
                 else{
+
+                    // cerr << "index = " << index << " area = " << *_bone[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
 
                     // add vertex
                     ForceGraph::vertex_descriptor vdNew = add_vertex( _bone );
@@ -423,7 +366,7 @@ void LevelHigh::decomposeSkeleton( void )
                     _bone[ vdNew ].forcePtr     = new Coord2( 0, 0 );
                     _bone[ vdNew ].placePtr     = new Coord2( 0, 0 );
                     _bone[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
-                    _bone[ vdNew ].weight       = 0.0;
+                    _bone[ vdNew ].weight       = *_bone[ vd ].areaPtr;
 
                     _bone[ vdNew ].widthPtr    = new double( sqrt( unit ) );
                     _bone[ vdNew ].heightPtr   = new double( sqrt( unit ) );
@@ -433,12 +376,14 @@ void LevelHigh::decomposeSkeleton( void )
                     pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _bone );
                     BoundaryGraph::edge_descriptor foreED = foreE.first;
                     _bone[ foreED ].id = num_edges( _bone );
+                    _bone[ foreED ].weight = 2.0 * (*_bone[ vd ].areaPtr);
 
                     // add last edge to form a circle
                     if( i == mag-1 ){
                         pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew, _bone );
                         BoundaryGraph::edge_descriptor foreED = foreE.first;
                         _bone[ foreED ].id = num_edges( _bone );
+                        _bone[ foreED ].weight = 2.0 * (*_bone[ vd ].areaPtr);
                     }
 
                     // post processing
@@ -470,6 +415,7 @@ void LevelHigh::decomposeSkeleton( void )
                 pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, _bone );
                 ForceGraph::edge_descriptor foreED = foreE.first;
                 _bone[ foreED ].id = itA->first;
+                _bone[ foreED ].weight = _bone[ vdT ].weight + _bone[ cloestVD ].weight;
             }
 
             // remove edges
@@ -479,7 +425,24 @@ void LevelHigh::decomposeSkeleton( void )
                 remove_edge( removeEVec[i], _bone );
             }
         }
+        else{
+            _bone[ vd ].weight = *_bone[ vd ].areaPtr;
+        }
     }
+
+#ifdef DEBUG
+    BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
+    {
+        cerr << "vID = " << _bone[vd].id << endl;
+        cerr << "weight = " << _bone[vd].weight << endl;
+    }
+    cerr << endl;
+    BGL_FORALL_EDGES( ed, _bone, ForceGraph )
+    {
+        cerr << "eID = " << _bone[ed].id << endl;
+        cerr << "weight = " << _bone[ed].weight << endl;
+    }
+#endif // DEBUG
 }
 
 //

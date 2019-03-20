@@ -66,9 +66,9 @@ void printGraph( BoundaryGraph & graph )
         cerr << "isFixed = " << graph[ vd ].isFixed << endl;
 
         cerr << "coord = " << *graph[ vd ].coordPtr;
-        cerr << "geo = " << *graph[ vd ].geoPtr;
-        cerr << "smooth = " << *graph[ vd ].smoothPtr;
-        cerr << "centroid = " << *graph[ vd ].centroidPtr;
+        //cerr << "geo = " << *graph[ vd ].geoPtr;
+        //cerr << "smooth = " << *graph[ vd ].smoothPtr;
+        //v1cerr << "centroid = " << *graph[ vd ].centroidPtr;
     }
 //#endif  // DEBUG
 

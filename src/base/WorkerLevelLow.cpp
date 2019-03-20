@@ -27,7 +27,7 @@ void WorkerLevelLow::onTimeoutStress( void )
     advance( itC, _indexVec[1] );
     CellComponent &cell = itC->second;
 
-    cerr << "cell.nMCL = " << cell.nMCL << endl;
+    // cerr << "cell.nMCL = " << cell.nMCL << endl;
     if( cell.nMCL <= 1 ) {
         stop();
         return;
@@ -64,7 +64,6 @@ void WorkerLevelLow::onTimeoutForce( void )
     double err = 0.0;
     vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
 
-    // cerr << "i = " << (int)_indexVec[0] << " j = " << (int)_indexVec[1] << endl;
     multimap< int, CellComponent > & cellComponentMap = cellComponentVec[ _indexVec[0] ];
     multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
     advance( itC, _indexVec[1] );
@@ -74,6 +73,10 @@ void WorkerLevelLow::onTimeoutForce( void )
         stop();
         return;
     }
+
+    //printGraph( itC->second.mcl.bone() );
+    //cerr << "i = " << (int)_indexVec[0] << " j = " << (int)_indexVec[1] << endl;
+    //cerr << "_contour = " << itC->second.mcl.forceBone().contour() << endl;
 
     switch ( itC->second.mcl.forceBone().mode() ) {
         case TYPE_FORCE:
