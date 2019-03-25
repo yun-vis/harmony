@@ -19,8 +19,6 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "optimization/Force.h"
-//#include "optimization/Smooth.h"
-//#include "optimization/Octilinear.h"
 #include "optimization/Stress.h"
 #include "base/Road.h"
 #include "base/LevelHigh.h"
@@ -31,8 +29,7 @@ class RegionData
 protected:
 
     // boundary
-    Boundary        *_boundaryPtr;
-    Boundary        *_simplifiedBoundaryPtr;
+    vector< Boundary >    *_boundaryVecPtr;
 
     // levelhigh
     LevelHigh       *_levelhighPtr;
@@ -51,15 +48,13 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-	// void setRegionData( Pathway *pathway );
+
     void setRegionData( LevelHigh * __levelhigh,
-                        Boundary * __boundary,
-                        Boundary * __simplifiedBoundary,
+                        vector< Boundary > *__boundaryVecPtr,
                         Cell * __cellPtr, Road * __roadPtr,
                         vector< Road > * __lanePtr ){
         _levelhighPtr = __levelhigh;
-        _boundaryPtr = __boundary;
-        _simplifiedBoundaryPtr = __simplifiedBoundary;
+        _boundaryVecPtr = __boundaryVecPtr;
         _cellPtr = __cellPtr;
         _roadPtr = __roadPtr;
         _lanePtr = __lanePtr;

@@ -1,6 +1,6 @@
 
-#ifndef THREAD_H
-#define THREAD_H
+#ifndef CONTROLLER_H
+#define CONTROLLER_H
 
 #include <QTimer>
 #include <QString>
@@ -57,4 +57,4 @@ Q_SIGNALS:
     void update( void );
     void operate( const QString & );
 };
-#endif // THREAD_H
+#endif // CONTROLLER_H

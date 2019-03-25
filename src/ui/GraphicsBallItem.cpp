@@ -42,7 +42,7 @@ void GraphicsBallItem::paint( QPainter *painter, const QStyleOptionGraphicsItem 
 
 	//cerr << "id = " << _id << endl;
 	if( _textOn == true ){
-		painter->drawText( rect().x()+5, rect().y()-5, QString::fromStdString( to_string( _id ) ) );
+		painter->drawText( rect().x()+5, rect().y()-5, _text );
 		//painter->drawText( rect().x()+10, rect().y()-10, _name );
 	}
 

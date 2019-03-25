@@ -18,6 +18,7 @@ using namespace std;
 #include "ui/GraphicsView.h"
 #include "base/TimeComplexity.h"
 #include "base/Controller.h"
+#include "base/ControllerBoundary.h"
 #include "base/RegionData.h"
 #endif // Q_MOC_RUN
 
@@ -45,10 +46,11 @@ private:
 
     // rendering
     GraphicsView    *_gv;
-
+    LEVELTYPE       _levelType;
 
     // threads
-    vector< Controller * > controllers;
+    vector< Controller * > _controllers;
+    vector< ControllerBoundary * > _bControllers;
 
     // display
     double             _content_width;
@@ -61,29 +63,17 @@ private:
     QAction *selDataAct;
 
     // simplification
-    QMenu *simMenu;
-    QAction *selCloneGraphAct;
-    QAction *selMinDistanceAct;
-    QAction *selMovebackSmoothAct;
-    QAction *selMovebackOctilinearAct;
-    QAction *selMovebackStressAct;
+    //QMenu *simMenu;
+    //QAction *selMovebackSmoothAct;
+    //QAction *selMovebackOctilinearAct;
 
     // optimization
     QMenu *optMenu;
-    QAction *selSmoothLSAct;
-    QAction *selSmoothSmallCGAct;
-    QAction *selSmoothCGAct;
+    //QAction *selSmoothLSAct;
+    //QAction *selSmoothCGAct;
 
     QAction *selOctilinearLSAct;
-    QAction *selOctilinearSmallCGAct;
     QAction *selOctilinearCGAct;
-
-    QAction *selStressLSAct;
-    QAction *selStressSmallCGAct;
-    QAction *selStressCGAct;
-
-    //void createActions( void );
-    //void createMenus( void );
 
     void postLoad( void );
     void simulateKey( Qt::Key key );
@@ -114,22 +104,14 @@ private:
     void stopProcessDetailedPathway( void );
     void steinertree( void );
 
+    // octilinearity
+    void processOctilinearBoundary( void );
+
 public Q_SLOTS:
 
     // optimization
-    void selectSmooth( void );
+    //void selectSmooth( void );
     void selectOctilinear( void );
-    void selectStress( void );
-    void selectSmoothSmall( void );
-    void selectOctilinearSmall( void );
-    void selectStressSmall( void );
-
-    // simplification
-    void selectCloneGraph( void );
-    void selectLevelHighMinDistance( void );
-    void selectLevelHighMovebackSmooth( void );
-    void selectLevelHighMovebackOctilinear( void );
-    void selectLevelHighMovebackStress( void );
 
     // level high
     void selectLevelHighBuildBoundary( void );
@@ -161,6 +143,8 @@ public Q_SLOTS:
     void listenProcessBone( void );
     // pathway
     void listenProcessDetailedPathway( void );
+    // octilinear
+    void listenProcessOctilinearBoundary( void );
     // display
     void redrawAllScene( void );
 

@@ -88,6 +88,8 @@ set(HEADERS
         include/base/WorkerLevelMiddle.h
         include/base/WorkerLevelLow.h
         include/base/WorkerLevelDetailed.h
+        include/base/ControllerBoundary.h
+        include/base/WorkerBoundary.h
         include/base/Color.h
         include/base/Cell.h
         include/base/Road.h
@@ -156,6 +158,8 @@ set(SOURCES
         src/base/WorkerLevelMiddle.cpp
         src/base/WorkerLevelLow.cpp
         src/base/WorkerLevelDetailed.cpp
+        src/base/ControllerBoundary.cpp
+        src/base/WorkerBoundary.cpp
         src/base/Color.cpp
         src/base/LevelHigh.cpp
         src/base/Cell.cpp
@@ -225,6 +229,8 @@ QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelMid
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelLow.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelDetailed.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Controller.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerBoundary.h )
+QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/ControllerBoundary.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.h )
 QT5_WRAP_CPP( MOC_GRAPHICSVIEW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GraphicsView.h )
 #set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_ui_Window.cpp PROPERTY SKIP_AUTOGEN ON )
@@ -234,6 +240,8 @@ set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerLevelLow.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerLevelDetailed.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Controller.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
+set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_ControllerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_Window.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_GraphicsView.cpp PROPERTY SKIP_AUTOGEN ON )
 

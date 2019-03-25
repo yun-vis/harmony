@@ -39,6 +39,7 @@ private:
 
     unsigned int _id;
     QString _name;
+    QString _text;
     bool    _textOn;
 
     int     _font_size;
@@ -80,8 +81,8 @@ public:
     unsigned int &	        id( void ) 	        { return _id; }
     const unsigned int &	id( void ) const	{ return _id; }
 
-    QString &	            name( void )        { return _name; }
-    const QString &	        name( void ) const	{ return _name; }
+    QString &	            text( void )        { return _text; }
+    const QString &	        text( void ) const	{ return _text; }
 
     int &	                fontSize( void ) 	    { return _font_size; }
     const int &	            fontSize( void ) const	{ return _font_size; }

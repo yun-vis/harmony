@@ -63,7 +63,7 @@ void Package::_clear( void )
 Package::Package( void )
 {
     _smoothPtr = new Smooth;
-    _octilinearPtr = new Octilinear;
+    _octilinearVecPtr = new vector< Octilinear >;
 }
 
 //

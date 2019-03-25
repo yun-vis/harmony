@@ -911,11 +911,9 @@ double Octilinear::ConjugateGradient( unsigned int iter )
 
     // main algorithm
     cerr << "iter = " << iter << endl;
-
     for( int i = 0; i < iter; i++ ) {
 
-        cerr << "i = " << i << endl;
-
+        // cerr << "i = " << i << endl;
         // prepare the square matrix
         A = _coef.transpose() * _coef;
         b = _coef.transpose() * _output;
@@ -983,13 +981,17 @@ void Octilinear::retrieve( void )
                 Coord2 downscale;
                 downscale.x() = ( x - g[ vertex ].coordPtr->x() )/2.0 + g[ vertex ].coordPtr->x();
                 downscale.y() = ( y - g[ vertex ].coordPtr->y() )/2.0 + g[ vertex ].coordPtr->y();
-                g[ vertex ].coordPtr->x() = downscale.x();
-                g[ vertex ].coordPtr->y() = downscale.y();
+                //if( g[ vertex ].isFixed != true ){
+                    g[ vertex ].coordPtr->x() = downscale.x();
+                    g[ vertex ].coordPtr->y() = downscale.y();
+                //}
                 //cerr << "x = " << x << " y = " << y << endl;
             }
             else {
-                g[ vertex ].coordPtr->x() = x;
-                g[ vertex ].coordPtr->y() = y;
+                //if( g[ vertex ].isFixed != true ){
+                    g[ vertex ].coordPtr->x() = x;
+                    g[ vertex ].coordPtr->y() = y;
+                //}
             }
         }
         nRows++;

@@ -192,47 +192,49 @@ void GraphicsView::_item_polygons( void )
 
 void GraphicsView::_item_boundary( void )
 {
-    BoundaryGraph &g =  _boundaryPtr->boundary();
-#ifdef SKIP
-    if( _is_simplifiedFlag == true )
-        g = & _simplifiedLevelHighPtr->boundary();
-    else
-        g = & _levelhighPtr->boundary();
-#endif // SKIP
+    vector< Boundary > &boundaryVec = *_boundaryVecPtr;
 
-    // draw edges
-    BGL_FORALL_EDGES( ed, g, BoundaryGraph ) {
+    //for( unsigned int i = 0; i < 1; i++ ){
+    for( unsigned int i = 0; i < boundaryVec.size(); i++ ){
 
-        BoundaryGraph::vertex_descriptor vdS = source( ed, g );
-        BoundaryGraph::vertex_descriptor vdT = target( ed, g );
-        QPainterPath path;
-        path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
-        path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
+        BoundaryGraph &g =  boundaryVec[i].boundary();
 
-        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-        itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
-        itemptr->setPath( path );
-        itemptr->id() = g[ed].id;
-        //itemptr->textOn() = true;
+        // draw edges
+        BGL_FORALL_EDGES( ed, g, BoundaryGraph ) {
 
-        _scene->addItem( itemptr );
+            BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+            BoundaryGraph::vertex_descriptor vdT = target( ed, g );
+            QPainterPath path;
+            path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
+            path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
+
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+            itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
+            itemptr->setPath( path );
+            itemptr->id() = g[ed].id;
+            //itemptr->textOn() = true;
+
+            _scene->addItem( itemptr );
+        }
+
+        // draw vertices
+        BGL_FORALL_VERTICES( vd, g, BoundaryGraph ) {
+
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = g[vd].id;
+            //itemptr->text() = QString::fromStdString( to_string( g[vd].isFixed ) );
+            //itemptr->textOn() = true;
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
     }
 
-    // draw vertices
-    BGL_FORALL_VERTICES( vd, g, BoundaryGraph ) {
-
-        GraphicsBallItem *itemptr = new GraphicsBallItem;
-        itemptr->fontSize() = _font_size;
-        itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
-        itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
-        itemptr->id() = g[vd].id;
-        //itemptr->textOn() = true;
-
-        //cerr << vertexCoord[vd];
-        _scene->addItem( itemptr );
-    }
 }
 
 void GraphicsView::_item_subpathways( void )
@@ -289,15 +291,20 @@ void GraphicsView::_item_subpathways( void )
 #endif // DEBUG
                 GraphicsVertexItem *itemptr = new GraphicsVertexItem;
                 itemptr->fontSize() = _font_size;
-                itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
 
                 if( *g[ initVD ].isClonedPtr == true )
-                //if( g[ initVD ].type == "reaction" )
                     itemptr->setBrush( QBrush( QColor( 0, 255, 255, 255 ), Qt::SolidPattern ) );
                 else if( subg[itC->second.groupID][vdF].isAlias == true )
                     itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
                 else
                     itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+
+                if( g[ initVD ].type == "reaction" )
+                    itemptr->vtype() = TYPE_ONE;
+                else if( g[ initVD ].type == "metabolite" )
+                    itemptr->vtype() = TYPE_TWO;
+
                 itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
                 itemptr->id() = dg[vd].id;
                 //itemptr->name() = QString::fromStdString( to_string( dg[vd].id ) );
@@ -695,7 +702,8 @@ void GraphicsView::_item_pathwayPolygons( void )
 
                     pickBrewerColor( k, rgb );
                     QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 0 ), 2 ) );
+                    //itemptr->setPen( QPen( QColor( 220, 220, 220, 100 ), 4 ) );
+                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
                     //itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
                     itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
                     itemptr->setPolygon( polygon );

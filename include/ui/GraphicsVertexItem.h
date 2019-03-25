@@ -11,6 +11,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <cassert>
 
 using namespace std;
 
@@ -40,6 +41,7 @@ private:
     unsigned int _id;
     QString _name;
     bool    _textOn;
+    VERTEXTYPE _vtype;
 
     int     _font_size;
     QFont   _font;
@@ -88,6 +90,10 @@ public:
 
     bool &	                textOn( void ) 	    { return _textOn; }
     const bool &	        textOn( void ) const{ return _textOn; }
+
+    VERTEXTYPE &	        vtype( void ) 	    { return _vtype; }
+    const VERTEXTYPE &	    vtype( void ) const  { return _vtype; }
+
 
 //------------------------------------------------------------------------------
 //      Specific methods

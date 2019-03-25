@@ -52,6 +52,7 @@ void resetVisitedTimes( BoundaryGraph & graph )
 //
 void printGraph( BoundaryGraph & graph )
 {
+    cerr << "Printing BoundaryGraph..." << endl;
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;
 

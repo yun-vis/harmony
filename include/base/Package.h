@@ -44,8 +44,8 @@ class Package
 protected:
 
     // optimization
-    Smooth          *_smoothPtr;        // smooth cellunit
-    Octilinear      *_octilinearPtr;    // octilinear cellunit
+    Smooth                      *_smoothPtr;            // smooth cellunit
+    vector< Octilinear >        *_octilinearVecPtr;     // octilinear cellunit
 
 //------------------------------------------------------------------------------
 //  Specific functions
