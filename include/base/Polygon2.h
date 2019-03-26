@@ -120,6 +120,7 @@ class Polygon2 {
     bool inPolygon( const Coord2 &cood );
     double minDistToPolygon( const Coord2 &cood );
     double maxRadiusInPolygon( const Coord2 &coord );
+    void cleanPolygon( void );
 
 //------------------------------------------------------------------------------
 //	Intersection check

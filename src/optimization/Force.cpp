@@ -397,7 +397,7 @@ void Force::_force( void )
                 map< double, ForceGraph::vertex_descriptor >::iterator itC = vdMap.begin();
                 map< double, ForceGraph::vertex_descriptor >::iterator itN = vdMap.begin();
                 advance( itC, i );
-                advance( itN, (i+1)%vdMap.size() );
+                advance( itN, (i+1)%(int)vdMap.size() );
 
                 Coord2 dc = *g[ itC->second ].coordPtr - *g[ vd ].coordPtr;
                 Coord2 dn = *g[ itN->second ].coordPtr - *g[ vd ].coordPtr;
@@ -463,15 +463,10 @@ void Force::_initForceSeed( void )
 //
 void Force::_centroidGeometry( void )
 {
-    _initForceSeed();
-    //_voronoi.init( _seedVec, _contour );
-    //_voronoi.createWeightedVoronoiDiagram();
-    _voronoi.id() = _id;
-    _voronoi.createVoronoiDiagram( false );  // true: weighted, false: uniformed
-
-    // const char theName[] = "Net::centroid : ";
     ForceGraph & g = *_forceGraphPtr;
+    // const char theName[] = "Net::centroid : ";
 
+    _initForceSeed();
     if( num_vertices( g ) == 1 ){
 
         BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
@@ -479,8 +474,16 @@ void Force::_centroidGeometry( void )
             g[ vd ].coordPtr->y() = _contour.centroid().y();
             g[ vd ].placePtr->zero();
         }
+
+        (*_voronoi.seedVec())[0].cellPolygon = _contour;
         return;
     }
+
+    //_voronoi.init( _seedVec, _contour );
+    //_voronoi.createWeightedVoronoiDiagram();
+    _voronoi.id() = _id;
+    _voronoi.createVoronoiDiagram( false );  // true: weighted, false: uniformed
+
 
     // initialization
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {

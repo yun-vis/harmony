@@ -25,6 +25,7 @@ protected:
     vector < unsigned int > _indexVec;
     QTimer * _timerPtr;
     ENERGYTYPE  _energyType;
+    unsigned int _count;
 
 public:
 

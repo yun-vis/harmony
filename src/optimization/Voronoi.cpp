@@ -299,7 +299,15 @@ void Voronoi::createVoronoiDiagram( bool isWeighted )
         if( pgon.orientation() == -1 ){
             pgon.reverse_orientation();
         }
+        cerr << "bpoly_orientation: " << bpoly << endl;
 #endif // DEBUG
+
+        if( pgon.is_simple() == false ){
+            cerr << "NOT_SIMPLE::pgon: " << pgon << endl;
+        }
+        if( bpoly.is_simple() == false ){
+            cerr << "NOT_SIMPLE::bpoly: " << bpoly << endl;
+        }
 
         //Perform the intersection. Since CGAL is very general, it believes the
         //result might be multiple polygons with holes.

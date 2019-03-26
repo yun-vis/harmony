@@ -530,8 +530,9 @@ void Octilinear::_initOutputs( void )
         // check if on a line
         if( vdVec.size() == 2 ){
 
-            fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
-                             *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
+            fix = true;
+            //fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
+            //                 *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
         }
 
         if( fix == true ){

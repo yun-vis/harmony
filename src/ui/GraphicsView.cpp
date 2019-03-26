@@ -291,7 +291,15 @@ void GraphicsView::_item_subpathways( void )
 #endif // DEBUG
                 GraphicsVertexItem *itemptr = new GraphicsVertexItem;
                 itemptr->fontSize() = _font_size;
-                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+
+                if( g[ initVD ].type == "reaction" ){
+                    itemptr->vtype() = TYPE_ONE;
+                    itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                }
+                else if( g[ initVD ].type == "metabolite" ){
+                    itemptr->vtype() = TYPE_TWO;
+                    itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+                }
 
                 if( *g[ initVD ].isClonedPtr == true )
                     itemptr->setBrush( QBrush( QColor( 0, 255, 255, 255 ), Qt::SolidPattern ) );
@@ -299,11 +307,6 @@ void GraphicsView::_item_subpathways( void )
                     itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
                 else
                     itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-
-                if( g[ initVD ].type == "reaction" )
-                    itemptr->vtype() = TYPE_ONE;
-                else if( g[ initVD ].type == "metabolite" )
-                    itemptr->vtype() = TYPE_TWO;
 
                 itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
                 itemptr->id() = dg[vd].id;
@@ -1024,41 +1027,28 @@ void GraphicsView::initSceneItems ( void )
 
 #ifdef DEBUG
     QPolygonF polygon;
-    polygon.append( QPointF( 44.0527, 337.856 ) );
-    polygon.append( QPointF( 44.3551, 336.94 ) );
-    polygon.append( QPointF( 44.1118, 336.206 ) );
-    polygon.append( QPointF( 41.3332, 335.823 ) );
-    polygon.append( QPointF( 40.8823, 207.968 ) );
-    polygon.append( QPointF( 42.2745, 205.987 ) );
-    polygon.append( QPointF( 41.1741, 207.887 ) );
-    polygon.append( QPointF( 41.4198, 56.8788 ) );
-    polygon.append( QPointF( 42.1249, 54.7245 ) );
-    polygon.append( QPointF( 43.6903, 52.155 ) );
-    polygon.append( QPointF( 44.7844, 49.2386 ) );
-    polygon.append( QPointF( 40.8283, 46.5611 ) );
+    polygon.append( QPointF( 224.096,	48.9556 ) );
+    polygon.append( QPointF( -14.9945,	49.0098 ) );
+    polygon.append( QPointF( -49.2294,	83.2829 ) );
+    polygon.append( QPointF( -193.705,	83.2976 ) );
+    polygon.append( QPointF( -278.9,	168.499 ) );
+    polygon.append( QPointF( -406.465,	168.513 ) );
+    polygon.append( QPointF( -472.593,	234.645 ) );
+    polygon.append( QPointF( -634.635,	234.653 ) );
+    polygon.append( QPointF( -634.627,	377.027 ) );
+    polygon.append( QPointF( -907.473,	377.017 ) );
+    polygon.append( QPointF( -907.475,	-544.485 ) );
+    polygon.append( QPointF( 93.7825,	-544.735 ) );
+    polygon.append( QPointF( 93.7916,	-416.364 ) );
+    polygon.append( QPointF( 183.628,	-326.513 ) );
+    polygon.append( QPointF( 93.7825,	-544.735 ) );
+    polygon.append( QPointF( 428.76,	-544.487 ) );
+    polygon.append( QPointF( 428.762,	-288.293 ) );
+    polygon.append( QPointF( 443.526,	-273.541 ) );
+    polygon.append( QPointF( 443.534,	-39.0293 ) );
 
+    // polygon.append( QPointF( 666.645, 134.033 ) );
 
-/*
-    polygon.append( QPointF( 666.645, 134.033 ) );
-    polygon.append( QPointF( 666.645, 341.81 ) );
-    polygon.append( QPointF( -341.116, 341.876 ) );
-    polygon.append( QPointF( -341.115, 218.802 ) );
-    polygon.append( QPointF( -289.538, 167.228 ) );
-    polygon.append( QPointF( -289.534, 148.552 ) );
-    polygon.append( QPointF( -174.029, 33.0573 ) );
-    polygon.append( QPointF( -174.023, 28.4049 ) );
-    polygon.append( QPointF( -145.428, -0.175128 ) );
-    polygon.append( QPointF( 118.628, 118.113 ) );
-    polygon.append( QPointF( 118.921, 118.35 ) );
-    polygon.append( QPointF( 162.1, 161.49 ) );
-    polygon.append( QPointF( 0.0779665, -0.152638 ) );
-    polygon.append( QPointF( 41.8945, -41.9938 ) );
-    polygon.append( QPointF( 137.811, -42.0177 ) );
-    polygon.append( QPointF( 233.879, -138.108 ) );
-    polygon.append( QPointF( 233.878, -340.788 ) );
-    polygon.append( QPointF( 567.486, -341.154 ) );
-    polygon.append( QPointF( 585.143, 52.5197 ) );
-*/
     GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
     vector< double > rgb;
 

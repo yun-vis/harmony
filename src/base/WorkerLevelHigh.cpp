@@ -71,7 +71,9 @@ void WorkerLevelHigh::onTimeoutForce( void )
         case TYPE_HYBRID:
         {
             _levelhighPtr->forceBone().force();
-            _levelhighPtr->forceBone().centroidGeometry();
+            int freq = VORONOI_FREQUENCE - MIN2( _count/20, VORONOI_FREQUENCE-1 );
+            if( _count % freq == 0 )
+                _levelhighPtr->forceBone().centroidGeometry();
             err = _levelhighPtr->forceBone().verletIntegreation();
             // cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
             if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
@@ -79,6 +81,7 @@ void WorkerLevelHigh::onTimeoutForce( void )
                 //cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
+            _count++;
             break;
         }
         default:
@@ -108,5 +111,5 @@ void WorkerLevelHigh::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelHigh::onTimeoutStress );
     }
 
-    start( TIMER_INTERVAL );
+    start( TIMER_INTERVAL/3 );
 }

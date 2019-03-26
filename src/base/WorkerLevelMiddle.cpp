@@ -81,7 +81,9 @@ void WorkerLevelMiddle::onTimeoutForce( void )
         {
             _cellPtr->cellVec()[ _indexVec[0] ].forceBone().force();
             _cellPtr->additionalForces();
-            _cellPtr->cellVec()[ _indexVec[0] ].forceBone().centroidGeometry();
+            int freq = VORONOI_FREQUENCE - MIN2( _count/20, VORONOI_FREQUENCE-1 );
+            if( _count % freq == 0 )
+                _cellPtr->cellVec()[ _indexVec[0] ].forceBone().centroidGeometry();
             err = _cellPtr->cellVec()[ _indexVec[0] ].forceBone().verletIntegreation();
             // cerr << "WorkerLevelMiddle::err (hybrid) = " << err << endl;
             if ( err < _cellPtr->cellVec()[ _indexVec[0] ].forceBone().finalEpsilon() ) {
@@ -89,11 +91,13 @@ void WorkerLevelMiddle::onTimeoutForce( void )
                 //cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                 //cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
             }
+            _count++;
             break;
         }
         default:
             break;
     }
+
 
     QCoreApplication::processEvents();
     Q_EMIT updateProcess();
@@ -122,5 +126,5 @@ void WorkerLevelMiddle::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeoutStress );
     }
 
-    start( TIMER_INTERVAL );
+    start( TIMER_INTERVAL/3 );
 }

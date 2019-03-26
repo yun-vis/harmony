@@ -130,7 +130,9 @@ public:
     void updateMCLCoords( void );
     void updatePathwayCoords( void );
     void createPolygonComplex( void );
+    void updatePolygonComplex( void );
     void createPolygonComplexFromDetailGraph( void );
+    void updatePolygonComplexFromDetailGraph( void );
     void additionalForces( void );
 
 //------------------------------------------------------------------------------

@@ -253,8 +253,8 @@ void Road::_initLane( unsigned int gid,
             for( unsigned int j = 1; j <= p.elements().size(); j++ ) {
 
                 Coord2 &prev = p.elements()[j - 1];
-                Coord2 &curr = p.elements()[(j) % p.elements().size()];
-                Coord2 &next = p.elements()[(j + 1) % p.elements().size()];
+                Coord2 &curr = p.elements()[(j)%(int)p.elements().size()];
+                Coord2 &next = p.elements()[(j + 1)%(int)p.elements().size()];
 
                 // cerr << "j-1 = " << j-1 << " j = " << (j)%p.elements().size() << " j+1 = " << (j+1)%p.elements().size() << endl;
                 bool isOnLine = Line2::isOnLine(curr, prev, next);
@@ -321,7 +321,7 @@ void Road::_initLane( unsigned int gid,
         for( unsigned int j = 0; j < vdVec.size(); j++ ){
 
             Coord2 &coordM = *_road[ vdVec[j] ].coordPtr;
-            Coord2 &coordN = *_road[ vdVec[(j+1)%vdVec.size()] ].coordPtr;
+            Coord2 &coordN = *_road[ vdVec[(j+1)%(int)vdVec.size()] ].coordPtr;
             Coord2 mnVec = coordN - coordM;
             Coord2 cmVec = coord - coordM;
             double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
@@ -362,7 +362,7 @@ void Road::_initLane( unsigned int gid,
             for( unsigned int j = 0; j < size; j++ ){
 
                 Coord2 coordS( p.elements()[j].x(), p.elements()[j].y() );
-                Coord2 coordT( p.elements()[ (j+1)%size ].x(), p.elements()[ (j+1)%size ].y() );
+                Coord2 coordT( p.elements()[ (j+1)%(int)size ].x(), p.elements()[ (j+1)%(int)size ].y() );
                 UndirectedBaseGraph::vertex_descriptor vdS = NULL, vdT = NULL;
                 _findVertexInRoad( coordS, vdS );
                 _findVertexInRoad( coordT, vdT );
@@ -652,7 +652,7 @@ void Road::_initRoad( Cell *cellPtr )
         for( unsigned j = 0; j < vdVec.size(); j++ ){
 
             UndirectedBaseGraph::vertex_descriptor vdS = vdVec[ j ];
-            UndirectedBaseGraph::vertex_descriptor vdT = vdVec[ (j+1)%vdVec.size() ];
+            UndirectedBaseGraph::vertex_descriptor vdT = vdVec[ (j+1)%(int)vdVec.size() ];
 
             bool found = false;
             UndirectedBaseGraph::edge_descriptor oldED;

@@ -91,7 +91,9 @@ void WorkerLevelDetailed::onTimeoutForce( void )
         case TYPE_HYBRID:
         {
             itC->second.detail.forceBone().force();
-            itC->second.detail.forceBone().centroidGeometry();
+            int freq = VORONOI_FREQUENCE - MIN2( _count/20, VORONOI_FREQUENCE-1 );
+            if( _count % freq == 0 )
+                itC->second.detail.forceBone().centroidGeometry();
             err = itC->second.detail.forceBone().verletIntegreation();
             //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
             //cerr << "_idI = " << _idI << ", idJ = " << _idJ << ": err (pathway force) = " << err << endl;
@@ -100,11 +102,15 @@ void WorkerLevelDetailed::onTimeoutForce( void )
                 //cerr << "[Force-Directed] Finished Execution Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutCPUTime() << endl;
             }
+            _count++;
             break;
         }
         default:
             break;
     }
+
+    cerr << "count = " << _count << endl;
+    if( _count > 200 ) stop();
 
     QCoreApplication::processEvents();
     Q_EMIT updateProcess();
@@ -139,5 +145,5 @@ void WorkerLevelDetailed::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeoutStress );
     }
 
-    start( 500 );
+    start( 2*TIMER_INTERVAL );
 }

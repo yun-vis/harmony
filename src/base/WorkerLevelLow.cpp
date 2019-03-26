@@ -107,7 +107,9 @@ void WorkerLevelLow::onTimeoutForce( void )
         case TYPE_HYBRID:
         {
             itC->second.mcl.forceBone().force();
-            itC->second.mcl.forceBone().centroidGeometry();
+            int freq = VORONOI_FREQUENCE - MIN2( _count/20, VORONOI_FREQUENCE-1 );
+            if( _count % freq == 0 )
+                itC->second.mcl.forceBone().centroidGeometry();
             err = itC->second.mcl.forceBone().verletIntegreation();
             // cerr << "WorkerCell:: err (mcl force) = " << err << endl;
             if (err < itC->second.mcl.forceBone().finalEpsilon()) {
@@ -115,6 +117,7 @@ void WorkerLevelLow::onTimeoutForce( void )
                 //cerr << "[Force-Directed] Finished Execution Time [" << idT << "] = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time [" << idT << "] = " << checkOutCPUTime() << endl;
             }
+            _count++;
             break;
         }
         default:

@@ -207,6 +207,17 @@ void Polygon2::updateCentroid( void )
     if( !(polygon.size() >= 3) ){
         cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
         cerr << "polygon.size() = " << polygon.size() << endl;
+
+        Vertex_circulator curr = polygon.vertices_circulator();
+        Vertex_circulator next = curr;
+        ++next;
+        CGAL::Vector_2< K > center = (*curr - ORIGIN) + (*next - ORIGIN);
+        double x = 0.5 * CGAL::to_double( center.x() );
+        double y = 0.5 * CGAL::to_double( center.y() );
+        _centroid.x() = x;
+        _centroid.y() = y;
+
+        return;
         assert( polygon.size() >= 3 );
     }
     Vertex_circulator start = polygon.vertices_circulator();
@@ -249,22 +260,26 @@ void Polygon2::updateOrientation( void )
     CGAL::Polygon_2< K > p;
 
 
-    map< pair< double, double >, unsigned int > elementMap;
+    //map< pair< double, double >, unsigned int > elementMap;
     for( unsigned int i = 0; i < _elements.size(); i++ ){
         double x =_elements[i].x();
         double y =_elements[i].y();
-        double nx =_elements[(i+1)%_elements.size()].x();
-        double ny =_elements[(i+1)%_elements.size()].y();
-        if( (_elements[i]-_elements[(i+1)%_elements.size()] ).norm() > 0.1 ){
+        double nx =_elements[(i+1)%(int)_elements.size()].x();
+        double ny =_elements[(i+1)%(int)_elements.size()].y();
+
+        //if( (_elements[i]-_elements[(i+1)%(int)_elements.size()] ).norm() > 0.1 ){
             p.push_back( K::Point_2( x, y ) );
-            elementMap.insert( pair< pair< double, double >, unsigned int >(
-                    pair< double, double >( x, y ), i ) );
-        }
+        //    elementMap.insert( pair< pair< double, double >, unsigned int >(
+        //            pair< double, double >( x, y ), i ) );
+        //}
         //cerr << "(x, y) = " << x << ", " << y << endl;
     }
     //cerr << endl;
     //cerr << "element.size() = " << _elements.size() << " eleMap.size() = " << elementMap.size() << endl;
     // assert( _elements.size() == elementMap.size() );
+
+    cerr << "polygon:" << endl << p << endl;
+
     if( p.is_simple() == false ){
         cerr << "polygon is not simple..." << endl
              << p << endl;
@@ -324,7 +339,7 @@ double Polygon2::minDistToPolygon( const Coord2 &coord )
     for( unsigned int i = 0; i < _elements.size(); i++ ){
 
         Coord2 &coordM = _elements[ i ];
-        Coord2 &coordN = _elements[ (i+1)%_elements.size() ];
+        Coord2 &coordN = _elements[ (i+1)%(int)_elements.size() ];
         Coord2 mnVec = coordN - coordM;
         Coord2 cmVec = coord - coordM;
         double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
@@ -365,7 +380,7 @@ double Polygon2::maxRadiusInPolygon( const Coord2 &coord )
     for( unsigned int i = 0; i < _elements.size(); i++ ){
 
         Coord2 &coordM = _elements[ i ];
-        Coord2 &coordN = _elements[ (i+1)%_elements.size() ];
+        Coord2 &coordN = _elements[ (i+1)%(int)_elements.size() ];
         Coord2 mnVec = coordN - coordM;
         Coord2 cmVec = coord - coordM;
         double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
@@ -379,6 +394,83 @@ double Polygon2::maxRadiusInPolygon( const Coord2 &coord )
     }
 
     return maxR;
+}
+
+//
+//  Polygon2::cleanPolygon --    clean up vertices if the polygon is not simple
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Polygon2::cleanPolygon( void )
+{
+    bool isSimple = false;
+    Polygon2 ori = _elements;
+
+    while( isSimple == false ){
+
+        CGAL::Polygon_2<K> poly;
+
+        // remove picks
+        Polygon2 tmp;
+        tmp.elements() = _elements;
+        _elements.clear();
+        // cerr << "size = " << tmp.elements().size() << endl;
+        for( unsigned int i = 0; i < tmp.elements().size(); i++ ){
+            int idP = (i-1+(int)tmp.elements().size())%(int)tmp.elements().size();
+            int idN = (i+1)%(int)tmp.elements().size();
+            Coord2 &coordP = tmp.elements()[idP];
+            Coord2 &coordI = tmp.elements()[i];
+            Coord2 &coordN = tmp.elements()[idN];
+            Coord2 PI = coordP - coordI;
+            Coord2 NI = coordN - coordI;
+            Coord2 PN = coordP - coordN;
+            if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 1e-5 ) ){
+                //if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 1e-5 ) &&
+                //    PN.norm()/NI.norm() > 1e-5  ){
+                _elements.push_back( tmp.elements()[i] );
+                poly.push_back( K::Point_2( tmp.elements()[i].x(), tmp.elements()[i].y() ) );
+            }
+            else{
+                cerr << "idP = " << idP << " i = " << i << " idN = " << idN << endl;
+                cerr << "P = " << coordP;
+                cerr << "I = " << coordI;
+                cerr << "N = " << coordN;
+                cerr << "PI = " << PI;
+                cerr << "NI = " << NI;
+                cerr << "PN =" << PN;
+            }
+        }
+
+
+        // remove overlapped vertices
+        poly.clear();
+        for (unsigned int j = 0; j < _elements.size(); j++) {
+            if ((_elements[j] - _elements[(j+1)%(int)_elements.size()]).norm() > MIN_VERTEX_DISTANCE )
+                poly.push_back(K::Point_2( _elements[j].x(), _elements[j].y()));
+        }
+
+        _elements.clear();
+        for (unsigned int j = 0; j < poly.size(); j++) {
+            _elements.push_back( Coord2( CGAL::to_double(poly[j].x()),
+                                         CGAL::to_double(poly[j].y())) );
+        }
+
+        isSimple = poly.is_simple();
+        if ( poly.is_simple() == false ) {
+            cerr << "isSimple = " << poly.is_simple() << endl;
+            cerr << "(overlap)::_polygon = " << *this << endl;
+            cerr << "(original)::_polygon = " << ori << endl;
+        }
+        else{
+            break;
+        }
+    }
+
+    // cerr << "(clean)::_contour = " << *this << endl;
 }
 
 //------------------------------------------------------------------------------

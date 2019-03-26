@@ -8,6 +8,7 @@ Worker::Worker( void )
 {
     // cerr << "Worker constructor QID = " << QThread::currentThreadId() << endl;
     _energyType = ENERGY_FORCE;
+    _count = 0;
 }
 
 Worker::~Worker()

@@ -737,7 +737,7 @@ void Window::steinertree( void )
     // cerr << "road built..." << endl;
     _gv->isRoadFlag() = true;
 
-
+/*
     cerr << "/***************" << endl;
     cerr << "/* Steiner tree" << endl;
     cerr << "/***************" << endl;
@@ -768,6 +768,7 @@ void Window::steinertree( void )
         (*_lanePtr)[i].steinerTree();
     }
     _gv->isLaneFlag() = true;
+*/
 }
 
 void Window::stopProcessDetailedPathway( void )
@@ -813,7 +814,6 @@ void Window::processOctilinearBoundary( void )
         // int iter = 2*sqrt( _boundaryPtr->nVertices() );
         (*_octilinearVecPtr)[i].prepare( &boundaryVec[i],
                                          _content_width/2.0, _content_height/2.0 );
-
 
         // create a new thread
         ControllerBoundary * conPtr = new ControllerBoundary;
@@ -951,7 +951,7 @@ void Window::buildLevelHighBoundaryGraph( void )
         for( unsigned int j = 1; j < size+1; j++ ){
 
             //Coord2 &coordS = polygon.elements()[j-1];
-            //Coord2 &coordT = polygon.elements()[j%polygon.elements().size()];
+            //Coord2 &coordT = polygon.elements()[j%(int)polygon.elements().size()];
 
             // Check if the station exists or not
             BoundaryGraph::vertex_descriptor curVDS = NULL;
@@ -966,7 +966,7 @@ void Window::buildLevelHighBoundaryGraph( void )
                 BGL_FORALL_VERTICES( vd, bg, BoundaryGraph )
                     {
                         Coord2 &c = *bg[ vd ].coordPtr;
-                        if( fabs( ( polygon.elements()[ (j-1+k)%size]-c ).norm() ) < 1e-2 ){
+                        if( fabs( ( polygon.elements()[ (j-1+k)%(int)size]-c ).norm() ) < 1e-2 ){
 
 #ifdef DEBUG
                             cerr << "The node has been in the database." << endl;
@@ -1175,7 +1175,7 @@ void Window::buildLevelMiddleBoundaryGraph( void )
                     BGL_FORALL_VERTICES( vd, bg, BoundaryGraph )
                         {
                             Coord2 &c = *bg[ vd ].coordPtr;
-                            if( fabs( ( polygon.elements()[ (j-1+k)%size]-c ).norm() ) < 1e-2 ){
+                            if( fabs( ( polygon.elements()[ (j-1+k)%(int)size]-c ).norm() ) < 1e-2 ){
 
 #ifdef DEBUG
                                 cerr << "The node has been in the database." << endl;
@@ -1395,7 +1395,7 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
                         BGL_FORALL_VERTICES( vd, bg, BoundaryGraph )
                         {
                             Coord2 &c = *bg[ vd ].coordPtr;
-                            if( fabs( ( polygon.elements()[ (j-1+k)%size]-c ).norm() ) < 1e-2 ){
+                            if( fabs( ( polygon.elements()[ (j-1+k)%(int)size]-c ).norm() ) < 1e-2 ){
 
 #ifdef DEBUG
                                 cerr << "The node has been in the database." << endl;
@@ -1585,6 +1585,9 @@ void Window::updateLevelMiddlePolygonComplex( void )
             }
         }
     }
+
+    // clean contour
+    _cellPtr->updatePolygonComplex();
 }
 
 //
@@ -1630,7 +1633,8 @@ void Window::updateLevelDetailPolygonComplex( void )
 
     // update cell contour
     _cellPtr->createPolygonComplexFromDetailGraph();
-
+    // clean contour
+    _cellPtr->updatePolygonComplexFromDetailGraph();
 }
 
 
@@ -1732,6 +1736,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "stopProcessBone..." << endl;
             stopProcessBone();
             _cellPtr->updatePathwayCoords();
+
+            _levelType = LEVEL_LOW;
+
             redrawAllScene();
             break;
         }
@@ -1865,7 +1872,7 @@ void Window::keyPressEvent( QKeyEvent *event )
                 _gv->isBoundaryFlag() = true;
                 _gv->isPolygonComplexFlag() = false;
             }
-            else if( _levelType == LEVEL_BONE ) {
+            else if( _levelType == LEVEL_LOW ) {
                 ;
             }
             else if( _levelType == LEVEL_DETAIL ) {

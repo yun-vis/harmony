@@ -553,7 +553,7 @@ void Stress::_updateCoefs( void )
         for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
 
             Coord2 &coordA = _contour.elements()[i];
-            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            Coord2 &coordB = _contour.elements()[ (i+1)%(int)_contour.elements().size() ];
             double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
             double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
 
@@ -597,7 +597,7 @@ void Stress::_updateCoefs( void )
         for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
 
             Coord2 &coordA = _contour.elements()[i];
-            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            Coord2 &coordB = _contour.elements()[ (i+1)%(int)_contour.elements().size() ];
             double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
             double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
 
@@ -705,7 +705,7 @@ void Stress::_updateOutputs( void )
         for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
 
             Coord2 &coordA = _contour.elements()[i];
-            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            Coord2 &coordB = _contour.elements()[ (i+1)%(int)_contour.elements().size() ];
             double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
             double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
 
@@ -833,7 +833,7 @@ void Stress::_updateOutputs( void )
         for( unsigned int i = 0; i < _contour.elements().size(); i++ ){
 
             Coord2 &coordA = _contour.elements()[i];
-            Coord2 &coordB = _contour.elements()[ (i+1)%_contour.elements().size() ];
+            Coord2 &coordB = _contour.elements()[ (i+1)%(int)_contour.elements().size() ];
             double geoL = ( coordB.y() - coordA.y() ) * g[ vd ].geoPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].geoPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
             double smoothL = ( coordB.y() - coordA.y() ) * g[ vd ].smoothPtr->x() - ( coordB.x() - coordA.x() ) * g[ vd ].smoothPtr->y() - coordA.x()*coordB.y() + coordB.x()*coordA.y();
 

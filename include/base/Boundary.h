@@ -126,18 +126,10 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
     void adjustsize( const int & width, const int & height );   // normalize the LevelHigh size
-    void simplifyLayout( void );                                // remove nearly straight degree 2 stations
-    bool movebackNodes( const Boundary & obj, const LAYOUTTYPE type );
 
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void cloneLayout( const Boundary & obj );
-    void cloneSmooth( const Boundary & obj );
-    void cloneOctilinear( const Boundary & obj );
-    void updateTempCoord( void );
-    void reorderID( void );                                     // reorder Boundary vertex and edge id
-
     void init( void ) { _init(); }
     void clear( void ) { _clear(); }
 
