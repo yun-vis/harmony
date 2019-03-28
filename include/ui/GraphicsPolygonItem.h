@@ -11,6 +11,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <string>
 
 using namespace std;
 

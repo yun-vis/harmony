@@ -153,7 +153,7 @@ using namespace::std;
 #define DOI_MAX         (4.0)
 //#define DOI_MAX         (5.0)
 //#define DOI_MAX         (8.0)
-#define MIN_VERTEX_DISTANCE (3.0)
+#define MIN_VERTEX_DISTANCE (1.0)
 #define PERTUBE_RANGE   (1e8)
 
 #define MAX_DEGREE_ALLOWED		(3)
@@ -161,9 +161,9 @@ using namespace::std;
 //#define TIMER_STEP      (100)
 #define MAX_COLOR_TYPE   (12)
 #define DEFAULT_FONT_SIZE   (10)
-#define MIN_NEIGHBOR_DISTANCE	(4)
+#define MIN_NEIGHBOR_DISTANCE	(2)
 #define TIMER_INTERVAL  (200)
-#define VORONOI_FREQUENCE (5)
+#define VORONOI_FREQUENCE (1)
 
 enum LAYOUTTYPE{ TYPE_GEOGRAPHY, TYPE_SMOOTH, TYPE_OCTILINEAR, TYPE_STRESS };
 enum OPTTYPE{ LEAST_SQUARE, CONJUGATE_GRADIENT };

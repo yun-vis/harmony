@@ -39,10 +39,11 @@ public:
     const ENERGYTYPE &		    energyType( void ) const   { return _energyType; }
     ENERGYTYPE &			    energyType( void )	       { return _energyType; }
 
+    void stop( void );
+
 protected:
 
     void start( int interval );
-    void stop( void );
 
 public Q_SLOTS:
 

@@ -11,6 +11,7 @@ WorkerLevelDetailed::WorkerLevelDetailed( void )
 
 WorkerLevelDetailed::~WorkerLevelDetailed()
 {
+    cerr << "destroy WorkerLevelDetailed..." << endl;
 }
 
 //----------------------------------------------------------
@@ -110,7 +111,10 @@ void WorkerLevelDetailed::onTimeoutForce( void )
     }
 
     cerr << "count = " << _count << endl;
-    if( _count > 200 ) stop();
+    if( _count > 50 ) {
+        // QCoreApplication::processEvents();
+        stop();
+    }
 
     QCoreApplication::processEvents();
     Q_EMIT updateProcess();
@@ -145,5 +149,6 @@ void WorkerLevelDetailed::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelDetailed::onTimeoutStress );
     }
 
-    start( 2*TIMER_INTERVAL );
+    QCoreApplication::processEvents();
+    start( (rand()%10+1)*TIMER_INTERVAL );
 }

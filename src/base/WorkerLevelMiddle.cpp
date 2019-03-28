@@ -11,6 +11,7 @@ WorkerLevelMiddle::WorkerLevelMiddle( void )
 
 WorkerLevelMiddle::~WorkerLevelMiddle()
 {
+    cerr << "destroy WorkerLevelMiddle..." << endl;
 }
 
 //----------------------------------------------------------
@@ -126,5 +127,6 @@ void WorkerLevelMiddle::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelMiddle::onTimeoutStress );
     }
 
+    QCoreApplication::processEvents();
     start( TIMER_INTERVAL/3 );
 }

@@ -11,12 +11,13 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <string>
 
 using namespace std;
 
-//#ifndef Q_MOC_RUN
+#ifndef Q_MOC_RUN
 #include "base/Common.h"
-//#endif // Q_MOC_RUN
+#endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsItem>

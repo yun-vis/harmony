@@ -37,9 +37,10 @@ typedef std::vector< std::string > Tokens;
 //  Outputs
 //  none
 //
-void Cell::_init( double *veCoveragePtr, map< unsigned int, Polygon2 > * polygonComplexPtr )
+void Cell::_init( double *veCoveragePtr, double *veRatioPtr, map< unsigned int, Polygon2 > * polygonComplexPtr )
 {
     _veCoveragePtr = veCoveragePtr;
+    _veRatioPtr = veRatioPtr;
     vector< ForceGraph > &lsubg     = _pathway->lsubG();
 
     //read config file
@@ -154,6 +155,24 @@ void Cell::_buildConnectedComponent( void )
         // cerr << endl << endl;
 
         multimap< int, CellComponent > &cellComponent = _cellComponentVec[i];
+        double unit = INFINITY;
+        // compute unit
+        for( unsigned int j = 0; j < num; j++ ){
+
+            double totalArea = 0.0;
+            for( unsigned int k = 0; k < cc[j].lsubgVec.size(); k++ ){
+                double textW = *lsubg[i][ cc[j].lsubgVec[k] ].namePixelWidthPtr;
+                double textH = *lsubg[i][ cc[j].lsubgVec[k] ].namePixelHeightPtr;
+                totalArea += textW * textH;
+            }
+
+            double veCoverage = num_vertices( lsubg[i] ) + (*_veRatioPtr)*num_edges( lsubg[i] );
+            double multiple = ceil( pow( ceil( totalArea/veCoverage/(double)_paramUnit ), 1 ) );    // text area size
+            if( unit > multiple ){
+                unit = multiple;
+            }
+        }
+
         cellComponent.clear();
         for( unsigned int j = 0; j < num; j++ ){
 
@@ -166,7 +185,18 @@ void Cell::_buildConnectedComponent( void )
 
             //cc[j].multiple = ceil( totalArea/(*_veCoveragePtr)/(double)_paramUnit );    // text area size
             //cc[j].multiple = SQUARE( ceil( totalArea/(*_veCoveragePtr)/(double)_paramUnit ) );    // text area size
-            cc[j].multiple = ceil( pow( ceil( totalArea/(*_veCoveragePtr)/(double)_paramUnit ), 1.8 ) );    // text area size
+            //totalArea += totalArea * (*_veRatioPtr) * cellComponent.size();
+            double veCoverage = num_vertices( lsubg[i] ) + (*_veRatioPtr)*num_edges( lsubg[i] );
+            cc[j].multiple = ceil( pow( ceil( totalArea/veCoverage/(double)_paramUnit ), 1.5 )/unit );    // text area size
+
+#ifdef DEBUG
+            if( i == 0 ){
+                cerr << "i = " << i << endl;
+                cerr << "cc[j].multiple = " << cc[j].multiple
+                     << " j = " << j << " totalArea = " << totalArea
+                     << " *_veCoveragePtr = " << *_veCoveragePtr << " paramUnit = " << _paramUnit << endl;
+            }
+#endif // DEBUG
 
             // cc[j].multiple = ceil( (double)cc[j].lsubgVec.size()/(double)_paramUnit );   // node size
             // cerr << "totalArea = " << totalArea << " cc[j].multiple = " << cc[j].multiple << endl;
@@ -230,7 +260,7 @@ void Cell::_buildConnectedComponent( void )
 
 #ifdef DEBUG
         cerr << "lg:" << endl;
-        printGraph( lg );
+        //printGraph( lg );
         cerr << "component:" << endl;
 #endif // DEBUG
 
@@ -391,9 +421,9 @@ void Cell::_buildCellGraphs( void )
 #endif // DEBUG
         }
 
-        printGraph( _cellVec[i].bone() );
 
 #ifdef DEBUG
+        //printGraph( _cellVec[i].bone() );
         multimap< Grid2, pair< CellComponent*, CellComponent* > >::iterator itR;
         for( itR = _interCellComponentMap.begin(); itR != _interCellComponentMap.end(); itR++ ){
 
@@ -575,8 +605,8 @@ void Cell::_buildCellGraphs( void )
                 maxRadius = tmpR;
             }
         }
-        // mainRadius = 2.0*maxRadius/3.0;
-        // secondRadius = maxRadius/3.0;
+        mainRadius = 2.0*maxRadius/3.0;
+        secondRadius = maxRadius/3.0;
 
 #ifdef DEBUG
         //1cerr << "x = " << x << " y = " << y << " maxR = " << maxRadius << endl;
@@ -926,7 +956,7 @@ int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_desc
             // cerr << "cID = " << cID << ": ";
             BOOST_FOREACH( const std::string& i, tokens ) {
 
-                int id = std::stoi( i );
+                int id = stoi( i );
                 // cerr << id << ", ";
                 ForceGraph::vertex_descriptor vd = vertex( id, dg );
                 dg[ vd ].label = cID;
@@ -946,7 +976,7 @@ int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_desc
 
 
 #ifdef DEBUG
-    printGraph( dg );
+    //printGraph( dg );
 #endif // DEBUG
 
     return cID;
@@ -1043,7 +1073,7 @@ void Cell::updateMCLCoords( void )
                     }
                 }
 #ifdef DEBUG
-                printGraph( mclg );
+                //printGraph( mclg );
 #endif // DEBUG
             }
         }

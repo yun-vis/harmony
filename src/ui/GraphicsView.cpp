@@ -126,6 +126,7 @@ void GraphicsView::_item_composite( void )
 void GraphicsView::_item_polygonComplex( void )
 {
     ForceGraph &s = _levelhighPtr->skeleton();
+
     //vector < vector< Coord2 > > p = _levelhighPtr->polygons();
     map< unsigned int, Polygon2 >  p = _levelhighPtr->polygonComplex();
     map< unsigned int, Polygon2 >::iterator itP = p.begin();
@@ -539,6 +540,39 @@ void GraphicsView::_item_interCellComponents( void )
 
 void GraphicsView::_item_cellPolygons( void )
 {
+/*
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
+
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
+        multimap< int, CellComponent > &componentMap = cellComponentVec[i];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+
+        for( ; itC != componentMap.end(); itC++ ){
+
+            CellComponent &c = itC->second;
+            Polygon2 &p = c.contour;
+
+            QPolygonF polygon;
+            for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+                // cerr << "x = " << p[i][j].x() << " y = " << p[i][j].y() << endl;
+            }
+
+            GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+            vector< double > rgb;
+            unsigned int gid = i;
+            pickBrewerColor( gid, rgb );
+            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+            itemptr->setPolygon( polygon );
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+*/
+
     vector< Bone >    & cellVec      = _cellPtr->cellVec();
     //vector< Force >      & cellFVec     = _cellPtr->forceCellVec();
     //vector< ForceGraph > & cellGVec     = _cellPtr->forceCellGraphVec();
@@ -706,7 +740,7 @@ void GraphicsView::_item_pathwayPolygons( void )
                     pickBrewerColor( k, rgb );
                     QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
                     //itemptr->setPen( QPen( QColor( 220, 220, 220, 100 ), 4 ) );
-                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 0 ), 2 ) );
                     //itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
                     itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
                     itemptr->setPolygon( polygon );
@@ -1027,25 +1061,13 @@ void GraphicsView::initSceneItems ( void )
 
 #ifdef DEBUG
     QPolygonF polygon;
-    polygon.append( QPointF( 224.096,	48.9556 ) );
-    polygon.append( QPointF( -14.9945,	49.0098 ) );
-    polygon.append( QPointF( -49.2294,	83.2829 ) );
-    polygon.append( QPointF( -193.705,	83.2976 ) );
-    polygon.append( QPointF( -278.9,	168.499 ) );
-    polygon.append( QPointF( -406.465,	168.513 ) );
-    polygon.append( QPointF( -472.593,	234.645 ) );
-    polygon.append( QPointF( -634.635,	234.653 ) );
-    polygon.append( QPointF( -634.627,	377.027 ) );
-    polygon.append( QPointF( -907.473,	377.017 ) );
-    polygon.append( QPointF( -907.475,	-544.485 ) );
-    polygon.append( QPointF( 93.7825,	-544.735 ) );
-    polygon.append( QPointF( 93.7916,	-416.364 ) );
-    polygon.append( QPointF( 183.628,	-326.513 ) );
-    polygon.append( QPointF( 93.7825,	-544.735 ) );
-    polygon.append( QPointF( 428.76,	-544.487 ) );
-    polygon.append( QPointF( 428.762,	-288.293 ) );
-    polygon.append( QPointF( 443.526,	-273.541 ) );
-    polygon.append( QPointF( 443.534,	-39.0293 ) );
+    polygon.append( QPointF( 189.533,	-212.48 ) );
+    polygon.append( QPointF( 198.637,	-236.929 ) );
+    polygon.append( QPointF( 198.64, -399.321 ) );
+    polygon.append( QPointF( 338.836,	-399.32 ) );
+    polygon.append( QPointF( 338.837,	-205.752 ) );
+    polygon.append( QPointF( 345.356,	-199.319 ) );
+    polygon.append( QPointF( 345.469,	-203.71 ) );
 
     // polygon.append( QPointF( 666.645, 134.033 ) );
 

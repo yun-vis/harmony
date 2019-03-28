@@ -11,17 +11,6 @@
 //------------------------------------------------------------------------------
 //      Including Header Files
 //------------------------------------------------------------------------------
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cassert>
-#include <cstring>
-#include <cmath>
-
-using namespace std;
-
-
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QFileDialog>
 
@@ -880,7 +869,7 @@ void Pathway::genGraph( void )
 	cerr << "num of 1_METABOLITE = " << numMeta << endl;
 
 #ifdef DEBUG
-    printGraph( _graph );
+    //printGraph( _graph );
 #endif // DEBUG
 
     genLayoutGraph();
@@ -943,7 +932,7 @@ void Pathway::genLayoutGraph( void )
 
 #ifdef DEBUG
 	cerr << "printing the layout graph..." << endl;
-    printGraph( _layoutGraph );
+    //printGraph( _layoutGraph );
 #endif // DEBUG
 }
 
@@ -982,7 +971,7 @@ void Pathway::loadMetaFreq( string filename )
 {
 	ifstream ifs( filename.c_str() );
 
-	// cerr << "file name = " << filename << endl;
+	//cerr << "file name = " << filename << endl;
 
 	if ( !ifs ) {
 		cerr << "Cannot open the target file : " << filename << endl;
@@ -1001,8 +990,8 @@ void Pathway::loadMetaFreq( string filename )
 		vector< string > tokens;
 		while (ss >> buf) tokens.push_back( buf );
 
-		_metaFreq.insert( pair< string, unsigned int >( tokens[0], stoi( tokens[1] ) ) );
         //cerr << tokens[0] << " = " << tokens[1] << endl;
+		_metaFreq.insert( pair< string, unsigned int >( tokens[0], stoi( tokens[1] ) ) );
 	}
 	//cerr << "_metaFreq.size() = " << _metaFreq.size() << endl;
 }
@@ -1084,9 +1073,10 @@ void Pathway::loadPathway( void )
 
 	// sort by ascii
 	map< string, string > namemap;
+	//cerr << "inputpath = " << _inputpath << endl;
 	for( ; itL != namelist.end(); itL++ ) {
 
-        string str = (*itL).toStdString();
+        string str = itL->toStdString();
 		string substr = str.substr ( 0, str.length()-4 );
 		namemap.insert( pair< string, string >( substr, substr ) );
 	}
@@ -1470,7 +1460,7 @@ void Pathway::genSubGraphs( void )
 
 #ifdef  DEBUG
 		//cerr << "_sub: " << iter->first << iter->second->name << endl;
-		printGraph( g );
+		//printGraph( g );
 		cerr << "****" << endl << endl << endl;
 
 		map< unsigned int, unsigned int >::iterator itM = idMap.begin();
@@ -1597,7 +1587,7 @@ void Pathway::genLayoutSubGraphs( void )
 		}
 
 #ifdef  DEBUG
-		printGraph( _layoutSubGraph[i] );
+		//printGraph( _layoutSubGraph[i] );
 #endif // DEBUG
 	}
 }

@@ -24,5 +24,7 @@ int main( int argc, char **argv )
 
     cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x" << endl;
 
+    //cerr << "cos( 15.0/180.0*PI ) = " <<  cos( 15.0/180.0*M_PI ) << endl;
+
     return app.exec();
 }

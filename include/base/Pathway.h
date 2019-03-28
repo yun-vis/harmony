@@ -15,12 +15,14 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <cassert>
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <tinyxml.h>
 //#include <tinystr.h>
+
 
 using namespace std;
 

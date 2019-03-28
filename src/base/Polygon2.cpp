@@ -208,6 +208,8 @@ void Polygon2::updateCentroid( void )
         cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
         cerr << "polygon.size() = " << polygon.size() << endl;
 
+        if( polygon.size() == 0 ) return;
+
         Vertex_circulator curr = polygon.vertices_circulator();
         Vertex_circulator next = curr;
         ++next;
@@ -259,6 +261,7 @@ void Polygon2::updateOrientation( void )
 {
     CGAL::Polygon_2< K > p;
 
+    if( _elements.size() == 0 )  return;
 
     //map< pair< double, double >, unsigned int > elementMap;
     for( unsigned int i = 0; i < _elements.size(); i++ ){
@@ -409,8 +412,12 @@ void Polygon2::cleanPolygon( void )
 {
     bool isSimple = false;
     Polygon2 ori = _elements;
+    bool isUpdated = false;
 
-    while( isSimple == false ){
+    cerr << "(before)::_polygon = " << endl << *this << endl;
+
+
+    while( isSimple == false && ( _elements.size() > 0 ) ) {
 
         CGAL::Polygon_2<K> poly;
 
@@ -428,7 +435,7 @@ void Polygon2::cleanPolygon( void )
             Coord2 PI = coordP - coordI;
             Coord2 NI = coordN - coordI;
             Coord2 PN = coordP - coordN;
-            if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 1e-5 ) ){
+            if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 5.0/180.0*M_PI ) ){
                 //if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 1e-5 ) &&
                 //    PN.norm()/NI.norm() > 1e-5  ){
                 _elements.push_back( tmp.elements()[i] );
@@ -442,6 +449,7 @@ void Polygon2::cleanPolygon( void )
                 cerr << "PI = " << PI;
                 cerr << "NI = " << NI;
                 cerr << "PN =" << PN;
+                isUpdated = true;
             }
         }
 
@@ -451,6 +459,12 @@ void Polygon2::cleanPolygon( void )
         for (unsigned int j = 0; j < _elements.size(); j++) {
             if ((_elements[j] - _elements[(j+1)%(int)_elements.size()]).norm() > MIN_VERTEX_DISTANCE )
                 poly.push_back(K::Point_2( _elements[j].x(), _elements[j].y()));
+            else{
+                cerr << "curr = " << _elements[j]
+                     << "next = " << _elements[(j+1)%(int)_elements.size() ] << endl;
+                cerr << "idC = " << j << " idN = " << (j+1)%(int)_elements.size() << endl;
+                isUpdated = true;
+            }
         }
 
         _elements.clear();
@@ -470,7 +484,8 @@ void Polygon2::cleanPolygon( void )
         }
     }
 
-    // cerr << "(clean)::_contour = " << *this << endl;
+    if( isUpdated == true )
+        cerr << "(clean)::_polygon = " << endl << *this << endl;
 }
 
 //------------------------------------------------------------------------------

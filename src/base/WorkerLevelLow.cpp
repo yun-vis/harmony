@@ -11,6 +11,7 @@ WorkerLevelLow::WorkerLevelLow( void )
 
 WorkerLevelLow::~WorkerLevelLow()
 {
+    cerr << "destroy WorkerLevelLow..." << endl;
 }
 
 //----------------------------------------------------------
@@ -149,5 +150,6 @@ void WorkerLevelLow::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelLow::onTimeoutStress );
     }
 
+    QCoreApplication::processEvents();
     start( TIMER_INTERVAL );
 }

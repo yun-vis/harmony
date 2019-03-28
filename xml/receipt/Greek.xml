@@ -1,0 +1,64 @@
+<metabolites>
+    <metabolite>
+        <name>Feta</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>Garlic</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>Olive_Oil</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>Onion</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>Parsley</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>Prawns</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>Tomato</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+    <metabolite>
+        <name>White_Wine</name>
+        <formula>none</formula>
+        <description>none</description>
+    </metabolite>
+</metabolites>
+<reactions>
+    <reaction>
+        <id>Garides_Saganaki</id>
+        <name>Garides_Saganaki</name>
+        <reactant>Prawns</reactant>
+        <reactant>Olive_Oil</reactant>
+        <reactant>Onion</reactant>
+        <reactant>Parsley</reactant>
+        <reactant>White_Wine</reactant>
+        <reactant>Tomato</reactant>
+        <reactant>Garlic</reactant>
+        <reactant>Feta</reactant>
+        <reversible>true</reversible>
+        <subsystem>Greek</subsystem>
+    </reaction>
+</reactions>
+<subsystems>
+    <subsystem>
+        <id>4</id>
+        <name>Greek</name>
+    </subsystem>
+</subsystems>

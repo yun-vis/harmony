@@ -63,6 +63,7 @@ class Cell : public PathwayData, public Common
 private:
 
     double                                         *_veCoveragePtr;
+    double                                         *_veRatioPtr;
     vector< Bone >                                  _cellVec;
 
     vector< multimap< int, CellComponent > >        _cellComponentVec;              // int: number of nodes in lsubg
@@ -86,7 +87,7 @@ private:
     void _buildCellGraphs( void );
     int _computeClusters( ForceGraph &dg,
                           vector< MetaboliteGraph::vertex_descriptor > & cluster );
-    void _init( double *veCoveragePtr, map< unsigned int, Polygon2 > * polygonComplexPtr );
+    void _init( double *veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > * polygonComplexPtr );
     void _clear( void );
 
 protected:
@@ -138,8 +139,8 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( double *__veCoveragePtr, map< unsigned int, Polygon2 > * __polygonComplexPtr ) {
-        _init( __veCoveragePtr, __polygonComplexPtr );
+    void init( double *__veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > * __polygonComplexPtr ) {
+        _init( __veCoveragePtr, __veRatioPtr, __polygonComplexPtr );
     }
     void clear( void ) { _clear(); }
 

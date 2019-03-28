@@ -11,6 +11,7 @@ WorkerLevelHigh::WorkerLevelHigh( void )
 
 WorkerLevelHigh::~WorkerLevelHigh()
 {
+    cerr << "destroy WorkerLevelHigh..." << endl;
 }
 
 //----------------------------------------------------------
@@ -50,7 +51,7 @@ void WorkerLevelHigh::onTimeoutForce( void )
             err = _levelhighPtr->forceBone().verletIntegreation();
             // cerr << "WorkerLevelHigh::err (force) = " << err << endl;
             if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
-                stop();
+                Worker::stop();
                 //cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
@@ -62,7 +63,7 @@ void WorkerLevelHigh::onTimeoutForce( void )
             err = _levelhighPtr->forceBone().gap();
             // cerr << "WorkerLevelHigh::err (centroid) = " << err << endl;
             if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
-                stop();
+                Worker::stop();
                 //cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
@@ -77,7 +78,7 @@ void WorkerLevelHigh::onTimeoutForce( void )
             err = _levelhighPtr->forceBone().verletIntegreation();
             // cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
             if ( err < _levelhighPtr->forceBone().finalEpsilon() ) {
-                stop();
+                Worker::stop();
                 //cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
                 //cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
             }
@@ -97,7 +98,7 @@ void WorkerLevelHigh::process( const QString &parameter )
     // here is the expensive or blocking operation
     // signal and slot should be thread safe
 
-    // cerr << "WorkerLevelHigh::process =  " << QThread::currentThreadId() << endl;
+    //cerr << "WorkerLevelHigh::process =  " << QThread::currentThreadId() << endl;
     //cerr << "WorkerLevelHigh::stresssize = " << (*_stress).size() << endl;
     //cerr << "WorkerLevelHigh::pathway = " << _pathway->nSubsys() << endl;
     _timerPtr = new QTimer;
@@ -111,5 +112,6 @@ void WorkerLevelHigh::process( const QString &parameter )
         QObject::connect( _timerPtr, &QTimer::timeout, this, &WorkerLevelHigh::onTimeoutStress );
     }
 
+    QCoreApplication::processEvents();
     start( TIMER_INTERVAL/3 );
 }

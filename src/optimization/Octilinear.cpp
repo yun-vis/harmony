@@ -120,7 +120,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
     _updateOutputs();
 
 #ifdef  DEBUG
-    printGraph( g );
+    //printGraph( g );
     cerr << " nVertices = " << nVertices << " nEdges = " << nEdges << endl;
     cerr << " nVars = " << _nVars << " nConstrs = " << _nConstrs << endl;
     cerr << "Finished initializing the linear system" << endl;
@@ -530,9 +530,9 @@ void Octilinear::_initOutputs( void )
         // check if on a line
         if( vdVec.size() == 2 ){
 
-            fix = true;
-            //fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
-            //                 *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
+            //fix = true;
+            fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
+                             *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
         }
 
         if( fix == true ){
@@ -914,7 +914,7 @@ double Octilinear::ConjugateGradient( unsigned int iter )
     cerr << "iter = " << iter << endl;
     for( int i = 0; i < iter; i++ ) {
 
-        // cerr << "i = " << i << endl;
+        cerr << "i = " << i << endl;
         // prepare the square matrix
         A = _coef.transpose() * _coef;
         b = _coef.transpose() * _output;
@@ -989,6 +989,32 @@ void Octilinear::retrieve( void )
                 //cerr << "x = " << x << " y = " << y << endl;
             }
             else {
+
+                bool fix = false;
+
+                // collect fixed vertices
+                vector< BoundaryGraph::vertex_descriptor > vdVec;
+                BoundaryGraph::out_edge_iterator eo, eo_end;
+                for( tie( eo, eo_end ) = out_edges( vertex, g ); eo != eo_end; ++eo ){
+
+                    BoundaryGraph::edge_descriptor ed = *eo;
+                    BoundaryGraph::vertex_descriptor vdT = target( ed, g );
+
+                    if( g[ vertex ].isFixed == true ){
+                        vdVec.push_back( vdT );
+                    }
+                }
+
+                // check if on a line
+                if( vdVec.size() == 2 ){
+
+                    fix = !Line2::isOnLine( *g[ vertex ].coordPtr,
+                                            *g[ vdVec[0] ].coordPtr, *g[ vdVec[1] ].coordPtr );
+
+                    // cerr << "vid = " << g[ vertex ].id << endl;
+                }
+
+                //if( fix != true ){
                 //if( g[ vertex ].isFixed != true ){
                     g[ vertex ].coordPtr->x() = x;
                     g[ vertex ].coordPtr->y() = y;

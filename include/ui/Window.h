@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
-#include <thread>
+//#include <thread>
 #include <cstdlib>
 
 using namespace std;

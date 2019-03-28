@@ -13,6 +13,8 @@ Worker::Worker( void )
 
 Worker::~Worker()
 {
+    // delete _timerPtr;
+    cerr << "destroy Worker..." << endl;
 }
 
 void Worker::start( int interval )
@@ -23,10 +25,12 @@ void Worker::start( int interval )
 void Worker::stop( void )
 {
     _timerPtr->stop();
+    cout << "final_count = " << _count << endl;
+
+    QCoreApplication::processEvents();
 
     QString result;
     Q_EMIT resultReady( result );
-    // cout << "count = " << _count << endl;
 }
 
 //----------------------------------------------------------

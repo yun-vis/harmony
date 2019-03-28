@@ -277,7 +277,7 @@ void Contour2::createContour( void ) {
 
     Polygon2 polygon;
     polygon.elements().push_back(Coord2(complex[vdS].coordPtr->x(), complex[vdS].coordPtr->y()));
-    while (true) {
+    while ( true ) {
 
         UndirectedBaseGraph::vertex_descriptor vdT = NULL;
         for (tie(eo, eo_end) = out_edges(vdC, complex); eo != eo_end; eo++) {
