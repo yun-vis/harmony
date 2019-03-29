@@ -346,11 +346,12 @@ void Force::_force( void )
                     double l = L;
 
                     *g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
-                    // cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
+                    //cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
                 }
                 // Replusive force by Couloum's power
                 if( dist > 0 ){
                     *g[ vdi ].forcePtr -= ( _paramKr/SQUARE( dist ) ) * unit;
+                    //cerr << "repul = " << ( _paramKr/SQUARE( dist ) ) * unit << endl;
                 }
 #ifdef DEBUG
                 cerr << "idi = " << g[vdi].id << " idj = " <<  g[vdj].id
@@ -404,7 +405,7 @@ void Force::_force( void )
                 Coord2 cn = *g[ itN->second ].coordPtr - *g[ itC->second ].coordPtr;
                 double theta = acos( ( dc.squaredNorm() + dn.squaredNorm() - cn.squaredNorm() )/(2.0*dc.norm()*dn.norm()) );
                 double force = _paramKc * atan( dc.norm()/_paramKd ) + atan( dn.norm()/_paramKd ) + _paramKe * cos( theta/2.0 )/sin( theta/2.0 );
-                // if( !isnan( theta ) ) *g[ vd ].forcePtr += Coord2( -force, force );
+                //if( !isnan( theta ) ) *g[ vd ].forcePtr += Coord2( -force, force );
 
 #ifdef DEBUG
                 if( isnan( theta ) ){

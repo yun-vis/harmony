@@ -641,7 +641,11 @@ void Window::processDetailedPathwayForce( void )
 
             int count = 0;
             double err = 0.0;
-            for( unsigned int k = 0; k < 50; k++ ){
+            unsigned int loop = MAX2( 50, num_vertices( c.detail.bone() ) );
+            //unsigned int loop = 100;
+            //cerr << "loop = " << loop << endl;
+            //if( i == 1 && j == 1 )
+            for( unsigned int k = 0; k < loop; k++ ){
                 cerr << "k = " << k << endl;
                 itC->second.detail.forceBone().force();
                 int freq = VORONOI_FREQUENCE - MIN2( count/20, VORONOI_FREQUENCE-1 );
@@ -771,9 +775,56 @@ void Window::processDetailedPathwayStress( void )
     }
 }
 
-
 void Window::steinertree( void )
 {
+    // select a target metabolite
+    MetaboliteGraph             &g         = _pathway->g();
+
+    BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
+        if( g[ vd ].type == "metabolite" ){
+            if( *g[ vd ].namePtr == "Soy_Sauce" ){
+                *g[ vd ].isSelectedPtr = true;
+            }
+        }
+    }
+
+    // compute steiner tree
+    _roadPtr->initRoad( _cellPtr );
+    // _roadPtr->initRoad( _cellPtr->cellComponentVec() );
+    //_roadPtr->buildRoad();
+    // cerr << "road built..." << endl;
+    _gv->isRoadFlag() = true;
+
+    _lanePtr->clear();
+    _lanePtr->resize( 1 );
+    (*_lanePtr)[0].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+    (*_lanePtr)[0].initSteinerNet( _cellPtr->cellComponentVec() );
+    (*_lanePtr)[0].steinerTree();
+    _gv->isLaneFlag() = true;
+
+#ifdef SKIP
+    // compute steiner tree
+    _roadPtr->initRoad( _cellPtr );
+    // _roadPtr->initRoad( _cellPtr->cellComponentVec() );
+    _roadPtr->buildRoad();
+    // cerr << "road built..." << endl;
+    _gv->isRoadFlag() = true;
+
+    _lanePtr->clear();
+    _lanePtr->resize( 1 );
+    for( unsigned int i = 0; i < _lanePtr->size(); i++ ){
+        vector < Highway > &highwayVec = _roadPtr->highwayMat()[i];
+        (*_lanePtr)[0].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_lanePtr)[0].initLane( 0, _cellPtr->cellComponentVec()[0], &highwayVec );
+        (*_lanePtr)[0].steinerTree();
+    }
+#endif // SKIP
+}
+
+#ifdef SKIP
+void Window::steinertree( void )
+{
+
 
     // compute steiner tree
     _roadPtr->initRoad( _cellPtr );
@@ -812,7 +863,9 @@ void Window::steinertree( void )
         (*_lanePtr)[i].steinerTree();
     }
     _gv->isLaneFlag() = true;
+
 }
+#endif // SKIP
 
 void Window::stopProcessDetailedPathway( void )
 {
@@ -1700,12 +1753,12 @@ void Window::updateLevelDetailPolygonComplex( void )
         //for (unsigned int n = 0; n < 1; n++) {
         for( ; itC != componentMap.end(); itC++ ){
 
-            cerr << "index = " << index << endl;
+            //cerr << "index = " << index << endl;
             Boundary &b = bVec[ index ];
             BoundaryGraph &bg = b.boundary();
 
             printGraph( bg );
-            cerr << endl << endl << endl;
+            // cerr << endl << endl << endl;
 
             Bone &detail = itC->second.detail;
             Force &force = detail.forceBone();
@@ -1721,10 +1774,14 @@ void Window::updateLevelDetailPolygonComplex( void )
                 for( unsigned int j = 0; j < polygon.elements().size(); j++ ){
                     // cerr << "i = " << i << " j = " << j << endl;
                     // cerr << " " << polygon.elements()[j];
-                    cerr << "id = " << bg[ itP->second[j] ].id << endl;
+                    // cerr << "id = " << bg[ itP->second[j] ].id << endl;
                     polygon.elements()[j].x() = bg[ itP->second[j] ].coordPtr->x();
                     polygon.elements()[j].y() = bg[ itP->second[j] ].coordPtr->y();
                 }
+                polygon.updateCentroid();
+                ForceGraph::vertex_descriptor vd = vertex( i, detail.bone() );
+                detail.bone()[vd].coordPtr->x() = polygon.centroid().x();
+                detail.bone()[vd].coordPtr->y() = polygon.centroid().y();
             }
             index++;
         }
@@ -1770,10 +1827,17 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_2:
         {
+
             stopProcessBoundary();
+
+            simulateKey( Qt::Key_E );
+            simulateKey( Qt::Key_E );
+            simulateKey( Qt::Key_E );
 
             _levelType = LEVEL_HIGH;
             processOctilinearBoundary();
+
+            simulateKey( Qt::Key_E );
 
             //selectOctilinear();
             //simulateKey( Qt::Key_O );
@@ -1782,6 +1846,8 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_Q:
         {
             simulateKey( Qt::Key_L );
+
+            simulateKey( Qt::Key_E );
 
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
@@ -1796,8 +1862,10 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_W:
         {
+
             cerr << "stopProcessCell..." << endl;
             stopProcessCell();
+            simulateKey( Qt::Key_E );
             cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
             cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
 
@@ -1810,6 +1878,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             // optimization
             // selectOctilinear();
             // simulateKey( Qt::Key_O );
+            simulateKey( Qt::Key_E );
 
             break;
         }
@@ -1832,11 +1901,14 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_S:
         {
+
             cerr << "stopProcessBone..." << endl;
             stopProcessBone();
+            simulateKey( Qt::Key_E );
             _cellPtr->updatePathwayCoords();
             _levelType = LEVEL_LOW;
 
+            simulateKey( Qt::Key_E );
             redrawAllScene();
             break;
         }
@@ -1863,12 +1935,14 @@ void Window::keyPressEvent( QKeyEvent *event )
             stopProcessDetailedPathway();
             cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
             cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
+            simulateKey( Qt::Key_E );
 
             // initialization and build the boundary
             selectLevelDetailBuildBoundary();
 
             _levelType = LEVEL_DETAIL;
             processOctilinearBoundary();
+            simulateKey( Qt::Key_E );
 
             // optimization
             //selectOctilinear();
@@ -1876,9 +1950,17 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             break;
         }
+        case Qt::Key_R:
+        {
+            _gv->isBoundaryFlag() = false;
+            // steiner tree
+            steinertree();
+            simulateKey( Qt::Key_E );
+            break;
+        }
         case Qt::Key_3:
         {
-            _gv->isSimplifiedFlag() = !_gv->isSimplifiedFlag();
+            _gv->isPathwayPolygonContourFlag() = !_gv->isPathwayPolygonContourFlag() ;
             redrawAllScene();
             break;
         }
@@ -1975,11 +2057,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             }
             else if( _levelType == LEVEL_DETAIL ) {
 
-                cerr << "here" << endl;
                 updateLevelDetailPolygonComplex();
-
-                // steiner tree
-                // steinertree();
             }
             else{
                 cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
@@ -2068,11 +2146,13 @@ void Window::keyPressEvent( QKeyEvent *event )
             // ui
             _gv->isCompositeFlag() = true;
 
+            simulateKey( Qt::Key_E );
             redrawAllScene();
             break;
         }
         case Qt::Key_E:
         {
+            redrawAllScene();
             // _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
             _gv->exportPNG( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );

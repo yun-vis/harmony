@@ -58,8 +58,10 @@ class MetaboliteVertexProperty : public BaseVertexProperty {
     unsigned int    degree;
 	bool			activate;
 	int 			stoichiometry;
-	bool * 			isClonedPtr;
+	bool * 			isSelectedPtr;
+	bool *			isClonedPtr;
     bool 			isAlias;
+
 	Coord2			* centerPtr;		// voronoi center
 	string          type;
 	string          metaType;

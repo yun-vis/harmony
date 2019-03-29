@@ -36,14 +36,6 @@
     </metabolite>
 </metabolites>
 <reactions>
-<reaction>
-    <id>LALA</id>
-    <name>LALACarboxylesterase (cocaine) (er)</name>
-    <reactant>h2o[r]</reactant>
-    <product>h[r]</product>
-    <reversible>true</reversible>
-    <subsystem>Alkaloid synthesis</subsystem>
-</reaction>
     <reaction>
         <id>COKECBESr</id>
         <name>Carboxylesterase (cocaine) (er)</name>

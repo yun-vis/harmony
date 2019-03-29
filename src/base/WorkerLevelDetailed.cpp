@@ -111,9 +111,10 @@ void WorkerLevelDetailed::onTimeoutForce( void )
     }
 
     cerr << "count = " << _count << endl;
-    if( _count > 50 ) {
+    if( _count%50 == 0 ) {
         // QCoreApplication::processEvents();
-        stop();
+        cerr << "#";
+        //stop();
     }
 
     QCoreApplication::processEvents();

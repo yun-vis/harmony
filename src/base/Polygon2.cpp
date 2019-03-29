@@ -435,13 +435,15 @@ void Polygon2::cleanPolygon( void )
             Coord2 PI = coordP - coordI;
             Coord2 NI = coordN - coordI;
             Coord2 PN = coordP - coordN;
-            if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 5.0/180.0*M_PI ) ){
+            double acosValue = acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) );
+            if( acosValue  > 5.0/180.0*M_PI  ){
                 //if( ( acos( (PI.squaredNorm() + NI.squaredNorm() - PN.squaredNorm())/(2.0*PI.norm()*NI.norm()) ) > 1e-5 ) &&
                 //    PN.norm()/NI.norm() > 1e-5  ){
                 _elements.push_back( tmp.elements()[i] );
                 poly.push_back( K::Point_2( tmp.elements()[i].x(), tmp.elements()[i].y() ) );
             }
             else{
+                cerr << "acosValue = " << acosValue << endl;
                 cerr << "idP = " << idP << " i = " << i << " idN = " << idN << endl;
                 cerr << "P = " << coordP;
                 cerr << "I = " << coordI;
@@ -450,9 +452,15 @@ void Polygon2::cleanPolygon( void )
                 cerr << "NI = " << NI;
                 cerr << "PN =" << PN;
                 isUpdated = true;
+
+                // put the rest of the vector back and break
+                for( unsigned int j = i+1; j < tmp.elements().size(); j++ ){
+                    _elements.push_back( tmp.elements()[j] );
+                    poly.push_back( K::Point_2( tmp.elements()[j].x(), tmp.elements()[j].y() ) );
+                }
+                break;
             }
         }
-
 
         // remove overlapped vertices
         poly.clear();

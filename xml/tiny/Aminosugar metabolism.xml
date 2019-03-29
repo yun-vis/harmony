@@ -347,4 +347,15 @@
         <reversible>false</reversible>
         <subsystem>Aminosugar metabolism</subsystem>
     </reaction>
+    <reaction>
+        <id>r0363</id>
+        <name>Glycolysis / Glyconeogenesis EC:2.7.1.1</name>
+        <reactant>itp[c]</reactant>
+        <reactant>gam[c]</reactant>
+        <product>h[c]</product>
+        <product>idp[c]</product>
+        <product>gam6p[c]</product>
+        <reversible>false</reversible>
+        <subsystem>Aminosugar metabolism</subsystem>
+    </reaction>
 </reactions>

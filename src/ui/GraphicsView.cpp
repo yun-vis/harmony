@@ -228,7 +228,7 @@ void GraphicsView::_item_boundary( void )
             itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = g[vd].id;
-            //itemptr->text() = QString::fromStdString( to_string( g[vd].isFixed ) );
+            itemptr->text() = QString::fromStdString( to_string( g[vd].isFixed ) );
             //itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
@@ -302,10 +302,13 @@ void GraphicsView::_item_subpathways( void )
                     itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
                 }
 
-                if( *g[ initVD ].isClonedPtr == true )
-                    itemptr->setBrush( QBrush( QColor( 0, 255, 255, 255 ), Qt::SolidPattern ) );
-                else if( subg[itC->second.groupID][vdF].isAlias == true )
+
+                if( *g[ initVD ].isSelectedPtr == true )
                     itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
+                else if( *g[ initVD ].isClonedPtr == true )
+                    itemptr->setBrush( QBrush( QColor( 72, 209, 204, 255 ), Qt::SolidPattern ) );
+                else if( subg[itC->second.groupID][vdF].isAlias == true )
+                    itemptr->setBrush( QBrush( QColor( 255, 192, 203, 255 ), Qt::SolidPattern ) );
                 else
                     itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
 
@@ -740,8 +743,10 @@ void GraphicsView::_item_pathwayPolygons( void )
                     pickBrewerColor( k, rgb );
                     QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
                     //itemptr->setPen( QPen( QColor( 220, 220, 220, 100 ), 4 ) );
-                    itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 0 ), 2 ) );
-                    //itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+                    if( _is_pathwayPolygonContourFlag == true )
+                        itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 0 ), 2 ) );
+                    else
+                        itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
                     itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
                     itemptr->setPolygon( polygon );
 
@@ -791,7 +796,7 @@ void GraphicsView::_item_road( void )
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
     }
-*/
+
     // draw paths
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
@@ -818,6 +823,7 @@ void GraphicsView::_item_road( void )
             }
         }
     }
+*/
 
 //#ifdef SKIP
     // draw routers
@@ -950,7 +956,7 @@ void GraphicsView::_item_lane( void )
             itemptr->setPen( QPen( QColor( 0, 100, 0, 200 ), 5 ) );
             itemptr->setPath( path );
             itemptr->id() = road[ ed ].visitedTimes;
-            itemptr->textOn() = true;
+            //itemptr->textOn() = true;
 
             _scene->addItem( itemptr );
         }
@@ -964,7 +970,8 @@ void GraphicsView::_item_lane( void )
             itemptr->setBrush( QBrush( QColor( 0, 100, 0, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( road[vd].coordPtr->x(), -road[vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = road[ vd ].id;
-            //itemptr->textOn() = true;
+            itemptr->text() = QString::fromStdString( to_string( road[ vd ].id ) );
+            itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
@@ -1003,30 +1010,25 @@ void GraphicsView::_item_lane( void )
     for( unsigned int i = 0; i < lane.size(); i++ ){
 
         UndirectedBaseGraph &road = lane[i].road();
-        vector < Terminal > &terminalVec = lane[i].terminalVec();
+        vector< pair< UndirectedBaseGraph::vertex_descriptor,
+                UndirectedBaseGraph::vertex_descriptor > > &treeEdgeVec = lane[i].treeEdgeVec();
 
-        for( unsigned int j = 0; j < terminalVec.size(); j++ ){
+        for( unsigned int k = 0; k < treeEdgeVec.size(); k++ ){
 
-            if( i != j ){
+            QPainterPath path;
+            Coord2 &coordS = *road[ treeEdgeVec[k].first ].coordPtr;
+            Coord2 &coordT = *road[ treeEdgeVec[k].second ].coordPtr;
+            path.moveTo( coordS.x(), -coordS.y() );
+            path.lineTo( coordT.x(), -coordT.y() );
 
-                for( unsigned int k = 0; k < terminalVec[j].treeEdges.size(); k++ ){
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
-                    QPainterPath path;
-                    Coord2 &coordS = *road[ terminalVec[j].treeEdges[k].first ].coordPtr;
-                    Coord2 &coordT = *road[ terminalVec[j].treeEdges[k].second ].coordPtr;
-                    path.moveTo( coordS.x(), -coordS.y() );
-                    path.lineTo( coordT.x(), -coordT.y() );
+            //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+            itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
+            itemptr->setPath( path );
+            _scene->addItem( itemptr );
 
-                    // add path
-                    GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-
-                    //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
-                    itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
-                    itemptr->setPath( path );
-                    _scene->addItem( itemptr );
-
-                }
-            }
         }
     }
 
@@ -1053,21 +1055,31 @@ void GraphicsView::initSceneItems ( void )
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
     if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
+    if( _is_boundaryFlag == true ) _item_boundary();
     if( _is_roadFlag == true ) _item_road();
     if( _is_laneFlag == true ) _item_lane();
-    if( _is_boundaryFlag == true ) _item_boundary();
     if( _is_subPathwayFlag == true ) _item_subpathways();
+
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 
 #ifdef DEBUG
     QPolygonF polygon;
-    polygon.append( QPointF( 189.533,	-212.48 ) );
-    polygon.append( QPointF( 198.637,	-236.929 ) );
-    polygon.append( QPointF( 198.64, -399.321 ) );
-    polygon.append( QPointF( 338.836,	-399.32 ) );
-    polygon.append( QPointF( 338.837,	-205.752 ) );
-    polygon.append( QPointF( 345.356,	-199.319 ) );
-    polygon.append( QPointF( 345.469,	-203.71 ) );
+
+    polygon.append( QPointF( -1979.37,	357.122 ) );
+	polygon.append( QPointF( -2139.33,	517.077 ) );
+    polygon.append( QPointF( -2259.74,	637.487 ) );
+	polygon.append( QPointF( -2465.88,	431.351 ) );
+	polygon.append( QPointF( -3356.49,	431.351 ) );
+	polygon.append( QPointF( -3356.52,	-331.888 ) );
+	polygon.append( QPointF( -2940.83,	-332.091 ) );
+	polygon.append( QPointF( -2941.93,	-331.663 ) );
+	polygon.append( QPointF( -3356.52,	-331.888 ) );
+	polygon.append( QPointF( -3356.49,	-2013.89 ) );
+	polygon.append( QPointF( -2220.54,	-2013.89 ) );
+	polygon.append( QPointF( -2220.54,	-1318.84 ) );
+	polygon.append( QPointF( -1870.03,	-968.338 ) );
+	polygon.append( QPointF( -1870.03,	-446.382 ) );
+	polygon.append( QPointF( -1979.37,	-337.042 ) );
 
     // polygon.append( QPointF( 666.645, 134.033 ) );
 
@@ -1221,6 +1233,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_roadFlag = false;
     _is_laneFlag = false;
     _is_mclPolygonFlag = false;
+    _is_pathwayPolygonFlag = false;
     _is_pathwayPolygonFlag = false;
 
     //setHorizontalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );

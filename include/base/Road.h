@@ -70,6 +70,10 @@ private:
     unsigned int                    _gid;
     vector < Terminal >             _terminalVec;
 
+    vector< UndirectedBaseGraph::vertex_descriptor > _citeVec;
+    vector< pair< UndirectedBaseGraph::vertex_descriptor,
+            UndirectedBaseGraph::vertex_descriptor > > _treeEdgeVec;
+
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
@@ -81,6 +85,7 @@ private:
     void _initRoad( Cell *cellPtr );
     void _initLane( unsigned int gid,  multimap< int, CellComponent > & cellComponent, vector < Highway > * highwayRoadPtr );
     void _clear( void );
+    void _initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec );
 
 protected:
 
@@ -103,6 +108,11 @@ public:
     vector< Terminal > &          terminalVec( void )        { return _terminalVec; }
     const vector< Terminal > &    terminalVec( void ) const  { return _terminalVec; }
 
+    const vector< pair< UndirectedBaseGraph::vertex_descriptor,
+            UndirectedBaseGraph::vertex_descriptor > > & treeEdgeVec( void ) const { return _treeEdgeVec; }
+    vector< pair< UndirectedBaseGraph::vertex_descriptor,
+            UndirectedBaseGraph::vertex_descriptor > > & treeEdgeVec( void ) { return _treeEdgeVec; }
+
 //------------------------------------------------------------------------------
 //  Find conflicts
 //------------------------------------------------------------------------------
@@ -116,6 +126,10 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
+    void initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec )
+    {
+        _initSteinerNet( __cellComponentVec );
+    }
     void initRoad( Cell *__cellPtr ) {
         _initRoad( __cellPtr );
     }

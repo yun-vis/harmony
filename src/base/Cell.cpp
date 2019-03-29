@@ -156,6 +156,7 @@ void Cell::_buildConnectedComponent( void )
 
         multimap< int, CellComponent > &cellComponent = _cellComponentVec[i];
         double unit = INFINITY;
+        double powUnit = 1.0;
         // compute unit
         for( unsigned int j = 0; j < num; j++ ){
 
@@ -167,7 +168,7 @@ void Cell::_buildConnectedComponent( void )
             }
 
             double veCoverage = num_vertices( lsubg[i] ) + (*_veRatioPtr)*num_edges( lsubg[i] );
-            double multiple = ceil( pow( ceil( totalArea/veCoverage/(double)_paramUnit ), 1 ) );    // text area size
+            double multiple = ceil( pow( ceil( totalArea/veCoverage/(double)_paramUnit ), powUnit ) );    // text area size
             if( unit > multiple ){
                 unit = multiple;
             }
@@ -187,7 +188,7 @@ void Cell::_buildConnectedComponent( void )
             //cc[j].multiple = SQUARE( ceil( totalArea/(*_veCoveragePtr)/(double)_paramUnit ) );    // text area size
             //totalArea += totalArea * (*_veRatioPtr) * cellComponent.size();
             double veCoverage = num_vertices( lsubg[i] ) + (*_veRatioPtr)*num_edges( lsubg[i] );
-            cc[j].multiple = ceil( pow( ceil( totalArea/veCoverage/(double)_paramUnit ), 1.5 )/unit );    // text area size
+            cc[j].multiple = ceil( pow( ceil( totalArea/veCoverage/(double)_paramUnit ), powUnit )/unit );    // text area size
 
 #ifdef DEBUG
             if( i == 0 ){
@@ -1083,7 +1084,7 @@ void Cell::updateMCLCoords( void )
 void Cell::updatePathwayCoords( void )
 {
     vector< ForceGraph >            &lsubg  = _pathway->lsubG();
-
+    double radius = 30.0;
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
@@ -1099,8 +1100,8 @@ void Cell::updatePathwayCoords( void )
                 BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
                     //Coord2 coord( rand()%(int)range-0.5*range, rand()%(int)range-0.5*range );
-                    Coord2 coord( (double)(rand()%(int)PERTUBE_RANGE)/(10.0*PERTUBE_RANGE)-0.05,
-                                  (double)(rand()%(int)PERTUBE_RANGE)/(10.0*PERTUBE_RANGE)-0.05 );
+                    Coord2 coord( (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius,
+                                  (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius );
 
                     unsigned int mclID = dg[ vd ].label;
                     ForceGraph::vertex_descriptor vdM = vertex( mclID, mcl );
@@ -1115,8 +1116,8 @@ void Cell::updatePathwayCoords( void )
                 BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
                     // Coord2 coord( rand()%(int)range-0.5*range, rand()%(int)range-0.5*range );
-                    Coord2 coord( (double)(rand()%(int)PERTUBE_RANGE)/(10.0*PERTUBE_RANGE)-0.05,
-                                  (double)(rand()%(int)PERTUBE_RANGE)/(10.0*PERTUBE_RANGE)-0.05 );
+                    Coord2 coord( (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius,
+                                  (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius );
 
                     dg[ vd ].coordPtr->x() = avg.x() + coord.x();
                     dg[ vd ].coordPtr->y() = avg.y() + coord.y();

@@ -72,7 +72,8 @@ private:
                         _is_boundaryFlag, _is_subPathwayFlag,
                         _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
                         _is_roadFlag, _is_laneFlag,
-                        _is_mclPolygonFlag, _is_pathwayPolygonFlag;
+                        _is_mclPolygonFlag, _is_pathwayPolygonFlag,
+                        _is_pathwayPolygonContourFlag;
 
 protected:
 
@@ -141,6 +142,8 @@ public:
     const bool &    isMCLPolygonFlag( void ) const  { return _is_mclPolygonFlag; }
     bool &          isPathwayPolygonFlag( void )        { return _is_pathwayPolygonFlag; }
     const bool &    isPathwayPolygonFlag( void ) const  { return _is_pathwayPolygonFlag; }
+    bool &          isPathwayPolygonContourFlag( void )        { return _is_pathwayPolygonContourFlag; }
+    const bool &    isPathwayPolygonContourFlag( void ) const  { return _is_pathwayPolygonContourFlag; }
     bool &          isCellFlag( void )              { return _is_cellFlag; }
     const bool &    isCellFlag( void ) const        { return _is_cellFlag; }
     bool &          isCellPolygonFlag( void )       { return _is_cellPolygonFlag; }

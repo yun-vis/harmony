@@ -282,13 +282,16 @@ bool Pathway::isCloneMetaType( MetaboliteGraph::vertex_descriptor metaVD )
 		//( _graph[ metaVD ].metaPtr->metaType == "5_COFACTOR_LIGHT" ) ||
 		//( _graph[ metaVD ].metaPtr->metaType == "4_ANTIOXIDANT_AND_FREERADICALS" ) ||
 		//( _graph[ metaVD ].metaPtr->metaType == "3_PHOSPHATE" ) ||
-		//( _graph[ metaVD ].metaPtr->metaType == "2_NUCLEOTIDE" ) ||
+		//w( _graph[ metaVD ].metaPtr->metaType == "2_NUCLEOTIDE" ) ||
 		//( _graph[ metaVD ].metaPtr->metaType == "unknown" ) ||
 		( _graph[ metaVD ].metaPtr->metaType == "1_METABOLITE" )
 		){
 
 		isClone = false;
 	}
+
+	cerr << "wrong" << endl;
+	assert( false );
 
 	//return false;
 	return isClone;
@@ -627,6 +630,7 @@ void Pathway::genGraph( void )
         //_graph[ reactVD ].isSelected	= false;
         //_graph[ reactVD ].isNeighbor	= false;
         _graph[ reactVD ].isClonedPtr   = new bool( false );
+        _graph[ reactVD ].isSelectedPtr = new bool( false );
         _graph[ reactVD ].isAlias       = false;
         _graph[ reactVD ].type 			= "reaction";
 		_graph[ reactVD ].coordPtr		= new Coord2;
@@ -667,7 +671,12 @@ void Pathway::genGraph( void )
 			bool isExist = findMetaboliteInGraph( tokens[ tokens.size()-1 ], metaVD );
 			//cerr << "metabolite = " << tokens[ tokens.size()-1 ] << endl;
             bool flag = false;
-			flag = !isExist || ( isExist && isCloneMetaType( metaVD ) ) || ( stoichiometry > 1 );
+			if( _isCloneByThreshold == true ){
+				flag = !isExist || ( isExist && ( _graph[ metaVD ].metaPtr->freq > _threshold ) );
+			}
+			else{
+				flag = !isExist || ( isExist && isCloneMetaType( metaVD ) ) || ( stoichiometry > 1 );
+			}
 
 
 #ifdef DEBUG
@@ -690,6 +699,7 @@ void Pathway::genGraph( void )
 				//_graph[ metaVD ].isSelected		= false;
                 //_graph[ metaVD ].isNeighbor	    = false;
                 _graph[ metaVD ].isClonedPtr    = &_meta[ index ].isCloned;
+                _graph[ metaVD ].isSelectedPtr  = new bool( false );
                 _graph[ metaVD ].isAlias        = false;
 				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr		= new Coord2;
@@ -762,8 +772,12 @@ void Pathway::genGraph( void )
 			MetaboliteGraph::vertex_descriptor metaVD;
 			bool isExist = findMetaboliteInGraph( tokens[ tokens.size()-1 ], metaVD );
             bool flag = false;
-			flag = !isExist || ( isExist && isCloneMetaType( metaVD ) ) || ( stoichiometry > 1 );
-
+			if( _isCloneByThreshold == true ){
+				flag = !isExist || ( isExist && ( _graph[ metaVD ].metaPtr->freq > _threshold ) );
+			}
+			else{
+				flag = !isExist || ( isExist && isCloneMetaType( metaVD ) ) || ( stoichiometry > 1 );
+			}
 #ifdef DEBUG
             if( name == "13dpg[c]" ){
 				cerr << "product name = " << name << " index = " << index << endl;
@@ -786,6 +800,7 @@ void Pathway::genGraph( void )
 				//_graph[ metaVD ].isSelected		= false;
                 //_graph[ metaVD ].isNeighbor		= false;
 				_graph[ metaVD ].isClonedPtr    = &_meta[ index ].isCloned;
+                _graph[ metaVD ].isSelectedPtr  = new bool( false );
                 _graph[ metaVD ].isAlias        = false;
   				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr 		= new Coord2;
@@ -1264,6 +1279,7 @@ void Pathway::genSubGraphs( void )
                         g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].metaPtr->namePixelHeight;
 						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
                         g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
+                        g[ newSVD ].isSelectedPtr   = _graph[ vdS ].isSelectedPtr;
                         g[ newSVD ].isAlias    	    = false;
 						g[ newSVD ].type        	= _graph[ vdS ].type;
                         g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
@@ -1296,6 +1312,7 @@ void Pathway::genSubGraphs( void )
 								g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].metaPtr->namePixelHeight;
 								g[ newSVD ].groupID         = _graph[ vdS ].groupID;
 								g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
+                                g[ newSVD ].isSelectedPtr   = _graph[ vdS ].isSelectedPtr;
 								g[ newSVD ].isAlias    	    = true;
 								g[ newSVD ].type        	= _graph[ vdS ].type;
 								g[ newSVD ].coordPtr    	= new Coord2( _graph[ vdS ].coordPtr->x(), _graph[ vdS ].coordPtr->x() );
@@ -1328,6 +1345,7 @@ void Pathway::genSubGraphs( void )
                         g[ newSVD ].namePixelHeightPtr  = &_graph[ vdS ].reactPtr->namePixelHeight;
 						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
                         g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
+                        g[ newSVD ].isSelectedPtr   = _graph[ vdS ].isSelectedPtr;
                         g[ newSVD ].isAlias    	    = false;
                         g[ newSVD ].type        	= _graph[ vdS ].type;
 						g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
@@ -1358,6 +1376,7 @@ void Pathway::genSubGraphs( void )
                         g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].metaPtr->namePixelHeight;
 						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
                         g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
+                        g[ newTVD ].isSelectedPtr   = _graph[ vdT ].isSelectedPtr;
                         g[ newTVD ].isAlias    	    = false;
 						g[ newTVD ].type       		= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
@@ -1387,6 +1406,7 @@ void Pathway::genSubGraphs( void )
 								g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].metaPtr->namePixelHeight;
 								g[ newTVD ].groupID         = _graph[ vdT ].groupID;
 								g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
+                                g[ newTVD ].isSelectedPtr   = _graph[ vdT ].isSelectedPtr;
 								g[ newTVD ].isAlias    	    = true;
 								g[ newTVD ].type       		= _graph[ vdT ].type;
 								g[ newTVD ].coordPtr    	= new Coord2( _graph[ vdT ].coordPtr->x(), _graph[ vdT ].coordPtr->y() );
@@ -1420,6 +1440,7 @@ void Pathway::genSubGraphs( void )
                         g[ newTVD ].namePixelHeightPtr  = &_graph[ vdT ].reactPtr->namePixelHeight;
 						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
                         g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
+                        g[ newTVD ].isSelectedPtr 	= _graph[ vdT ].isSelectedPtr;;
                         g[ newTVD ].isAlias    	    = false;
                         g[ newTVD ].type          	= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
@@ -2141,6 +2162,7 @@ void Pathway::genDependencyGraph( void )
 		{
 			isProceed = ( _graph[ vd ].type == "metabolite" ) && isCloneMetaType( vd ) == false;
 		}
+
 		if( isProceed ) {
 
 			//assert( _graph[ vd ].metaPtr->metaType != "7_WATER" );
