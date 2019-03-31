@@ -290,9 +290,6 @@ bool Pathway::isCloneMetaType( MetaboliteGraph::vertex_descriptor metaVD )
 		isClone = false;
 	}
 
-	cerr << "wrong" << endl;
-	assert( false );
-
 	//return false;
 	return isClone;
 }
@@ -334,42 +331,94 @@ void Pathway::exportEdges( void )
 {
     // graph
 	ofstream ofs( "../data/biological_yun.txt" );
+	ForceGraph g;
 
-	BGL_FORALL_EDGES( ed, _graph, MetaboliteGraph ) {
+	// copy graphs
+    unsigned int index = 0;
+    for( unsigned int i = 0; i < _subGraph.size(); i++ ){
 
-		MetaboliteGraph::vertex_descriptor vdS = source( ed, _graph );
-		MetaboliteGraph::vertex_descriptor vdT = target( ed, _graph );
+        BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ) {
 
-		ofs << _graph[vdS].id << " " << _graph[vdT].id << endl;
+            ForceGraph::vertex_descriptor vdNew = add_vertex( g );
+            g[vdNew].id = _subGraph[i][vd].id+index;
+            g[vdNew].label = i;
+        }
+        index += num_vertices( _subGraph[i] );
+    }
+
+    index = 0;
+    for( unsigned int i = 0; i < _layoutSubGraph.size(); i++ ){
+        BGL_FORALL_EDGES( ed, _layoutSubGraph[i], ForceGraph ) {
+
+            ForceGraph::vertex_descriptor vdS = source( ed, _layoutSubGraph[i] );
+            ForceGraph::vertex_descriptor vdT = target( ed, _layoutSubGraph[i] );
+            unsigned int idS = _layoutSubGraph[i][vdS].id + index;
+            unsigned int idT = _layoutSubGraph[i][vdT].id + index;
+            ForceGraph::vertex_descriptor vdNS = vertex( idS, g );
+            ForceGraph::vertex_descriptor vdNT = vertex( idT, g );
+
+            //cerr << "idS = " << g[vdNS].id << " idT = " << g[vdNT].id << endl;
+
+            pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdNS, vdNT, g );
+            ForceGraph::edge_descriptor foreED = foreE.first;
+            g[ foreED ].id 		= _layoutSubGraph[i][ed].id+index;
+            //cerr << "eid = " << g[ foreED ].id << endl;
+        }
+        index += num_vertices( _layoutSubGraph[i] );
+    }
+
+    BGL_FORALL_EDGES( ed, g, ForceGraph ) {
+
+		ForceGraph::vertex_descriptor vdS = source( ed, g );
+		ForceGraph::vertex_descriptor vdT = target( ed, g );
+
+		cerr << "eid = " << g[ed].id << endl;
+        cerr << g[vdS].id << " " << g[vdT].id << endl;
+		ofs << g[vdS].id << " " << g[vdT].id << endl;
 	}
 
+	ofs.close();
 
 	// distance matrix
 	ofstream ofsm( "../data/matrix_biological_yun.txt" );
 
-	BGL_FORALL_VERTICES( vdO, _graph, MetaboliteGraph ) {
+	index = 0;
+    BGL_FORALL_VERTICES( vdO, g, ForceGraph ) {
 
-		BGL_FORALL_VERTICES( vdI, _graph, MetaboliteGraph ) {
+        BGL_FORALL_VERTICES( vdI, g, ForceGraph ) {
 
-            bool foundF = false, foundB = false;
-            MetaboliteGraph::edge_descriptor oldED;
-            tie( oldED, foundF ) = edge( vdO, vdI, _graph );
-            tie( oldED, foundB ) = edge( vdI, vdO, _graph );
+                bool foundF = false, foundB = false;
+                ForceGraph::edge_descriptor oldED;
+                tie( oldED, foundF ) = edge( vdO, vdI, g );
+                tie( oldED, foundB ) = edge( vdI, vdO, g );
 
-            if( foundF || foundB ) ofsm << "1,";
-            else ofsm << "100000,";
-		}
-		ofsm << endl;
-	}
+                if( foundF || foundB ) ofsm << "1,";
+                else ofsm << "10000,";
+        }
+        ofsm << endl;
+    }
+
+	ofsm.close();
+
+    // distance matrix
+    ofstream ofsc( "../data/biological_yun_communities.txt" );
+
+    BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+
+        ofsc << g[vd].id << "\t" << g[vd].label << endl;
+    }
+
+    ofsc.close();
 }
 
-void Pathway::loadDot( string filename )
+void Pathway::loadDot( UndirectedPropertyGraph &graph, string filename )
 {
-    UndirectedPropertyGraph graph;
-
     VertexIndexMap              vertexIndex     = get( vertex_index, graph );
+    VertexPosMap                vertexPos       = get( vertex_mypos, graph );
 	VertexLabelMap              vertexLabel     = get( vertex_mylabel, graph );
 	VertexColorMap              vertexColor     = get( vertex_mycolor, graph );
+    VertexXMap                  vertexX         = get( vertex_myx, graph );
+    VertexYMap                  vertexY         = get( vertex_myy, graph );
     EdgeIndexMap                edgeIndex       = get( edge_index, graph );
     EdgeWeightMap               edgeWeight      = get( edge_weight, graph );
 
@@ -377,16 +426,42 @@ void Pathway::loadDot( string filename )
 
     //dp.property( "fontsize" , vertexIndex );
     dp.property( "label",  vertexLabel );
+    dp.property( "pos",  vertexPos );
 	dp.property( "clustercolor",  vertexColor );
-    dp.property( "weight",edgeWeight );
+    dp.property( "weight", edgeWeight );
 
     ifstream ifs( filename );
     read_graphviz( ifs, graph, dp );
     boost::print_graph( graph );
 
 	BGL_FORALL_VERTICES( vd, graph, UndirectedPropertyGraph ) {
-		cerr << "id = " << vertexIndex[vd] << ", label = " << vertexLabel[vd]
-			 << ", color = " << vertexColor[vd] << endl;
+
+	    string str = vertexPos[vd];
+	    vector< double > vect;
+
+        stringstream ss( str );
+
+        double v;
+        while( ss >> v ) {
+            vect.push_back( v );
+
+            if ( ss.peek() == ',' )
+                ss.ignore();
+        }
+
+        //for ( int i=0; i< vect.size(); i++)
+        //    cout << vect.at(i) << endl;
+
+		vertexX[vd] = vect.at(0);
+        vertexY[vd] = vect.at(1);
+#ifdef DEBUG
+        cerr << "id = " << vertexIndex[vd] << ", label = " << vertexLabel[vd]
+             << ", color = " << vertexColor[vd]
+             << ", pos = " << vertexPos[vd]
+             << ", x = " << vertexX[vd]
+             << ", y = " << vertexY[vd]
+             << endl;
+#endif // DEBUG
 	}
 
 	map< string, unsigned int > colormap;
@@ -400,6 +475,75 @@ void Pathway::loadDot( string filename )
 			it->second++;
 		}
 	}
+}
+
+void Pathway::exportDot( void )
+{
+	// graph
+	ofstream ofs( "../dot/pathway.txt" );
+	ofs << "graph {" << endl;
+
+	unsigned int index = 0;
+	for( unsigned int i = 0; i < _subGraph.size(); i++ ){
+
+		BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ) {
+
+            MetaboliteGraph::vertex_descriptor initVD = vertex( _subGraph[i][vd].initID, _graph );
+            if( *_graph[initVD].isClonedPtr == true ){
+                ofs << " \"" << _subGraph[i][vd].id+index
+                    << "\" [cluster=\"" << i
+                    << "\", label=\"" << *_subGraph[i][vd].namePtr
+                    << "\", color=\"" << "#48d1cc"
+                        << "\", style=\"filled,rounded"
+                        << "\"];"<< endl;
+		    }
+            else if( _subGraph[i][vd].isAlias == true )
+            {
+                ofs << " \"" << _subGraph[i][vd].id+index
+                    << "\" [cluster=\"" << i
+                    << "\", label=\"" << *_subGraph[i][vd].namePtr
+                    << "\", color=\"" << "#ffc0cb"
+                        << "\", style=\"filled,rounded"
+                        << "\"];"<< endl;
+            }
+            else{
+                if( _graph[initVD].type == "metabolite" ){
+                    ofs << " \"" << _subGraph[i][vd].id+index
+                        << "\" [cluster=\"" << i
+                        << "\", label=\"" << *_subGraph[i][vd].namePtr
+                        << "\", color=\"#ffffff"
+						<< "\", fontcolor=\"#666666"
+                        << "\", style=\"filled,rounded"
+                        << "\"];"<< endl;
+                }
+                else{
+                    ofs << " \"" << _subGraph[i][vd].id+index
+                        << "\" [cluster=\"" << i
+                        << "\", label=\"" << *_subGraph[i][vd].namePtr
+                        << "\", color=\"#ffffff"
+                        << "\", style=\"filled"
+                        << "\"];"<< endl;
+                }
+            }
+		}
+		index += num_vertices( _layoutSubGraph[i] );
+	}
+
+	index = 0;
+	for( unsigned int i = 0; i < _layoutSubGraph.size(); i++ ){
+		BGL_FORALL_EDGES( ed, _layoutSubGraph[i], ForceGraph ) {
+
+			ForceGraph::vertex_descriptor vdS = source( ed, _layoutSubGraph[i] );
+			ForceGraph::vertex_descriptor vdT = target( ed, _layoutSubGraph[i] );
+
+			ofs << " \"" << _layoutSubGraph[i][vdS].id+index << "\" -- "
+				<< "\"" << _layoutSubGraph[i][vdT].id+index << "\" [color=\"#000000\"];" << endl;
+		}
+		index += num_vertices( _layoutSubGraph[i] );
+	}
+
+	ofs << "}" << endl;
+	ofs.close();
 }
 
 //

@@ -168,7 +168,8 @@ public:
     void genLayoutSubGraphs( void );
 	void genDependencyGraph( void );
 
-	void loadDot( string filename );
+	void loadDot( UndirectedPropertyGraph &graph, string filename );
+	void exportDot( void );
 	void normalization( void );
 
 //------------------------------------------------------------------------------

@@ -156,7 +156,8 @@ void Cell::_buildConnectedComponent( void )
 
         multimap< int, CellComponent > &cellComponent = _cellComponentVec[i];
         double unit = INFINITY;
-        double powUnit = 1.0;
+        //double powUnit = 1.0; // pathway
+        double powUnit = 1.2; // metabolic
         // compute unit
         for( unsigned int j = 0; j < num; j++ ){
 

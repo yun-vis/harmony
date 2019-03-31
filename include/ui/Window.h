@@ -106,6 +106,7 @@ private:
 
     // octilinearity
     void processOctilinearBoundary( void );
+    void spaceCoverage( void );
 
 public Q_SLOTS:
 

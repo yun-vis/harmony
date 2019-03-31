@@ -286,6 +286,24 @@ void Window::processCellForce( void )
     _gv->isCellPolygonFlag() = true;
     _gv->isCellFlag() = true;
 
+    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
+
+        unsigned int loop = 200;
+        for( unsigned int k = 0; k < loop; k++ ){
+            cerr << "k = " << k << endl;
+            _cellPtr->cellVec()[ i ].forceBone().force();
+            _cellPtr->additionalForces();
+            int freq = VORONOI_FREQUENCE - MIN2( k/20, VORONOI_FREQUENCE-1 );
+            if( k % freq == 0 )
+                _cellPtr->cellVec()[ i ].forceBone().centroidGeometry();
+            double err = _cellPtr->cellVec()[ i ].forceBone().verletIntegreation();
+            cerr << "WorkerLevelMiddle::err (hybrid) = " << err << endl;
+        }
+    }
+
+    redrawAllScene();
+
+#ifdef THREAD_VERSION
     //for( unsigned int i = 0; i < 2; i++ ){
     for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
 
@@ -306,6 +324,7 @@ void Window::processCellForce( void )
         QString text = "processCellForce";
         Q_EMIT conPtr->operate( text );
     }
+#endif // THREAD_VERSION
 }
 
 void Window::processCellStress( void )
@@ -782,7 +801,9 @@ void Window::steinertree( void )
 
     BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
         if( g[ vd ].type == "metabolite" ){
-            if( *g[ vd ].namePtr == "Soy_Sauce" ){
+            //if( *g[ vd ].namePtr == "Glucose" ){
+            if( *g[ vd ].namePtr == "glu_L[c]" ){
+            //if( *g[ vd ].namePtr == "Soy_Sauce" ){
                 *g[ vd ].isSelectedPtr = true;
             }
         }
@@ -1794,6 +1815,195 @@ void Window::updateLevelDetailPolygonComplex( void )
 }
 
 
+double computeCV( vector< double > data )
+{
+    double sum = 0.0, mean, standardDeviation = 0.0;
+
+    for( unsigned int i = 0; i < data.size(); i++ ) {
+        sum += data[i];
+    }
+    mean = sum/(double)data.size();
+
+    for( unsigned int i = 0; i < data.size(); i++ ){
+        standardDeviation += pow( data[i] - mean, 2 );
+    }
+
+    return sqrt( standardDeviation / (double)data.size() )/mean;
+}
+
+#ifdef GMAP
+void Window::spaceCoverage( void )
+{
+    UndirectedPropertyGraph g;
+    //_pathway->loadDot( g, "../dot/gmap-pathway.dot" );
+    //_pathway->loadDot( g, "../dot/gmap-recipe.dot" );
+    _pathway->loadDot( g, "../dot/gmap-metabolic.dot" );
+
+    VertexIndexMap              vertexIndex     = get( vertex_index, g );
+    VertexPosMap                vertexPos       = get( vertex_mypos, g );
+    VertexLabelMap              vertexLabel     = get( vertex_mylabel, g );
+    VertexColorMap              vertexColor     = get( vertex_mycolor, g );
+    VertexXMap                  vertexX         = get( vertex_myx, g );
+    VertexYMap                  vertexY         = get( vertex_myy, g );
+    EdgeIndexMap                edgeIndex       = get( edge_index, g );
+    EdgeWeightMap               edgeWeight      = get( edge_weight, g );
+
+
+    int neighborNo = 5;
+    vector< double > neighbor;
+    vector< double > area;
+    Polygon2 contour;
+
+    double minX = INFINITY, maxX = -INFINITY, minY = INFINITY, maxY = -INFINITY;
+    BGL_FORALL_VERTICES( vd, g, UndirectedPropertyGraph ) {
+        if( minX > vertexX[vd] ) minX = vertexX[vd];
+        if( minY > vertexY[vd] ) minY = vertexY[vd];
+        if( maxX < vertexX[vd] ) maxX = vertexX[vd];
+        if( maxY < vertexY[vd] ) maxY = vertexY[vd];
+    }
+    cerr << "mixX = " << minX << " minY = " << minY << endl;
+    cerr << "maxX = " << maxX << " maxY = " << maxY << endl;
+    // pathway
+    //contour.elements().push_back( Coord2( -51.067, -65.033 ) );
+    //contour.elements().push_back( Coord2( 2236.6, -65.033 ) );
+    //contour.elements().push_back( Coord2( 2236.6, 1616.8 ) );
+    //contour.elements().push_back( Coord2( -51.067, 1616.8 ) );
+    // recipe
+    //contour.elements().push_back( Coord2( -66.788, -85.048 ) );
+    //contour.elements().push_back( Coord2( 5404.7, -85.048 ) );
+    //contour.elements().push_back( Coord2( 5404.7, 4966.6 ) );
+    //contour.elements().push_back( Coord2( -66.788, 4966.6 ) );
+    // metabolic
+    // "-99.785,-68.388,4445.4,4205.1"
+    contour.elements().push_back( Coord2( -99.785, -68.388 ) );
+    contour.elements().push_back( Coord2( 4445.4 , -68.388 ) );
+    contour.elements().push_back( Coord2( 4445.4, 4205.1 ) );
+    contour.elements().push_back( Coord2( -99.785 , 4205.1) );
+
+    // voronoi
+    Voronoi v;
+    vector< Seed > seedVec;
+    BGL_FORALL_VERTICES( vd, g, UndirectedPropertyGraph ) {
+
+        Seed seed;
+        seed.id = vertexIndex[vd];
+        seed.weight = 1.0;
+        seed.coord = Coord2( vertexX[vd], vertexY[vd] );
+        seedVec.push_back( seed );
+    }
+    v.init( seedVec, contour );
+    v.id() = 0;
+    v.createVoronoiDiagram( false );  // true: weighted, false: uniformed
+
+    for( unsigned int i = 0; i < seedVec.size(); i++ ){
+        Polygon2 &p = seedVec[i].cellPolygon;
+        p.updateCentroid();
+        area.push_back( p.area() );
+        //cerr << "area = " << p.area() << endl;
+    }
+
+    // neighbor
+    vector< Coord2 > coordVec;
+    BGL_FORALL_VERTICES( vd, g, UndirectedPropertyGraph ) {
+
+        coordVec.push_back( Coord2( vertexX[vd], vertexY[vd] ) );
+    }
+
+    for( unsigned int i = 0; i < coordVec.size(); i++ ){
+
+        multimap< double, double > sortedDist;
+        for( unsigned int j = 0; j < coordVec.size(); j++ ){
+
+            double dist = (coordVec[i] - coordVec[j]).norm();
+            sortedDist.insert( pair< double, double >( dist, dist ) );
+        }
+        double sum = 0;
+        for( unsigned int j = 0; j < neighborNo; j++ ){
+            multimap< double, double >::iterator it = sortedDist.begin();
+            advance( it, j );
+            sum += it->first;
+        }
+        neighbor.push_back( sum );
+    }
+
+    cerr << "neighbor CV = " << computeCV( neighbor ) << endl;
+    cerr << "area CV = " << computeCV( area ) << endl;
+}
+#endif // GMAP
+
+
+void Window::spaceCoverage( void )
+{
+    int neighborNo = 5;
+    vector< double > neighbor;
+    vector< double > area;
+    vector< ForceGraph > &lsubg =  _pathway->lsubG();
+    Polygon2 contour;
+
+    contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
+    contour.elements().push_back( Coord2( + 0.5*_content_width, - 0.5*_content_height ) );
+    contour.elements().push_back( Coord2( + 0.5*_content_width, + 0.5*_content_height ) );
+    contour.elements().push_back( Coord2( - 0.5*_content_width, + 0.5*_content_height ) );
+    cerr << "content_width = " << _content_width << " content_height = " << _content_height << endl;
+
+    // voronoi
+    Voronoi v;
+    vector< Seed > seedVec;
+    unsigned int index;
+    for( unsigned int i = 0; i < lsubg.size(); i++ ){
+
+        BGL_FORALL_VERTICES( vd, lsubg[i], ForceGraph ) {
+
+            Seed seed;
+            seed.id = lsubg[i][vd].id+index;
+            seed.weight = 1.0;
+            seed.coord = *lsubg[i][vd].coordPtr;
+            seedVec.push_back( seed );
+        }
+        index += num_vertices( lsubg[i] );
+    }
+    v.init( seedVec, contour );
+    v.id() = 0;
+    v.createVoronoiDiagram( false );  // true: weighted, false: uniformed
+
+    for( unsigned int i = 0; i < seedVec.size(); i++ ){
+        Polygon2 &p = seedVec[i].cellPolygon;
+        p.updateCentroid();
+        area.push_back( p.area() );
+        //cerr << "area = " << p.area() << endl;
+    }
+
+    // neighbor
+    vector< Coord2 > coordVec;
+    for( unsigned int i = 0; i < lsubg.size(); i++ ){
+
+        BGL_FORALL_VERTICES( vd, lsubg[i], ForceGraph ) {
+
+            coordVec.push_back( *lsubg[i][vd].coordPtr );
+        }
+    }
+    for( unsigned int i = 0; i < coordVec.size(); i++ ){
+
+        multimap< double, double > sortedDist;
+        for( unsigned int j = 0; j < coordVec.size(); j++ ){
+
+            double dist = (coordVec[i] - coordVec[j]).norm();
+            sortedDist.insert( pair< double, double >( dist, dist ) );
+        }
+        double sum = 0;
+        for( unsigned int j = 0; j < neighborNo; j++ ){
+            multimap< double, double >::iterator it = sortedDist.begin();
+            advance( it, j );
+            sum += it->first;
+        }
+        neighbor.push_back( sum );
+    }
+
+    cerr << "neighbor CV = " << computeCV( neighbor ) << endl;
+    cerr << "area CV = " << computeCV( area ) << endl;
+}
+
+
 void Window::timerEvent( QTimerEvent *event )
 {
     Q_UNUSED( event );
@@ -1958,6 +2168,12 @@ void Window::keyPressEvent( QKeyEvent *event )
             simulateKey( Qt::Key_E );
             break;
         }
+        case Qt::Key_D:
+        {
+            _pathway->exportDot();
+            _pathway->exportEdges();
+            break;
+        }
         case Qt::Key_3:
         {
             _gv->isPathwayPolygonContourFlag() = !_gv->isPathwayPolygonContourFlag() ;
@@ -2086,7 +2302,6 @@ void Window::keyPressEvent( QKeyEvent *event )
                             _gv->cloneThreshold() );
 
             _pathway->generate();
-            _pathway->exportEdges();
             _gv->veCoverage() = _pathway->nVertices() + _gv->veRatio() * _pathway->nEdges();
 
             // canvasArea: content width and height
@@ -2148,6 +2363,11 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             simulateKey( Qt::Key_E );
             redrawAllScene();
+            break;
+        }
+        case Qt::Key_C:
+        {
+            spaceCoverage();
             break;
         }
         case Qt::Key_E:
