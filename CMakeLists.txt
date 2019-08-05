@@ -82,14 +82,12 @@ set(HEADERS
         include/base/Grid2.h
         include/base/QuardTree.h
         include/base/TimeComplexity.h
-        include/base/Controller.h
-        include/base/Worker.h
-        include/base/WorkerLevelHigh.h
-        include/base/WorkerLevelMiddle.h
-        include/base/WorkerLevelLow.h
-        include/base/WorkerLevelDetailed.h
-        include/base/ControllerBoundary.h
-        include/base/WorkerBoundary.h
+        include/base/ThreadBase.h
+        include/base/ThreadOctilinearBoundary.h
+        include/base/ThreadLevelHigh.h
+        include/base/ThreadLevelMiddle.h
+        include/base/ThreadLevelLow.h
+        include/base/ThreadLevelDetailed.h
         include/base/Color.h
         include/base/Cell.h
         include/base/Road.h
@@ -152,14 +150,12 @@ set(SOURCES
         src/base/Line2.cpp
         src/base/QuardTree.cpp
         src/base/TimeComplexity.cpp
-        src/base/Controller.cpp
-        src/base/Worker.cpp
-        src/base/WorkerLevelHigh.cpp
-        src/base/WorkerLevelMiddle.cpp
-        src/base/WorkerLevelLow.cpp
-        src/base/WorkerLevelDetailed.cpp
-        src/base/ControllerBoundary.cpp
-        src/base/WorkerBoundary.cpp
+        src/base/ThreadBase.cpp
+        src/base/ThreadOctilinearBoundary.cpp
+        src/base/ThreadLevelHigh.cpp
+        src/base/ThreadLevelMiddle.cpp
+        src/base/ThreadLevelLow.cpp
+        src/base/ThreadLevelDetailed.cpp
         src/base/Color.cpp
         src/base/LevelHigh.cpp
         src/base/Cell.cpp
@@ -223,25 +219,9 @@ QT5_WRAP_UI( UI_HEADERS ${UI_FILES} )
 QT5_WRAP_CPP( MOC_SRCS ${UI_HEADERS})
 QT5_WRAP_CPP( MOC_SRCS ${MOC_HEADERS} )
 #QT5_WRAP_CPP( MOC_WINDOWUI ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.ui )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Worker.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelHigh.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelMiddle.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelLow.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerLevelDetailed.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/Controller.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/WorkerBoundary.h )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/base/ControllerBoundary.h )
 QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.h )
 QT5_WRAP_CPP( MOC_GRAPHICSVIEW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GraphicsView.h )
 #set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_ui_Window.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Worker.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerLevelHigh.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerLevelMiddle.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerLevelLow.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerLevelDetailed.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_Controller.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_WorkerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/base/moc_ControllerBoundary.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_Window.cpp PROPERTY SKIP_AUTOGEN ON )
 set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_GraphicsView.cpp PROPERTY SKIP_AUTOGEN ON )
 

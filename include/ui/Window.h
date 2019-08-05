@@ -8,8 +8,6 @@
 #include <list>
 #include <algorithm>
 #include <cmath>
-#include <ctime>
-//#include <thread>
 #include <cstdlib>
 
 using namespace std;
@@ -17,9 +15,13 @@ using namespace std;
 #ifndef Q_MOC_RUN
 #include "ui/GraphicsView.h"
 #include "base/TimeComplexity.h"
-#include "base/Controller.h"
-#include "base/ControllerBoundary.h"
+#include "base/ThreadOctilinearBoundary.h"
+#include "base/ThreadLevelHigh.h"
+#include "base/ThreadLevelMiddle.h"
+#include "base/ThreadLevelLow.h"
+#include "base/ThreadLevelDetailed.h"
 #include "base/RegionData.h"
+#include "../lib/CTPL/ctpl.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
@@ -30,6 +32,7 @@ using namespace std;
 #include <QtWidgets/QApplication>
 #include <QtCore/QTimer>
 #include <QtCore/QThread>
+
 
 #define REMOVEBACKNUM   (15)
 //#define RECORD_VIDEO
@@ -48,34 +51,26 @@ private:
     GraphicsView    *_gv;
     LEVELTYPE       _levelType;
 
-    // threads
-    vector< Controller * > _controllers;
-    vector< ControllerBoundary * > _bControllers;
-
     // display
     double             _content_width;
     double             _content_height;
     Polygon2           _contour;
 
+    //*******************************************
     // menu
+    //*******************************************
     // load
     QMenu *loadMenu;
     QAction *selDataAct;
 
-    // simplification
-    //QMenu *simMenu;
-    //QAction *selMovebackSmoothAct;
-    //QAction *selMovebackOctilinearAct;
-
     // optimization
     QMenu *optMenu;
-    //QAction *selSmoothLSAct;
-    //QAction *selSmoothCGAct;
 
     QAction *selOctilinearLSAct;
     QAction *selOctilinearCGAct;
 
     void postLoad( void );
+
     void simulateKey( Qt::Key key );
 
     void _init( void );
@@ -85,23 +80,13 @@ private:
     void _timerVideoStop( void );
 #endif //RECORD_VIDEO
 
-    // thread controller
-    // boundary
-    void processBoundaryForce( void );
-    void processBoundaryStress( void );
-    void stopProcessBoundary( void );
-    // cell
-    void processCellForce( void );
-    void processCellStress( void );
-    void stopProcessCell( void );
-    // bone
-    void processBoneForce( void );
-    void processBoneStress( void );
-    void stopProcessBone( void );
-    // pathway
-    void processDetailedPathwayForce( void );
-    void processDetailedPathwayStress( void );
-    void stopProcessDetailedPathway( void );
+    // thread
+    void threadBoundaryForce( void );
+    void threadCellForce( void );
+    void threadBoneForce( void );
+    void threadPathwayForce( void );
+    void threadOctilinearBoundary( void );
+
     void steinertree( void );
 
     // octilinearity
@@ -112,7 +97,7 @@ public Q_SLOTS:
 
     // optimization
     //void selectSmooth( void );
-    void selectOctilinear( void );
+    //void selectOctilinear( void );
 
     // level high
     void selectLevelHighBuildBoundary( void );
@@ -135,17 +120,6 @@ public Q_SLOTS:
     void timerVideo( void );
 #endif //RECORD_VIDEO
 
-    // thread controller
-    // boundary
-    void listenProcessBoundary( void );
-    // cell
-    void listenProcessCell( void );
-    // bone
-    void listenProcessBone( void );
-    // pathway
-    void listenProcessDetailedPathway( void );
-    // octilinear
-    void listenProcessOctilinearBoundary( void );
     // display
     void redrawAllScene( void );
 

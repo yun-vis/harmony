@@ -282,7 +282,7 @@ bool Pathway::isCloneMetaType( MetaboliteGraph::vertex_descriptor metaVD )
 		//( _graph[ metaVD ].metaPtr->metaType == "5_COFACTOR_LIGHT" ) ||
 		//( _graph[ metaVD ].metaPtr->metaType == "4_ANTIOXIDANT_AND_FREERADICALS" ) ||
 		//( _graph[ metaVD ].metaPtr->metaType == "3_PHOSPHATE" ) ||
-		//w( _graph[ metaVD ].metaPtr->metaType == "2_NUCLEOTIDE" ) ||
+		( _graph[ metaVD ].metaPtr->metaType == "2_NUCLEOTIDE" ) ||
 		//( _graph[ metaVD ].metaPtr->metaType == "unknown" ) ||
 		( _graph[ metaVD ].metaPtr->metaType == "1_METABOLITE" )
 		){

@@ -23,7 +23,7 @@ private:
 
     bool _isFinished;
     Worker *_workerPtr;
-    QThread _workerThread;
+    QThread *_workerThread;
 
 public:
 
@@ -33,8 +33,8 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
-    const QThread &         wt( void ) const 	 { return _workerThread; }
-    QThread &               wt( void )           { return _workerThread; }
+    const QThread *         wt( void ) const 	 { return _workerThread; }
+    QThread *               wt( void )           { return _workerThread; }
 
     void    setEnergyType( ENERGYTYPE __type ) { _workerPtr->energyType() = __type; }
 
@@ -47,7 +47,8 @@ public:
     void quit( void ){
         //_workerPtr->stop();
         _isFinished = true;
-        _workerThread.quit();
+        _workerThread->quit();
+        _workerThread->wait();
     }
     //bool isFinished( void ){
     //    return _workerThread.isFinished();
@@ -63,7 +64,8 @@ public Q_SLOTS:
         cerr << "handling the result of controller threadID = " << QThread::currentThreadId() << endl;
         _isFinished = true;
         // Q_EMIT finish();
-        _workerThread.quit();
+        _workerThread->quit();
+        _workerThread->wait();
 
 /*
         while (_workerThread.isRunning())

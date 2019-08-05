@@ -63,6 +63,7 @@ private:
     string 				_inputpath, _tmppath,       // input output files
                         _fileFreq, _fileType;       // metabolite frequency
     ENERGYTYPE          _energyType;
+    unsigned int        _maxThread;                 // maximum thread number
 
     // ui
     int                 _font_size;
@@ -155,6 +156,9 @@ public:
     const bool &    isRoadFlag( void ) const        { return _is_roadFlag; }
     bool &          isLaneFlag( void )              { return _is_laneFlag; }
     const bool &    isLaneFlag( void ) const        { return _is_laneFlag; }
+
+    unsigned int &  maxThread( void )               { return _maxThread; }
+    const unsigned int &    maxThread( void ) const { return _maxThread; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

@@ -161,7 +161,6 @@ void GraphicsView::_item_polygons( void )
     vector< Seed > &seedVec = *(_levelhighPtr->forceBone().voronoi().seedVec());
 
     // cerr << "test = " << (*_levelhighPtr->forceBone().voronoi().seedVec())[0].cellPolygon.elements().size() << endl;
-
     // cerr << "seedVec.size() = " << seedVec.size() << endl;
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -1046,7 +1045,7 @@ void GraphicsView::initSceneItems ( void )
     if( _is_polygonComplexFlag == true ) _item_polygonComplex();
     if( _is_compositeFlag == true ) _item_composite();
     if( _is_skeletonFlag == true ) _item_skeleton();
-    if( _is_polygonFlag == true ) _item_seeds();
+    // if( _is_polygonFlag == true ) _item_seeds();
     if( _is_cellFlag == true ) {
         _item_cells();
         _item_interCellComponents();
@@ -1200,6 +1199,7 @@ GraphicsView::GraphicsView( QWidget *parent )
         else
             cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
     }
+    _maxThread = std::thread::hardware_concurrency() - 1; // preserve one thread for main thread
 
     cerr << "filepath: " << configFilePath << endl;
     cerr << "font_size: " << _font_size << endl;
@@ -1212,6 +1212,8 @@ GraphicsView::GraphicsView( QWidget *parent )
     cerr << "file_type: " << _fileFreq << endl;
     cerr << "file_freq: " << _fileType << endl;
     cerr << "energy_type: " << _energyType << endl;
+    cerr << "max_thread: " << _maxThread << endl;
+
 
     setAutoFillBackground( true );
     setBackgroundBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );

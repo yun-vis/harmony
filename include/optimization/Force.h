@@ -14,6 +14,10 @@
 //------------------------------------------------------------------------------
 //	Including Header Files
 //------------------------------------------------------------------------------
+#include <ctime>
+
+using namespace std;
+
 #include <QImage>
 #include "base/Polygon2.h"
 #include "base/QuardTree.h"

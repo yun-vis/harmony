@@ -1,6 +1,6 @@
 
-#ifndef WORKERBOUNDARY_H
-#define WORKERBOUNDARY_H
+#ifndef ThreadOctilinearBoundary_H
+#define ThreadOctilinearBoundary_H
 
 #include <iostream>
 
@@ -15,10 +15,8 @@
 #include <QThread>
 #include <QTimer>
 
-class WorkerBoundary : public QObject, public RegionData
+class ThreadOctilinearBoundary : public RegionData
 {
-    Q_OBJECT
-
 protected:
 
     Octilinear *_octilinearPtr;
@@ -28,14 +26,17 @@ protected:
 
 public:
 
-    explicit WorkerBoundary( void );
-    virtual ~WorkerBoundary();
+    explicit ThreadOctilinearBoundary( void ); // constructor
+    ThreadOctilinearBoundary( const ThreadOctilinearBoundary &t ); // copy constructor
+    virtual ~ThreadOctilinearBoundary();
 
     void init( Octilinear *octilinearPtr, int &iter, OPTTYPE &optType ){
         _octilinearPtr = octilinearPtr;
         _iter = iter;
         _optType = optType;
     }
+
+    void run( int id );
 
     const OPTTYPE &		optType( void ) const   { return _optType; }
     OPTTYPE &			optType( void )	        { return _optType; }
@@ -45,7 +46,7 @@ public:
 
 protected:
 
-
+/*
 public Q_SLOTS:
 
     virtual void process( const QString &parameter );
@@ -54,5 +55,6 @@ Q_SIGNALS:
 
     void resultReady( const QString &result );
     void updateProcess( void );
+*/
 };
-#endif // WORKERBOUNDARY_H
+#endif // ThreadOctilinearBoundary_H

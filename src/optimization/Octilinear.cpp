@@ -1030,7 +1030,7 @@ void Octilinear::retrieve( void )
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;
     BGL_FORALL_VERTICES( vertex, g, BoundaryGraph ){
-        cerr << "V(" << g[ vertex ].id << ") = " << vertexSmooth[ vertex ];
+        cerr << "V(" << g[ vertex ].id << ") = " << *g[ vertex ].smoothPtr;
     }
     BGL_FORALL_EDGES( edge, g, BoundaryGraph ){
         cerr << "E(" << g[ edge ].id << ") : smoAngle= " << edgeSmoAngle[ edge ] << endl;

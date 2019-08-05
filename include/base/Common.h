@@ -13,6 +13,9 @@
 
 using namespace::std;
 
+#include <QtCore/QMutex>
+
+
 //------------------------------------------------------------------------------
 //	Macro Switches
 //------------------------------------------------------------------------------
@@ -163,7 +166,7 @@ using namespace::std;
 #define DEFAULT_FONT_SIZE   (10)
 #define MIN_NEIGHBOR_DISTANCE	(4)
 #define TIMER_INTERVAL  (200)
-#define VORONOI_FREQUENCE (5)
+#define VORONOI_FREQUENCE (1)
 
 enum LAYOUTTYPE{ TYPE_GEOGRAPHY, TYPE_SMOOTH, TYPE_OCTILINEAR, TYPE_STRESS };
 enum OPTTYPE{ LEAST_SQUARE, CONJUGATE_GRADIENT };
@@ -171,9 +174,9 @@ enum ENERGYTYPE{ ENERGY_FORCE, ENERGY_STRESS };
 enum FORCETYPE{ TYPE_FORCE, TYPE_BARNES_HUT, TYPE_CENTROID, TYPE_HYBRID };
 enum COLORTYPE{ COLOR_PREDEFINED, COLOR_MONOTONE, COLOR_PASTEL, COLOR_BREWER };
 enum WORKERTYPE{ WORKER_BOUNDARY, WORKER_CELL, WORKER_BONE, WORKER_PATHWAY };
+enum THREADTYPE{ THREAD_BOUNDARY, THREAD_CELL, THREAD_BONE, THREAD_PATHWAY };
 enum VERTEXTYPE{ TYPE_ONE, TYPE_TWO };
 enum LEVELTYPE{ LEVEL_HIGH, LEVEL_MIDDLE, LEVEL_LOW, LEVEL_DETAIL };
-
 
 // extern int font_size;
 

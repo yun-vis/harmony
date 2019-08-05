@@ -653,8 +653,8 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
                 _road[ vdNew ].coordPtr = new Coord2( coord.x(), coord.y() );
                 gates.push_back( vdNew );
                 _citeVec.push_back( vdNew );
-                //cerr << "isselected = " << *subG[m][vd].isSelectedPtr << endl;
-                //cerr << "vid = " << _road[ vdNew ].id << " initID = " << _road[ vdNew ].initID << endl;
+                cerr << "isselected = " << *subG[m][vd].isSelectedPtr << endl;
+                cerr << "vid = " << _road[ vdNew ].id << " initID = " << _road[ vdNew ].initID << endl;
                 nVertices++;
             }
         }
@@ -1197,7 +1197,7 @@ void Road::steinerTree( void )
     vector< unsigned int > terminals;
     _treeEdgeVec.clear();
 
-    // cerr << "gid = " << _gid << endl;
+    //cerr << "gid = " << _gid << endl;
     // add edges
     BGL_FORALL_EDGES( ed, _road, UndirectedBaseGraph ) {
         UndirectedBaseGraph::vertex_descriptor vdS = source( ed, _road );
@@ -1208,14 +1208,16 @@ void Road::steinerTree( void )
     }
 
     // add terminals
-    map< UndirectedBaseGraph::vertex_descriptor,
-            UndirectedBaseGraph::vertex_descriptor >::iterator itT;
+    //map< UndirectedBaseGraph::vertex_descriptor,
+    //        UndirectedBaseGraph::vertex_descriptor >::iterator itT;
     for( unsigned int i = 0; i < _citeVec.size(); i++ ){
         terminals.push_back( _road[ _citeVec[i] ].id+1 );
         //cerr << _road[ itT->first ].id << ", ";
     }
     //cerr << endl;
 
+    //printGraph( _road );
+    cerr << "nV = " << num_vertices( _road ) << " nE = " << num_vertices( _road ) << endl;
     vector< pair< unsigned int, unsigned int > > treeedges;
     steinertree( num_vertices( _road ), num_edges( _road ), graph, terminals, treeedges );
 

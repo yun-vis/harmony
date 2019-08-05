@@ -56,6 +56,9 @@ void Bone::createPolygonComplex( unsigned int nV )
     // find the sets of the polygons of the same group
     // int nV = num_vertices( _skeleton );
     _polygonMat.resize( nV );
+
+    cerr << "seedVec.size() = " << seedVec.size()
+         << " num_vertices( _bone ) = " << num_vertices( _bone ) << endl;
     assert( seedVec.size() == num_vertices( _bone ) );
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
 

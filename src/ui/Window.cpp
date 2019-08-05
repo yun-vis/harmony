@@ -89,7 +89,10 @@ void Window::postLoad( void )
 
 void Window::redrawAllScene( void )
 {
+    _pathway->pathwayMutex().lock();
     _gv->initSceneItems();
+    _pathway->pathwayMutex().unlock();
+
     _gv->update();
     _gv->scene()->update();
     update();
@@ -103,7 +106,7 @@ void Window::redrawAllScene( void )
     QCoreApplication::processEvents();
 }
 
-
+/*
 void Window::selectOctilinear( void )
 {
     vector< Boundary > &boundaryVec = *_boundaryVecPtr;
@@ -153,6 +156,7 @@ void Window::selectOctilinear( void )
 
     redrawAllScene();
 }
+*/
 
 void Window::selectLevelHighBuildBoundary( void )
 {
@@ -184,6 +188,56 @@ void Window::timerVideo( void )
 }
 #endif // RECORD_VIDEO
 
+
+void Window::threadBoundaryForce( void )
+{
+    // rendering setting
+    _gv->isPolygonFlag() = true;
+
+    // initialization
+    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, "../configs/boundary.conf" );
+    ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
+
+    // create a new thread
+    ThreadLevelHigh tlh;
+    //vector < unsigned int > indexVec;
+
+    tlh.setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+    tlh.setRegionData( _levelhighPtr, _boundaryVecPtr,
+                       _cellPtr, _roadPtr, _lanePtr );
+    tlh.init( THREAD_BOUNDARY, _gv->energyType(), 0, 0 );
+
+    pool.push([]( int id, ThreadLevelHigh* tlh ){ tlh->run( id ); }, &tlh );
+    //string name = "w";
+    //pool.push([&]( int id, ThreadLevelHigh* tlh ){ tlh->run( id, name ); }, &tlh );
+    //cerr << "pool.size() = " << pool.size() << endl;
+
+
+    // wait for all computing threads to finish and stop all threads
+    // pool.stop();
+    // cerr << "after name = " << name << endl;
+    // cv.wait_until( p.n_idle() != _gv->maxThread() );
+
+    // rendering
+    while( pool.n_idle() != _gv->maxThread() ){
+
+        cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        this_thread::sleep_for( chrono::milliseconds( 500 ) );
+        redrawAllScene();
+    }
+
+    // examples from CTPL
+    // pool.push(first); // function
+    // pool.push(third, "additional_param");
+    // pool.push( [] (int id){ std::cout << "hello from " << id << '\n'; }); // lambda
+    // pool.push(std::ref(second)); // functor, reference
+    // pool.push(const_cast<const Second &>(second)); // functor, copy ctor
+    // pool.push(std::move(second)); // functor, move ctor
+
+    //simulateKey( Qt::Key_2 );
+}
+
+/*
 void Window::listenProcessBoundary( void )
 {
     bool allFinished = true;
@@ -217,7 +271,7 @@ void Window::processBoundaryForce( void )
     _controllers.push_back( conPtr );
 
     connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-    connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
+    connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
 
     _gv->isPolygonFlag() = true;
 
@@ -242,7 +296,7 @@ void Window::processBoundaryStress( void )
     _controllers.push_back( conPtr );
 
     connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-    connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
+    connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
 
     _gv->isPolygonFlag() = true;
 
@@ -262,7 +316,51 @@ void Window::stopProcessBoundary( void )
 
     simulateKey( Qt::Key_B );
 }
+*/
 
+void Window::threadCellForce( void )
+{
+    // initialization
+    ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
+
+    // cerr << "size = " << _cellPtr->cellVec().size() << endl;
+    vector< ThreadLevelMiddle * > tlm;
+    tlm.resize( _cellPtr->cellVec().size() );
+
+    //for( unsigned int i = 0; i < 2; i++ ){
+    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
+
+        // create a new thread
+        tlm[i] = new ThreadLevelMiddle;
+        //vector < unsigned int > indexVec;
+        //indexVec.push_back( i );
+
+        tlm[i]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        tlm[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
+                           _cellPtr, _roadPtr, _lanePtr );
+
+        tlm[i]->init( THREAD_CELL, _gv->energyType(), i, 0 );
+        pool.push([]( int id, ThreadLevelMiddle* t ){ t->run( id ); }, tlm[i] );
+    }
+
+    // rendering
+    while( pool.n_idle() != _gv->maxThread() ){
+
+         //cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        this_thread::sleep_for( chrono::milliseconds( 500 ) );
+        redrawAllScene();
+    }
+    // cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+
+    // clear the memory
+    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
+        delete tlm[i];
+    }
+
+    //simulateKey( Qt::Key_W );
+}
+
+/*
 void Window::listenProcessCell( void )
 {
     bool allFinished = true;
@@ -286,6 +384,7 @@ void Window::processCellForce( void )
     _gv->isCellPolygonFlag() = true;
     _gv->isCellFlag() = true;
 
+#ifdef SKIP
     for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
 
         unsigned int loop = 200;
@@ -300,10 +399,10 @@ void Window::processCellForce( void )
             cerr << "WorkerLevelMiddle::err (hybrid) = " << err << endl;
         }
     }
-
     redrawAllScene();
+#endif // SKIP
 
-#ifdef THREAD_VERSION
+//#ifdef THREAD_VERSION
     //for( unsigned int i = 0; i < 2; i++ ){
     for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
 
@@ -319,12 +418,12 @@ void Window::processCellForce( void )
         _controllers.push_back( conPtr );
 
         connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-        connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
+        connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
 
         QString text = "processCellForce";
         Q_EMIT conPtr->operate( text );
     }
-#endif // THREAD_VERSION
+//#endif // THREAD_VERSION
 }
 
 void Window::processCellStress( void )
@@ -372,9 +471,9 @@ void Window::processCellStress( void )
         _controllers.push_back( conPtr );
 
         connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-        connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
+        connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
 
-        QString text = "processCellForce";
+        QString text = "processCellStress";
         Q_EMIT conPtr->operate( text );
     }
 }
@@ -395,7 +494,76 @@ void Window::stopProcessCell( void )
     simulateKey( Qt::Key_P );
     //cerr << "Pressing Key_P" << endl;
 }
+*/
 
+void Window::threadBoneForce( void )
+{
+    _gv->isCellPolygonFlag() = false;
+    _gv->isCellPolygonComplexFlag() = true;
+    _gv->isMCLPolygonFlag() = true;
+    _gv->isPathwayPolygonFlag() = false;
+
+    // initialization
+    ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
+
+    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
+
+    // initialization
+    vector< vector< ThreadLevelLow * > > tll;
+    tll.resize( cellComponentVec.size() );
+
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
+        tll[i].resize( cellComponentMap.size() );
+    }
+
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
+
+        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
+
+            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
+            advance( itC, j );
+            CellComponent &c = itC->second;
+
+            // create mcl force
+            c.mcl.forceBone().init( &itC->second.mcl.bone(), &itC->second.contour, "../configs/mcl.conf" );
+            c.mcl.forceBone().id() = 0;
+
+            tll[i][j] = new ThreadLevelLow;
+            tll[i][j]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+            tll[i][j]->setRegionData( _levelhighPtr, _boundaryVecPtr,
+                                      _cellPtr, _roadPtr, _lanePtr );
+
+            //vector < unsigned int > indexVec;
+            //indexVec.push_back( i );
+            //indexVec.push_back( j );
+            tll[i][j]->init( THREAD_BONE, _gv->energyType(), i, j );
+            pool.push([]( int id, ThreadLevelLow* t ){ t->run( id ); }, tll[i][j] );
+        }
+    }
+
+    // rendering
+    while( pool.n_idle() != _gv->maxThread() ){
+
+        //cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        this_thread::sleep_for( chrono::milliseconds( 500 ) );
+        redrawAllScene();
+    }
+
+    // clear the memory
+    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+
+        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
+
+        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ) {
+            delete tll[i][j];
+        }
+    }
+}
+
+/*
 void Window::listenProcessBone( void )
 {
     bool allFinished = true;
@@ -441,7 +609,7 @@ void Window::processBoneForce( void )
             _controllers.push_back( conPtr );
 
             connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-            connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
+            connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
 
             QString text = "processBoneForce";
             Q_EMIT conPtr->operate( text );
@@ -482,7 +650,7 @@ void Window::processBoneStress( void )
                 _controllers.push_back( conPtr );
 
                 connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-                connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
+                connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
 
                 QString text = "processBoneStress";
                 Q_EMIT conPtr->operate( text );
@@ -502,190 +670,30 @@ void Window::stopProcessBone( void )
 
     _gv->isSubPathwayFlag() = true;
 }
-
-void Window::listenProcessDetailedPathway( void )
-{
-    bool allFinished = true;
-
-    // check if all threads are finished
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        allFinished = allFinished && _controllers[ i ]->isFinished();
-        // cerr << "is _controllers[" << i << "] finished ? "<< _controllers[ i ]->isFinished();
-    }
-
-    cerr << "allFinished = " << allFinished << endl;
-    if( ( allFinished == true ) && ( _controllers.size() != 0 ) ){
-        simulateKey( Qt::Key_X );
-        //cerr << "Pressing Key_X size = " << _controllers.size() << endl;
-    }
-}
-
-void Window::processDetailedPathwayForce( void )
-{
-    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
-/*
-    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
-
-        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
-
-        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
-
-            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
-            advance( itC, j );
-            CellComponent &c = itC->second;
-
-            Boundary b;
-            Smooth s;
-            double err = 0.0;
-            unsigned int &nVertices = b.nVertices();
-            unsigned int &nEdges = b.nEdges();
-            unsigned int &nLines = b.nLines();
-            ForceGraph &cg = c.detail.bone();
-            BoundaryGraph &bg = b.boundary();
-
-            // copy vertices
-            BGL_FORALL_VERTICES( vd, cg, ForceGraph )
-            {
-                BoundaryGraph::vertex_descriptor curVD = add_vertex( bg );
-
-                bg[ curVD ].id          = cg[ vd ].id;
-                bg[ curVD ].geoPtr      = new Coord2( cg[ vd ].coordPtr->x(), cg[ vd ].coordPtr->y() );
-                bg[ curVD ].smoothPtr   = new Coord2( cg[ vd ].coordPtr->x(), cg[ vd ].coordPtr->y() );
-                bg[ curVD ].coordPtr    = cg[ vd ].coordPtr;
-
-#ifdef DEBUG
-                if( i == 0 ){
-                    cerr << "i = " << i << " vid = " << cg[ vd ].id << " cg[ vd ].coordPtr = " << *cg[ vd ].coordPtr;
-                }
-#endif // DEBUG
-
-                bg[ curVD ].id = bg[ curVD ].initID = nVertices;
-                bg[ curVD ].namePtr = new string( to_string( bg[ curVD ].id ) );
-                bg[ curVD ].weight = 1.0;
-                //bg[ curVD ].lineID.push_back( nLines );
-
-                nVertices++;
-            }
-
-            // copy edges
-            BGL_FORALL_EDGES( ed, cg, ForceGraph )
-            {
-                unsigned int idS = cg[ source( ed, cg ) ].id;
-                unsigned int idT = cg[ target( ed, cg ) ].id;
-                BoundaryGraph::vertex_descriptor vdS = vertex( idS, bg );
-                BoundaryGraph::vertex_descriptor vdT = vertex( idT, bg );
-                pair<BoundaryGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, bg );
-                BoundaryGraph::edge_descriptor foreED = foreE.first;
-
-                // calculate geographical angle
-                Coord2 coordO;
-                Coord2 coordD;
-                if( bg[ vdS ].initID < bg[ vdT ].initID ){
-                    coordO = *bg[ vdS ].coordPtr;
-                    coordD = *bg[ vdT ].coordPtr;
-                }
-                else{
-                    coordO = *bg[ vdT ].coordPtr;
-                    coordD = *bg[ vdS ].coordPtr;
-                }
-                double diffX = coordD.x() - coordO.x();
-                double diffY = coordD.y() - coordO.y();
-                double angle = atan2( diffY, diffX );
-
-                bg[ foreED ].initID = bg[ foreED ].id = cg[ ed ].id;
-                bg[ foreED ].weight = 1.0;
-                bg[ foreED ].geoAngle = angle;
-                bg[ foreED ].smoothAngle = angle;
-                bg[ foreED ].angle = angle;
-                bg[ foreED ].lineID.push_back( nLines );
-                bg[ foreED ].visitedTimes = 0;
-
-                nEdges++;
-            }
-
-            // run smooth optimization
-            s.prepare( &b, _content_width/2, _content_height/2 );
-            err = s.ConjugateGradient( 3 * nVertices );
-            s.retrieve();
-
-            cerr << "simNStation = " << nVertices << endl;
-            cerr << "nVertices = " << nVertices << endl;
-            // ofs << "    Coarse CG: " << clock() - start_time << " err = " << err << " iter = " << 2 * _simplifiedBoundaryPtr->nStations() << endl;
-
-            for( unsigned int k = 0; k < 2; k++ ) {
-            // while( true ) {
-
-                clock_t start = clock();
-                int iter = 0;
-
-                // check if all nodes are moved back
-#ifdef  DEBUG
-                cerr << " num_vertices( _simplifiedBoundaryPtr->boundary() ) = " << num_vertices( _simplifiedBoundaryPtr->boundary() ) << endl
-             << " num_vertices( _boundaryPtr->boundary() ) = " << num_vertices( _boundaryPtr->boundary() ) << endl
-             << " nLabels = " << nLabels << endl;
-#endif  // DEBUG
-                s.prepare( &b, _content_width/2, _content_height/2 );
-                iter = MAX2( 2 * ( &b.nVertices() - &b.nVertices() ), 30 );
-                err = s.ConjugateGradient( iter );
-                s.retrieve();
-
-                cerr << "i = " << i << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
-                // ofs << "    time each loop = " << clock() - start << " err = " << err << " iter = " << iter << endl;
-            }
-            //_simplifiedBoundaryPtr->adjustsize( width(), height() );
-            s.clear();
-            b.cloneSmooth( b );
-
-            // cerr << "Total Time CG = " << clock() - start_time << endl;
-            // ofs << "Total Time CG = " << clock() - start_time << endl;
-        }
-    }
 */
 
+void Window::threadPathwayForce( void )
+{
+    _gv->isCellPolygonComplexFlag() = false;
+    _gv->isPathwayPolygonFlag() = true;
+    _gv->isMCLPolygonFlag() = false;
 
-    unsigned int idC = 0;
-    //for( unsigned int i = 0; i < 1; i++ ){
-    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+    // initialization
+    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
+    // _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, "../configs/boundary.conf" );
+    ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
+    vector< vector< ThreadLevelDetailed * > > tld;
 
-        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
-
-        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
-
-            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
-            advance( itC, j );
-            CellComponent &c = itC->second;
-
-            c.detail.forceBone().init( &c.detail.bone(), &c.contour, "../configs/pathway.conf" );
-            c.detail.forceBone().id() = idC;
-
-            int count = 0;
-            double err = 0.0;
-            unsigned int loop = MAX2( 50, num_vertices( c.detail.bone() ) );
-            //unsigned int loop = 100;
-            //cerr << "loop = " << loop << endl;
-            //if( i == 1 && j == 1 )
-            for( unsigned int k = 0; k < loop; k++ ){
-                cerr << "k = " << k << endl;
-                itC->second.detail.forceBone().force();
-                int freq = VORONOI_FREQUENCE - MIN2( count/20, VORONOI_FREQUENCE-1 );
-                if( count % freq == 0 )
-                    itC->second.detail.forceBone().centroidGeometry();
-                err = itC->second.detail.forceBone().verletIntegreation();
-            }
-
-            idC++;
-        }
-    }
-
-#ifdef THREAD_VERSION
     vector< vector< unsigned int > > idMat;
     idMat.resize( cellComponentVec.size() );
+    tld.resize( idMat.size() );
     unsigned int idD = 0;
     unsigned int threadNo = 0;
     for( unsigned int i = 0; i < idMat.size(); i++ ){
 
         multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
         idMat[i].resize( cellComponentMap.size() );
+        tld[i].resize( idMat[i].size() );
         for( unsigned int j = 0; j < idMat[i].size(); j++ ){
 
             idMat[i][j] = idD;
@@ -715,82 +723,24 @@ void Window::processDetailedPathwayForce( void )
             c.detail.forceBone().id() = idC;
 
             cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
-            Controller * conPtr = new Controller;
-            conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                                   _cellPtr, _roadPtr, _lanePtr );
-            vector < unsigned int > indexVec;
-            indexVec.push_back( i );
-            indexVec.push_back( j );
-            conPtr->init( indexVec, WORKER_PATHWAY );
-            _controllers.push_back( conPtr );
 
-            connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-            // connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessDetailedPathway );
-            connect( conPtr, &Controller::finish, this, &Window::listenProcessDetailedPathway );
+            tld[i][j] = new ThreadLevelDetailed;
+            tld[i][j]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+            tld[i][j]->setRegionData( _levelhighPtr, _boundaryVecPtr,
+                                   _cellPtr, _roadPtr, _lanePtr );
+            tld[i][j]->init( THREAD_PATHWAY, _gv->energyType(), i, j );
+            pool.push([]( int id, ThreadLevelDetailed* t ){ t->run( id ); }, tld[i][j] );
 
             idC++;
-            QString text = "processDetailedPathwayForce";
-            Q_EMIT conPtr->operate( text );
-        }
-    }
-#endif // THREAD_VERSION
-}
-
-void Window::processDetailedPathwayStress( void )
-{
-    vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
-
-    vector< vector< unsigned int > > idMat;
-    idMat.resize( cellComponentVec.size() );
-    unsigned int idD = 0;
-    for( unsigned int i = 0; i < idMat.size(); i++ ){
-
-        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
-        idMat[i].resize( cellComponentMap.size() );
-        for( unsigned int j = 0; j < idMat[i].size(); j++ ){
-
-            idMat[i][j] = idD;
-            idD++;
         }
     }
 
-    // cerr << "idD = " << idD << endl;
-    // cerr << "From main thread: " << QThread::currentThreadId() << endl;
-    unsigned int idC = 0;
-    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
+    // rendering
+    while( pool.n_idle() != _gv->maxThread() ){
 
-        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[i];
-
-        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
-
-            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
-            advance( itC, j );
-            CellComponent &c = itC->second;
-
-            c.detail.forceBone().prepare( &c.detail.bone(), &c.contour );
-            c.detail.forceBone().id() = idC;
-
-            // cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
-            Controller * conPtr = new Controller;
-            conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                                   _cellPtr, _roadPtr, _lanePtr );
-            vector < unsigned int > indexVec;
-            indexVec.push_back( i );
-            indexVec.push_back( j );
-            conPtr->init( indexVec, WORKER_PATHWAY );
-            // set energy type
-            conPtr->setEnergyType( _gv->energyType() );
-            _controllers.push_back( conPtr );
-
-            connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-            connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessDetailedPathway );
-
-            idC++;
-            QString text = "processDetailedPathwayStress";
-            Q_EMIT conPtr->operate( text );
-        }
+        cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        this_thread::sleep_for( chrono::milliseconds( 500 ) );
+        redrawAllScene();
     }
 }
 
@@ -799,9 +749,11 @@ void Window::steinertree( void )
     // select a target metabolite
     MetaboliteGraph             &g         = _pathway->g();
 
+    // highlight
     BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
         if( g[ vd ].type == "metabolite" ){
             //if( *g[ vd ].namePtr == "Glucose" ){
+            //if( *g[ vd ].namePtr == "glu_L[c]" ){
             if( *g[ vd ].namePtr == "glu_L[c]" ){
             //if( *g[ vd ].namePtr == "Soy_Sauce" ){
                 *g[ vd ].isSelectedPtr = true;
@@ -812,7 +764,7 @@ void Window::steinertree( void )
     // compute steiner tree
     _roadPtr->initRoad( _cellPtr );
     // _roadPtr->initRoad( _cellPtr->cellComponentVec() );
-    //_roadPtr->buildRoad();
+    _roadPtr->buildRoad();
     // cerr << "road built..." << endl;
     _gv->isRoadFlag() = true;
 
@@ -888,6 +840,7 @@ void Window::steinertree( void )
 }
 #endif // SKIP
 
+/*
 void Window::stopProcessDetailedPathway( void )
 {
     // quit all threads
@@ -897,7 +850,9 @@ void Window::stopProcessDetailedPathway( void )
     }
     _controllers.clear();
 }
+*/
 
+/*
 void Window::listenProcessOctilinearBoundary( void )
 {
     bool allFinished = true;
@@ -913,7 +868,8 @@ void Window::listenProcessOctilinearBoundary( void )
         _bControllers.clear();
         simulateKey( Qt::Key_O );
     }
-/*
+
+#ifdef SKIP
     // check if all threads are finished
     for( unsigned int i = 0; i < _bControllers.size(); i++ ) {
         allFinished = allFinished && _bControllers[ i ]->isFinished();
@@ -925,9 +881,62 @@ void Window::listenProcessOctilinearBoundary( void )
         _bControllers.clear();
         simulateKey( Qt::Key_O );
     }
+#endif // SKIP
+}
 */
+
+void Window::threadOctilinearBoundary( void )
+{
+    // initialization
+    ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
+
+    vector< Boundary > &boundaryVec = *_boundaryVecPtr;
+    vector< ThreadOctilinearBoundary * > tob;
+    tob.resize( boundaryVec.size() );
+
+    _octilinearVecPtr->clear();
+    _octilinearVecPtr->resize( boundaryVec.size() );
+
+    // cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
+    for( unsigned int i = 0; i < boundaryVec.size(); i++ ) {
+
+        cerr << "select octilinear ..."
+             << " boundaryVec[i].nVertices() = " << boundaryVec[i].nVertices() << endl;
+
+        // initialization
+        int iter = 200;
+        //int iter = 2*_boundaryPtr->nVertices();
+        // int iter = 2*sqrt( _boundaryPtr->nVertices() );
+        (*_octilinearVecPtr)[i].prepare( &boundaryVec[i],
+                                         _content_width/2.0, _content_height/2.0 );
+
+        // create a new thread
+        tob[i] = new ThreadOctilinearBoundary;
+        tob[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
+                               _cellPtr, _roadPtr, _lanePtr );
+        tob[i]->init( &(*_octilinearVecPtr)[i], iter, (*_octilinearVecPtr)[i].opttype() );
+
+        pool.push([]( int id, ThreadOctilinearBoundary *t ){ t->run( id ); }, tob[i] );
+    }
+
+    // rendering
+    while( pool.n_idle() != _gv->maxThread() ){
+
+        //cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        this_thread::sleep_for( chrono::milliseconds( 500 ) );
+        redrawAllScene();
+    }
+    // cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+
+    // clear the memory
+    for( unsigned int i = 0; i < boundaryVec.size(); i++ ) {
+        delete tob[i];
+    }
+
+    //simulateKey( Qt::Key_O );
 }
 
+/*
 void Window::processOctilinearBoundary( void )
 {
     vector< Boundary > &boundaryVec = *_boundaryVecPtr;
@@ -976,7 +985,7 @@ void Window::processOctilinearBoundary( void )
     }
 #endif // SKIP
 }
-
+*/
 
 //
 //  Window::buildPackageGraph --    build the boundary from the voronoi cell
@@ -2029,66 +2038,107 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            if( _gv->energyType() == ENERGY_FORCE )
-                processBoundaryForce();
-            else if( _gv->energyType() == ENERGY_STRESS )
-                processBoundaryStress();
+
+            //****************************************
+            // initialization
+            //****************************************
+
+            //****************************************
+            // optimization
+            //****************************************
+            threadBoundaryForce();
+
+            //****************************************
+            // rendering
+            //****************************************
+            redrawAllScene();
+
             break;
         }
         case Qt::Key_2:
         {
+            //****************************************
+            // initialization
+            //****************************************
+            simulateKey( Qt::Key_B );
+            //simulateKey( Qt::Key_E );
 
-            stopProcessBoundary();
-
-            simulateKey( Qt::Key_E );
-            simulateKey( Qt::Key_E );
-            simulateKey( Qt::Key_E );
-
+            //****************************************
+            // optimization
+            //****************************************
             _levelType = LEVEL_HIGH;
-            processOctilinearBoundary();
+            threadOctilinearBoundary();
 
+            simulateKey( Qt::Key_O );
+
+            //****************************************
+            // rendering
+            //****************************************
+            redrawAllScene();
             simulateKey( Qt::Key_E );
 
-            //selectOctilinear();
-            //simulateKey( Qt::Key_O );
+            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
+
             break;
         }
         case Qt::Key_Q:
         {
-            simulateKey( Qt::Key_L );
-
-            simulateKey( Qt::Key_E );
-
             checkInETime();
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            if( _gv->energyType() == ENERGY_FORCE )
-                processCellForce();
-            else if( _gv->energyType() == ENERGY_STRESS )
-                processCellStress();
+
+            //****************************************
+            // initialization
+            //****************************************
+            _gv->isCellPolygonFlag() = true;
+            _gv->isCellFlag() = true;
+
+            simulateKey( Qt::Key_L );
+            simulateKey( Qt::Key_E );
+
+            //****************************************
+            // optimization
+            //****************************************
+            threadCellForce();
+
+            //****************************************
+            // rendering
+            //****************************************
+            redrawAllScene();
+            simulateKey( Qt::Key_E );
 
             break;
         }
         case Qt::Key_W:
         {
+            //****************************************
+            // initialization
+            //****************************************
+            _gv->isCellPolygonFlag() = false;
+            _gv->isCellFlag() = false;
+            _gv->isCellPolygonComplexFlag() = true;
+            simulateKey( Qt::Key_P );
 
-            cerr << "stopProcessCell..." << endl;
-            stopProcessCell();
-            simulateKey( Qt::Key_E );
-            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
-
+            //****************************************
+            // optimization
+            //****************************************
             // initialization and build the boundary
             selectLevelMiddleBuildBoundary();
 
             _levelType = LEVEL_MIDDLE;
-            processOctilinearBoundary();
+            threadOctilinearBoundary();
+            simulateKey( Qt::Key_O );
 
-            // optimization
-            // selectOctilinear();
-            // simulateKey( Qt::Key_O );
+            //****************************************
+            // rendering
+            //****************************************
+            redrawAllScene();
             simulateKey( Qt::Key_E );
+
+            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
 
             break;
         }
@@ -2098,28 +2148,43 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
-            if( _gv->energyType() == ENERGY_FORCE )
-                processBoneForce();
-            else if( _gv->energyType() == ENERGY_STRESS )
-                processBoneStress();
+
+            //****************************************
+            // initialization
+            //****************************************
             _gv->isCellPolygonFlag() = false;
             _gv->isCellPolygonComplexFlag() = true;
             _gv->isMCLPolygonFlag() = true;
             _gv->isPathwayPolygonFlag() = false;
+
+            //****************************************
+            // optimization
+            //****************************************
+            threadBoneForce();
+
+            //****************************************
+            // rendering
+            //****************************************
             redrawAllScene();
+
             break;
         }
         case Qt::Key_S:
         {
-
-            cerr << "stopProcessBone..." << endl;
-            stopProcessBone();
-            simulateKey( Qt::Key_E );
-            _cellPtr->updatePathwayCoords();
+            //****************************************
+            // initialization
+            //****************************************
+            //simulateKey( Qt::Key_E );
             _levelType = LEVEL_LOW;
+            _gv->isSubPathwayFlag() = true;
+            _cellPtr->updatePathwayCoords();
 
-            simulateKey( Qt::Key_E );
+            //****************************************
+            // rendering
+            //****************************************
             redrawAllScene();
+            //simulateKey( Qt::Key_E );
+
             break;
         }
         case Qt::Key_Z:
@@ -2129,35 +2194,49 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
-            if( _gv->energyType() == ENERGY_FORCE )
-                processDetailedPathwayForce();
-            else if( _gv->energyType() == ENERGY_STRESS )
-                processDetailedPathwayStress();
+            //****************************************
+            // initialization
+            //****************************************
             _gv->isCellPolygonComplexFlag() = false;
             _gv->isPathwayPolygonFlag() = true;
             _gv->isMCLPolygonFlag() = false;
+
+            //****************************************
+            // optimization
+            //****************************************
+            threadPathwayForce();
+
+            //****************************************
+            // rendering
+            //****************************************
             redrawAllScene();
+
             break;
         }
         case Qt::Key_X:
         {
-            cerr << "stopProcessDetailedPathway..." << endl;
-            stopProcessDetailedPathway();
-            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
-            simulateKey( Qt::Key_E );
-
+            //****************************************
+            // initialization
+            //****************************************
             // initialization and build the boundary
             selectLevelDetailBuildBoundary();
-
             _levelType = LEVEL_DETAIL;
-            processOctilinearBoundary();
-            simulateKey( Qt::Key_E );
 
+            //****************************************
             // optimization
-            //selectOctilinear();
-            //simulateKey( Qt::Key_O );
+            //****************************************
+            threadOctilinearBoundary();
+            //simulateKey( Qt::Key_E );
 
+            simulateKey( Qt::Key_O );
+
+            //****************************************
+            // rendering
+            //****************************************
+            redrawAllScene();
+
+            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
             break;
         }
         case Qt::Key_R:

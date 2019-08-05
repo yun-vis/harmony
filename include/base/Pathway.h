@@ -22,7 +22,7 @@
 #include <cstring>
 #include <tinyxml.h>
 //#include <tinystr.h>
-
+#include <mutex>
 
 using namespace std;
 
@@ -80,6 +80,7 @@ private:
 
 protected:
 
+	mutex						_pathway_mutex;
 	string 						_inputpath, _outputpath;	// input output files
 	string 						_fileFreq, _fileType;		// metabolite frequency
 
@@ -149,6 +150,9 @@ public:
     double *                width( void )        { return _widthPtr; }
     const double *          height( void ) const { return _heightPtr; }
     double *                height( void )       { return _heightPtr; }
+
+	const mutex &           pathwayMutex( void ) const { return _pathway_mutex; }
+	mutex &                 pathwayMutex( void )       { return _pathway_mutex; }
 
 //------------------------------------------------------------------------------
 //  	Specific functions
