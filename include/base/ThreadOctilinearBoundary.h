@@ -23,6 +23,7 @@ protected:
 
     OPTTYPE _optType;
     int     _iter;
+    int     _test;
 
 public:
 
@@ -30,10 +31,14 @@ public:
     ThreadOctilinearBoundary( const ThreadOctilinearBoundary &t ); // copy constructor
     virtual ~ThreadOctilinearBoundary();
 
-    void init( Octilinear *octilinearPtr, int &iter, OPTTYPE &optType ){
+    void init( Octilinear *octilinearPtr, const int iter, OPTTYPE &optType, const int test ){
         _octilinearPtr = octilinearPtr;
         _iter = iter;
         _optType = optType;
+        _test = test;
+        cerr << " init iter = " << _iter
+             << " test = " << _test
+             << " optType = " << _optType << endl;
     }
 
     void run( int id );
@@ -46,15 +51,5 @@ public:
 
 protected:
 
-/*
-public Q_SLOTS:
-
-    virtual void process( const QString &parameter );
-
-Q_SIGNALS:
-
-    void resultReady( const QString &result );
-    void updateProcess( void );
-*/
 };
 #endif // ThreadOctilinearBoundary_H

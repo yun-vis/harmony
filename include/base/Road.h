@@ -67,6 +67,10 @@ private:
     UndirectedBaseGraph             _road;
     vector< vector < Highway > >    _highwayMat;
 
+    vector< Contour2 >              _contourVec;    // subsystem contours
+    vector< vector< Coord2 > >      _roadChaikinCurve;
+    vector< Coord2 >                _laneChaikinCurve;
+
     unsigned int                    _gid;
     vector < Terminal >             _terminalVec;
 
@@ -86,6 +90,12 @@ private:
     void _initLane( unsigned int gid,  multimap< int, CellComponent > & cellComponent, vector < Highway > * highwayRoadPtr );
     void _clear( void );
     void _initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec );
+
+    // curve computation
+    void _initRoadChaikinCurve( void );
+    void _initLaneChaikinCurve( void );
+    void _runRoadChaikinCurve( int num );
+    void _runLaneChaikinCurve( int num );
 
 protected:
 
@@ -112,6 +122,15 @@ public:
             UndirectedBaseGraph::vertex_descriptor > > & treeEdgeVec( void ) const { return _treeEdgeVec; }
     vector< pair< UndirectedBaseGraph::vertex_descriptor,
             UndirectedBaseGraph::vertex_descriptor > > & treeEdgeVec( void ) { return _treeEdgeVec; }
+
+    vector< Contour2 > &        subsysContour( void )       { return _contourVec; }
+    const vector< Contour2 > &  subsysContour( void ) const { return _contourVec; }
+
+    vector< vector< Coord2 > > &          roadChaikinCurve( void )        { return _roadChaikinCurve; }
+    const vector< vector< Coord2 > > &    roadChaikinCurve( void ) const  { return _roadChaikinCurve; }
+    vector< Coord2 > &          laneChaikinCurve( void )        { return _laneChaikinCurve; }
+    const vector< Coord2 > &    laneChaikinCurve( void ) const  { return _laneChaikinCurve; }
+
 
 //------------------------------------------------------------------------------
 //  Find conflicts

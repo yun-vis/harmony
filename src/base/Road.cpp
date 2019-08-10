@@ -920,8 +920,9 @@ void Road::_initRoad( Cell *cellPtr )
     unsigned int nVertices = 0, nEdges = 0;
 
     // build subsystem contour
-    vector< Contour2 > contourVec;
-    contourVec.resize( cellPtr->cellVec().size() );     // subsystem size
+    //vector< Contour2 > contourVec;
+    _contourVec.clear();
+    _contourVec.resize( cellPtr->cellVec().size() );     // subsystem size
 
     // collect cell boundary contour polygons
     for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
@@ -935,30 +936,29 @@ void Road::_initRoad( Cell *cellPtr )
             unsigned int subsysID = component.groupID;
             Polygon2 &c = component.contour;
 
-            contourVec[ subsysID ].polygons().push_back( c );
+            _contourVec[ subsysID ].polygons().push_back( c );
         }
 
     }
 
     // create subsystem contour
-    for( unsigned int i = 0; i < contourVec.size(); i++ ){
+    for( unsigned int i = 0; i < _contourVec.size(); i++ ){
 
-        contourVec[ i ].id() = i;
-        contourVec[ i ].createContour();
+        _contourVec[ i ].id() = i;
+        _contourVec[ i ].createContour();
     }
 
     // build road graph
-    for( unsigned int i = 0; i < contourVec.size(); i++ ){
+    for( unsigned int i = 0; i < _contourVec.size(); i++ ){
 
-        Polygon2 &contour = contourVec[i].contour();
+        Polygon2 &contour = _contourVec[i].contour();
         vector< UndirectedBaseGraph::vertex_descriptor > vdVec;
 
         for( unsigned j = 0; j < contour.elements().size(); j++ ){
 
-            Coord2 coord( contour.elements()[j].x(),
-                          contour.elements()[j].y() );
+            // Coord2 coord( contour.elements()[j].x(), contour.elements()[j].y() );
             UndirectedBaseGraph::vertex_descriptor vd = NULL;
-            bool isFound = _findVertexInRoad( coord, vd );
+            bool isFound = _findVertexInRoad( contour.elements()[j], vd );
 
             if( isFound ){
                 vdVec.push_back( vd );
@@ -967,7 +967,7 @@ void Road::_initRoad( Cell *cellPtr )
 
                 UndirectedBaseGraph::vertex_descriptor vdNew = add_vertex( _road );
                 _road[ vdNew ].id = nVertices;
-                _road[ vdNew ].coordPtr = new Coord2( coord.x(), coord.y() );
+                _road[ vdNew ].coordPtr = & contour.elements()[j];
 
                 vdVec.push_back( vdNew );
                 nVertices++;
@@ -1013,6 +1013,257 @@ void Road::_clear( void )
     clearGraph( _road );
     _highwayMat.clear();
 }
+
+//
+//  Road::_initRoadChaikinCurve -- init road Chaikin's curve
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Road::_initRoadChaikinCurve( void )
+{
+    _roadChaikinCurve.clear();
+    _roadChaikinCurve.resize( _contourVec.size() );
+
+    double unit = 100.0;
+    // store initial the path
+    for( unsigned int i = 0; i < _contourVec.size(); i++ ){
+
+        Polygon2 &contour = _contourVec[i].contour();
+
+        _roadChaikinCurve[i].push_back( contour.elements()[0] );
+        for( unsigned int j = 1; j <= contour.elements().size(); j++ ){
+
+            Coord2 diff = (contour.elements()[j%contour.elements().size()]-contour.elements()[j-1]);
+            // cerr << "dist = " << diff.norm() << endl;
+            if( diff.norm() > unit ) {
+
+                int num = floor( diff.norm()/unit );
+                double interval = diff.norm()/(double)num;
+
+                for( int k = 1; k < num; k++ ){
+                    // cerr << "here" << endl;
+                    Coord2 c = contour.elements()[j-1] + (double)k * interval * diff / diff.norm();
+                    // cerr << "here " << c;
+                    _roadChaikinCurve[i].push_back( c );
+                }
+            }
+            if( j < contour.elements().size() )
+                _roadChaikinCurve[i].push_back( contour.elements()[j] );
+        }
+    }
+}
+
+//
+//  Road::_runRoadChaikinCurve -- run road Chaikin's curve
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Road::_runRoadChaikinCurve( int num )
+{
+    // num = 1;
+    double interval = 4.0;
+
+    for( unsigned int i = 0; i < _roadChaikinCurve.size(); i++ ){
+
+        for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
+            cerr << _roadChaikinCurve[i][j];
+        }
+        cerr << endl;
+
+
+        for( int k = 0; k < num; k++ ){
+
+            vector< Coord2 > core;
+            for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
+                core.push_back( _roadChaikinCurve[i][j] );
+            }
+
+            // compute Chaikin Curve
+            _roadChaikinCurve[i].clear();
+            for( unsigned int j = 0; j < core.size(); j++ ){
+
+                Coord2 &p1 = core[j];
+                Coord2 &p2 = core[(j+1)%core.size()];
+                Coord2 q = (1.0-1.0/interval)*p1 + (1.0/interval)*p2;
+                Coord2 r = (1.0/interval)*p1 + (1.0-1.0/interval)*p2;
+
+                _roadChaikinCurve[i].push_back( q );
+                _roadChaikinCurve[i].push_back( r );
+            }
+        }
+
+        cerr << "after:" << endl;
+        for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
+            cerr << _roadChaikinCurve[i][j];
+        }
+        cerr << endl;
+/*
+        _laneChaikinCurve.clear();
+        for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
+            _laneChaikinCurve.push_back( _roadChaikinCurve[i][j] );
+        }
+        _runLaneChaikinCurve( num );
+*/
+/*
+        _roadChaikinCurve[i].clear();
+        for( unsigned int j = 0; j < core.size(); j++ ){
+            _roadChaikinCurve[i].push_back( core[j] );
+        }
+*/
+        // cerr << i << " _roadChaikinCurve[i] size = " << _roadChaikinCurve[i].size() << endl;
+    }
+
+#ifdef DEBUG
+    for( unsigned int i = 0; i < _roadChaikinCurve.size(); i++ ) {
+        cerr << "i = " << i << ", " << _roadChaikinCurve[i].size() << endl;
+    }
+#endif // DEBUG
+}
+
+
+//
+//  Road::_initLaneChaikinCurve -- init lane Chaikin's curve
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Road::_initLaneChaikinCurve( void )
+{
+    _laneChaikinCurve.clear();
+
+#ifdef DEBUG
+    for( unsigned int k = 0; k < _treeEdgeVec.size(); k++ ){
+
+        Coord2 &coordS = *_road[ _treeEdgeVec[k].first ].coordPtr;
+        Coord2 &coordT = *_road[ _treeEdgeVec[k].second ].coordPtr;
+
+        cerr << " source = " << coordS
+             << " target = " << coordT;
+    }
+#endif // DEBUG
+
+    // sort the edge segments to a path
+    map< int, pair< Coord2, Coord2 > > pathmap;
+    deque < Coord2 > path;
+    // initialization
+    for( unsigned int i = 0; i < _treeEdgeVec.size(); i++ ) {
+
+        Coord2 &coordS = *_road[ _treeEdgeVec[i].first ].coordPtr;
+        Coord2 &coordT = *_road[ _treeEdgeVec[i].second ].coordPtr;
+
+        pathmap.insert( pair< int, pair< Coord2, Coord2 > >( i, pair< Coord2, Coord2 >( coordS, coordT ) ) );
+    }
+
+    map< int, pair< Coord2, Coord2 > >::iterator itM = pathmap.begin();
+
+    path.push_back( itM->second.first );
+    path.push_back( itM->second.second );
+    pathmap.erase( itM );
+    // itM = pathmap.begin();
+    while( pathmap.size() > 0 ){
+
+        Coord2 & coordF = path[ 0 ];
+        Coord2 & coordB = path[ path.size()-1 ];
+
+        // cerr << " coordF = " << coordF << " coordB = " << coordB << endl;
+        map< int, pair< Coord2, Coord2 > >::iterator itF = pathmap.end(), itB = pathmap.end();
+        for( itM = pathmap.begin(); itM != pathmap.end(); itM++ ){
+
+            // backward
+            if( coordB == itM->second.first ){
+                path.push_back( itM->second.second );
+                itB = itM;
+            }
+            else if( coordB == itM->second.second ){
+                path.push_back( itM->second.first );
+                itB = itM;
+            }
+
+            // forward
+            if( coordF == itM->second.first ){
+                path.push_front( itM->second.second );
+                itF = itM;
+            }
+            else if( coordF == itM->second.second ){
+                path.push_front( itM->second.first );
+                itF = itM;
+            }
+        }
+
+        // remove the selected items
+        if( itF != pathmap.end() ) pathmap.erase( itF );
+        if( itB != pathmap.end() ) pathmap.erase( itB );
+    }
+
+    // store initial the path
+    for( unsigned int i = 0; i < path.size(); i++ ){
+
+        _laneChaikinCurve.push_back( path[i] );
+    }
+
+#ifdef DEBUG
+    for( unsigned int i = 0; i < path.size(); i++ ){
+
+        cout << path[i];
+    }
+#endif // DEBUG
+
+}
+
+//
+//  Road::_runLaneChaikinCurve -- run lane Chaikin's curve
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void Road::_runLaneChaikinCurve( int num )
+{
+#ifdef DEBUG
+    for( unsigned int i = 0; i < _ChaikinCurve.size(); i++ ){
+
+        cout << _ChaikinCurve[i];
+    }
+#endif // DEBUG
+    for( int i = 0; i < num; i++ ){
+
+        vector< Coord2 > core;
+        for( unsigned int i = 0; i < _laneChaikinCurve.size(); i++ ){
+
+            core.push_back( _laneChaikinCurve[i] );
+        }
+
+        // compute Chaikin Curve
+        double interval = 4.0;
+        _laneChaikinCurve.clear();
+        for( unsigned int i = 0; i < core.size()-1; i++ ){
+
+            Coord2 &p1 = core[i];
+            Coord2 &p2 = core[i+1];
+            Coord2 q = (1.0-1.0/interval)*p1 + (1.0/interval)*p2;
+            Coord2 r = (1.0/interval)*p1 + (1.0-1.0/interval)*p2;
+
+            if( i == 0 ) _laneChaikinCurve.push_back( p1 );
+            _laneChaikinCurve.push_back( q );
+            _laneChaikinCurve.push_back( r );
+            if( i == core.size()-2 ) _laneChaikinCurve.push_back( p2 );
+        }
+    }
+}
+
 
 
 //
@@ -1162,6 +1413,9 @@ void Road::buildRoad( void )
 
     _findShortestPaths();
 
+    _initRoadChaikinCurve();
+    _runRoadChaikinCurve( 10 );
+
 #ifdef DEBUG
     for( unsigned int i = 0; i < nSystems; i++ ) {
         for( unsigned int j = 0; j < nSystems; j++ ){
@@ -1230,6 +1484,11 @@ void Road::steinerTree( void )
                 UndirectedBaseGraph::vertex_descriptor >( vdS, vdT ) );
     }
     //cerr << endl;
+
+    // compute lane Chaikin curve
+    _initLaneChaikinCurve();
+    _runLaneChaikinCurve( 10 );
+
 }
 
 #ifdef SKIP
@@ -1278,6 +1537,8 @@ void Road::steinerTree( void )
     }
 }
 #endif // SKIP
+
+
 
 //
 //  Road::Road -- default constructor

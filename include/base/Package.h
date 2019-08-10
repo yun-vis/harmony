@@ -45,7 +45,7 @@ protected:
 
     // optimization
     Smooth                      *_smoothPtr;            // smooth cellunit
-    vector< Octilinear >        *_octilinearVecPtr;     // octilinear cellunit
+    vector< Octilinear * >      *_octilinearVecPtr;     // octilinear cellunit
 
 //------------------------------------------------------------------------------
 //  Specific functions

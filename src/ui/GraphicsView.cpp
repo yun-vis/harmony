@@ -762,7 +762,9 @@ void GraphicsView::_item_road( void )
     vector< MetaboliteGraph >   &subg       = _pathway->subG();
     UndirectedBaseGraph &road               = _roadPtr->road();
     vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
+    vector< vector< Coord2 > > & roadChaikinCurveVec = _roadPtr->roadChaikinCurve();
 
+#ifdef SKIP
     // draw edges
     BGL_FORALL_EDGES( ed, road, UndirectedBaseGraph ) {
 
@@ -781,7 +783,108 @@ void GraphicsView::_item_road( void )
         itemptr->setPath( path );
         _scene->addItem( itemptr );
     }
+#endif // SKIP
+
+#ifdef SKIP
+    // draw road path
+    vector< Contour2 > & subsysContour = _roadPtr->subsysContour();
+    for( unsigned int i = 0; i < subsysContour.size(); i++ ){
+
+        Polygon2 &contour = subsysContour[i].contour();
+        QPainterPath path;
+        for( unsigned int j = 0; j < contour.elements().size(); j++ ){
+
+            Coord2 & coord = contour.elements()[j];
+
+            if( j == 0 )
+                path.moveTo( coord.x(), -coord.y() );
+            else
+                path.lineTo( coord.x(), -coord.y() );
+            if( j == contour.elements().size()-1 )
+                path.lineTo( contour.elements()[0].x(), -contour.elements()[0].y() );
+        }
+
+        // add path
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+        //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 3 ) );
+        itemptr->setPath( path );
+        _scene->addItem( itemptr );
+    }
+#endif // SKIP
+
+    // draw background
+    for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
+
+        vector< Coord2 > &p = roadChaikinCurveVec[i];
+
+        QPolygonF polygon;
+        for( unsigned int k = 0; k < p.size(); k++ ){
+            polygon.append( QPointF( p[k].x(), -p[k].y() ) );
+        }
+
+        // add polygon
+        GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+        vector< double > rgb;
+
+        pickBrewerColor( i, rgb );
+        QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+
+        itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+
+        itemptr->setPolygon( polygon );
+        _scene->addItem( itemptr );
+    }
+
+
+    // draw contour
+    for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
+
+        vector< Coord2 > &p = roadChaikinCurveVec[i];
+
+        QPainterPath path;
+        for( unsigned int k = 0; k < p.size(); k++ ){
+
+            if( k == 0 ){
+                path.moveTo( p[k].x(), -p[k].y() );
+            }
+            else{
+                path.lineTo( p[k].x(), -p[k].y() );
+            }
+        }
+        path.lineTo( p[0].x(), -p[0].y() );
+
+        // add path
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+        //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 6 ) );
+        itemptr->setPath( path );
+        _scene->addItem( itemptr );
+    }
+
 /*
+    for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
+
+        vector< Coord2 > &p = roadChaikinCurveVec[i];
+
+        for( unsigned int k = 0; k < p.size(); k++ ){
+
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            itemptr->setPen( QPen( QColor( 125, 0, 0, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 125, 0, 0, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( p[k].x(), -p[k].y(), 10, 10 ) );
+            itemptr->id() = k;
+
+            _scene->addItem( itemptr );
+        }
+    }
+*/
+
+#ifdef SKIP
     // draw vertices
     BGL_FORALL_VERTICES( vd, road, UndirectedBaseGraph ) {
 
@@ -822,9 +925,9 @@ void GraphicsView::_item_road( void )
             }
         }
     }
-*/
+#endif // SKIP
 
-//#ifdef SKIP
+#ifdef SKIP
     // draw routers
     for( unsigned int i = 0; i < highwayMat.size(); i++ ) {
         for( unsigned int j = 0; j < highwayMat[i].size(); j++ ) {
@@ -861,7 +964,7 @@ void GraphicsView::_item_road( void )
             }
         }
     }
-//#endif // SKIP
+#endif // SKIP
 
 #ifdef SKIP
     // draw local edges
@@ -932,7 +1035,8 @@ void GraphicsView::_item_road( void )
 void GraphicsView::_item_lane( void )
 {
     vector< Road > &lane = *_lanePtr;
-/*
+
+#ifdef SKIP
     for( unsigned int i = 0; i < 1; i++ ){
     //for( unsigned int i = 0; i < lane.size(); i++ ){
 
@@ -976,8 +1080,9 @@ void GraphicsView::_item_lane( void )
             _scene->addItem( itemptr );
         }
     }
-*/
-/*
+#endif // SKIP
+
+#ifdef SKIP
     // draw routers
     //for( unsigned int i = 0; i < 1; i++ ){
     for( unsigned int i = 0; i < lane.size(); i++ ){
@@ -1002,8 +1107,9 @@ void GraphicsView::_item_lane( void )
             }
         }
     }
-*/
+#endif // SKIP
 
+#ifdef SKIP
     // draw steiner tree
     //for( unsigned int i = 0; i < 1; i++ ){
     for( unsigned int i = 0; i < lane.size(); i++ ){
@@ -1030,7 +1136,32 @@ void GraphicsView::_item_lane( void )
 
         }
     }
+#endif // SKIP
 
+    // draw lane Chaikin curve
+    for( unsigned int i = 0; i < lane.size(); i++ ){
+
+        vector< Coord2 > &p = lane[i].laneChaikinCurve();
+
+        QPainterPath path;
+        for( unsigned int k = 0; k < p.size(); k++ ){
+
+            if( k == 0 ){
+                path.moveTo( p[k].x(), -p[k].y() );
+            }
+            else{
+                path.lineTo( p[k].x(), -p[k].y() );
+            }
+        }
+
+        // add path
+        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+        //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+        itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
+        itemptr->setPath( path );
+        _scene->addItem( itemptr );
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -1055,8 +1186,8 @@ void GraphicsView::initSceneItems ( void )
     if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_boundaryFlag == true ) _item_boundary();
-    if( _is_roadFlag == true ) _item_road();
-    if( _is_laneFlag == true ) _item_lane();
+    if( _is_roadFlag == true ) _item_road();        // cluster boundary
+    if( _is_laneFlag == true ) _item_lane();        // route connecting duplicated nodes
     if( _is_subPathwayFlag == true ) _item_subpathways();
 
     // cerr << "_scene.size = " << _scene->items().size() << endl;

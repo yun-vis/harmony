@@ -1066,7 +1066,23 @@ void Octilinear::clear( void )
 //  none
 //
 Octilinear::Octilinear( void )
-{   
+{
+    _opttype = LEAST_SQUARE;
+
+    _boundary = NULL;
+    _half_width = 0.0;    // window_width
+    _half_height = 0.0;   // window_height
+
+    _nVars = 0;
+    _nConstrs = 0;
+    _w_octilinear = 0.0;
+    _w_position = 0.0;
+    _w_fixposition = 0.0;
+    _w_boundary = 0.0;
+    _w_crossing = 0.0;
+    _d_Alpha = 0.0;
+    _d_Beta = 0.0;
+    _theta.clear();
 }
 
 //
@@ -1080,6 +1096,22 @@ Octilinear::Octilinear( void )
 //
 Octilinear::Octilinear( const Octilinear & obj )
 {
+    _opttype = obj._opttype;
+
+    _boundary = obj._boundary;
+    _half_width = obj._half_width;      // window_width
+    _half_height = obj._half_height;    // window_height
+
+    _nVars = obj._nVars;
+    _nConstrs = obj._nConstrs;
+    _w_octilinear = obj._w_octilinear;
+    _w_position = obj._w_position;
+    _w_fixposition = obj._w_fixposition;
+    _w_boundary = obj._w_boundary;
+    _w_crossing = obj._w_crossing;
+    _d_Alpha = obj._d_Alpha;
+    _d_Beta = obj._d_Beta;
+    _theta = obj._theta;
 }
 
 

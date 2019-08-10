@@ -237,86 +237,6 @@ void Window::threadBoundaryForce( void )
     //simulateKey( Qt::Key_2 );
 }
 
-/*
-void Window::listenProcessBoundary( void )
-{
-    bool allFinished = true;
-
-    // check if all threads are finished
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        allFinished = allFinished && _controllers[ i ]->isFinished();
-        // cerr << "is _controllers[" << i << "] finished ? "<< _controllers[ i ]->isFinished();
-    }
-
-    if( ( allFinished == true ) && ( _controllers.size() != 0 ) ){
-        //cerr << "Pressing Key_2 size = " << _controllers.size() << endl;
-        simulateKey( Qt::Key_2 );
-    }
-}
-
-void Window::processBoundaryForce( void )
-{
-    // create a new thread
-    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, "../configs/boundary.conf" );
-
-    Controller * conPtr = new Controller;
-    conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                           _cellPtr, _roadPtr, _lanePtr );
-
-    vector < unsigned int > indexVec;
-    conPtr->init( indexVec, WORKER_BOUNDARY );
-    // set energy type
-    conPtr->setEnergyType( _gv->energyType() );
-    _controllers.push_back( conPtr );
-
-    connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-    connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
-
-    _gv->isPolygonFlag() = true;
-
-    QString text = "processBoundaryForce";
-    Q_EMIT conPtr->operate( text );
-}
-
-void Window::processBoundaryStress( void )
-{
-    _levelhighPtr->forceBone().prepare( &_levelhighPtr->bone(), &_contour );
-
-    // create a new thread
-    Controller * conPtr = new Controller;
-    conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                           _cellPtr, _roadPtr, _lanePtr );
-
-    vector < unsigned int > indexVec;
-    conPtr->init( indexVec, WORKER_BOUNDARY );
-    // set energy type
-    conPtr->setEnergyType( _gv->energyType() );
-    _controllers.push_back( conPtr );
-
-    connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-    connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBoundary );
-
-    _gv->isPolygonFlag() = true;
-
-    QString text = "processBoundaryStress";
-    Q_EMIT conPtr->operate( text );
-}
-
-void Window::stopProcessBoundary( void )
-{
-
-    // quit all threads
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        _controllers[ i ]->quit();
-        delete _controllers[ i ];
-    }
-    _controllers.clear();
-
-    simulateKey( Qt::Key_B );
-}
-*/
 
 void Window::threadCellForce( void )
 {
@@ -766,14 +686,14 @@ void Window::steinertree( void )
     // _roadPtr->initRoad( _cellPtr->cellComponentVec() );
     _roadPtr->buildRoad();
     // cerr << "road built..." << endl;
-    _gv->isRoadFlag() = true;
 
     _lanePtr->clear();
     _lanePtr->resize( 1 );
     (*_lanePtr)[0].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     (*_lanePtr)[0].initSteinerNet( _cellPtr->cellComponentVec() );
     (*_lanePtr)[0].steinerTree();
-    _gv->isLaneFlag() = true;
+
+
 
 #ifdef SKIP
     // compute steiner tree
@@ -888,6 +808,7 @@ void Window::listenProcessOctilinearBoundary( void )
 void Window::threadOctilinearBoundary( void )
 {
     // initialization
+    const int iter = 200;
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 
     vector< Boundary > &boundaryVec = *_boundaryVecPtr;
@@ -901,20 +822,19 @@ void Window::threadOctilinearBoundary( void )
     for( unsigned int i = 0; i < boundaryVec.size(); i++ ) {
 
         cerr << "select octilinear ..."
-             << " boundaryVec[i].nVertices() = " << boundaryVec[i].nVertices() << endl;
+             << " boundaryVec[i].nVertices() = " << boundaryVec[i].nVertices()
+             << " iter = " << iter << endl;
 
         // initialization
-        int iter = 200;
-        //int iter = 2*_boundaryPtr->nVertices();
-        // int iter = 2*sqrt( _boundaryPtr->nVertices() );
-        (*_octilinearVecPtr)[i].prepare( &boundaryVec[i],
+        (*_octilinearVecPtr)[i] = new Octilinear;
+        (*_octilinearVecPtr)[i]->prepare( &boundaryVec[i],
                                          _content_width/2.0, _content_height/2.0 );
 
         // create a new thread
         tob[i] = new ThreadOctilinearBoundary;
         tob[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
                                _cellPtr, _roadPtr, _lanePtr );
-        tob[i]->init( &(*_octilinearVecPtr)[i], iter, (*_octilinearVecPtr)[i].opttype() );
+        tob[i]->init( (*_octilinearVecPtr)[i], iter, (*_octilinearVecPtr)[i]->opttype(), 10 );
 
         pool.push([]( int id, ThreadOctilinearBoundary *t ){ t->run( id ); }, tob[i] );
     }
@@ -935,57 +855,6 @@ void Window::threadOctilinearBoundary( void )
 
     //simulateKey( Qt::Key_O );
 }
-
-/*
-void Window::processOctilinearBoundary( void )
-{
-    vector< Boundary > &boundaryVec = *_boundaryVecPtr;
-
-    _octilinearVecPtr->clear();
-    _octilinearVecPtr->resize( boundaryVec.size() );
-    cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
-    for( unsigned int i = 0; i < boundaryVec.size(); i++ ) {
-
-        cerr << "select octilinear ..."
-             << " boundaryVec[i].nVertices() = " << boundaryVec[i].nVertices() << endl;
-
-        // initialization
-        int iter = 200;
-        //int iter = 2*_boundaryPtr->nVertices();
-        // int iter = 2*sqrt( _boundaryPtr->nVertices() );
-        (*_octilinearVecPtr)[i].prepare( &boundaryVec[i],
-                                         _content_width/2.0, _content_height/2.0 );
-
-        // create a new thread
-        ControllerBoundary * conPtr = new ControllerBoundary;
-        conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                               _cellPtr, _roadPtr, _lanePtr );
-
-        conPtr->init(& (*_octilinearVecPtr)[i], iter, (*_octilinearVecPtr)[i].opttype() );
-        _bControllers.push_back( conPtr );
-
-        connect( conPtr, &ControllerBoundary::update, this, &Window::redrawAllScene );
-        connect( &conPtr->wt(), &QThread::finished, this, &Window::listenProcessOctilinearBoundary );
-        //connect( conPtr, &ControllerBoundary::finish, this, &Window::listenProcessOctilinearBoundary );
-
-        QString text = "processOctilinearBoundary";
-        Q_EMIT conPtr->operate( text );
-    }
-
-#ifdef SKIP
-    //usleep( 6000 );
-    bool allFinished = true;
-    while( true ){
-        // check if all threads are finished
-        for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-            allFinished = allFinished && _bControllers[ i ]->isFinished();
-            // cerr << "is _controllers[" << i << "] finished ? "<< _controllers[ i ]->isFinished();
-        }
-        if( allFinished == true ) break;
-    }
-#endif // SKIP
-}
-*/
 
 //
 //  Window::buildPackageGraph --    build the boundary from the voronoi cell
@@ -2225,7 +2094,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //****************************************
             // optimization
             //****************************************
-            threadOctilinearBoundary();
+            //threadOctilinearBoundary();
             //simulateKey( Qt::Key_E );
 
             simulateKey( Qt::Key_O );
@@ -2242,6 +2111,10 @@ void Window::keyPressEvent( QKeyEvent *event )
         case Qt::Key_R:
         {
             _gv->isBoundaryFlag() = false;
+            _gv->isRoadFlag() = true;
+            _gv->isPathwayPolygonFlag() = false;
+            _gv->isLaneFlag() = true;
+            
             // steiner tree
             steinertree();
             simulateKey( Qt::Key_E );
