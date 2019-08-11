@@ -786,7 +786,7 @@ void Cell::createPolygonComplexFromDetailGraph( void )
         multimap< int, CellComponent > &componentMap = _cellComponentVec[i];
         multimap< int, CellComponent >::iterator itC = componentMap.begin();
 
-        cerr << "id = " << itC->second.id << endl;
+        // cerr << "id = " << itC->second.id << endl;
         for( ; itC != componentMap.end(); itC++ ){
 
             Force       &f = itC->second.detail.forceBone();
@@ -801,6 +801,11 @@ void Cell::createPolygonComplexFromDetailGraph( void )
                 vector< Polygon2 > pVec;
                 for( unsigned int j = 0; j < cSize; j++ ) {
                     pVec.push_back( (*f.voronoi().seedVec())[j].cellPolygon );
+
+                    if( i == _cellComponentVec.size()-1 && j == 7 ){
+                        cerr << "mytest = " << j << endl;
+                        cerr << (*f.voronoi().seedVec())[j].cellPolygon << endl;
+                    }
                 }
 
                 contour.init( idC, pVec );

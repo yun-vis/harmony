@@ -43,21 +43,21 @@ void printGraph( UndirectedBaseGraph & graph )
     BGL_FORALL_VERTICES( vd, graph, UndirectedBaseGraph ) {
 
         //UndirectedBaseGraph::degree_size_type      degrees         = out_degree( vd, graph );
-		cerr << " id = " << graph[vd].id
-			 << endl;
+		cerr << " id = " << graph[vd].id << " coord = " << *graph[ vd ].coordPtr;
     }
 //#endif  // DEBUG
 
-#ifdef  DEBUG
+//#ifdef  DEBUG
     // print edge information
     BGL_FORALL_EDGES( ed, graph, UndirectedBaseGraph ) {
 
         UndirectedBaseGraph::vertex_descriptor vdS = source( ed, graph );
         UndirectedBaseGraph::vertex_descriptor vdT = target( ed, graph );
 
-        cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) " << endl;
+        cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) "
+         	 << " w = " << graph[ ed ].weight << endl;
     }
-#endif  // DEBUG
+//#endif  // DEBUG
 }
 
 //

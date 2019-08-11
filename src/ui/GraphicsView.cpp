@@ -103,7 +103,7 @@ void GraphicsView::_item_composite( void )
         itemptr->setPath( path );
         itemptr->id() = s[ed].id;
         itemptr->weight() = s[ed].weight;
-        //itemptr->textOn() = true;
+        // itemptr->textOn() = true;
 
         _scene->addItem( itemptr );
     }
@@ -116,7 +116,8 @@ void GraphicsView::_item_composite( void )
         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
         itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
         itemptr->id() = s[vd].id;
-        //itemptr->textOn() = true;
+        itemptr->text() = QString::fromStdString( to_string( s[vd].id ) );
+        itemptr->textOn() = true;
 
         //cerr << vertexCoord[vd];
         _scene->addItem( itemptr );
@@ -602,7 +603,7 @@ void GraphicsView::_item_cellPolygons( void )
             pickBrewerColor( gid, rgb );
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 0 ), Qt::SolidPattern ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
             itemptr->setPolygon( polygon );
 
             //cerr << vertexCoord[vd];
@@ -1193,25 +1194,78 @@ void GraphicsView::initSceneItems ( void )
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 
 #ifdef DEBUG
+/*
+    vector< QPointF > test;
+
+    test.push_back( QPointF(310.792,	-328.956 ) );
+    test.push_back( QPointF(310.792,	-237.622 ) );
+    test.push_back( QPointF(242.897,	-169.727 ) );
+    test.push_back( QPointF(242.897,	-120.323 ) );
+    test.push_back( QPointF(128.926,	-234.295 ) );
+    test.push_back( QPointF(128.926,	-328.956 ) );
+    test.push_back( QPointF(129.713,	16.3117 ) );
+    test.push_back( QPointF(50.6418,	-62.7591 ) );
+    test.push_back( QPointF(50.6418,	-156.011 ) );
+    test.push_back( QPointF(242.897,	-101.929 ) );
+    test.push_back( QPointF(197.856,	-56.8884 ) );
+    test.push_back( QPointF(197.856,	-40.2206 ) );
+    test.push_back( QPointF(141.324,	16.3117 ) );
+    test.push_back( QPointF(-200.527,	62.5449 ) );
+    test.push_back( QPointF(-122.3,		-15.6823 ) );
+    test.push_back( QPointF(-60.4159,	46.203 ) );
+    test.push_back( QPointF(-120.294,	106.078 ) );
+    test.push_back( QPointF(-176.043,	106.078 ) );
+    test.push_back( QPointF(-200.527,	130.562 ) );
+    test.push_back( QPointF(-455.697,	103.132 ) );
+    test.push_back( QPointF(-345.96,	103.133 ) );
+    test.push_back( QPointF(-292.543,	156.549 ) );
+    test.push_back( QPointF(-323.773,	156.549 ) );
+    test.push_back( QPointF(-323.773,	244.297 ) );
+    test.push_back( QPointF(-455.697,	244.297 ) );
+    test.push_back( QPointF(-455.697,	-105.952 ) );
+    test.push_back( QPointF(-345.96,	3.78434 ) );
+    test.push_back( QPointF(-226.514,	156.549 ) );
+    test.push_back( QPointF(-259.288,	3.78438 ) );
+    test.push_back( QPointF(-455.697,	-328.956 ) );
+    test.push_back( QPointF(47.915,	16.3117 ) );
+    test.push_back( QPointF( 18.0214,	46.2052 ) );
+
+    for( unsigned int i = 0; i < test.size(); i++ ){
+
+        GraphicsBallItem *itemptr = new GraphicsBallItem;
+        itemptr->fontSize() = _font_size;
+        itemptr->setPen( QPen( QColor( 100, 0, 0, 255 ), 2 ) );
+        itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
+        itemptr->setRect( QRectF( test[i].x(), -test[i].y(), 10, 10 ) );
+        itemptr->id() = i;
+        itemptr->text() = QString::fromStdString( to_string( i) );
+        itemptr->textOn() = true;
+
+        _scene->addItem( itemptr );
+    }
+*/
     QPolygonF polygon;
 
-    polygon.append( QPointF( -1979.37,	357.122 ) );
-	polygon.append( QPointF( -2139.33,	517.077 ) );
-    polygon.append( QPointF( -2259.74,	637.487 ) );
-	polygon.append( QPointF( -2465.88,	431.351 ) );
-	polygon.append( QPointF( -3356.49,	431.351 ) );
-	polygon.append( QPointF( -3356.52,	-331.888 ) );
-	polygon.append( QPointF( -2940.83,	-332.091 ) );
-	polygon.append( QPointF( -2941.93,	-331.663 ) );
-	polygon.append( QPointF( -3356.52,	-331.888 ) );
-	polygon.append( QPointF( -3356.49,	-2013.89 ) );
-	polygon.append( QPointF( -2220.54,	-2013.89 ) );
-	polygon.append( QPointF( -2220.54,	-1318.84 ) );
-	polygon.append( QPointF( -1870.03,	-968.338 ) );
-	polygon.append( QPointF( -1870.03,	-446.382 ) );
-	polygon.append( QPointF( -1979.37,	-337.042 ) );
-
-    // polygon.append( QPointF( 666.645, 134.033 ) );
+    polygon.append( QPointF( 310.792, 328.956 ) );
+    polygon.append( QPointF( 310.792, 237.622 ) );
+    polygon.append( QPointF( 242.897, 169.727 ) );
+    polygon.append( QPointF( 242.897, 101.929 ) );
+    polygon.append( QPointF( 197.856, 56.8884 ) );
+    polygon.append( QPointF( 197.856, 40.2206 ) );
+    polygon.append( QPointF( 141.324, -16.3117 ) );
+    polygon.append( QPointF( 47.915, -16.3117 ) );
+    polygon.append( QPointF( 18.0214, -46.2052 ) );
+    polygon.append( QPointF( -60.4159, -46.203 ) );
+    polygon.append( QPointF( -122.3, 15.6823 ) );
+    polygon.append( QPointF( -200.527, -62.5449 ) );
+    polygon.append( QPointF( -60.4159, -46.203 ) );
+    polygon.append( QPointF( -120.294, -106.078 ) );
+    polygon.append( QPointF( -176.043, -106.078 ) );
+    polygon.append( QPointF( -226.514, -156.549 ) );
+    polygon.append( QPointF( -323.773, -156.549 ) );
+    polygon.append( QPointF( -323.773, -244.297 ) );
+    polygon.append( QPointF( -455.697, -244.297 ) );
+    polygon.append( QPointF( -455.697, 328.956 ) );
 
     GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
     vector< double > rgb;
@@ -1223,6 +1277,7 @@ void GraphicsView::initSceneItems ( void )
 
     //cerr << vertexCoord[vd];
     _scene->addItem( itemptr );
+
 #endif // DEBUG
 }
 

@@ -413,12 +413,12 @@ void Polygon2::cleanPolygon( void )
     bool isSimple = false;
     Polygon2 ori = _elements;
     bool isUpdated = false;
-
+    int test = 0;
     cerr << "(before)::_polygon = " << endl << *this << endl;
 
+    while( isSimple == false && ( _elements.size() > 0 ) && test < 5 ) {
 
-    while( isSimple == false && ( _elements.size() > 0 ) ) {
-
+        test++;
         CGAL::Polygon_2<K> poly;
 
         // remove picks

@@ -954,8 +954,8 @@ double Octilinear::ConjugateGradient( unsigned int iter )
 //
 void Octilinear::retrieve( void )
 {
-    BoundaryGraph & g           = _boundary->boundary();
-    unsigned int nVertices      = _boundary->nVertices();
+    BoundaryGraph & g               = _boundary->boundary();
+    const unsigned int nVertices    = _boundary->nVertices();
 
     // find the vertex that is too close to an edge
     vector< BoundaryGraph::vertex_descriptor > vdVec;

@@ -181,11 +181,14 @@ void Contour2::createContour( void ) {
 
     // copy cells to a graph
     UndirectedBaseGraph complex;
-    unsigned int id = 0;
+    unsigned int vid = 0;
+    unsigned int eid = 0;
     for (unsigned int j = 0; j < _polygons.size(); j++) {
 
         Polygon2 &p = _polygons[j];
         vector<UndirectedBaseGraph::vertex_descriptor> vdVec;
+
+        if( j == 7 ) cerr << "jp = " << p << endl;
 
         // add vertices
         for (unsigned int k = 0; k < p.elements().size(); k++) {
@@ -193,18 +196,21 @@ void Contour2::createContour( void ) {
 
             bool isFound = findVertexInComplex( p.elements()[k], complex, vd );
             if (isFound == true) {
-                vdVec.push_back(vd);
-            } else {
+                vdVec.push_back( vd );
+                cerr << k << " found = " << *complex[vd].coordPtr;
+            }
+            else {
                 vd = add_vertex(complex);
-                complex[vd].id = id;
+                complex[vd].id = vid;
                 complex[vd].coordPtr = new Coord2(p.elements()[k].x(), p.elements()[k].y());
                 vdVec.push_back(vd);
-                id++;
+                vid++;
+                cerr << k << " new = " << *complex[vd].coordPtr;
             }
+            cerr << "( " << complex[ vd ].id << " ) = " << *complex[ vd ].coordPtr << endl;
         }
 
         // add edges
-        unsigned int eid = 0;
         for (unsigned int k = 1; k < vdVec.size() + 1; k++) {
 
             UndirectedBaseGraph::vertex_descriptor vdS = vdVec[k-1];
@@ -224,8 +230,12 @@ void Contour2::createContour( void ) {
                 complex[foreED].weight = 0;
                 eid++;
             }
+            // cerr << "( " << complex[ vdS ].id << ", " << complex[ vdT ].id << " ) " << endl;
         }
+        // cerr << endl;
     }
+
+    printGraph( complex );
 
     // remove inner edges
     vector<UndirectedBaseGraph::edge_descriptor> edVec;
@@ -245,12 +255,14 @@ void Contour2::createContour( void ) {
         remove_edge(edVec[j], complex);
     }
     // reorder edge id
-    unsigned int eid = 0;
+    eid = 0;
     BGL_FORALL_EDGES(ed, complex, UndirectedBaseGraph) {
-            complex[ed].id = eid;
-            complex[ed].visit = false;
-            eid++;
-        }
+        complex[ed].id = eid;
+        complex[ed].visit = false;
+        eid++;
+    }
+
+    printGraph( complex );
 
     // find the vertex with degree > 0
 #ifdef DEBUG
@@ -335,6 +347,7 @@ void Contour2::createContour( void ) {
     _contour.cleanPolygon();
     _contour.updateCentroid();
     _contour.updateOrientation();
+    cerr << "contour = " << _contour << endl;
 
 
 #ifdef DEBUG

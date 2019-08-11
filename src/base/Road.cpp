@@ -930,15 +930,16 @@ void Road::_initRoad( Cell *cellPtr )
         multimap< int, CellComponent > & cellComponentMap = cellComponentVec[i];
         multimap< int, CellComponent >::iterator itC;
 
+        // cerr << "i = " << i << " size = " << cellComponentMap.size() << endl;
         for( itC = cellComponentMap.begin(); itC != cellComponentMap.end(); itC++ ){
 
             CellComponent &component = itC->second;
             unsigned int subsysID = component.groupID;
             Polygon2 &c = component.contour;
 
+            if( subsysID == 2 ) cerr << "myc = " << c << endl;
             _contourVec[ subsysID ].polygons().push_back( c );
         }
-
     }
 
     // create subsystem contour
@@ -1073,11 +1074,12 @@ void Road::_runRoadChaikinCurve( int num )
 
     for( unsigned int i = 0; i < _roadChaikinCurve.size(); i++ ){
 
+#ifdef DEBUG
         for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
             cerr << _roadChaikinCurve[i][j];
         }
         cerr << endl;
-
+#endif // DEBUG
 
         for( int k = 0; k < num; k++ ){
 
@@ -1100,25 +1102,14 @@ void Road::_runRoadChaikinCurve( int num )
             }
         }
 
+#ifdef DEBUG
         cerr << "after:" << endl;
         for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
             cerr << _roadChaikinCurve[i][j];
         }
         cerr << endl;
-/*
-        _laneChaikinCurve.clear();
-        for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
-            _laneChaikinCurve.push_back( _roadChaikinCurve[i][j] );
-        }
-        _runLaneChaikinCurve( num );
-*/
-/*
-        _roadChaikinCurve[i].clear();
-        for( unsigned int j = 0; j < core.size(); j++ ){
-            _roadChaikinCurve[i].push_back( core[j] );
-        }
-*/
-        // cerr << i << " _roadChaikinCurve[i] size = " << _roadChaikinCurve[i].size() << endl;
+#endif // DEBUG
+
     }
 
 #ifdef DEBUG

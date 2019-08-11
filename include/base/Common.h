@@ -156,7 +156,7 @@ using namespace::std;
 #define DOI_MAX         (4.0)
 //#define DOI_MAX         (5.0)
 //#define DOI_MAX         (8.0)
-#define MIN_VERTEX_DISTANCE (1.0)
+#define MIN_VERTEX_DISTANCE (0.5)
 #define PERTUBE_RANGE   (1e8)
 
 #define MAX_DEGREE_ALLOWED		(3)

@@ -342,7 +342,7 @@ void Force::_force( void )
                     double l = L;
 
                     *g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
-                    //cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
+                    // cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
                 }
                 // Replusive force by Couloum's power
                 if( dist > 0 ){
@@ -399,10 +399,33 @@ void Force::_force( void )
                 Coord2 dc = *g[ itC->second ].coordPtr - *g[ vd ].coordPtr;
                 Coord2 dn = *g[ itN->second ].coordPtr - *g[ vd ].coordPtr;
                 Coord2 cn = *g[ itN->second ].coordPtr - *g[ itC->second ].coordPtr;
+                Coord2 uM = ( dc + dn )/2.0;
+                uM = uM / uM.norm();
+                Coord2 transposeUM = Coord2( uM.y(), -uM.x() );
+#ifdef DEBUG
+                cerr << "c = " << *g[ itC->second ].coordPtr;
+                cerr << "n = " << *g[ itN->second ].coordPtr;
+                cerr << "d = " << *g[ vd ].coordPtr;
+                cerr << "dc = " << dc;
+                cerr << "dn = " << dn;
+                cerr << "cn = " << cn;
+                cerr << "uM = " << uM;
+#endif // DEBUG
                 double theta = acos( ( dc.squaredNorm() + dn.squaredNorm() - cn.squaredNorm() )/(2.0*dc.norm()*dn.norm()) );
-                double force = _paramKc * atan( dc.norm()/_paramKd ) + atan( dn.norm()/_paramKd ) + _paramKe * cos( theta/2.0 )/sin( theta/2.0 );
-                //if( !isnan( theta ) ) *g[ vd ].forcePtr += Coord2( -force, force );
+                double force = _paramKc * ( atan( dc.norm()/(double)_paramKd ) + atan( dn.norm()/(double)_paramKd ) ) + _paramKe * cos( theta/2.0 )/sin( theta/2.0 );
+                if( !isnan( theta ) ) {
 
+                    if( transposeUM * dc > 0.0 ){
+                        *g[ itN->second ].forcePtr -= force * transposeUM;
+                        *g[ itC->second ].forcePtr += force * transposeUM;
+                        //cerr << "itN->second = " << -1.0*force * transposeUM << endl;
+                    }
+                    else{
+                        *g[ itN->second ].forcePtr += force * transposeUM;
+                        *g[ itC->second ].forcePtr -= force * transposeUM;
+                        //cerr << "itN->second = " << 1.0*force * transposeUM << endl;
+                    }
+                }
 #ifdef DEBUG
                 if( isnan( theta ) ){
                     cerr << "vid = " << g[ vd ].id << " theta = " << theta << " force = " << force << endl;

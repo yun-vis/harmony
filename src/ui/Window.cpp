@@ -47,7 +47,7 @@ void Window::_init( void )
     _content_width = width() - LEFTRIGHT_MARGIN;
     _content_height = height() - TOPBOTTOM_MARGIN;
 
-    // initialization of boundary 
+    // initialization of boundary
     _levelhighPtr = new LevelHigh;
 
     // initialization of region data
@@ -106,57 +106,6 @@ void Window::redrawAllScene( void )
     QCoreApplication::processEvents();
 }
 
-/*
-void Window::selectOctilinear( void )
-{
-    vector< Boundary > &boundaryVec = *_boundaryVecPtr;
-
-    _octilinearVecPtr->clear();
-    _octilinearVecPtr->resize( boundaryVec.size() );
-    for( unsigned int i = 0; i < boundaryVec.size(); i++ ){
-
-        cerr << "select octilinear ..." << " boundaryVec[i].nVertices() = "<< boundaryVec[i].nVertices() << endl;
-
-        // initialization
-        int iter = 200;
-        //int iter = 2*_boundaryPtr->nVertices();
-        // int iter = 2*sqrt( _boundaryPtr->nVertices() );
-        //_octilinearVecPtr->prepare( _simplifiedBoundaryPtr, _content_width/2.0, _content_height/2.0 );
-        (*_octilinearVecPtr)[i].prepare( &boundaryVec[i], _content_width/2.0, _content_height/2.0 );
-
-
-        // run octilinear optimization
-        OPTTYPE opttype = (*_octilinearVecPtr)[0].opttype();
-#ifdef DEBUG
-        cerr << "oct::_content_width = " << _content_width << " half = " << _content_width/2 << endl;
-    cerr << "iter = " << iter << endl;
-#endif // DEBUG
-        switch( opttype ) {
-            case LEAST_SQUARE:
-            {
-                (*_octilinearVecPtr)[i].LeastSquare( iter );
-            }
-                break;
-            case CONJUGATE_GRADIENT:
-            {
-                (*_octilinearVecPtr)[i].ConjugateGradient( iter );
-            }
-                break;
-            default:
-            {
-                cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
-            }
-                break;
-        }
-        (*_octilinearVecPtr)[i].retrieve();
-
-        //cerr << "BoundaryGraph:" << endl;
-        //printGraph( boundaryVec[i].boundary() );
-    }
-
-    redrawAllScene();
-}
-*/
 
 void Window::selectLevelHighBuildBoundary( void )
 {
@@ -483,114 +432,6 @@ void Window::threadBoneForce( void )
     }
 }
 
-/*
-void Window::listenProcessBone( void )
-{
-    bool allFinished = true;
-
-    // check if all threads are finished
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        allFinished = allFinished && _controllers[ i ]->isFinished();
-        // cerr << "is _controllers[" << i << "] finished ? "<< _controllers[ i ]->isFinished();
-    }
-
-    if( ( allFinished == true ) && ( _controllers.size() != 0 ) ){
-        simulateKey( Qt::Key_S );
-        //cerr << "Pressing Key_S size = " << _controllers.size() << endl;
-    }
-}
-
-void Window::processBoneForce( void )
-{
-    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
-
-    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
-
-        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
-
-        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
-
-            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
-            advance( itC, j );
-            CellComponent &c = itC->second;
-
-            // create mcl force
-            c.mcl.forceBone().init( &itC->second.mcl.bone(), &itC->second.contour, "../configs/mcl.conf" );
-            c.mcl.forceBone().id() = 0;
-
-            Controller * conPtr = new Controller;
-            conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                                   _cellPtr, _roadPtr, _lanePtr );
-            vector < unsigned int > indexVec;
-            indexVec.push_back( i );
-            indexVec.push_back( j );
-            conPtr->init( indexVec, WORKER_BONE );
-            _controllers.push_back( conPtr );
-
-            connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-            connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
-
-            QString text = "processBoneForce";
-            Q_EMIT conPtr->operate( text );
-        }
-    }
-}
-
-void Window::processBoneStress( void )
-{
-    vector< multimap< int, CellComponent > > & cellComponentVec = _cellPtr->cellComponentVec();
-
-    for( unsigned int i = 0; i < cellComponentVec.size(); i++ ){
-
-        multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
-
-        for( unsigned int j = 0; j < cellComponentMap.size(); j++ ){
-
-            multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
-            advance( itC, j );
-            CellComponent &c = itC->second;
-
-            if( num_vertices( itC->second.mcl.bone() ) > 0 ){
-
-                // create mcl force
-                c.mcl.forceBone().prepare( &itC->second.mcl.bone(), &itC->second.contour );
-                c.mcl.forceBone().id() = 0;
-
-                Controller * conPtr = new Controller;
-                conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-                conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                                       _cellPtr, _roadPtr, _lanePtr );
-                vector < unsigned int > indexVec;
-                indexVec.push_back( i );
-                indexVec.push_back( j );
-                conPtr->init( indexVec, WORKER_BONE );
-                // set energy type
-                conPtr->setEnergyType( _gv->energyType() );
-                _controllers.push_back( conPtr );
-
-                connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-                connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessBone );
-
-                QString text = "processBoneStress";
-                Q_EMIT conPtr->operate( text );
-            }
-        }
-    }
-}
-
-void Window::stopProcessBone( void )
-{
-    // quit all threads
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        _controllers[ i ]->quit();
-        delete _controllers[ i ];
-    }
-    _controllers.clear();
-
-    _gv->isSubPathwayFlag() = true;
-}
-*/
 
 void Window::threadPathwayForce( void )
 {
@@ -694,7 +535,6 @@ void Window::steinertree( void )
     (*_lanePtr)[0].steinerTree();
 
 
-
 #ifdef SKIP
     // compute steiner tree
     _roadPtr->initRoad( _cellPtr );
@@ -760,50 +600,6 @@ void Window::steinertree( void )
 }
 #endif // SKIP
 
-/*
-void Window::stopProcessDetailedPathway( void )
-{
-    // quit all threads
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        _controllers[ i ]->quit();
-        delete _controllers[ i ];
-    }
-    _controllers.clear();
-}
-*/
-
-/*
-void Window::listenProcessOctilinearBoundary( void )
-{
-    bool allFinished = true;
-
-    // check if all threads are finished
-    for( unsigned int i = 0; i < _bControllers.size(); i++ ) {
-        allFinished = allFinished && _bControllers[ i ]->wt().isFinished();
-        // cerr << "is _bControllers[" << i << "] finished ? "<< _bControllers[ i ]->wt().isFinished();
-    }
-
-    if( ( allFinished == true ) && ( _bControllers.size() != 0 ) ){
-        cerr << "Pressing Key_O size = " << _bControllers.size() << endl;
-        _bControllers.clear();
-        simulateKey( Qt::Key_O );
-    }
-
-#ifdef SKIP
-    // check if all threads are finished
-    for( unsigned int i = 0; i < _bControllers.size(); i++ ) {
-        allFinished = allFinished && _bControllers[ i ]->isFinished();
-        // cerr << "is _bControllers[" << i << "] finished ? "<< _bControllers[ i ]->isFinished();
-    }
-
-    if( ( allFinished == true ) && ( _bControllers.size() != 0 ) ){
-        cerr << "Pressing Key_O size = " << _bControllers.size() << endl;
-        _bControllers.clear();
-        simulateKey( Qt::Key_O );
-    }
-#endif // SKIP
-}
-*/
 
 void Window::threadOctilinearBoundary( void )
 {
@@ -1640,8 +1436,7 @@ void Window::updateLevelDetailPolygonComplex( void )
     cerr << "updating detail polygonComplex after optimization ..." << endl;
     vector< multimap <int, CellComponent> > &cellCVec = _cellPtr->cellComponentVec();
     vector< Boundary > &bVec = *_boundaryVecPtr;
-
-    cerr << "bVec.size() = " << bVec.size() << endl;
+    // cerr << "bVec.size() = " << bVec.size() << endl;
 
     unsigned int index = 0;
     for (unsigned int m = 0; m < cellCVec.size(); m++) {
@@ -1656,7 +1451,7 @@ void Window::updateLevelDetailPolygonComplex( void )
             Boundary &b = bVec[ index ];
             BoundaryGraph &bg = b.boundary();
 
-            printGraph( bg );
+            // printGraph( bg );
             // cerr << endl << endl << endl;
 
             Bone &detail = itC->second.detail;
@@ -1668,8 +1463,8 @@ void Window::updateLevelDetailPolygonComplex( void )
                 advance( itP, i );
 
                 Polygon2 &polygon = seedVec[i].cellPolygon;
-                cerr << "polygon.size() = " << polygon.elements().size() << endl;
-                cerr << "vd.size() = " << itP->second.size() << endl;
+                // cerr << "polygon.size() = " << polygon.elements().size() << endl;
+                // cerr << "vd.size() = " << itP->second.size() << endl;
                 for( unsigned int j = 0; j < polygon.elements().size(); j++ ){
                     // cerr << "i = " << i << " j = " << j << endl;
                     // cerr << " " << polygon.elements()[j];
@@ -1686,10 +1481,62 @@ void Window::updateLevelDetailPolygonComplex( void )
         }
     }
 
+    // collect cell boundary contour polygons
+    for( unsigned int i = 0; i < cellCVec.size(); i++ ){
+
+        multimap< int, CellComponent > & cellComponentMap = cellCVec[i];
+        multimap< int, CellComponent >::iterator itC;
+
+        // cerr << "i = " << i << " size = " << cellComponentMap.size() << endl;
+        for( itC = cellComponentMap.begin(); itC != cellComponentMap.end(); itC++ ){
+
+            CellComponent &component = itC->second;
+            unsigned int subsysID = component.groupID;
+            Polygon2 &c = component.contour;
+
+            if( subsysID == 2 ) cerr << "testc0 = " << c << endl;
+        }
+    }
+
     // update cell contour
     _cellPtr->createPolygonComplexFromDetailGraph();
-    // clean contour
+
+    // collect cell boundary contour polygons
+    for( unsigned int i = 0; i < cellCVec.size(); i++ ){
+
+        multimap< int, CellComponent > & cellComponentMap = cellCVec[i];
+        multimap< int, CellComponent >::iterator itC;
+
+        // cerr << "i = " << i << " size = " << cellComponentMap.size() << endl;
+        for( itC = cellComponentMap.begin(); itC != cellComponentMap.end(); itC++ ){
+
+            CellComponent &component = itC->second;
+            unsigned int subsysID = component.groupID;
+            Polygon2 &c = component.contour;
+
+            if( subsysID == 2 ) cerr << "testc1 = " << c << endl;
+        }
+    }
+
+    // update contour
     _cellPtr->updatePolygonComplexFromDetailGraph();
+
+    // collect cell boundary contour polygons
+    for( unsigned int i = 0; i < cellCVec.size(); i++ ){
+
+        multimap< int, CellComponent > & cellComponentMap = cellCVec[i];
+        multimap< int, CellComponent >::iterator itC;
+
+        // cerr << "i = " << i << " size = " << cellComponentMap.size() << endl;
+        for( itC = cellComponentMap.begin(); itC != cellComponentMap.end(); itC++ ){
+
+            CellComponent &component = itC->second;
+            unsigned int subsysID = component.groupID;
+            Polygon2 &c = component.contour;
+
+            if( subsysID == 2 ) cerr << "testc2 = " << c << endl;
+        }
+    }
 }
 
 
@@ -2114,7 +1961,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->isRoadFlag() = true;
             _gv->isPathwayPolygonFlag() = false;
             _gv->isLaneFlag() = true;
-            
+
             // steiner tree
             steinertree();
             simulateKey( Qt::Key_E );
