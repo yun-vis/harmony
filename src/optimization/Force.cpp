@@ -37,13 +37,15 @@
 //  Outputs
 //	none
 //
-void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour, string __configFilePath )
+void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour,
+                   LEVELTYPE __leveltype, string __configFilePath )
 {
     // srand48( time( NULL ) );
     srand48( 3 );
 
     _forceGraphPtr = __forceGraphPtr;
     _contour = *__contour;
+    _level = __leveltype;
 
     _contour.computeBoundingBox();
     _boxCenter = _contour.boxCenter();
@@ -88,6 +90,11 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour, string __c
     if ( conf.has( "ke" ) ){
         string paramKe = conf.gets( "ke" );
         _paramKe = stringToDouble( paramKe );
+    }
+
+    if ( conf.has( "ko" ) ){
+        string paramKo = conf.gets( "ko" );
+        _paramKo = stringToDouble( paramKo );
     }
 
     if ( conf.has( "ratio_force" ) ){
@@ -358,6 +365,7 @@ void Force::_force( void )
         }
     }
 
+    // angular forces
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
 
         ForceGraph::out_edge_iterator eo, eo_end;
@@ -389,6 +397,7 @@ void Force::_force( void )
 #endif // DEBUG
 
         if( vdMap.size() > 1 ){
+
             for( unsigned int i = 0; i < vdMap.size(); i++ ){
 
                 map< double, ForceGraph::vertex_descriptor >::iterator itC = vdMap.begin();
@@ -418,12 +427,10 @@ void Force::_force( void )
                     if( transposeUM * dc > 0.0 ){
                         *g[ itN->second ].forcePtr -= force * transposeUM;
                         *g[ itC->second ].forcePtr += force * transposeUM;
-                        //cerr << "itN->second = " << -1.0*force * transposeUM << endl;
                     }
                     else{
                         *g[ itN->second ].forcePtr += force * transposeUM;
                         *g[ itC->second ].forcePtr -= force * transposeUM;
-                        //cerr << "itN->second = " << 1.0*force * transposeUM << endl;
                     }
                 }
 #ifdef DEBUG
@@ -444,6 +451,38 @@ void Force::_force( void )
         }
     }
 
+
+    // overlap forces
+    if( (_level == LEVEL_DETAIL) && (_iteration > 25) ){
+
+        // cerr << "_iteration = " << _iteration
+        //      << " _paramKo = " << _paramKo << endl;
+        BGL_FORALL_VERTICES( vdO, g, ForceGraph ) {
+            BGL_FORALL_VERTICES( vdI, g, ForceGraph ) {
+
+                    if( vdO < vdI ){
+
+                    Coord2 diff = (*g[ vdO ].coordPtr - *g[ vdI ].coordPtr);
+                    Coord2 unit = diff/diff.norm();
+                    double dist = diff.norm();
+                    double diagonalO = sqrt( SQUARE( *g[ vdO ].namePixelWidthPtr ) + SQUARE( *g[ vdO ].namePixelHeightPtr ) );
+                    double diagonalI = sqrt( SQUARE( *g[ vdI ].namePixelWidthPtr ) + SQUARE( *g[ vdI ].namePixelHeightPtr ) );
+
+                    if( dist < 1.1*(diagonalO+diagonalI)){
+
+                        Coord2 force = ( _paramKo/SQUARE( (diagonalO + diagonalI)/(1.1*(diagonalO + diagonalI) - dist ) ) ) * unit;
+#ifdef DEBUG
+                        cerr << "id = ( " << g[vdO].id << ", " << g[vdI].id
+                             << " ) overlap forces = " << force << endl;
+#endif // DEBUG
+                        *g[ vdI ].forcePtr -= force;
+                        *g[ vdO ].forcePtr += force;
+                    }
+                }
+            }
+        }
+    }
+
 #ifdef DEBUG
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
         cerr << "id[" << g[vd].id << "] = " << *g[ vd ].forcePtr;
@@ -452,7 +491,7 @@ void Force::_force( void )
 }
 
 //
-//  Force::force --	compute the displacements exerted by the force-directed model
+//  Force::_initForceSeed --	compute the displacements exerted by the force-directed model
 //
 //  Inputs
 //	none
@@ -473,7 +512,7 @@ void Force::_initForceSeed( void )
 }
 
 //
-//  Force::force --	compute the displacements exerted by the force-directed model
+//  Force::_centroidGeometry --	compute the displacements exerted by the force-directed model
 //
 //  Inputs
 //	none
@@ -898,6 +937,7 @@ double Force::_verletIntegreation( void )
 Force::Force()
 {
     _id = 0;
+    _level = LEVEL_HIGH;
 
     _width = 0.0;
     _height = 0.0;

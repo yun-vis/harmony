@@ -41,7 +41,7 @@ void LevelHigh::_init( double *widthPtr, double *heightPtr, double *veCoveragePt
 {
     _content_widthPtr = widthPtr;
     _content_heightPtr = heightPtr;
-    _forceBone.init( &_bone, contourPtr, "../configs/boundary.conf" );
+    _forceBone.init( &_bone, contourPtr, LEVEL_HIGH, "../configs/boundary.conf" );
     _veCoveragePtr = veCoveragePtr;
 
     clearGraph( _skeleton );

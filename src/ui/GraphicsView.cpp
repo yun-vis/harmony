@@ -822,6 +822,8 @@ void GraphicsView::_item_road( void )
 
         QPolygonF polygon;
         for( unsigned int k = 0; k < p.size(); k++ ){
+
+            // cerr << "c = " << p[k];
             polygon.append( QPointF( p[k].x(), -p[k].y() ) );
         }
 
@@ -838,7 +840,6 @@ void GraphicsView::_item_road( void )
         itemptr->setPolygon( polygon );
         _scene->addItem( itemptr );
     }
-
 
     // draw contour
     for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
@@ -865,25 +866,6 @@ void GraphicsView::_item_road( void )
         itemptr->setPath( path );
         _scene->addItem( itemptr );
     }
-
-/*
-    for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
-
-        vector< Coord2 > &p = roadChaikinCurveVec[i];
-
-        for( unsigned int k = 0; k < p.size(); k++ ){
-
-            GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->fontSize() = _font_size;
-            itemptr->setPen( QPen( QColor( 125, 0, 0, 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 125, 0, 0, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( p[k].x(), -p[k].y(), 10, 10 ) );
-            itemptr->id() = k;
-
-            _scene->addItem( itemptr );
-        }
-    }
-*/
 
 #ifdef SKIP
     // draw vertices

@@ -144,7 +144,7 @@ void Window::threadBoundaryForce( void )
     _gv->isPolygonFlag() = true;
 
     // initialization
-    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, "../configs/boundary.conf" );
+    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, LEVEL_HIGH, "../configs/boundary.conf" );
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 
     // create a new thread
@@ -229,141 +229,6 @@ void Window::threadCellForce( void )
     //simulateKey( Qt::Key_W );
 }
 
-/*
-void Window::listenProcessCell( void )
-{
-    bool allFinished = true;
-
-    //cerr << "before _controllers size = " << _controllers.size() << endl;
-    // check if all threads are finished
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        allFinished = allFinished && _controllers[ i ]->isFinished();
-        // cerr << "is _controllers[" << i << "] finished ? "<< _controllers[ i ]->isFinished();
-    }
-    //cerr << "after _controllers size = " << _controllers.size() << endl;
-
-
-    if( ( allFinished == true ) && ( _controllers.size() != 0 ) ){
-        //simulateKey( Qt::Key_W );
-    }
-}
-
-void Window::processCellForce( void )
-{
-    _gv->isCellPolygonFlag() = true;
-    _gv->isCellFlag() = true;
-
-#ifdef SKIP
-    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
-
-        unsigned int loop = 200;
-        for( unsigned int k = 0; k < loop; k++ ){
-            cerr << "k = " << k << endl;
-            _cellPtr->cellVec()[ i ].forceBone().force();
-            _cellPtr->additionalForces();
-            int freq = VORONOI_FREQUENCE - MIN2( k/20, VORONOI_FREQUENCE-1 );
-            if( k % freq == 0 )
-                _cellPtr->cellVec()[ i ].forceBone().centroidGeometry();
-            double err = _cellPtr->cellVec()[ i ].forceBone().verletIntegreation();
-            cerr << "WorkerLevelMiddle::err (hybrid) = " << err << endl;
-        }
-    }
-    redrawAllScene();
-#endif // SKIP
-
-//#ifdef THREAD_VERSION
-    //for( unsigned int i = 0; i < 2; i++ ){
-    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
-
-        Controller * conPtr = new Controller;
-        conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-        conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                               _cellPtr, _roadPtr, _lanePtr );
-        vector < unsigned int > indexVec;
-        indexVec.push_back( i );
-        conPtr->init( indexVec, WORKER_CELL );
-        // set energy type
-        conPtr->setEnergyType( _gv->energyType() );
-        _controllers.push_back( conPtr );
-
-        connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-        connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
-
-        QString text = "processCellForce";
-        Q_EMIT conPtr->operate( text );
-    }
-//#endif // THREAD_VERSION
-}
-
-void Window::processCellStress( void )
-{
-    _gv->isCellPolygonFlag() = true;
-    _gv->isCellFlag() = true;
-
-    map< unsigned int, Polygon2 >  p = _levelhighPtr->polygonComplex();
-    //for( unsigned int i = 0; i < 1; i++ ){
-    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
-
-#ifdef DEBUG
-        ForceGraph &g = _cellPtr->cellVec()[i].bone();
-        unsigned int nEdges = num_edges( g );
-        {
-            ForceGraph::vertex_descriptor vdBS = vertex( 1, g );
-            ForceGraph::vertex_descriptor vdBT = vertex( 2, g );
-
-            pair< BoundaryGraph::edge_descriptor, unsigned int > addE = add_edge( vdBS, vdBT, g );
-            BoundaryGraph::edge_descriptor addED = addE.first;
-
-            g[ addED ].id = nEdges;
-            g[ addED ].initID = nEdges;
-            g[ addED ].weight = 1.0;
-        }
-#endif // DEBUG
-
-        // for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
-
-        map< unsigned int, Polygon2 >::iterator itP = p.begin();
-        advance( itP, i );
-        // cerr << "cell::contour = " << itP->second.elements().size() << endl;
-        _cellPtr->cellVec()[i].forceBone().prepare( &_cellPtr->cellVec()[i].bone(), &itP->second );
-        //cerr << "cell::contour = " << _cellPtr->cellVec()[i].forceBone().contour()->elements().size() << endl;
-
-        Controller * conPtr = new Controller;
-        conPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-        conPtr->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                               _cellPtr, _roadPtr, _lanePtr );
-        vector < unsigned int > indexVec;
-        indexVec.push_back( i );
-        conPtr->init( indexVec, WORKER_CELL );
-        // set energy type
-        conPtr->setEnergyType( _gv->energyType() );
-        _controllers.push_back( conPtr );
-
-        connect( conPtr, &Controller::update, this, &Window::redrawAllScene );
-        connect( conPtr->wt(), &QThread::finished, this, &Window::listenProcessCell );
-
-        QString text = "processCellStress";
-        Q_EMIT conPtr->operate( text );
-    }
-}
-
-void Window::stopProcessCell( void )
-{
-    // quit all threads
-    for( unsigned int i = 0; i < _controllers.size(); i++ ) {
-        _controllers[ i ]->quit();
-        delete _controllers[ i ];
-    }
-    _controllers.clear();
-
-    _gv->isCellPolygonFlag() = false;
-    _gv->isCellFlag() = false;
-    _gv->isCellPolygonComplexFlag() = true;
-
-    simulateKey( Qt::Key_P );
-    //cerr << "Pressing Key_P" << endl;
-}
-*/
 
 void Window::threadBoneForce( void )
 {
@@ -397,7 +262,7 @@ void Window::threadBoneForce( void )
             CellComponent &c = itC->second;
 
             // create mcl force
-            c.mcl.forceBone().init( &itC->second.mcl.bone(), &itC->second.contour, "../configs/mcl.conf" );
+            c.mcl.forceBone().init( &itC->second.mcl.bone(), &itC->second.contour, LEVEL_LOW, "../configs/mcl.conf" );
             c.mcl.forceBone().id() = 0;
 
             tll[i][j] = new ThreadLevelLow;
@@ -441,7 +306,6 @@ void Window::threadPathwayForce( void )
 
     // initialization
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
-    // _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, "../configs/boundary.conf" );
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
     vector< vector< ThreadLevelDetailed * > > tld;
 
@@ -480,7 +344,7 @@ void Window::threadPathwayForce( void )
             advance( itC, j );
             CellComponent &c = itC->second;
 
-            c.detail.forceBone().init( &c.detail.bone(), &c.contour, "../configs/pathway.conf" );
+            c.detail.forceBone().init( &c.detail.bone(), &c.contour, LEVEL_DETAIL, "../configs/pathway.conf" );
             c.detail.forceBone().id() = idC;
 
             cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;

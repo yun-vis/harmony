@@ -64,19 +64,19 @@ void Cell::_init( double *veCoveragePtr, double *veRatioPtr, map< unsigned int, 
 
     _cellVec.resize( lsubg.size() );
 
-    for( unsigned int i = 0; i < lsubg.size(); i++ ){
+    for( unsigned int i = 0; i < _cellVec.size(); i++ ){
 
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
         map< unsigned int, Polygon2 >::iterator itP = polygonComplexPtr->begin();
         advance( itP, i );
-        _cellVec[i].forceBone().init( &_cellVec[i].bone(), &itP->second, "../configs/cell.conf" );
+        _cellVec[i].forceBone().init( &_cellVec[i].bone(), &itP->second, LEVEL_MIDDLE, "../configs/cell.conf" );
         _cellVec[i].forceBone().id() = i;
         // _cellVec[i].forceBone().contour() = itP->second;
     }
 
     _buildConnectedComponent();
-    _computeCellComponentSimilarity();
-    _buildInterCellComponents();
+    //_computeCellComponentSimilarity();
+    //_buildInterCellComponents();
     _buildCellGraphs();
 
     cerr << "filepath: " << configFilePath << endl;
@@ -216,7 +216,9 @@ void Cell::_buildConnectedComponent( void )
                 //fg[ vdNew ].componentID = lsubg[i][ cc[j].lsubgVec[k] ].id;
                 fg[ vdNew ].initID      = lsubg[i][ cc[j].lsubgVec[k] ].id;
 
-                fg[ vdNew ].namePtr      = lsubg[i][ cc[j].lsubgVec[k] ].namePtr;
+                fg[ vdNew ].namePtr         = lsubg[i][ cc[j].lsubgVec[k] ].namePtr;
+                fg[ vdNew ].namePixelWidthPtr   = lsubg[i][ cc[j].lsubgVec[k] ].namePixelWidthPtr;
+                fg[ vdNew ].namePixelHeightPtr  = lsubg[i][ cc[j].lsubgVec[k] ].namePixelHeightPtr;
                 fg[ vdNew ].coordPtr     = lsubg[i][ cc[j].lsubgVec[k] ].coordPtr;
                 fg[ vdNew ].prevCoordPtr = new Coord2( lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->x(),
                                                        lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->y() );
@@ -460,7 +462,8 @@ void Cell::_buildCellGraphs( void )
         }
 
         // find sets createtd by the similarity measure
-        unsigned int size = _cellComponentSimilarityVec[i].size();
+        unsigned int size = 0;
+        if( _cellComponentSimilarityVec.size() != 0 ) _cellComponentSimilarityVec[i].size();
         map< unsigned int, vector< unsigned int > > setMap;
         for( unsigned int m = 0; m < size; m++ ){
 
@@ -1492,7 +1495,14 @@ void Cell::additionalForces( void )
 //
 Cell::Cell( void )
 {
-    ;
+    _veCoveragePtr = NULL;
+    _veRatioPtr = NULL;
+    _cellVec.clear();
+
+    _cellComponentVec.clear();
+    _cellComponentSimilarityVec.clear();
+    _interCellComponentMap.clear();
+    _reducedInterCellComponentMap.clear();
 }
 
 //

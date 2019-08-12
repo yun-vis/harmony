@@ -38,6 +38,7 @@ class Force : public Stress
   private:
 
     unsigned int    _id;
+    LEVELTYPE       _level;                 // force level
     string          _configFilePath;        // config file path
     Coord2          _boxCenter;             // bounding box center of the contour
     double			_width, _height;        // bounding box of the contour
@@ -57,6 +58,7 @@ class Force : public Stress
     double          _paramKc;               // k1 force
     double          _paramKd;               // k2 force
     double          _paramKe;               // k3 force
+    double          _paramKo;               // opverlap repulsive force
 
     double          _paramRatioForce;
     double          _paramRatioVoronoi;
@@ -73,7 +75,7 @@ class Force : public Stress
   protected:
 
     void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 *__contourPtr,
-                              string __configFilePath );
+                              LEVELTYPE __leveltype, string __configFilePath );
     void            _clear  ( void );
     void		    _random	( void );
 
@@ -109,6 +111,9 @@ class Force : public Stress
     const unsigned int &    id( void )      const   { return _id; }
     unsigned int &          id( void )              { return _id; }
 
+    // const LEVELTYPE &       level( void )   const   { return _level; }
+    // LEVELTYPE &             level( void )           { return _level; }
+
     const double &		    width ( void )	const	{ return _width; }
     double &			    width ( void )		    { return _width; }
     const double &			height( void )	const	{ return _height; }
@@ -126,15 +131,15 @@ class Force : public Stress
     const QuardTree &       quardTree( void )       const   { return _quardTree; }
     QuardTree &             quardTree( void )               { return _quardTree; }
 
-    double gap ( void )	{ return _gap(); }
-    double verletIntegreation( void ) { return _verletIntegreation(); }
+    double                  gap ( void )	                { return _gap(); }
+    double                  verletIntegreation( void )      { return _verletIntegreation(); }
 
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
     void init( ForceGraph * __forceGraphPtr, Polygon2 *__contourPtr,
-               string __configFilePath ) {
-        _init( __forceGraphPtr, __contourPtr, __configFilePath );
+               LEVELTYPE __leveltype, string __configFilePath ) {
+        _init( __forceGraphPtr, __contourPtr, __leveltype, __configFilePath );
     }
     void clear( void )				{ _clear(); }
     void random( void )				{ _random(); }
