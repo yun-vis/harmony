@@ -56,6 +56,8 @@ public:
     Bone                                    detail;
 
     vector< ForceGraph::vertex_descriptor > polygonComplexVD; // vd of contour in the BoundaryGraph
+
+    vector< vector< ForceGraph::vertex_descriptor > > metaboliteVec;   // mcl cluster vertex id
 };
 
 class Cell : public PathwayData, public Common
@@ -85,8 +87,8 @@ private:
     void _computeCellComponentSimilarity( void );
     void _buildInterCellComponents( void );
     void _buildCellGraphs( void );
-    int _computeClusters( ForceGraph &dg,
-                          vector< MetaboliteGraph::vertex_descriptor > & cluster );
+    int _computeMCLClusters( ForceGraph &dg );
+    void _computeClusters( void );
     void _init( double *veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > * polygonComplexPtr );
     void _clear( void );
 

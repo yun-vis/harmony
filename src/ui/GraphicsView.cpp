@@ -403,6 +403,7 @@ void GraphicsView::_item_cells( void )
             itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
             itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = cellVec[i].bone()[vd].id;
+            itemptr->text() = QString::fromStdString( to_string( cellVec[i].bone()[vd].id ) );
             itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
@@ -636,17 +637,20 @@ void GraphicsView::_item_cellPolygonComplex( void )
             vector< double > rgb;
             ForceGraph::vertex_descriptor vd = vertex( itC->second.id, cellVec[k].bone() );
 
-            unsigned int gid = cellVec[k].bone()[vd].groupID;
-            pickBrewerColor( gid, rgb );
-            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
-            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
-            itemptr->setPolygon( polygon );
-            //itemptr->id() = cellVec[k].bone()[vd].id;
-            //itemptr->textOn() = true;
+            if( vd != NULL ) {
 
-            //cerr << vertexCoord[vd];
-            _scene->addItem( itemptr );
+                unsigned int gid = cellVec[k].bone()[vd].groupID;
+                pickBrewerColor( gid, rgb );
+                QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
+                itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+                itemptr->setPolygon( polygon );
+                //itemptr->id() = cellVec[k].bone()[vd].id;
+                //itemptr->textOn() = true;
+
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
 
 #ifdef DEBUG
             for( unsigned int j = 0; j < c.elements().size(); j++ ){
@@ -823,7 +827,7 @@ void GraphicsView::_item_road( void )
         QPolygonF polygon;
         for( unsigned int k = 0; k < p.size(); k++ ){
 
-            // cerr << "c = " << p[k];
+            cerr << "c = " << p[k];
             polygon.append( QPointF( p[k].x(), -p[k].y() ) );
         }
 
@@ -1013,6 +1017,8 @@ void GraphicsView::_item_road( void )
         }
     }
 #endif // SKIP
+
+    cerr << "end" << endl;
 }
 
 void GraphicsView::_item_lane( void )

@@ -75,6 +75,7 @@ void Cell::_init( double *veCoveragePtr, double *veRatioPtr, map< unsigned int, 
     }
 
     _buildConnectedComponent();
+    _computeClusters();
     //_computeCellComponentSimilarity();
     //_buildInterCellComponents();
     _buildCellGraphs();
@@ -106,7 +107,7 @@ void Cell::_clear( void )
 
 
 //
-//  Cell::findConnectedComponent -- find connected component
+//  Cell::buildConnectedComponent -- find connected component
 //
 //  Inputs
 //  none
@@ -319,6 +320,400 @@ void Cell::_buildConnectedComponent( void )
 //  Outputs
 //  none
 //
+void Cell::_buildCellGraphs( void )
+{
+    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+
+    _cellVec.resize( lsubg.size() );    // subsystem size
+    for( unsigned int i = 0; i < lsubg.size(); i++ ) {
+
+        multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
+        Polygon2 &contour = _cellVec[i].forceBone().contour();
+
+        // cerr << "contour = " << contour.centroid() << endl;
+        unsigned int idV = 0, idE = 0;
+        for (; itC != _cellComponentVec[i].end(); itC++) {
+
+#ifdef DEBUG
+            cerr << "i = " << i << " nG = " << _cellComponentVec.size()
+                 << " nM = " << itC->second.multiple << " nV = " << itC->second.cellVec.size() << endl;
+#endif // DEBUG
+
+            cerr << "init nV = " << num_vertices( _cellVec[i].bone() ) << " nE = " << num_edges( _cellVec[i].bone() ) << endl;
+
+            // add vertices
+            vector <ForceGraph::vertex_descriptor> vdVec;
+            ForceGraph &dg = itC->second.detail.bone();
+
+            int multiple = itC->second.metaboliteVec.size();
+            // int multiple = itC->second.multiple;
+            // cerr << "multiple = " << multiple << endl;
+            for (unsigned int k = 0; k < multiple; k++) {
+
+                // add vertex
+                int length = 10;
+                ForceGraph::vertex_descriptor vdNew = add_vertex( _cellVec[i].bone() );
+                double x = -50.0 + 100.0*(double)k/(double)multiple + contour.centroid().x() + rand()%(int)length - 0.5*length;
+                double y = -25.0 + 50.0*(double)(rand()%2) + contour.centroid().y() + rand()%(int)length - 0.5*length;
+
+                _cellVec[i].bone()[vdNew].id = idV;
+                _cellVec[i].bone()[vdNew].groupID = i;
+                _cellVec[i].bone()[vdNew].componentID = itC->second.id;
+                _cellVec[i].bone()[vdNew].initID = idV;
+
+                _cellVec[i].bone()[vdNew].coordPtr = new Coord2(x, y);
+                _cellVec[i].bone()[vdNew].prevCoordPtr = new Coord2(x, y);
+                //_cellVec[i].bone()[ vdNew ].coordPtr     = new Coord2( 0.0, 0.0 );
+                //_cellVec[i].bone()[ vdNew ].prevCoordPtr = new Coord2( 0.0, 0.0 );
+                _cellVec[i].bone()[vdNew].forcePtr = new Coord2(0.0, 0.0);
+                _cellVec[i].bone()[vdNew].placePtr = new Coord2(0.0, 0.0);
+                _cellVec[i].bone()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
+                _cellVec[i].bone()[vdNew].weight = (double) itC->second.lsubgVec.size() / (double) multiple;
+
+                _cellVec[i].bone()[vdNew].widthPtr = new double( sqrt(_paramUnit) );
+                _cellVec[i].bone()[vdNew].heightPtr = new double( sqrt(_paramUnit) );
+                _cellVec[i].bone()[vdNew].areaPtr = new double( _paramUnit );
+
+                idV++;
+                vdVec.push_back(vdNew);
+            }
+            itC->second.cellgVec.clear();
+            itC->second.cellgVec = vdVec;
+
+            // add edges
+            if ( vdVec.size() > 1 ) {
+
+                BGL_FORALL_EDGES( ed, dg, ForceGraph ) {
+
+                    ForceGraph::vertex_descriptor vdS = source( ed, dg );
+                    ForceGraph::vertex_descriptor vdT = target( ed, dg );
+
+                    unsigned int labelS = dg[vdS].label;
+                    unsigned int labelT = dg[vdT].label;
+
+                    bool isConnected = false;
+                    if( labelS != labelT ){
+
+                        bool isFound = false;
+                        ForceGraph::edge_descriptor oldED;
+                        tie( oldED, isFound ) = edge( vdS, vdT, dg );
+                        if( isFound == true ){
+                            isConnected = true;
+                        }
+                    }
+                    // cerr << "labelS = " << labelS << " labelT = " << labelT << endl;
+
+                    if( isConnected == true ){
+
+                        ForceGraph::vertex_descriptor vdS = vdVec[ labelS ];
+                        ForceGraph::vertex_descriptor vdT = vdVec[ labelT ];
+                        //ForceGraph::vertex_descriptor vdS = vertex( labelS, _cellVec[i].bone() );
+                        //ForceGraph::vertex_descriptor vdT = vertex( labelT, _cellVec[i].bone() );
+
+                        bool isFound = false;
+                        ForceGraph::edge_descriptor oldED;
+                        tie( oldED, isFound ) = edge( vdS, vdT, _cellVec[i].bone() );
+                        // cerr << "degreeS = " << degreeS << " degreeT = " << degreeT << endl;
+                        if( isFound == false ){
+
+                            pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _cellVec[i].bone() );
+                            ForceGraph::edge_descriptor foreED = foreE.first;
+                            _cellVec[i].bone()[foreED].id = idE;
+
+                            idE++;
+                        }
+                    }
+                }
+
+                cerr << "subID = " << i << " vdVec.size() = " << vdVec.size() << endl;
+                cerr << "nV = " << num_vertices( _cellVec[i].bone() ) << " nE = " << num_edges( _cellVec[i].bone() ) << endl;
+            }
+        }
+    }
+
+/*
+    // initialize the position
+    for( unsigned int i = 0; i < lsubg.size(); i++ ) {
+
+        multimap<int, CellComponent>::iterator itC = _cellComponentVec[i].begin();
+        Polygon2 &contourI = _cellVec[i].forceBone().contour();
+
+        vector < vector< ForceGraph::vertex_descriptor > > mergeVec;      // vector of cell need to be merged
+
+        for (; itC != _cellComponentVec[i].end(); itC++) {
+            // if ( itC->second.cellgVec.size() > 1 )
+            mergeVec.push_back( itC->second.cellgVec );
+        }
+
+        // find sets createtd by the similarity measure
+        unsigned int size = 0;
+        if( _cellComponentSimilarityVec.size() != 0 ) _cellComponentSimilarityVec[i].size();
+        map< unsigned int, vector< unsigned int > > setMap;
+        for( unsigned int m = 0; m < size; m++ ){
+
+            vector< unsigned int > idVec;
+            idVec.push_back( m );
+            unsigned int minID = m;
+            for( unsigned int n = 0; n < size; n++ ){
+
+                if(  _cellComponentSimilarityVec[i][m][n] == 1.0 ) {
+                    idVec.push_back( n );
+                    if( minID > n ) minID = n;
+                }
+            }
+
+            if( idVec.size() > 1 ){
+
+                setMap.insert( pair< unsigned int, vector< unsigned int > >( minID, idVec ) );
+            }
+            else{
+
+                multimap< int, CellComponent >::iterator itM = _cellComponentVec[i].begin();
+                advance( itM, m );
+            }
+        }
+
+        // find target edge border edge center
+        vector< Coord2 > targetCoords;
+        targetCoords.resize( lsubg.size() );
+        for( unsigned int m = 0; m < targetCoords.size(); m++ ){
+
+            Polygon2 &contourM = _cellVec[ m ].forceBone().contour();
+
+            //cerr << "cs = " << contourI << endl;
+            Polygon2 & cS = contourI;
+            Polygon2 & cT = contourM;
+            targetCoords[i].zero();
+
+            double maxLength = 0;
+            // cerr << "pSize = " << cS.elements().size() << " qSize = " << cT.elements().size() << endl;
+            for( unsigned int p = 0; p < cS.elements().size(); p++ ) {
+                for( unsigned int q = 0; q < cT.elements().size(); q++ ) {
+
+                    Coord2 &ps = cS.elements()[p];
+                    Coord2 &pt = cS.elements()[(p+1)%(int)cS.elements().size()];
+
+                    Coord2 &qs = cT.elements()[q];
+                    Coord2 &qt = cT.elements()[(q+1)%(int)cT.elements().size()];
+
+                    if( (ps == qt) && (pt == qs) ){
+                        double length = (ps-pt).norm();
+
+                        if( length > maxLength ){
+                            targetCoords[m] = (ps+pt)/2.0;
+                            maxLength = length;
+                        }
+                    }
+                }
+            }
+        }
+*/
+#ifdef DEBUG
+        for( unsigned int m = 0; m < targetCoords.size(); m++ ) {
+            cerr << "i = " << i << " m = " << m << " targetCoords[m] = " << targetCoords[m];
+        }
+#endif // DEBUG
+/*
+        // add secondary edges, based on the similarity measure
+        unsigned int idE = num_edges( _cellVec[i].bone() );
+        map< unsigned int, vector< unsigned int > >::iterator itM;
+        for( itM = setMap.begin(); itM != setMap.end(); itM++ ){
+
+            vector< unsigned int > &idVec = itM->second;
+            // for( unsigned int m = 0; m < idVec.size()-1; m++ ){  // chain
+            for( unsigned int m = 0; m < idVec.size(); m++ ){       // circle
+
+                ForceGraph::vertex_descriptor vdS = vertex( idVec[m], _cellVec[i].bone() );
+                ForceGraph::vertex_descriptor vdT = vertex( idVec[(m+1)%(int)idVec.size()], _cellVec[i].bone() );
+
+                bool isFound = false;
+                ForceGraph::edge_descriptor oldED;
+                tie( oldED, isFound ) = edge( vdS, vdT, _cellVec[i].bone() );
+                // cerr << "degreeS = " << degreeS << " degreeT = " << degreeT << endl;
+                if( isFound == false ){
+                    pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _cellVec[i].bone() );
+                    ForceGraph::edge_descriptor foreED = foreE.first;
+                    _cellVec[i].bone()[ foreED ].id = idE;
+
+                    idE++;
+                }
+            }
+            if( idVec.size() >= 6  ){
+
+                unsigned int step = 1;
+                while( true ){
+
+                    unsigned int idS = 1 + step;
+                    unsigned int idT = idVec.size() - step;
+
+                    // cerr << "idS = " << idS << " idT = " << idT << endl;
+                    ForceGraph::vertex_descriptor vdS = vertex( idVec[ idS ], _cellVec[i].bone() );
+                    ForceGraph::vertex_descriptor vdT = vertex( idVec[ idT ], _cellVec[i].bone() );
+
+                    if( (idT-idS) < 3 ) break;
+
+                    bool isFound = false;
+                    ForceGraph::edge_descriptor oldED;
+                    tie( oldED, isFound ) = edge( vdS, vdT, _cellVec[i].bone() );
+
+                    if( isFound == false ){
+
+                        pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge(vdS, vdT, _cellVec[i].bone());
+                        ForceGraph::edge_descriptor foreED = foreE.first;
+                        _cellVec[i].bone()[foreED].id = idE;
+
+                        idE++;
+                    }
+                    step++;
+                }
+            }
+        }
+*/
+
+/*
+        // compute the initial position
+        cerr << "mergeVec.size() = " << mergeVec.size()
+             << " setMap.size() = " << setMap.size()
+             << endl;
+        unsigned int total = mergeVec.size() + setMap.size();
+        double x = contourI.centroid().x(); // + rand()%100 - 50;
+        double y = contourI.centroid().y(); // + rand()%100 - 50;
+        double mainRadius = 0.0, secondRadius = 0.0;
+        double shiftAngle = 0.0;
+
+        // perturbe to find the main and second radius
+        unsigned int perturbeTimes = 100;
+        double maxRadius = contourI.maxRadiusInPolygon( Coord2( x, y ) );
+        for( unsigned int m = 0; m < perturbeTimes; m++ ){
+
+            Coord2 tmp( x + rand()%(int)maxRadius - 0.5*maxRadius,
+                        y + rand()%(int)maxRadius - 0.5*maxRadius );
+            double tmpR = contourI.maxRadiusInPolygon( tmp );
+
+            if( contourI.inPolygon( tmp ) && ( tmpR > maxRadius ) ){
+                x = tmp.x();
+                y = tmp.y();
+                maxRadius = tmpR;
+            }
+        }
+        mainRadius = 2.0*maxRadius/3.0;
+        secondRadius = maxRadius/3.0;
+
+#ifdef DEBUG
+        //1cerr << "x = " << x << " y = " << y << " maxR = " << maxRadius << endl;
+        //cerr << "mainR = " << mainRadius << " secondR = " << secondRadius << endl;
+        center.push_back( Coord2( x, y ) );
+        radius.push_back( maxRadius );
+        con.push_back( contourI );
+#endif // DEBUG
+
+        // initialize cell position
+        for( unsigned int m = 0; m < mergeVec.size(); m++ ){
+
+            double cosTheta = cos( 2.0*M_PI*(double)m/(double)total + shiftAngle );
+            double sinTheta = sin( 2.0*M_PI*(double)m/(double)total + shiftAngle );
+            double cx = x + mainRadius * cosTheta;
+            double cy = y + mainRadius * sinTheta;
+
+            int targetID = -1;
+
+            for( unsigned int n = 0; n < mergeVec[m].size(); n++ ){
+
+                ForceGraph::vertex_descriptor &vd = mergeVec[m][n];
+#ifdef SKIP
+                // find the target subsystem id
+                if( n == 0 ){
+
+                    multimap< Grid2, pair< CellComponent*, CellComponent* > >::iterator itR;
+                    for( itR = _reducedInterCellComponentMap.begin(); itR != _reducedInterCellComponentMap.end(); itR++ ){
+
+                        if( i == itR->first.p() ){
+                            for( unsigned int p = 0; p < itR->second.first->cellgVec.size(); p++ ){
+                                if( vd == itR->second.first->cellgVec[p] )
+                                    targetID = itR->first.q();
+                            }
+                        }
+                        else if( i == itR->first.q() ){
+                            for( unsigned int p = 0; p < itR->second.second->cellgVec.size(); p++ ){
+                                if( vd == itR->second.second->cellgVec[p] )
+                                    targetID = itR->first.p();
+                            }
+                        }
+                    }
+
+                    if( targetID != -1 ) {
+
+                        //cerr << "targetCoords[ " << targetID << " ] = " << targetCoords[ targetID ];
+                        cx += ( targetCoords[ targetID ].x() - cx )/2.0;
+                        cy += ( targetCoords[ targetID ].y() - cy )/2.0;
+                    }
+
+                }
+#endif // SKIP
+#ifdef DEBUG
+                multimap< Grid2, pair< CellComponent*, CellComponent* > >::iterator itR;
+                for( itR = _reducedInterCellComponentMap.begin(); itR != _reducedInterCellComponentMap.end(); itR++ ){
+
+                    cerr << i << ": vid: " << _cellVec[i].bone()[ vd ].id << endl;
+                    cerr << itR->first.p() << ": first: ";
+                    for( unsigned int p = 0; p < itR->second.first->cellgVec.size(); p++ ){
+                        cerr << _forceCellGraphVec[itR->first.p()][ itR->second.first->cellgVec[p] ].id << ", ";
+                    }
+                    cerr << endl;
+                    cerr << itR->first.q() << ": second: ";
+                    for( unsigned int p = 0; p < itR->second.second->cellgVec.size(); p++ ){
+                        cerr << _forceCellGraphVec[itR->first.q()][ itR->second.second->cellgVec[p] ].id << ", ";
+                    }
+                    cerr << endl;
+                }
+                cerr << endl << endl;
+#endif // DEBUG
+
+                double cosValue = secondRadius * cos( 2.0*M_PI*(double)n/(double)mergeVec[m].size() + shiftAngle );
+                double sinValue = secondRadius * sin( 2.0*M_PI*(double)n/(double)mergeVec[m].size() + shiftAngle );
+                _cellVec[i].bone()[vd].coordPtr->x() = cx + cosValue + ( (rand()%(int)PERTUBE_RANGE)/(10*PERTUBE_RANGE) - 0.05 );
+                _cellVec[i].bone()[vd].coordPtr->y() = cy + sinValue + ( (rand()%(int)PERTUBE_RANGE)/(10*PERTUBE_RANGE) - 0.05 );
+                _cellVec[i].bone()[vd].prevCoordPtr->x() = cx + cosValue;
+                _cellVec[i].bone()[vd].prevCoordPtr->y() = cy + sinValue;
+            }
+        }
+
+#ifdef DEBUG
+        for( itM = setMap.begin(); itM != setMap.end(); itM++ ){
+
+            vector< unsigned int > &idVec = itM->second;
+            cerr << "setID = " << itM->first << endl;
+            for( unsigned int m = 0; m < idVec.size(); m++ ){
+                cerr << idVec[m] << " ";
+            }
+            cerr << endl;
+        }
+        cerr << endl;
+#endif // DEBUG
+
+    }
+*/
+#ifdef DEBUG
+    // print cellGroup
+    assert( lsubg.size() == _forceCellGraphVec.size() );
+    for( unsigned int i = 0; i < lsubg.size(); i++ ) {
+
+        multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
+        for( ; itC != _cellComponentVec[i].end(); itC++ ){
+            cerr << "id = " << itC->second.id
+                 << " multiple = " << itC->second.multiple
+                 << " first = " << itC->first
+                 << " size = " << itC->second.cellgVec.size() << endl;
+            for( unsigned int j = 0; j < itC->second.cellgVec.size(); j++ ){
+                cerr << i << ", " << j << ": " << *_cellVec[i].bone()[ itC->second.cellgVec[j] ].coordPtr << endl;
+            }
+        }
+        cerr << endl;
+    }
+#endif // DEBUG
+}
+
+#ifdef SKIP
 void Cell::_buildCellGraphs( void )
 {
     vector< ForceGraph >            &lsubg  = _pathway->lsubG();
@@ -780,6 +1175,7 @@ void Cell::_buildCellGraphs( void )
     }
 #endif // DEBUG
 }
+#endif // SKIP
 
 void Cell::createPolygonComplexFromDetailGraph( void )
 {
@@ -802,22 +1198,13 @@ void Cell::createPolygonComplexFromDetailGraph( void )
 
                 Contour2 contour;
                 vector< Polygon2 > pVec;
-                for( unsigned int j = 0; j < cSize; j++ ) {
-                    pVec.push_back( (*f.voronoi().seedVec())[j].cellPolygon );
-
-                    if( i == _cellComponentVec.size()-1 && j == 7 ){
-                        cerr << "mytest = " << j << endl;
-                        cerr << (*f.voronoi().seedVec())[j].cellPolygon << endl;
-                    }
-                }
 
                 contour.init( idC, pVec );
                 contour.createContour();
                 c.contour = contour.contour();
             }
             else{
-                // cerr << "csize = 1" << endl;
-                // int id = fg[c.cellgVec[0]].id;
+
                 Polygon2 &p = (*f.voronoi().seedVec())[0].cellPolygon;
                 p.updateOrientation();;
                 c.contour = p;
@@ -910,7 +1297,7 @@ void Cell::updatePolygonComplex( void )
     }
 }
 
-int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_descriptor > & cluster )
+int Cell::_computeMCLClusters( ForceGraph &dg )
 {
     string inputfilename = "../micans/input.txt";
     string outputfilename = "../micans/output.txt";
@@ -989,7 +1376,47 @@ int Cell::_computeClusters( ForceGraph &dg, vector< MetaboliteGraph::vertex_desc
     //printGraph( dg );
 #endif // DEBUG
 
+    cerr << "cID = " << cID << endl;
     return cID;
+}
+
+void Cell::_computeClusters( void )
+{
+    for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){ // subsystems number
+
+        multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
+        for( ; itC != _cellComponentVec[i].end(); itC++ ){
+
+            Coord2 &avg = itC->second.contour.centroid();
+
+#ifdef SKIP
+            cerr << "avg = " << avg;
+            Coord2 avg( 0.0, 0.0 );
+            unsigned int cellSize = itC->second.cellgVec.size();
+            for( unsigned int j = 0; j < cellSize; j++ ){
+                //cerr << "id = " << itC->second.id << " j = " << j << endl;
+                //cerr << "coord = " << *_forceCellGraphVec[ i ][ itC->second.cellgVec[j] ].coordPtr << endl;
+                avg = avg + *_forceCellGraphVec[ i ][ itC->second.cellgVec[j] ].coordPtr;
+            }
+            avg /= (double)cellSize;
+#endif // SKIP
+
+            // vector< MetaboliteGraph::vertex_descriptor > cluster;
+            ForceGraph &dg = itC->second.detail.bone();
+            int nClusters = _computeMCLClusters( dg );
+
+            itC->second.metaboliteVec.resize( nClusters );
+            BGL_FORALL_VERTICES( vd, dg, ForceGraph ){
+
+                unsigned int label = dg[ vd ].label;
+                itC->second.metaboliteVec[ label ].push_back( vd );
+            }
+
+            cerr << "nV = " << num_vertices( dg ) << " nE = " << num_edges( dg ) << endl;
+            // cerr << "computeClusters nCluster = " << nClusters
+            //     << " ?= " << itC->second.metaboliteVec.size() << endl;
+        }
+    }
 }
 
 void Cell::updateMCLCoords( void )
@@ -1016,8 +1443,11 @@ void Cell::updateMCLCoords( void )
             avg /= (double)cellSize;
 #endif // SKIP
 
-            vector< MetaboliteGraph::vertex_descriptor > cluster;
-            int nClusters = _computeClusters( itC->second.detail.bone(), cluster );
+            vector< vector< ForceGraph::vertex_descriptor > > & cluster = itC->second.metaboliteVec;
+            int nClusters = cluster.size();
+
+            // cerr << "nClusters = " << nClusters << endl;
+            // int nClusters = _computeClusters( itC->second.detail.bone(), cluster );
             assert( nClusters != -1 );
 
             itC->second.nMCL = nClusters;
@@ -1097,6 +1527,7 @@ void Cell::updatePathwayCoords( void )
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
+        ForceGraph &cg = _cellVec[i].bone();
         for( ; itC != _cellComponentVec[i].end(); itC++ ){
 
             ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].bone() );
@@ -1113,9 +1544,12 @@ void Cell::updatePathwayCoords( void )
                                   (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius );
 
                     unsigned int mclID = dg[ vd ].label;
-                    ForceGraph::vertex_descriptor vdM = vertex( mclID, mcl );
-                    dg[ vd ].coordPtr->x() = mcl[ vdM ].coordPtr->x() + coord.x();
-                    dg[ vd ].coordPtr->y() = mcl[ vdM ].coordPtr->y() + coord.y();
+                    // ForceGraph::vertex_descriptor vdM = vertex( mclID, mcl );
+                    ForceGraph::vertex_descriptor vdM = itC->second.cellgVec[ mclID ];
+                    dg[ vd ].coordPtr->x() = cg[ vdM ].coordPtr->x() + coord.x();
+                    dg[ vd ].coordPtr->y() = cg[ vdM ].coordPtr->y() + coord.y();
+                    //dg[ vd ].coordPtr->x() = mcl[ vdM ].coordPtr->x() + coord.x();
+                    //dg[ vd ].coordPtr->y() = mcl[ vdM ].coordPtr->y() + coord.y();
                     coordVec.push_back( coord );
                 }
             }

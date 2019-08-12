@@ -1363,44 +1363,10 @@ void Window::updateLevelDetailPolygonComplex( void )
     }
 
     // update cell contour
-    _cellPtr->createPolygonComplexFromDetailGraph();
-
-    // collect cell boundary contour polygons
-    for( unsigned int i = 0; i < cellCVec.size(); i++ ){
-
-        multimap< int, CellComponent > & cellComponentMap = cellCVec[i];
-        multimap< int, CellComponent >::iterator itC;
-
-        // cerr << "i = " << i << " size = " << cellComponentMap.size() << endl;
-        for( itC = cellComponentMap.begin(); itC != cellComponentMap.end(); itC++ ){
-
-            CellComponent &component = itC->second;
-            unsigned int subsysID = component.groupID;
-            Polygon2 &c = component.contour;
-
-            if( subsysID == 2 ) cerr << "testc1 = " << c << endl;
-        }
-    }
+    // _cellPtr->createPolygonComplexFromDetailGraph();
 
     // update contour
-    _cellPtr->updatePolygonComplexFromDetailGraph();
-
-    // collect cell boundary contour polygons
-    for( unsigned int i = 0; i < cellCVec.size(); i++ ){
-
-        multimap< int, CellComponent > & cellComponentMap = cellCVec[i];
-        multimap< int, CellComponent >::iterator itC;
-
-        // cerr << "i = " << i << " size = " << cellComponentMap.size() << endl;
-        for( itC = cellComponentMap.begin(); itC != cellComponentMap.end(); itC++ ){
-
-            CellComponent &component = itC->second;
-            unsigned int subsysID = component.groupID;
-            Polygon2 &c = component.contour;
-
-            if( subsysID == 2 ) cerr << "testc2 = " << c << endl;
-        }
-    }
+    // _cellPtr->updatePolygonComplexFromDetailGraph();
 }
 
 
@@ -1650,6 +1616,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             threadOctilinearBoundary();
 
             simulateKey( Qt::Key_O );
+            simulateKey( Qt::Key_L );
 
             //****************************************
             // rendering
@@ -1675,8 +1642,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->isCellPolygonFlag() = true;
             _gv->isCellFlag() = true;
 
-            simulateKey( Qt::Key_L );
-            simulateKey( Qt::Key_E );
+            // simulateKey( Qt::Key_E );
 
             //****************************************
             // optimization
@@ -1710,6 +1676,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _levelType = LEVEL_MIDDLE;
             threadOctilinearBoundary();
             simulateKey( Qt::Key_O );
+
 
             //****************************************
             // rendering
@@ -1888,28 +1855,25 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_L:
         {
+            _gv->isCellFlag() = true;
+            _gv->isCompositeFlag() = false;
+            _gv->isPolygonFlag() = false;
+            _gv->isCellPolygonComplexFlag() = true;
+            // _gv->isBoundaryFlag() = false;
+
             // load setting
             _pathway->initLayout( _levelhighPtr->polygonComplex() );
 
             // initialize cell
             _cellPtr->clear();
             _cellPtr->init( &_gv->veCoverage(), &_gv->veRatio(), &_levelhighPtr->polygonComplex() );
-
-            _gv->isCellFlag() = true;
-            _gv->isCompositeFlag() = false;
-            _gv->isPolygonFlag() = false;
-            _gv->isCellPolygonComplexFlag() = true;
-            _gv->isBoundaryFlag() = false;
-            redrawAllScene();
             break;
         }
         case Qt::Key_P:
         {
             _cellPtr->createPolygonComplex();
             _cellPtr->updateMCLCoords();
-            // _cellPtr->updatePathwayCoords();
-            // _gv->isCellPolygonComplexFlag() = true;
-            // _gv->isSubPathwayFlag() = true;
+
             redrawAllScene();
             break;
         }
