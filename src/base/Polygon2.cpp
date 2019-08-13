@@ -263,23 +263,14 @@ void Polygon2::updateOrientation( void )
 
     if( _elements.size() == 0 )  return;
 
-    //map< pair< double, double >, unsigned int > elementMap;
     for( unsigned int i = 0; i < _elements.size(); i++ ){
         double x =_elements[i].x();
         double y =_elements[i].y();
         double nx =_elements[(i+1)%(int)_elements.size()].x();
         double ny =_elements[(i+1)%(int)_elements.size()].y();
 
-        //if( (_elements[i]-_elements[(i+1)%(int)_elements.size()] ).norm() > 0.1 ){
-            p.push_back( K::Point_2( x, y ) );
-        //    elementMap.insert( pair< pair< double, double >, unsigned int >(
-        //            pair< double, double >( x, y ), i ) );
-        //}
-        //cerr << "(x, y) = " << x << ", " << y << endl;
+        p.push_back( K::Point_2( x, y ) );
     }
-    //cerr << endl;
-    //cerr << "element.size() = " << _elements.size() << " eleMap.size() = " << elementMap.size() << endl;
-    // assert( _elements.size() == elementMap.size() );
 
     cerr << "polygon:" << endl << p << endl;
 

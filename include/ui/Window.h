@@ -17,8 +17,8 @@ using namespace std;
 #include "base/TimeComplexity.h"
 #include "base/ThreadOctilinearBoundary.h"
 #include "base/ThreadLevelHigh.h"
+#include "base/ThreadLevelCenter.h"
 #include "base/ThreadLevelMiddle.h"
-#include "base/ThreadLevelLow.h"
 #include "base/ThreadLevelDetailed.h"
 #include "base/RegionData.h"
 #include "../lib/CTPL/ctpl.h"
@@ -83,7 +83,8 @@ private:
     // thread
     void threadBoundaryForce( void );
     void threadCellForce( void );
-    void threadBoneForce( void );
+    // void threadBoneForce( void );
+    void threadCenterForce( void );
     void threadPathwayForce( void );
     void threadOctilinearBoundary( void );
 

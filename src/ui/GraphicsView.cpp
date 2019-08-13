@@ -35,17 +35,17 @@ void GraphicsView::_item_seeds( void )
         BoundaryGraph &b = _levelhighPtr->forceBone().boundary().boundary();
         BGL_FORALL_VERTICES( vd, b, BoundaryGraph ) {
 
-            GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->fontSize() = _font_size;
-            //itemptr->setPen( Qt::NoPen );
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
-            itemptr->id() = b[vd].id;
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = _font_size;
+                //itemptr->setPen( Qt::NoPen );
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
+                itemptr->id() = b[vd].id;
 
-            //cerr << vertexCoord[vd];
-            _scene->addItem( itemptr );
-        }
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
     }
 }
 
@@ -56,32 +56,32 @@ void GraphicsView::_item_skeleton( void )
     // draw edges
     BGL_FORALL_EDGES( ed, s, ForceGraph ) {
 
-        ForceGraph::vertex_descriptor vdS = source( ed, s );
-        ForceGraph::vertex_descriptor vdT = target( ed, s );
-        QPainterPath path;
-        path.moveTo( s[vdS].coordPtr->x(), -s[vdS].coordPtr->y() );
-        path.lineTo( s[vdT].coordPtr->x(), -s[vdT].coordPtr->y() );
+            ForceGraph::vertex_descriptor vdS = source( ed, s );
+            ForceGraph::vertex_descriptor vdT = target( ed, s );
+            QPainterPath path;
+            path.moveTo( s[vdS].coordPtr->x(), -s[vdS].coordPtr->y() );
+            path.lineTo( s[vdT].coordPtr->x(), -s[vdT].coordPtr->y() );
 
-        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setPath( path );
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setPath( path );
 
-        _scene->addItem( itemptr );
-    }
+            _scene->addItem( itemptr );
+        }
 
     BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
-        GraphicsBallItem *itemptr = new GraphicsBallItem;
-        itemptr->fontSize() = _font_size;
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
-        itemptr->id() = s[vd].id;
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = s[vd].id;
 
-        //cerr << vertexCoord[vd];
-        _scene->addItem( itemptr );
-    }
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
 }
 
 void GraphicsView::_item_composite( void )
@@ -91,37 +91,37 @@ void GraphicsView::_item_composite( void )
     // draw edges
     BGL_FORALL_EDGES( ed, s, ForceGraph ) {
 
-        ForceGraph::vertex_descriptor vdS = source( ed, s );
-        ForceGraph::vertex_descriptor vdT = target( ed, s );
-        QPainterPath path;
-        path.moveTo( s[vdS].coordPtr->x(), -s[vdS].coordPtr->y() );
-        path.lineTo( s[vdT].coordPtr->x(), -s[vdT].coordPtr->y() );
+            ForceGraph::vertex_descriptor vdS = source( ed, s );
+            ForceGraph::vertex_descriptor vdT = target( ed, s );
+            QPainterPath path;
+            path.moveTo( s[vdS].coordPtr->x(), -s[vdS].coordPtr->y() );
+            path.lineTo( s[vdT].coordPtr->x(), -s[vdT].coordPtr->y() );
 
-        GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setPath( path );
-        itemptr->id() = s[ed].id;
-        itemptr->weight() = s[ed].weight;
-        // itemptr->textOn() = true;
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setPath( path );
+            itemptr->id() = s[ed].id;
+            itemptr->weight() = s[ed].weight;
+            // itemptr->textOn() = true;
 
-        _scene->addItem( itemptr );
-    }
+            _scene->addItem( itemptr );
+        }
 
     BGL_FORALL_VERTICES( vd, s, ForceGraph ) {
 
-        GraphicsBallItem *itemptr = new GraphicsBallItem;
-        itemptr->fontSize() = _font_size;
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-        itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
-        itemptr->id() = s[vd].id;
-        itemptr->text() = QString::fromStdString( to_string( s[vd].id ) );
-        itemptr->textOn() = true;
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = _font_size;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = s[vd].id;
+            itemptr->text() = QString::fromStdString( to_string( s[vd].id ) );
+            itemptr->textOn() = true;
 
-        //cerr << vertexCoord[vd];
-        _scene->addItem( itemptr );
-    }
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
 }
 
 void GraphicsView::_item_polygonComplex( void )
@@ -203,37 +203,37 @@ void GraphicsView::_item_boundary( void )
         // draw edges
         BGL_FORALL_EDGES( ed, g, BoundaryGraph ) {
 
-            BoundaryGraph::vertex_descriptor vdS = source( ed, g );
-            BoundaryGraph::vertex_descriptor vdT = target( ed, g );
-            QPainterPath path;
-            path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
-            path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
+                BoundaryGraph::vertex_descriptor vdS = source( ed, g );
+                BoundaryGraph::vertex_descriptor vdT = target( ed, g );
+                QPainterPath path;
+                path.moveTo( g[vdS].coordPtr->x(), -g[vdS].coordPtr->y() );
+                path.lineTo( g[vdT].coordPtr->x(), -g[vdT].coordPtr->y() );
 
-            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
-            itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
-            itemptr->setPath( path );
-            itemptr->id() = g[ed].id;
-            //itemptr->textOn() = true;
+                GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+                itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
+                itemptr->setPath( path );
+                itemptr->id() = g[ed].id;
+                //itemptr->textOn() = true;
 
-            _scene->addItem( itemptr );
-        }
+                _scene->addItem( itemptr );
+            }
 
         // draw vertices
         BGL_FORALL_VERTICES( vd, g, BoundaryGraph ) {
 
-            GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->fontSize() = _font_size;
-            itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
-            itemptr->id() = g[vd].id;
-            itemptr->text() = QString::fromStdString( to_string( g[vd].isFixed ) );
-            //itemptr->textOn() = true;
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = _font_size;
+                itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( g[vd].coordPtr->x(), -g[vd].coordPtr->y(), 10, 10 ) );
+                itemptr->id() = g[vd].id;
+                itemptr->text() = QString::fromStdString( to_string( g[vd].isFixed ) );
+                //itemptr->textOn() = true;
 
-            //cerr << vertexCoord[vd];
-            _scene->addItem( itemptr );
-        }
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
     }
 
 }
@@ -264,62 +264,62 @@ void GraphicsView::_item_subpathways( void )
             // draw edges
             BGL_FORALL_EDGES( ed, dg, ForceGraph ) {
 
-                ForceGraph::vertex_descriptor vdS = source( ed, dg );
-                ForceGraph::vertex_descriptor vdT = target( ed, dg );
+                    ForceGraph::vertex_descriptor vdS = source( ed, dg );
+                    ForceGraph::vertex_descriptor vdT = target( ed, dg );
 
-                QPainterPath path;
-                path.moveTo( dg[vdS].coordPtr->x(), -dg[vdS].coordPtr->y() );
-                path.lineTo( dg[vdT].coordPtr->x(), -dg[vdT].coordPtr->y() );
+                    QPainterPath path;
+                    path.moveTo( dg[vdS].coordPtr->x(), -dg[vdS].coordPtr->y() );
+                    path.lineTo( dg[vdT].coordPtr->x(), -dg[vdT].coordPtr->y() );
 
-                // add path
-                GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+                    // add path
+                    GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
-                itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
-                //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
-                itemptr->setPath( path );
-                _scene->addItem( itemptr );
-            }
+                    itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
+                    //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+                    itemptr->setPath( path );
+                    _scene->addItem( itemptr );
+                }
 
             // draw vertices
             BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
-                MetaboliteGraph::vertex_descriptor vdF = vertex( dg[vd].initID, subg[itC->second.groupID] );
+                    MetaboliteGraph::vertex_descriptor vdF = vertex( dg[vd].initID, subg[itC->second.groupID] );
 
-                MetaboliteGraph::vertex_descriptor initVD = vertex( subg[itC->second.groupID][vdF].initID, g );
+                    MetaboliteGraph::vertex_descriptor initVD = vertex( subg[itC->second.groupID][vdF].initID, g );
 #ifdef DEBUG
-                cerr << " itC->second.groupID = " << itC->second.groupID << " dg[vd].initID = " << dg[vd].initID
+                    cerr << " itC->second.groupID = " << itC->second.groupID << " dg[vd].initID = " << dg[vd].initID
                      << " subg[itC->second.groupID][vdF].initID = " << subg[itC->second.groupID][vdF].initID << endl;
 #endif // DEBUG
-                GraphicsVertexItem *itemptr = new GraphicsVertexItem;
-                itemptr->fontSize() = _font_size;
+                    GraphicsVertexItem *itemptr = new GraphicsVertexItem;
+                    itemptr->fontSize() = _font_size;
 
-                if( g[ initVD ].type == "reaction" ){
-                    itemptr->vtype() = TYPE_ONE;
-                    itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                    if( g[ initVD ].type == "reaction" ){
+                        itemptr->vtype() = TYPE_ONE;
+                        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                    }
+                    else if( g[ initVD ].type == "metabolite" ){
+                        itemptr->vtype() = TYPE_TWO;
+                        itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
+                    }
+
+
+                    if( *g[ initVD ].isSelectedPtr == true )
+                        itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
+                    else if( *g[ initVD ].isClonedPtr == true )
+                        itemptr->setBrush( QBrush( QColor( 72, 209, 204, 255 ), Qt::SolidPattern ) );
+                    else if( subg[itC->second.groupID][vdF].isAlias == true )
+                        itemptr->setBrush( QBrush( QColor( 255, 192, 203, 255 ), Qt::SolidPattern ) );
+                    else
+                        itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+
+                    itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
+                    itemptr->id() = dg[vd].id;
+                    //itemptr->name() = QString::fromStdString( to_string( dg[vd].id ) );
+                    itemptr->name() = QString::fromStdString( *g[ initVD ].namePtr );
+
+                    //cerr << vertexCoord[vd];
+                    _scene->addItem( itemptr );
                 }
-                else if( g[ initVD ].type == "metabolite" ){
-                    itemptr->vtype() = TYPE_TWO;
-                    itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
-                }
-
-
-                if( *g[ initVD ].isSelectedPtr == true )
-                    itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
-                else if( *g[ initVD ].isClonedPtr == true )
-                    itemptr->setBrush( QBrush( QColor( 72, 209, 204, 255 ), Qt::SolidPattern ) );
-                else if( subg[itC->second.groupID][vdF].isAlias == true )
-                    itemptr->setBrush( QBrush( QColor( 255, 192, 203, 255 ), Qt::SolidPattern ) );
-                else
-                    itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-
-                itemptr->setRect( QRectF( dg[vd].coordPtr->x(), -dg[vd].coordPtr->y(), 10, 10 ) );
-                itemptr->id() = dg[vd].id;
-                //itemptr->name() = QString::fromStdString( to_string( dg[vd].id ) );
-                itemptr->name() = QString::fromStdString( *g[ initVD ].namePtr );
-
-                //cerr << vertexCoord[vd];
-                _scene->addItem( itemptr );
-            }
         }
     }
 }
@@ -334,32 +334,118 @@ void GraphicsView::_item_pathways( void )
         // draw edges
         BGL_FORALL_EDGES( ed, lsubg[i], ForceGraph ) {
 
-            ForceGraph::vertex_descriptor vdS = source( ed, lsubg[i] );
-            ForceGraph::vertex_descriptor vdT = target( ed, lsubg[i] );
+                ForceGraph::vertex_descriptor vdS = source( ed, lsubg[i] );
+                ForceGraph::vertex_descriptor vdT = target( ed, lsubg[i] );
 
-            QPainterPath path;
-            path.moveTo( lsubg[i][vdS].coordPtr->x(), -lsubg[i][vdS].coordPtr->y() );
-            path.lineTo( lsubg[i][vdT].coordPtr->x(), -lsubg[i][vdT].coordPtr->y() );
+                QPainterPath path;
+                path.moveTo( lsubg[i][vdS].coordPtr->x(), -lsubg[i][vdS].coordPtr->y() );
+                path.lineTo( lsubg[i][vdT].coordPtr->x(), -lsubg[i][vdT].coordPtr->y() );
 
-            // add path
-            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+                // add path
+                GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
-            //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
-            itemptr->setPath( path );
-            _scene->addItem( itemptr );
-        }
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 125 ), 2 ) );
+                //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+                itemptr->setPath( path );
+                _scene->addItem( itemptr );
+            }
 
         // draw vertices
         BGL_FORALL_VERTICES( vd, lsubg[i], ForceGraph ) {
 
-            GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->fontSize() = _font_size;
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( lsubg[i][vd].coordPtr->x(), -lsubg[i][vd].coordPtr->y(), 10, 10 ) );
-            itemptr->id() = lsubg[i][vd].id;
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = _font_size;
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( lsubg[i][vd].coordPtr->x(), -lsubg[i][vd].coordPtr->y(), 10, 10 ) );
+                itemptr->id() = lsubg[i][vd].id;
 
+                _scene->addItem( itemptr );
+            }
+    }
+}
+
+void GraphicsView::_item_centers( void )
+{
+    vector< Bone > &centerVec      = _cellPtr->centerVec();
+
+    for( unsigned int i = 0; i < centerVec.size(); i++ ){
+
+        ForceGraph &cb = centerVec[i].bone();
+
+        // draw edges
+        BGL_FORALL_EDGES( ed, cb, ForceGraph ) {
+
+            ForceGraph::vertex_descriptor vdS = source( ed, cb );
+            ForceGraph::vertex_descriptor vdT = target( ed, cb );
+
+            QPainterPath path;
+            path.moveTo( cb[vdS].coordPtr->x(), -cb[vdS].coordPtr->y() );
+            path.lineTo( cb[vdT].coordPtr->x(), -cb[vdT].coordPtr->y() );
+
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+            itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 2 ) );
+            //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+            itemptr->setPath( path );
+
+            _scene->addItem( itemptr );
+        }
+
+        // draw vertices
+        BGL_FORALL_VERTICES( vd, cb, ForceGraph ) {
+
+            ForceGraph::degree_size_type degrees = out_degree( vd, cb );
+
+            GraphicsBallItem *itemptr = new GraphicsBallItem;
+            itemptr->fontSize() = 2*_font_size;
+            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
+            itemptr->setRect( QRectF( cb[vd].coordPtr->x(), -cb[vd].coordPtr->y(), 10, 10 ) );
+            itemptr->id() = cb[vd].id;
+            itemptr->text() = QString::fromStdString( to_string( cb[vd].id ) );
+            itemptr->textOn() = true;
+
+            //cerr << vertexCoord[vd];
+            _scene->addItem( itemptr );
+        }
+    }
+}
+
+void GraphicsView::_item_centerPolygons( void )
+{
+    vector< Bone > &centerVec      = _cellPtr->centerVec();
+
+    for( unsigned int i = 0; i < centerVec.size(); i++ ){
+
+        ForceGraph &cb = centerVec[i].bone();
+        vector< Seed > &seedVec = *(centerVec[i].forceBone().voronoi().seedVec());
+
+        for( unsigned int i = 0; i < seedVec.size(); i++ ){
+
+            Polygon2 &p = seedVec[i].cellPolygon;
+            // cerr << "p.elements().size() = " << p.elements().size() << endl;
+
+            QPolygonF polygon;
+            for( unsigned int j = 0; j < p.elements().size(); j++ ){
+                // cerr << "i = " << i << " x = " << p.elements()[j].x() << " y = " << p.elements()[j].y() << endl;
+                polygon.append( QPointF( p.elements()[j].x(), -p.elements()[j].y() ) );
+            }
+
+            GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
+            vector< double > rgb;
+            ForceGraph::vertex_descriptor vd = vertex( i, cb );
+
+            unsigned int gid = cb[vd].groupID;
+            pickBrewerColor( gid, rgb );
+            // cerr << rgb[0]*255 << ", " << rgb[1]*255 << ", " << rgb[2]*255 << endl;
+            QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+            itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
+            itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+            itemptr->setPolygon( polygon );
+
+            //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
         }
     }
@@ -376,39 +462,39 @@ void GraphicsView::_item_cells( void )
         // draw edges
         BGL_FORALL_EDGES( ed, cellVec[i].bone(), ForceGraph ) {
 
-            ForceGraph::vertex_descriptor vdS = source( ed, cellVec[i].bone() );
-            ForceGraph::vertex_descriptor vdT = target( ed, cellVec[i].bone() );
+                ForceGraph::vertex_descriptor vdS = source( ed, cellVec[i].bone() );
+                ForceGraph::vertex_descriptor vdT = target( ed, cellVec[i].bone() );
 
-            QPainterPath path;
-            path.moveTo( cellVec[i].bone()[vdS].coordPtr->x(), -cellVec[i].bone()[vdS].coordPtr->y() );
-            path.lineTo( cellVec[i].bone()[vdT].coordPtr->x(), -cellVec[i].bone()[vdT].coordPtr->y() );
+                QPainterPath path;
+                path.moveTo( cellVec[i].bone()[vdS].coordPtr->x(), -cellVec[i].bone()[vdS].coordPtr->y() );
+                path.lineTo( cellVec[i].bone()[vdT].coordPtr->x(), -cellVec[i].bone()[vdT].coordPtr->y() );
 
-            // add path
-            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+                // add path
+                GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
-            itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
-            //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
-            itemptr->setPath( path );
-            _scene->addItem( itemptr );
-        }
+                itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+                //itemptr->setPen( QPen( QColor( 0, 0, 0, 200 ), 2 ) );
+                itemptr->setPath( path );
+                _scene->addItem( itemptr );
+            }
 
         // draw vertices
         BGL_FORALL_VERTICES( vd, cellVec[i].bone(), ForceGraph ) {
 
-            ForceGraph::degree_size_type degrees = out_degree( vd, cellVec[i].bone() );
+                ForceGraph::degree_size_type degrees = out_degree( vd, cellVec[i].bone() );
 
-            GraphicsBallItem *itemptr = new GraphicsBallItem;
-            itemptr->fontSize() = 2*_font_size;
-            itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
-            itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
-            itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
-            itemptr->id() = cellVec[i].bone()[vd].id;
-            itemptr->text() = QString::fromStdString( to_string( cellVec[i].bone()[vd].id ) );
-            itemptr->textOn() = true;
+                GraphicsBallItem *itemptr = new GraphicsBallItem;
+                itemptr->fontSize() = 2*_font_size;
+                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                itemptr->setBrush( QBrush( QColor( 0, 0, 255, 255 ), Qt::SolidPattern ) );
+                itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
+                itemptr->id() = cellVec[i].bone()[vd].id;
+                itemptr->text() = QString::fromStdString( to_string( cellVec[i].bone()[vd].id ) );
+                itemptr->textOn() = true;
 
-            //cerr << vertexCoord[vd];
-            _scene->addItem( itemptr );
-        }
+                //cerr << vertexCoord[vd];
+                _scene->addItem( itemptr );
+            }
 
 #ifdef DEBUG
         // bounding box
@@ -440,17 +526,17 @@ void GraphicsView::_item_cells( void )
 
             BGL_FORALL_VERTICES( vd, b, BoundaryGraph ) {
 
-                GraphicsBallItem *itemptr = new GraphicsBallItem;
-                itemptr->fontSize() = _font_size;
-                //itemptr->setPen( Qt::NoPen );
-                itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
-                itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
-                itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
-                itemptr->id() = b[vd].id;
+                    GraphicsBallItem *itemptr = new GraphicsBallItem;
+                    itemptr->fontSize() = _font_size;
+                    //itemptr->setPen( Qt::NoPen );
+                    itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
+                    itemptr->setBrush( QBrush( QColor( 100, 0, 0, 255 ), Qt::SolidPattern ) );
+                    itemptr->setRect( QRectF( b[vd].centroidPtr->x(), -b[vd].centroidPtr->y(), 10, 10 ) );
+                    itemptr->id() = b[vd].id;
 
-                //cerr << vertexCoord[vd];
-                _scene->addItem( itemptr );
-            }
+                    //cerr << vertexCoord[vd];
+                    _scene->addItem( itemptr );
+                }
         }
     }
 
@@ -507,7 +593,7 @@ void GraphicsView::_item_cells( void )
 
 void GraphicsView::_item_interCellComponents( void )
 {
-    vector< Bone >                     &cellVec    = _cellPtr->cellVec();
+    vector< Bone >                     &centerVec    = _cellPtr->centerVec();
     //vector< ForceGraph >                     &cellGVec    = _cellPtr->forceCellGraphVec();
     // vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
@@ -521,6 +607,8 @@ void GraphicsView::_item_interCellComponents( void )
         unsigned int idT = itC->first.q();      // subsystem ID
         CellComponent &ccS = *itC->second.first;
         CellComponent &ccT = *itC->second.second;
+        ForceGraph::vertex_descriptor vdS = vertex( ccS.id, centerVec[idS].bone() );
+        ForceGraph::vertex_descriptor vdT = vertex( ccT.id, centerVec[idT].bone() );
 
 #ifdef DEBUG
         cerr << "idS = " << idS << " idT = " << idT << endl;
@@ -529,8 +617,8 @@ void GraphicsView::_item_interCellComponents( void )
 #endif // DEBUG
 
         QPainterPath path;
-        path.moveTo( cellVec[idS].bone()[ccS.cellgVec[0]].coordPtr->x(), -cellVec[idS].bone()[ccS.cellgVec[0]].coordPtr->y() );
-        path.lineTo( cellVec[idT].bone()[ccT.cellgVec[0]].coordPtr->x(), -cellVec[idT].bone()[ccT.cellgVec[0]].coordPtr->y() );
+        path.moveTo( centerVec[idS].bone()[ vdS ].coordPtr->x(), -centerVec[idS].bone()[ vdS ].coordPtr->y() );
+        path.lineTo( centerVec[idT].bone()[ vdT ].coordPtr->x(), -centerVec[idT].bone()[ vdT ].coordPtr->y() );
 
         GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
         itemptr->setPen( QPen( QColor( 255, 0, 0, 100 ), 3 ) );
@@ -541,6 +629,7 @@ void GraphicsView::_item_interCellComponents( void )
 
     }
 }
+
 
 void GraphicsView::_item_cellPolygons( void )
 {
@@ -670,7 +759,7 @@ void GraphicsView::_item_cellPolygonComplex( void )
     }
 }
 
-
+/*
 void GraphicsView::_item_mclPolygons( void )
 {
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
@@ -712,6 +801,7 @@ void GraphicsView::_item_mclPolygons( void )
         }
     }
 }
+*/
 
 void GraphicsView::_item_pathwayPolygons( void )
 {
@@ -1164,15 +1254,17 @@ void GraphicsView::initSceneItems ( void )
     if( _is_polygonFlag == true ) _item_polygons();
     if( _is_polygonComplexFlag == true ) _item_polygonComplex();
     if( _is_compositeFlag == true ) _item_composite();
-    if( _is_skeletonFlag == true ) _item_skeleton();
+    // if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
-    if( _is_cellFlag == true ) {
-        _item_cells();
+    if( _is_centerPolygonFlag == true ) _item_centerPolygons();
+    if( _is_centerFlag == true ) {
+        _item_centers();
         _item_interCellComponents();
     }
+    if( _is_cellFlag == true ) _item_cells();
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
     if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
-    if( _is_mclPolygonFlag == true ) _item_mclPolygons();
+    // if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_boundaryFlag == true ) _item_boundary();
     if( _is_roadFlag == true ) _item_road();        // cluster boundary
@@ -1182,7 +1274,7 @@ void GraphicsView::initSceneItems ( void )
     // cerr << "_scene.size = " << _scene->items().size() << endl;
 
 #ifdef DEBUG
-/*
+    /*
     vector< QPointF > test;
 
     test.push_back( QPointF(310.792,	-328.956 ) );
@@ -1306,7 +1398,7 @@ void GraphicsView::exportPNG ( double x, double y, double w, double h )
 
 
 GraphicsView::GraphicsView( QWidget *parent )
-    : QGraphicsView( parent )
+        : QGraphicsView( parent )
 {
 //----------------------------------------------------------
 // clear stored images
@@ -1392,7 +1484,7 @@ GraphicsView::GraphicsView( QWidget *parent )
     setAutoFillBackground( true );
     setBackgroundBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
 
-	_scene = new QGraphicsScene( this );
+    _scene = new QGraphicsScene( this );
     _scene->setSceneRect( -default_width/2.0, -default_height/2.0,
                           default_width, default_height );  // x, y, w, h
 
@@ -1408,13 +1500,16 @@ GraphicsView::GraphicsView( QWidget *parent )
     _is_cellPolygonComplexFlag = false;
     _is_roadFlag = false;
     _is_laneFlag = false;
-    _is_mclPolygonFlag = false;
+    //_is_mclPolygonFlag = false;
+    _is_centerFlag = false;
+    _is_centerPolygonFlag = false;
     _is_pathwayPolygonFlag = false;
     _is_pathwayPolygonFlag = false;
 
     //setHorizontalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );
     //setVerticalScrollBarPolicy ( Qt::ScrollBarAlwaysOn );
     //viewport()->scroll( 500, 500 );
+
     this->setScene( _scene );
 }
 

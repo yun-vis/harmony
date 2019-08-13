@@ -31,6 +31,7 @@ using namespace std;
 #include "optimization/Similarity.h"
 #include "optimization/Smooth.h"
 #include "optimization/Octilinear.h"
+#include "gv/GraphVizAPI.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -52,11 +53,10 @@ public:
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
     vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
 
-    Bone                                    mcl;
+    // Bone                                    mcl;
     Bone                                    detail;
 
     vector< ForceGraph::vertex_descriptor > polygonComplexVD; // vd of contour in the BoundaryGraph
-
     vector< vector< ForceGraph::vertex_descriptor > > metaboliteVec;   // mcl cluster vertex id
 };
 
@@ -66,6 +66,7 @@ private:
 
     double                                         *_veCoveragePtr;
     double                                         *_veRatioPtr;
+    vector< Bone >                                  _centerVec;
     vector< Bone >                                  _cellVec;
 
     vector< multimap< int, CellComponent > >        _cellComponentVec;              // int: number of nodes in lsubg
@@ -86,6 +87,7 @@ private:
     void _buildConnectedComponent( void );
     void _computeCellComponentSimilarity( void );
     void _buildInterCellComponents( void );
+    void _buildCenterGraphs( void );
     void _buildCellGraphs( void );
     int _computeMCLClusters( ForceGraph &dg );
     void _computeClusters( void );
@@ -111,8 +113,10 @@ public:
     unsigned int &              nComponent( void )          { return _nComponent; }
     const unsigned int &        nComponent( void ) const    { return _nComponent; }
 
-    vector< Bone > &            cellVec( void )        { return _cellVec; }
-    const vector< Bone > &      cellVec( void ) const  { return _cellVec; }
+    vector< Bone > &            centerVec( void )           { return _centerVec; }
+    const vector< Bone > &      centerVec( void ) const     { return _centerVec; }
+    vector< Bone > &            cellVec( void )             { return _cellVec; }
+    const vector< Bone > &      cellVec( void ) const       { return _cellVec; }
 
     vector< multimap< int, CellComponent > > &  cellComponentVec( void )                { return _cellComponentVec; }
     const vector< multimap< int, CellComponent > > &  cellComponentVec( void ) const    { return _cellComponentVec; }
@@ -130,13 +134,15 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void updateMCLCoords( void );
+    // void updateMCLCoords( void );
+    void updateCenterCoords( void );
     void updatePathwayCoords( void );
     void createPolygonComplex( void );
     void updatePolygonComplex( void );
     void createPolygonComplexFromDetailGraph( void );
     void updatePolygonComplexFromDetailGraph( void );
-    void additionalForces( void );
+    void additionalForcesMiddle( void );
+    void additionalForcesCenter( void );
 
 //------------------------------------------------------------------------------
 //  File I/O

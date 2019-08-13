@@ -29,7 +29,7 @@ void ThreadLevelMiddle::force( void )
             case TYPE_BARNES_HUT: {
                 _pathway->pathwayMutex().lock();
                 _cellPtr->cellVec()[_cellIndex].forceBone();
-                _cellPtr->additionalForces();
+                _cellPtr->additionalForcesMiddle();
                 err = _cellPtr->cellVec()[_cellIndex].forceBone().verletIntegreation();
                 _pathway->pathwayMutex().unlock();
                 cerr << "ThreadLevelMiddle::err (force) = " << err << endl;
@@ -43,7 +43,7 @@ void ThreadLevelMiddle::force( void )
             case TYPE_CENTROID: {
                 _pathway->pathwayMutex().lock();
                 _cellPtr->cellVec()[_cellIndex].forceBone().centroidGeometry();
-                _cellPtr->additionalForces();
+                _cellPtr->additionalForcesMiddle();
                 err = _cellPtr->cellVec()[_cellIndex].forceBone().gap();
                 _pathway->pathwayMutex().unlock();
                 //cerr << "WorkerLevelMiddle::err (centroid) = " << err << endl;
@@ -57,9 +57,9 @@ void ThreadLevelMiddle::force( void )
             case TYPE_HYBRID: {
                 _pathway->pathwayMutex().lock();
                 _cellPtr->cellVec()[_cellIndex].forceBone().force();
-                _cellPtr->additionalForces();
+                _cellPtr->additionalForcesMiddle();
                 int freq = VORONOI_FREQUENCE - MIN2(_count / 20, VORONOI_FREQUENCE - 1);
-                if (_count % freq == 0)
+                if (_count % freq == 0 )
                     _cellPtr->cellVec()[_cellIndex].forceBone().centroidGeometry();
                 err = _cellPtr->cellVec()[_cellIndex].forceBone().verletIntegreation();
                 _pathway->pathwayMutex().unlock();

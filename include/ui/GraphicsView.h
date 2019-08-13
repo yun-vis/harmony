@@ -73,8 +73,9 @@ private:
                         _is_boundaryFlag, _is_subPathwayFlag,
                         _is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
                         _is_roadFlag, _is_laneFlag,
-                        _is_mclPolygonFlag, _is_pathwayPolygonFlag,
-                        _is_pathwayPolygonContourFlag;
+                        // _is_mclPolygonFlag,
+                        _is_centerFlag, _is_centerPolygonFlag,
+                        _is_pathwayPolygonFlag, _is_pathwayPolygonContourFlag;
 
 protected:
 
@@ -85,6 +86,8 @@ protected:
     void _item_pathways( void );
     void _item_subpathways( void );
 
+    void _item_centers( void );
+    void _item_centerPolygons( void );
     void _item_cells( void );
     void _item_seeds( void );
     void _item_polygonComplex( void );
@@ -92,7 +95,7 @@ protected:
     void _item_cellPolygons( void );
     void _item_cellPolygonComplex( void );
     void _item_interCellComponents( void );
-    void _item_mclPolygons( void );
+    // void _item_mclPolygons( void );
     void _item_pathwayPolygons( void );
     void _item_road( void );
     void _item_lane( void );
@@ -139,8 +142,12 @@ public:
     const bool &    isBoundaryFlag( void ) const    { return _is_boundaryFlag; }
     bool &          isSubPathwayFlag( void )        { return _is_subPathwayFlag; }
     const bool &    isSubPathwayFlag( void ) const  { return _is_subPathwayFlag; }
-    bool &          isMCLPolygonFlag( void )        { return _is_mclPolygonFlag; }
-    const bool &    isMCLPolygonFlag( void ) const  { return _is_mclPolygonFlag; }
+    bool &          isCenterPolygonFlag( void )         { return _is_centerPolygonFlag; }
+    const bool &    isCenterPolygonFlag( void ) const   { return _is_centerPolygonFlag; }
+    bool &          isCenterFlag( void )            { return _is_centerFlag; }
+    const bool &    isCenterFlag( void ) const      { return _is_centerFlag; }
+    //bool &          isMCLPolygonFlag( void )        { return _is_mclPolygonFlag; }
+    //const bool &    isMCLPolygonFlag( void ) const  { return _is_mclPolygonFlag; }
     bool &          isPathwayPolygonFlag( void )        { return _is_pathwayPolygonFlag; }
     const bool &    isPathwayPolygonFlag( void ) const  { return _is_pathwayPolygonFlag; }
     bool &          isPathwayPolygonContourFlag( void )        { return _is_pathwayPolygonContourFlag; }

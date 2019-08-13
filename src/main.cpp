@@ -13,6 +13,7 @@ int main( int argc, char **argv )
 //----------------------------------------------------------
 // view
 //----------------------------------------------------------
+
     Window window;
     window.setWindowTitle( "qtBorder" );
     double w = window.width();
@@ -21,6 +22,7 @@ int main( int argc, char **argv )
     window.setPathwayData( &pathway, w, h );
     window.init();
     window.show();
+
 
     cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x" << endl;
 

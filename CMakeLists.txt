@@ -26,6 +26,7 @@ if (UNIX AND NOT APPLE)
 
   message(status "Setting G++ flags")
   #set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
+  set( GRAPHVIZ_PATH_DIR "/home/$ENV{USER}/MyLib/release/graphviz")
 
   # add the libraries you need below
   find_package(OpenGL REQUIRED)
@@ -56,12 +57,14 @@ include_directories(
         /usr/include/x86_64-linux-gnu
         ${CMAKE_SOURCE_DIR}/include
         ${QT5_PATH_DIR}/include
+        ${GRAPHVIZ_PATH_DIR}/include
 )
 link_directories(
         /opt/local/lib
         /usr/lib/x86_64-linux-gnu/
         ${CMAKE_SOURCE_DIR}/src
         ${QT5_PATH_DIR}/lib
+        ${GRAPHVIZ_PATH_DIR}/lib
 )
 
 
@@ -85,8 +88,8 @@ set(HEADERS
         include/base/ThreadBase.h
         include/base/ThreadOctilinearBoundary.h
         include/base/ThreadLevelHigh.h
+        include/base/ThreadLevelCenter.h
         include/base/ThreadLevelMiddle.h
-        include/base/ThreadLevelLow.h
         include/base/ThreadLevelDetailed.h
         include/base/Color.h
         include/base/Cell.h
@@ -138,6 +141,7 @@ set(HEADERS
         include/ui/GraphicsView.h
         include/ui/Window.h
         include/ui/Window.ui
+        include/gv/GraphVizAPI.h
         include/boost/create_dual_graph.hpp
     )
 set(SOURCES
@@ -153,8 +157,8 @@ set(SOURCES
         src/base/ThreadBase.cpp
         src/base/ThreadOctilinearBoundary.cpp
         src/base/ThreadLevelHigh.cpp
+        src/base/ThreadLevelCenter.cpp
         src/base/ThreadLevelMiddle.cpp
-        src/base/ThreadLevelLow.cpp
         src/base/ThreadLevelDetailed.cpp
         src/base/Color.cpp
         src/base/LevelHigh.cpp
@@ -207,6 +211,7 @@ set(SOURCES
         src/ui/GraphicsPolygonItem.cpp
         src/ui/GraphicsView.cpp
         src/ui/Window.cpp
+        src/gv/GraphVizAPI.cpp
         src/main.cpp
     )
 
@@ -228,7 +233,7 @@ set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/mo
 add_executable(qtborder ${SOURCES} ${MOC_SRCS} ${MOC_WINDOW} ${MOC_GRAPHICSVIEW})
 message("CMAKE_CXX_FLAGS" ${CMAKE_CXX_FLAGS})
 if (UNIX AND NOT APPLE)
-  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml CGAL gmp boost_thread boost_system boost_graph dl pthread GL GLU glut)
+  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml cgraph gvc CGAL gmp boost_thread boost_system boost_graph dl pthread GL GLU glut)
 elseif(APPLE)
   target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml boost_thread-mt boost_system-mt boost_graph-mt CGAL gmp dl)
 endif()

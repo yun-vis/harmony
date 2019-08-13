@@ -72,7 +72,7 @@ void ThreadLevelLow::force( void )
                 _pathway->pathwayMutex().lock();
                 itC->second.mcl.forceBone().force();
                 int freq = VORONOI_FREQUENCE - MIN2(_count / 20, VORONOI_FREQUENCE - 1);
-                if (_count % freq == 0)
+                if (_count % freq == 0 )
                     itC->second.mcl.forceBone().centroidGeometry();
                 err = itC->second.mcl.forceBone().verletIntegreation();
                 // cerr << "WorkerCell:: err (mcl force) = " << err << endl;

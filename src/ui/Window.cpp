@@ -186,6 +186,44 @@ void Window::threadBoundaryForce( void )
     //simulateKey( Qt::Key_2 );
 }
 
+void Window::threadCenterForce( void )
+{
+// initialization
+    ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
+
+    // cerr << "size = " << _cellPtr->cellVec().size() << endl;
+    vector< ThreadLevelCenter * > tlc;
+    tlc.resize( _cellPtr->centerVec().size() );
+
+    //for( unsigned int i = 0; i < 2; i++ ){
+    for( unsigned int i = 0; i < tlc.size(); i++ ){
+
+        // create a new thread
+        tlc[i] = new ThreadLevelCenter;
+
+        tlc[i]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        tlc[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
+                               _cellPtr, _roadPtr, _lanePtr );
+
+        tlc[i]->init( THREAD_CENTER, _gv->energyType(), i, 0 );
+        pool.push([]( int id, ThreadLevelCenter* t ){ t->run( id ); }, tlc[i] );
+    }
+
+    // rendering
+    while( pool.n_idle() != _gv->maxThread() ){
+
+        //cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        this_thread::sleep_for( chrono::milliseconds( 500 ) );
+        redrawAllScene();
+    }
+    // cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+
+    // clear the memory
+    for( unsigned int i = 0; i < _cellPtr->centerVec().size(); i++ ){
+        delete tlc[i];
+    }
+
+}
 
 void Window::threadCellForce( void )
 {
@@ -197,7 +235,7 @@ void Window::threadCellForce( void )
     tlm.resize( _cellPtr->cellVec().size() );
 
     //for( unsigned int i = 0; i < 2; i++ ){
-    for( unsigned int i = 0; i < _cellPtr->cellVec().size(); i++ ){
+    for( unsigned int i = 0; i < tlm.size(); i++ ){
 
         // create a new thread
         tlm[i] = new ThreadLevelMiddle;
@@ -229,7 +267,7 @@ void Window::threadCellForce( void )
     //simulateKey( Qt::Key_W );
 }
 
-
+/*
 void Window::threadBoneForce( void )
 {
     _gv->isCellPolygonFlag() = false;
@@ -296,13 +334,12 @@ void Window::threadBoneForce( void )
         }
     }
 }
-
+*/
 
 void Window::threadPathwayForce( void )
 {
     _gv->isCellPolygonComplexFlag() = false;
     _gv->isPathwayPolygonFlag() = true;
-    _gv->isMCLPolygonFlag() = false;
 
     // initialization
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
@@ -1636,22 +1673,20 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
-            //****************************************
+            //----------------------------------------
             // initialization
-            //****************************************
-            _gv->isCellPolygonFlag() = true;
-            _gv->isCellFlag() = true;
+            //----------------------------------------
+            _gv->isCenterPolygonFlag() = true;
+            _gv->isCenterFlag() = true;
 
-            // simulateKey( Qt::Key_E );
-
-            //****************************************
+            //----------------------------------------
             // optimization
-            //****************************************
-            threadCellForce();
+            //----------------------------------------
+            threadCenterForce();
 
-            //****************************************
+            //----------------------------------------
             // rendering
-            //****************************************
+            //----------------------------------------
             redrawAllScene();
             simulateKey( Qt::Key_E );
 
@@ -1659,28 +1694,26 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_W:
         {
-            //****************************************
+            //----------------------------------------
             // initialization
-            //****************************************
-            _gv->isCellPolygonFlag() = false;
-            _gv->isCellFlag() = false;
+            //----------------------------------------
+            _gv->isCenterPolygonFlag() = false;
+            _gv->isCenterFlag() = false;
+            _gv->isCellFlag() = true;
+            _gv->isCompositeFlag() = false;
+            _gv->isPolygonFlag() = false;
             _gv->isCellPolygonComplexFlag() = true;
-            simulateKey( Qt::Key_P );
+            // _gv->isBoundaryFlag() = false;
 
-            //****************************************
+            //----------------------------------------
             // optimization
-            //****************************************
-            // initialization and build the boundary
-            selectLevelMiddleBuildBoundary();
+            //----------------------------------------
+            // update initial center position
+            _cellPtr->updateCenterCoords();
 
-            _levelType = LEVEL_MIDDLE;
-            threadOctilinearBoundary();
-            simulateKey( Qt::Key_O );
-
-
-            //****************************************
+            //----------------------------------------
             // rendering
-            //****************************************
+            //----------------------------------------
             redrawAllScene();
             simulateKey( Qt::Key_E );
 
@@ -1696,41 +1729,55 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
-            //****************************************
+            //----------------------------------------
             // initialization
-            //****************************************
-            _gv->isCellPolygonFlag() = false;
-            _gv->isCellPolygonComplexFlag() = true;
-            _gv->isMCLPolygonFlag() = true;
-            _gv->isPathwayPolygonFlag() = false;
+            //----------------------------------------
+            _gv->isCellPolygonFlag() = true;
+            _gv->isCellFlag() = true;
 
-            //****************************************
+            // simulateKey( Qt::Key_E );
+
+            //----------------------------------------
             // optimization
-            //****************************************
-            threadBoneForce();
+            //----------------------------------------
+            threadCellForce();
 
-            //****************************************
+            //----------------------------------------
             // rendering
-            //****************************************
+            //----------------------------------------
             redrawAllScene();
+            simulateKey( Qt::Key_E );
 
             break;
         }
         case Qt::Key_S:
         {
-            //****************************************
+            //----------------------------------------
             // initialization
-            //****************************************
-            //simulateKey( Qt::Key_E );
-            _levelType = LEVEL_LOW;
-            _gv->isSubPathwayFlag() = true;
-            _cellPtr->updatePathwayCoords();
+            //----------------------------------------
+            _gv->isCellPolygonFlag() = false;
+            _gv->isCellFlag() = false;
+            _gv->isCellPolygonComplexFlag() = true;
+            _cellPtr->createPolygonComplex();
 
-            //****************************************
+            //----------------------------------------
+            // optimization
+            //----------------------------------------
+            // initialization and build the boundary
+            selectLevelMiddleBuildBoundary();
+
+            _levelType = LEVEL_MIDDLE;
+            threadOctilinearBoundary();
+            simulateKey( Qt::Key_O );
+
+            //----------------------------------------
             // rendering
-            //****************************************
+            //----------------------------------------
             redrawAllScene();
-            //simulateKey( Qt::Key_E );
+            simulateKey( Qt::Key_E );
+
+            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
 
             break;
         }
@@ -1741,45 +1788,48 @@ void Window::keyPressEvent( QKeyEvent *event )
             checkInCPUTime();
             cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
-            //****************************************
+            //----------------------------------------
             // initialization
-            //****************************************
+            //----------------------------------------
             _gv->isCellPolygonComplexFlag() = false;
             _gv->isPathwayPolygonFlag() = true;
-            _gv->isMCLPolygonFlag() = false;
+            //_gv->isMCLPolygonFlag() = false;
+            _gv->isSubPathwayFlag() = true;
+            _levelType = LEVEL_LOW;
+            _cellPtr->updatePathwayCoords();
 
-            //****************************************
+            //----------------------------------------
             // optimization
-            //****************************************
+            //----------------------------------------
             threadPathwayForce();
 
-            //****************************************
+            //----------------------------------------
             // rendering
-            //****************************************
+            //----------------------------------------
             redrawAllScene();
 
             break;
         }
         case Qt::Key_X:
         {
-            //****************************************
+            //----------------------------------------
             // initialization
-            //****************************************
+            //----------------------------------------
             // initialization and build the boundary
             selectLevelDetailBuildBoundary();
             _levelType = LEVEL_DETAIL;
 
-            //****************************************
+            //----------------------------------------
             // optimization
-            //****************************************
+            //----------------------------------------
             //threadOctilinearBoundary();
             //simulateKey( Qt::Key_E );
 
             simulateKey( Qt::Key_O );
 
-            //****************************************
+            //----------------------------------------
             // rendering
-            //****************************************
+            //----------------------------------------
             redrawAllScene();
 
             cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
@@ -1855,11 +1905,7 @@ void Window::keyPressEvent( QKeyEvent *event )
         }
         case Qt::Key_L:
         {
-            _gv->isCellFlag() = true;
-            _gv->isCompositeFlag() = false;
-            _gv->isPolygonFlag() = false;
-            _gv->isCellPolygonComplexFlag() = true;
-            // _gv->isBoundaryFlag() = false;
+            _gv->isCenterFlag() = true;
 
             // load setting
             _pathway->initLayout( _levelhighPtr->polygonComplex() );
@@ -1867,14 +1913,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             // initialize cell
             _cellPtr->clear();
             _cellPtr->init( &_gv->veCoverage(), &_gv->veRatio(), &_levelhighPtr->polygonComplex() );
-            break;
-        }
-        case Qt::Key_P:
-        {
-            _cellPtr->createPolygonComplex();
-            _cellPtr->updateMCLCoords();
 
-            redrawAllScene();
             break;
         }
         case Qt::Key_O:
@@ -2016,7 +2055,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->isCellFlag() = false;
             _gv->isCellPolygonFlag() = false;
             _gv->isCellPolygonComplexFlag() = false;
-            _gv->isMCLPolygonFlag() = false;
+            //_gv->isMCLPolygonFlag() = false;
             _gv->isRoadFlag() = true;
             _gv->isLaneFlag() = true;
             _gv->isSubPathwayFlag() = true;
@@ -2030,7 +2069,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "_gv->isCellFlag() = " << _gv->isCellFlag() << endl;
             cerr << "_gv->isCellPolygonFlag() = " << _gv->isCellPolygonFlag() << endl;
             cerr << "_gv->isCellPolygonComplexFlag() = " << _gv->isCellPolygonComplexFlag() << endl;
-            cerr << "_gv->isMCLPolygonFlag() = " << _gv->isMCLPolygonFlag() << endl;
+            //cerr << "_gv->isMCLPolygonFlag() = " << _gv->isMCLPolygonFlag() << endl;
             cerr << "_gv->isRoadFlag() = " << _gv->isRoadFlag() << endl;
             cerr << "_gv->isLaneFlag() = " << _gv->isLaneFlag() << endl;
             cerr << "_gv->isSubPathwayFlag() = " << _gv->isSubPathwayFlag() << endl;
@@ -2049,7 +2088,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->isCellFlag() = false;
             _gv->isCellPolygonFlag() = false;
             _gv->isCellPolygonComplexFlag() = false;
-            _gv->isMCLPolygonFlag() = false;
+            //_gv->isMCLPolygonFlag() = false;
             _gv->isRoadFlag() = true;
             _gv->isLaneFlag() = true;
             _gv->isSubPathwayFlag() = true;
@@ -2063,7 +2102,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             cerr << "_gv->isCellFlag() = " << _gv->isCellFlag() << endl;
             cerr << "_gv->isCellPolygonFlag() = " << _gv->isCellPolygonFlag() << endl;
             cerr << "_gv->isCellPolygonComplexFlag() = " << _gv->isCellPolygonComplexFlag() << endl;
-            cerr << "_gv->isMCLPolygonFlag() = " << _gv->isMCLPolygonFlag() << endl;
+            //cerr << "_gv->isMCLPolygonFlag() = " << _gv->isMCLPolygonFlag() << endl;
             cerr << "_gv->isRoadFlag() = " << _gv->isRoadFlag() << endl;
             cerr << "_gv->isLaneFlag() = " << _gv->isLaneFlag() << endl;
             cerr << "_gv->isSubPathwayFlag() = " << _gv->isSubPathwayFlag() << endl;

@@ -65,7 +65,7 @@ void ThreadLevelDetailed::force( void )
                 _pathway->pathwayMutex().lock();
                 itC->second.detail.forceBone().force();
                 int freq = VORONOI_FREQUENCE - MIN2( _count/20, VORONOI_FREQUENCE-1 );
-                if( _count % freq == 0 )
+                if( _count % freq == 0 && _count > 30 )
                     itC->second.detail.forceBone().centroidGeometry();
                 err = itC->second.detail.forceBone().verletIntegreation();
                 _pathway->pathwayMutex().unlock();
