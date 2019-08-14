@@ -381,7 +381,7 @@ void Window::threadPathwayForce( void )
             advance( itC, j );
             CellComponent &c = itC->second;
 
-            c.detail.forceBone().init( &c.detail.bone(), &c.contour, LEVEL_DETAIL, "../configs/pathway.conf" );
+            c.detail.forceBone().init( &c.detail.bone(), &c.contour.contour(), LEVEL_DETAIL, "../configs/pathway.conf" );
             c.detail.forceBone().id() = idC;
 
             cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
@@ -861,7 +861,7 @@ void Window::buildLevelMiddleBoundaryGraph( void )
         for( multimap< int, CellComponent >::iterator itC = cellComponent.begin();
              itC != cellComponent.end(); itC++ ){
 
-            Polygon2 &polygon = itC->second.contour;
+            Polygon2 &polygon = itC->second.contour.contour();
             vector< ForceGraph::vertex_descriptor > vdVec;
             unsigned int size = polygon.elements().size();
 
@@ -1311,8 +1311,8 @@ void Window::updateLevelMiddlePolygonComplex( void )
 
             vector< ForceGraph::vertex_descriptor > &polygonComplexVD = itC->second.polygonComplexVD;
             for( unsigned int j = 0; j < polygonComplexVD.size(); j++ ){
-                itC->second.contour.elements()[j].x() = bg[ polygonComplexVD[j] ].coordPtr->x();
-                itC->second.contour.elements()[j].y() = bg[ polygonComplexVD[j] ].coordPtr->y();
+                itC->second.contour.contour().elements()[j].x() = bg[ polygonComplexVD[j] ].coordPtr->x();
+                itC->second.contour.contour().elements()[j].y() = bg[ polygonComplexVD[j] ].coordPtr->y();
 
                 // cerr << "j = " << j << " " << itC->second.contour.elements()[j];
             }
@@ -1320,7 +1320,19 @@ void Window::updateLevelMiddlePolygonComplex( void )
     }
 
     // clean contour
-    _cellPtr->updatePolygonComplex();
+    _cellPtr->cleanPolygonComplex();
+
+    // compute curvy contour
+    vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
+    for( unsigned int k = 0; k < cellCVec.size(); k++ ){
+
+        multimap< int, CellComponent > &componentMap = cellCVec[k];
+        multimap< int, CellComponent >::iterator itC = componentMap.begin();
+        for( ; itC != componentMap.end(); itC++ ){
+
+            itC->second.contour.computeChaikinCurve( 5, 50 );
+        }
+    }
 }
 
 //
@@ -1393,7 +1405,7 @@ void Window::updateLevelDetailPolygonComplex( void )
 
             CellComponent &component = itC->second;
             unsigned int subsysID = component.groupID;
-            Polygon2 &c = component.contour;
+            Polygon2 &c = component.contour.contour();
 
             if( subsysID == 2 ) cerr << "testc0 = " << c << endl;
         }
@@ -1822,7 +1834,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // optimization
             //----------------------------------------
-            //threadOctilinearBoundary();
+            threadOctilinearBoundary();
             //simulateKey( Qt::Key_E );
 
             simulateKey( Qt::Key_O );
@@ -1842,6 +1854,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             _gv->isRoadFlag() = true;
             _gv->isPathwayPolygonFlag() = false;
             _gv->isLaneFlag() = true;
+            _gv->isCellPolygonComplexFlag() = true;
 
             // steiner tree
             steinertree();

@@ -703,10 +703,9 @@ void GraphicsView::_item_cellPolygons( void )
 }
 
 
-void GraphicsView::_item_cellPolygonComplex( void )
+void GraphicsView::_item_cellPolygonComplex( bool fineFlag )
 {
     vector< Bone > &cellVec      = _cellPtr->cellVec();
-    //vector< ForceGraph > &cellGVec    = _cellPtr->forceCellGraphVec();
     vector< multimap< int, CellComponent > > &cellCVec    = _cellPtr->cellComponentVec();
 
     for( unsigned int k = 0; k < cellCVec.size(); k++ ){
@@ -715,11 +714,13 @@ void GraphicsView::_item_cellPolygonComplex( void )
         multimap< int, CellComponent >::iterator itC = componentMap.begin();
         for( ; itC != componentMap.end(); itC++ ){
 
-            Polygon2 &c = itC->second.contour;
+            Polygon2 *c;
+            if( fineFlag == true ) c = &itC->second.contour.fineContour();
+            else c = &itC->second.contour.contour();
             QPolygonF polygon;
 
-            for( unsigned int j = 0; j < c.elements().size(); j++ ){
-                polygon.append( QPointF( c.elements()[j].x(), -c.elements()[j].y() ) );
+            for( unsigned int j = 0; j < c->elements().size(); j++ ){
+                polygon.append( QPointF( c->elements()[j].x(), -c->elements()[j].y() ) );
             }
 
             GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
@@ -857,7 +858,8 @@ void GraphicsView::_item_road( void )
     vector< MetaboliteGraph >   &subg       = _pathway->subG();
     UndirectedBaseGraph &road               = _roadPtr->road();
     vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
-    vector< vector< Coord2 > > & roadChaikinCurveVec = _roadPtr->roadChaikinCurve();
+    // vector< vector< Coord2 > > & roadChaikinCurveVec = _roadPtr->roadChaikinCurve();
+    vector< Contour2 > & subsysContour = _roadPtr->subsysContour();
 
 #ifdef SKIP
     // draw edges
@@ -910,14 +912,14 @@ void GraphicsView::_item_road( void )
 #endif // SKIP
 
     // draw background
-    for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
+    for( unsigned int i = 0; i < subsysContour.size(); i++ ){
 
-        vector< Coord2 > &p = roadChaikinCurveVec[i];
+        vector< Coord2 > &p = subsysContour[i].fineContour().elements();
 
         QPolygonF polygon;
         for( unsigned int k = 0; k < p.size(); k++ ){
 
-            cerr << "c = " << p[k];
+            // cerr << "c = " << p[k];
             polygon.append( QPointF( p[k].x(), -p[k].y() ) );
         }
 
@@ -929,16 +931,16 @@ void GraphicsView::_item_road( void )
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
 
         itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
-        itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
+        itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 50 ), Qt::SolidPattern ) );
 
         itemptr->setPolygon( polygon );
         _scene->addItem( itemptr );
     }
 
     // draw contour
-    for( unsigned int i = 0; i < roadChaikinCurveVec.size(); i++ ){
+    for( unsigned int i = 0; i < subsysContour.size(); i++ ){
 
-        vector< Coord2 > &p = roadChaikinCurveVec[i];
+        vector< Coord2 > &p = subsysContour[i].fineContour().elements();
 
         QPainterPath path;
         for( unsigned int k = 0; k < p.size(); k++ ){
@@ -1108,7 +1110,7 @@ void GraphicsView::_item_road( void )
     }
 #endif // SKIP
 
-    cerr << "end" << endl;
+    // cerr << "end" << endl;
 }
 
 void GraphicsView::_item_lane( void )
@@ -1263,7 +1265,12 @@ void GraphicsView::initSceneItems ( void )
     }
     if( _is_cellFlag == true ) _item_cells();
     if( _is_cellPolygonFlag == true ) _item_cellPolygons();
-    if( _is_cellPolygonComplexFlag == true ) _item_cellPolygonComplex();
+    if( _is_cellPolygonComplexFlag == true ) {
+        if( _is_laneFlag == true )
+            _item_cellPolygonComplex( true );
+        else
+            _item_cellPolygonComplex( false );
+    }
     // if( _is_mclPolygonFlag == true ) _item_mclPolygons();
     if( _is_pathwayPolygonFlag == true ) _item_pathwayPolygons();
     if( _is_boundaryFlag == true ) _item_boundary();

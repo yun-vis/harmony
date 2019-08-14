@@ -40,11 +40,14 @@ class Contour2 {
     unsigned int        _id;
     Polygon2            _contour;       // centroid of the elements
     vector< Polygon2 >  _polygons;      // coordinates of end points
+    Polygon2            _fineContour;   // curvy contour
 
     virtual void	    _init( unsigned int __id, vector< Polygon2 > __polygons );
     void                _clear( void );
 
-  public:
+    void                _initChaikinCurve( double unit );
+
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
@@ -79,6 +82,10 @@ class Contour2 {
     vector< Polygon2 > &	    polygons( void )	    { return _polygons; }
     const vector< Polygon2 > &	polygons( void ) const	{ return _polygons; }
 
+    // fine contour
+    Polygon2 &	                fineContour( void )	        { return _fineContour; }
+    const Polygon2 &	        fineContour( void ) const	{ return _fineContour; }
+
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
@@ -86,6 +93,7 @@ class Contour2 {
                               UndirectedBaseGraph::vertex_descriptor &target );
     void createContour( void );
     bool inContour( Coord2 &coord );
+    void computeChaikinCurve( int num, double unit );
 
 //------------------------------------------------------------------------------
 //	Intersection check

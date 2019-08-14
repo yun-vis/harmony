@@ -80,6 +80,7 @@ void Contour2::_init( unsigned int __id, vector< Polygon2 > __polygons )
 void Contour2::_clear( void )
 {
     _polygons.clear();
+    _fineContour.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -100,6 +101,7 @@ void Contour2::_clear( void )
 //
 Contour2::Contour2()
 {
+    _fineContour.clear();
 }
 
 //
@@ -360,6 +362,65 @@ void Contour2::createContour( void ) {
 bool Contour2::inContour( Coord2 &coord )
 {
     return _contour.inPolygon( coord );
+}
+
+void Contour2::_initChaikinCurve( double unit = 100 )
+{
+    // initialization
+    _fineContour.elements().clear();
+
+    // store initial the path
+    Polygon2 &contour = _contour;
+
+    cerr << "contour.elements().size() = " << contour.elements().size() << endl;
+    if( contour.elements().size() > 0 )
+        _fineContour.elements().push_back( contour.elements()[0] );
+    for( unsigned int j = 1; j <= contour.elements().size(); j++ ){
+
+        Coord2 diff = (contour.elements()[j%contour.elements().size()]-contour.elements()[j-1]);
+        // cerr << "dist = " << diff.norm() << endl;
+        if( diff.norm() > unit ) {
+
+            int num = floor( diff.norm()/unit );
+            double interval = diff.norm()/(double)num;
+
+            for( int k = 1; k < num; k++ ){
+                // cerr << "here" << endl;
+                Coord2 c = contour.elements()[j-1] + (double)k * interval * diff / diff.norm();
+                // cerr << "here " << c;
+                _fineContour.elements().push_back( c );
+            }
+        }
+        if( j < contour.elements().size() )
+            _fineContour.elements().push_back( contour.elements()[j] );
+    }
+}
+
+void Contour2::computeChaikinCurve( int num = 5, double unit = 100 )
+{
+    _initChaikinCurve( unit );
+
+    double interval = 4.0;
+    for( int k = 0; k < num; k++ ){
+
+        vector< Coord2 > core;
+        for( unsigned int j = 0; j < _fineContour.elements().size(); j++ ){
+            core.push_back( _fineContour.elements()[j] );
+        }
+
+        // compute Chaikin Curve
+        _fineContour.clear();
+        for( unsigned int j = 0; j < core.size(); j++ ){
+
+            Coord2 &p1 = core[j];
+            Coord2 &p2 = core[(j+1)%core.size()];
+            Coord2 q = (1.0-1.0/interval)*p1 + (1.0/interval)*p2;
+            Coord2 r = (1.0/interval)*p1 + (1.0-1.0/interval)*p2;
+
+            _fineContour.elements().push_back( q );
+            _fineContour.elements().push_back( r );
+        }
+    }
 }
 
 //------------------------------------------------------------------------------

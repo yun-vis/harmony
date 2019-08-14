@@ -235,7 +235,7 @@ message("CMAKE_CXX_FLAGS" ${CMAKE_CXX_FLAGS})
 if (UNIX AND NOT APPLE)
   target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml cgraph gvc CGAL gmp boost_thread boost_system boost_graph dl pthread GL GLU glut)
 elseif(APPLE)
-  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml boost_thread-mt boost_system-mt boost_graph-mt CGAL gmp dl)
+  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml cgraph gvc boost_thread-mt boost_system-mt boost_graph-mt CGAL gmp dl)
 endif()
 
 # qt stuff

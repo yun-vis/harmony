@@ -93,7 +93,7 @@ protected:
     void _item_polygonComplex( void );
     void _item_polygons( void );
     void _item_cellPolygons( void );
-    void _item_cellPolygonComplex( void );
+    void _item_cellPolygonComplex( bool fineFlag );
     void _item_interCellComponents( void );
     // void _item_mclPolygons( void );
     void _item_pathwayPolygons( void );

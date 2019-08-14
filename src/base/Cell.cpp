@@ -1361,13 +1361,13 @@ void Cell::createPolygonComplexFromDetailGraph( void )
 
                 contour.init( idC, pVec );
                 contour.createContour();
-                c.contour = contour.contour();
+                c.contour = contour;
             }
             else{
 
                 Polygon2 &p = (*f.voronoi().seedVec())[0].cellPolygon;
                 p.updateOrientation();;
-                c.contour = p;
+                c.contour.contour() = p;
             }
 
             idC++;
@@ -1391,11 +1391,10 @@ void Cell::updatePolygonComplexFromDetailGraph( void )
             ForceGraph &fg = itC->second.detail.bone();
 
             CellComponent &c = itC->second;
-            c.contour.cleanPolygon();
+            c.contour.contour().cleanPolygon();
             idC++;
         }
     }
-
     assert( idC == _nComponent );
 }
 
@@ -1424,14 +1423,14 @@ void Cell::createPolygonComplex( void )
                 }
                 contour.init( idC, pVec );
                 contour.createContour();
-                c.contour = contour.contour();
+                c.contour.contour() = contour.contour();
             }
             else{
                 // cerr << "csize = 1" << endl;
                 int id = fg[c.cellgVec[0]].id;
                 Polygon2 &p = (*f.voronoi().seedVec())[id].cellPolygon;
                 p.updateOrientation();;
-                c.contour = p;
+                c.contour.contour() = p;
             }
 
             idC++;
@@ -1441,7 +1440,7 @@ void Cell::createPolygonComplex( void )
     assert( idC == _nComponent );
 }
 
-void Cell::updatePolygonComplex( void )
+void Cell::cleanPolygonComplex( void )
 {
     unsigned int idC = 0;
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
@@ -1452,7 +1451,7 @@ void Cell::updatePolygonComplex( void )
         for( ; itC != componentMap.end(); itC++ ){
 
             CellComponent &c = itC->second;
-            c.contour.cleanPolygon();
+            c.contour.contour().cleanPolygon();
         }
     }
 }
@@ -1547,7 +1546,7 @@ void Cell::_computeClusters( void )
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
         for( ; itC != _cellComponentVec[i].end(); itC++ ){
 
-            Coord2 &avg = itC->second.contour.centroid();
+            Coord2 &avg = itC->second.contour.contour().centroid();
 
 #ifdef SKIP
             cerr << "avg = " << avg;
@@ -1730,7 +1729,7 @@ void Cell::updatePathwayCoords( void )
         for( ; itC != _cellComponentVec[i].end(); itC++ ){
 
             ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].bone() );
-            Coord2 &avg = itC->second.contour.centroid();
+            Coord2 &avg = itC->second.contour.contour().centroid();
             vector< Coord2 > coordVec;
             if( itC->second.metaboliteVec.size() > 1 ){
 

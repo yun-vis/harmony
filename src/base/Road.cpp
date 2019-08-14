@@ -935,7 +935,7 @@ void Road::_initRoad( Cell *cellPtr )
 
             CellComponent &component = itC->second;
             unsigned int subsysID = component.groupID;
-            Polygon2 &c = component.contour;
+            Polygon2 &c = component.contour.contour();
 
             if( subsysID == 2 ) cerr << "myc = " << c << endl;
             _contourVec[ subsysID ].polygons().push_back( c );
@@ -1016,49 +1016,6 @@ void Road::_clear( void )
 }
 
 //
-//  Road::_initRoadChaikinCurve -- init road Chaikin's curve
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void Road::_initRoadChaikinCurve( void )
-{
-    _roadChaikinCurve.clear();
-    _roadChaikinCurve.resize( _contourVec.size() );
-
-    double unit = 100.0;
-    // store initial the path
-    for( unsigned int i = 0; i < _contourVec.size(); i++ ){
-
-        Polygon2 &contour = _contourVec[i].contour();
-
-        _roadChaikinCurve[i].push_back( contour.elements()[0] );
-        for( unsigned int j = 1; j <= contour.elements().size(); j++ ){
-
-            Coord2 diff = (contour.elements()[j%contour.elements().size()]-contour.elements()[j-1]);
-            // cerr << "dist = " << diff.norm() << endl;
-            if( diff.norm() > unit ) {
-
-                int num = floor( diff.norm()/unit );
-                double interval = diff.norm()/(double)num;
-
-                for( int k = 1; k < num; k++ ){
-                    // cerr << "here" << endl;
-                    Coord2 c = contour.elements()[j-1] + (double)k * interval * diff / diff.norm();
-                    // cerr << "here " << c;
-                    _roadChaikinCurve[i].push_back( c );
-                }
-            }
-            if( j < contour.elements().size() )
-                _roadChaikinCurve[i].push_back( contour.elements()[j] );
-        }
-    }
-}
-
-//
 //  Road::_runRoadChaikinCurve -- run road Chaikin's curve
 //
 //  Inputs
@@ -1069,54 +1026,9 @@ void Road::_initRoadChaikinCurve( void )
 //
 void Road::_runRoadChaikinCurve( int num )
 {
-    // num = 1;
-    double interval = 4.0;
-
-    for( unsigned int i = 0; i < _roadChaikinCurve.size(); i++ ){
-
-#ifdef DEBUG
-        for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
-            cerr << _roadChaikinCurve[i][j];
-        }
-        cerr << endl;
-#endif // DEBUG
-
-        for( int k = 0; k < num; k++ ){
-
-            vector< Coord2 > core;
-            for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
-                core.push_back( _roadChaikinCurve[i][j] );
-            }
-
-            // compute Chaikin Curve
-            _roadChaikinCurve[i].clear();
-            for( unsigned int j = 0; j < core.size(); j++ ){
-
-                Coord2 &p1 = core[j];
-                Coord2 &p2 = core[(j+1)%core.size()];
-                Coord2 q = (1.0-1.0/interval)*p1 + (1.0/interval)*p2;
-                Coord2 r = (1.0/interval)*p1 + (1.0-1.0/interval)*p2;
-
-                _roadChaikinCurve[i].push_back( q );
-                _roadChaikinCurve[i].push_back( r );
-            }
-        }
-
-#ifdef DEBUG
-        cerr << "after:" << endl;
-        for( unsigned int j = 0; j < _roadChaikinCurve[i].size(); j++ ){
-            cerr << _roadChaikinCurve[i][j];
-        }
-        cerr << endl;
-#endif // DEBUG
-
+    for( unsigned int i = 0; i < _contourVec.size(); i++ ){
+        _contourVec[i].computeChaikinCurve( 5, 50 );
     }
-
-#ifdef DEBUG
-    for( unsigned int i = 0; i < _roadChaikinCurve.size(); i++ ) {
-        cerr << "i = " << i << ", " << _roadChaikinCurve[i].size() << endl;
-    }
-#endif // DEBUG
 }
 
 
@@ -1403,9 +1315,7 @@ void Road::buildRoad( void )
     }
 
     _findShortestPaths();
-
-    _initRoadChaikinCurve();
-    _runRoadChaikinCurve( 10 );
+    _runRoadChaikinCurve( 5 );
 
 #ifdef DEBUG
     for( unsigned int i = 0; i < nSystems; i++ ) {

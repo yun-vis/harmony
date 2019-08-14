@@ -92,9 +92,8 @@ private:
     void _initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec );
 
     // curve computation
-    void _initRoadChaikinCurve( void );
-    void _initLaneChaikinCurve( void );
     void _runRoadChaikinCurve( int num );
+    void _initLaneChaikinCurve( void );
     void _runLaneChaikinCurve( int num );
 
 protected:
@@ -126,8 +125,6 @@ public:
     vector< Contour2 > &        subsysContour( void )       { return _contourVec; }
     const vector< Contour2 > &  subsysContour( void ) const { return _contourVec; }
 
-    vector< vector< Coord2 > > &          roadChaikinCurve( void )        { return _roadChaikinCurve; }
-    const vector< vector< Coord2 > > &    roadChaikinCurve( void ) const  { return _roadChaikinCurve; }
     vector< Coord2 > &          laneChaikinCurve( void )        { return _laneChaikinCurve; }
     const vector< Coord2 > &    laneChaikinCurve( void ) const  { return _laneChaikinCurve; }
 

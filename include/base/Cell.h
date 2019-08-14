@@ -48,7 +48,7 @@ public:
     unsigned int                            groupID;    // subsystem id
     unsigned int                            nMCL;       // number of mcl clustering
 
-    Polygon2                                contour;    // contour of the cell component
+    Contour2                                contour;    // contour of the cell component
     double                                  multiple;   // multiple of cell unit
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
     vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
@@ -138,7 +138,7 @@ public:
     void updateCenterCoords( void );
     void updatePathwayCoords( void );
     void createPolygonComplex( void );
-    void updatePolygonComplex( void );
+    void cleanPolygonComplex( void );
     void createPolygonComplexFromDetailGraph( void );
     void updatePolygonComplexFromDetailGraph( void );
     void additionalForcesMiddle( void );
