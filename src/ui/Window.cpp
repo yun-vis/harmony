@@ -415,9 +415,9 @@ void Window::steinertree( void )
     BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
         if( g[ vd ].type == "metabolite" ){
             //if( *g[ vd ].namePtr == "Glucose" ){
+            if( *g[ vd ].namePtr == "coke[r]" ){
             //if( *g[ vd ].namePtr == "glu_L[c]" ){
-            //if( *g[ vd ].namePtr == "glu_L[c]" ){
-            if( *g[ vd ].namePtr == "Soy_Sauce" ){
+            //if( *g[ vd ].namePtr == "Soy_Sauce" ){
             //if( *g[ vd ].namePtr == "Sunflower_Oil" ){
                 *g[ vd ].isSelectedPtr = true;
             }
@@ -1284,6 +1284,7 @@ void Window::updateLevelHighPolygonComplex( void )
 
             // cerr << "i = " << i << " " << itC->second.elements()[i];
         }
+
         itC++;
     }
 }
@@ -1689,6 +1690,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // initialization
             //----------------------------------------
+            _gv->isPolygonComplexFlag() = false;
             _gv->isCenterPolygonFlag() = true;
             _gv->isCenterFlag() = true;
 
@@ -1710,6 +1712,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // initialization
             //----------------------------------------
+            _gv->isPolygonComplexFlag() = true;
             _gv->isCenterPolygonFlag() = false;
             _gv->isCenterFlag() = false;
             _gv->isCellFlag() = true;
@@ -1745,6 +1748,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // initialization
             //----------------------------------------
+            _gv->isPolygonComplexFlag() = false;
             _gv->isCellPolygonFlag() = true;
             _gv->isCellFlag() = true;
 
@@ -1835,7 +1839,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // optimization
             //----------------------------------------
-            //threadOctilinearBoundary();
+            threadOctilinearBoundary();
             simulateKey( Qt::Key_E );
 
             simulateKey( Qt::Key_O );
@@ -2005,6 +2009,8 @@ void Window::keyPressEvent( QKeyEvent *event )
             double x = sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / ratio );
             _content_width = ratio * x;
             _content_height = x;
+            // _content_width = ratio * x;
+            // _content_height = x;
 
 #ifdef DEBUG
             cerr << "veCoverage = " << _gv->veCoverage()

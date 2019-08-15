@@ -315,6 +315,8 @@ void LevelHigh::decomposeSkeleton( void )
 #endif // DEBUG
 
         vector< ForceGraph::edge_descriptor > removeEVec;
+        // double radius = 25.0; // tiny
+        double radius = 100.0;
 
         if( mag > 1 ){
 
@@ -340,8 +342,8 @@ void LevelHigh::decomposeSkeleton( void )
 
                 double cosTheta = 1.0 * cos( 2.0*M_PI*(double)i/(double)mag );
                 double sinTheta = 1.0 * sin( 2.0*M_PI*(double)i/(double)mag );
-                double x = origin.x() + 100*cosTheta;
-                double y = origin.y() + 100*sinTheta;
+                double x = origin.x() + radius*cosTheta;
+                double y = origin.y() + radius*sinTheta;
 
                 if( i == 0 ){
 

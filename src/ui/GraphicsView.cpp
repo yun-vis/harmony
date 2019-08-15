@@ -117,7 +117,7 @@ void GraphicsView::_item_composite( void )
             itemptr->setRect( QRectF( s[vd].coordPtr->x(), -s[vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = s[vd].id;
             itemptr->text() = QString::fromStdString( to_string( s[vd].id ) );
-            itemptr->textOn() = true;
+            //itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
@@ -405,7 +405,7 @@ void GraphicsView::_item_centers( void )
             itemptr->setRect( QRectF( cb[vd].coordPtr->x(), -cb[vd].coordPtr->y(), 10, 10 ) );
             itemptr->id() = cb[vd].id;
             itemptr->text() = QString::fromStdString( to_string( cb[vd].id ) );
-            itemptr->textOn() = true;
+            //itemptr->textOn() = true;
 
             //cerr << vertexCoord[vd];
             _scene->addItem( itemptr );
@@ -490,7 +490,7 @@ void GraphicsView::_item_cells( void )
                 itemptr->setRect( QRectF( cellVec[i].bone()[vd].coordPtr->x(), -cellVec[i].bone()[vd].coordPtr->y(), 10, 10 ) );
                 itemptr->id() = cellVec[i].bone()[vd].id;
                 itemptr->text() = QString::fromStdString( to_string( cellVec[i].bone()[vd].id ) );
-                itemptr->textOn() = true;
+                //itemptr->textOn() = true;
 
                 //cerr << vertexCoord[vd];
                 _scene->addItem( itemptr );
@@ -715,6 +715,7 @@ void GraphicsView::_item_cellPolygonComplex( bool fineFlag )
         for( ; itC != componentMap.end(); itC++ ){
 
             Polygon2 *c;
+            //if( fineFlag == true ) c = &itC->second.contour.contour();
             if( fineFlag == true ) c = &itC->second.contour.fineContour();
             else c = &itC->second.contour.contour();
             QPolygonF polygon;
@@ -732,7 +733,8 @@ void GraphicsView::_item_cellPolygonComplex( bool fineFlag )
                 unsigned int gid = cellVec[k].bone()[vd].groupID;
                 pickBrewerColor( gid, rgb );
                 QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 8 ) );
+                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 6 ) );
+                //itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 8 ) );
                 itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
                 itemptr->setPolygon( polygon );
                 //itemptr->id() = cellVec[k].bone()[vd].id;
@@ -914,6 +916,7 @@ void GraphicsView::_item_road( void )
     // draw background
     for( unsigned int i = 0; i < subsysContour.size(); i++ ){
 
+        //vector< Coord2 > &p = subsysContour[i].contour().elements();
         vector< Coord2 > &p = subsysContour[i].fineContour().elements();
 
         QPolygonF polygon;
@@ -940,6 +943,7 @@ void GraphicsView::_item_road( void )
     // draw contour
     for( unsigned int i = 0; i < subsysContour.size(); i++ ){
 
+        //vector< Coord2 > &p = subsysContour[i].contour().elements();
         vector< Coord2 > &p = subsysContour[i].fineContour().elements();
 
         QPainterPath path;
@@ -958,7 +962,7 @@ void GraphicsView::_item_road( void )
         GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
         //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
-        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 6 ) );
+        itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 8 ) );
         itemptr->setPath( path );
         _scene->addItem( itemptr );
     }
@@ -1258,6 +1262,7 @@ void GraphicsView::_item_lane( void )
             Line2 &line = paths[j];
 
             QPainterPath path;
+            //vector< Coord2 > &samples = line.samples();
             vector< Coord2 > &samples = line.fineSamples();
 
             for( unsigned int k = 0; k < samples.size(); k++ ){
@@ -1312,7 +1317,7 @@ void GraphicsView::initSceneItems ( void )
     if( _is_polygonFlag == true ) _item_polygons();
     if( _is_polygonComplexFlag == true ) _item_polygonComplex();
     if( _is_compositeFlag == true ) _item_composite();
-    // if( _is_skeletonFlag == true ) _item_skeleton();
+    if( _is_skeletonFlag == true ) _item_skeleton();
     // if( _is_polygonFlag == true ) _item_seeds();
     if( _is_centerPolygonFlag == true ) _item_centerPolygons();
     if( _is_centerFlag == true ) {
