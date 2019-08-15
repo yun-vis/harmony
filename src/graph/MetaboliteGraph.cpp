@@ -28,7 +28,7 @@
 //  Outputs
 //  none
 //
-void printGraph( MetaboliteGraph & graph )
+void printGraph( const MetaboliteGraph & graph )
 {
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;

@@ -22,7 +22,7 @@ void ThreadLevelHigh::force( void )
     cerr << "epsilon = " << _levelhighPtr->forceBone().finalEpsilon() << endl;
 
     double err = INFINITY;
-    while( ( err > _levelhighPtr->forceBone().finalEpsilon() ) && ( _count < 120 ) ) {
+    while( ( err > _levelhighPtr->forceBone().finalEpsilon() ) && ( _count < 200 ) ) {
 
         switch (_levelhighPtr->forceBone().mode()) {
 
@@ -57,7 +57,7 @@ void ThreadLevelHigh::force( void )
                 _pathway->pathwayMutex().lock();
                 _levelhighPtr->forceBone().force();
                 int freq = VORONOI_FREQUENCE - MIN2(_count / 20, VORONOI_FREQUENCE - 1);
-                if (_count % freq == 0)
+                if (_count % freq == 0 && _count > 50 )
                     _levelhighPtr->forceBone().centroidGeometry();
                 err = _levelhighPtr->forceBone().verletIntegreation();
                 _pathway->pathwayMutex().unlock();

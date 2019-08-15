@@ -52,7 +52,7 @@ void geodesicAssignment( SkeletonGraph & graph );
 unsigned int zoneAssignment( SkeletonGraph & graph );
 void radialPlacement( SkeletonGraph & graph, int width, int height );
 
-void printGraph( SkeletonGraph & graph );
+void printGraph( const SkeletonGraph & graph );
 void clearGraph( SkeletonGraph & graph );
 
 #endif  // _SkeletonGraph_H

@@ -50,7 +50,7 @@ void resetVisitedTimes( BoundaryGraph & graph )
 //  Outputs
 //  none
 //
-void printGraph( BoundaryGraph & graph )
+void printGraph( const BoundaryGraph & graph )
 {
     cerr << "Printing BoundaryGraph..." << endl;
     cerr << "num_vertices = " << num_vertices( graph ) << endl;

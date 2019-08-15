@@ -33,7 +33,7 @@
 //  Outputs
 //  none
 //
-void printGraph( UndirectedBaseGraph & graph )
+void printGraph( const UndirectedBaseGraph & graph )
 {
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;
@@ -43,7 +43,8 @@ void printGraph( UndirectedBaseGraph & graph )
     BGL_FORALL_VERTICES( vd, graph, UndirectedBaseGraph ) {
 
         //UndirectedBaseGraph::degree_size_type      degrees         = out_degree( vd, graph );
-		cerr << " id = " << graph[vd].id << " coord = " << *graph[ vd ].coordPtr;
+		cerr << " id = " << graph[vd].id << " initID = " << graph[vd].initID
+		     << " coord = " << *graph[ vd ].coordPtr;
     }
 //#endif  // DEBUG
 

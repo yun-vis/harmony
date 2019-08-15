@@ -732,7 +732,7 @@ void GraphicsView::_item_cellPolygonComplex( bool fineFlag )
                 unsigned int gid = cellVec[k].bone()[vd].groupID;
                 pickBrewerColor( gid, rgb );
                 QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
-                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 4 ) );
+                itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 8 ) );
                 itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
                 itemptr->setPolygon( polygon );
                 //itemptr->id() = cellVec[k].bone()[vd].id;
@@ -1219,6 +1219,7 @@ void GraphicsView::_item_lane( void )
     }
 #endif // SKIP
 
+#ifdef SKIP
     // draw lane Chaikin curve
     for( unsigned int i = 0; i < lane.size(); i++ ){
 
@@ -1242,6 +1243,61 @@ void GraphicsView::_item_lane( void )
         itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
         itemptr->setPath( path );
         _scene->addItem( itemptr );
+    }
+#endif // SKIP
+
+    // draw steinter tree
+    for( unsigned int i = 0; i < lane.size(); i++ ) {
+
+        vector< Line2 > &paths = lane[i].curvytree().paths();
+        UndirectedBaseGraph &tree = lane[i].curvytree().tree();
+
+        // draw the paths
+        for( unsigned int j = 0; j < paths.size(); j++ ){
+
+            Line2 &line = paths[j];
+
+            QPainterPath path;
+            vector< Coord2 > &samples = line.fineSamples();
+
+            for( unsigned int k = 0; k < samples.size(); k++ ){
+
+                Coord2 &coord = samples[k];
+                if( k == 0 ) path.moveTo( coord.x(), -coord.y() );
+                else path.lineTo( coord.x(), -coord.y() );
+            }
+
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+            //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+            itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
+            itemptr->setPath( path );
+            _scene->addItem( itemptr );
+        }
+
+#ifdef SKIP
+        // draw the tree
+        BGL_FORALL_EDGES( ed, tree, UndirectedBaseGraph ) {
+
+            UndirectedBaseGraph::vertex_descriptor vdS = source( ed, tree );
+            UndirectedBaseGraph::vertex_descriptor vdT = target( ed, tree );
+
+            QPainterPath path;
+            Coord2 &coordS = *tree[ vdS ].coordPtr;
+            Coord2 &coordT = *tree[ vdT ].coordPtr;
+            path.moveTo( coordS.x(), -coordS.y() );
+            path.lineTo( coordT.x(), -coordT.y() );
+
+            // add path
+            GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+
+            //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
+            itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
+            itemptr->setPath( path );
+            _scene->addItem( itemptr );
+        }
+#endif // SKIP
     }
 }
 

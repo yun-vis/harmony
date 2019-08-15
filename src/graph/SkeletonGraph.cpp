@@ -245,7 +245,7 @@ unsigned int zoneAssignment( SkeletonGraph & graph )
 //  Outputs
 //  none
 //
-void printGraph( SkeletonGraph & graph )
+void printGraph( const SkeletonGraph & graph )
 {
 	cerr << " SkeletonGraph( G ).nVertices = " << num_vertices( graph ) << endl;
 	cerr << " SkeletonGraph( G ).nEdges = " << num_edges( graph ) << endl;

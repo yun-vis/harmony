@@ -55,7 +55,7 @@ typedef vector< PointDifference > DifferenceVec;
 //------------------------------------------------------------------------------
 void randomGraphLayout( DirectedBaseGraph & graph, double width, double height );
 void fruchtermanGraphLayout( DirectedBaseGraph & graph, double width, double height );
-void printGraph( DirectedBaseGraph & g );
+void printGraph( const  DirectedBaseGraph & g );
 void clearGraph( DirectedBaseGraph & g );
 
 #endif  // _DirectedBaseGraph_H

@@ -372,7 +372,7 @@ void Contour2::_initChaikinCurve( double unit = 100 )
     // store initial the path
     Polygon2 &contour = _contour;
 
-    cerr << "contour.elements().size() = " << contour.elements().size() << endl;
+    // cerr << "contour.elements().size() = " << contour.elements().size() << endl;
     if( contour.elements().size() > 0 )
         _fineContour.elements().push_back( contour.elements()[0] );
     for( unsigned int j = 1; j <= contour.elements().size(); j++ ){

@@ -42,7 +42,7 @@ typedef adjacency_list< listS, listS, undirectedS,
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( TreeGraph & g );
+void printGraph( const TreeGraph & g );
 void clearGraph( TreeGraph & g );
 
 #endif  // _TreeGraph_H

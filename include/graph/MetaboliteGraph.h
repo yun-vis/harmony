@@ -35,7 +35,7 @@ using namespace boost;
 typedef adjacency_list< listS, listS, bidirectionalS,
 			            MetaboliteVertexProperty, MetaboliteEdgeProperty, BaseGraphProperty >  MetaboliteGraph;
 
-void printGraph( MetaboliteGraph & graph );
+void printGraph( const MetaboliteGraph & graph );
 void clearGraph( MetaboliteGraph & graph );
 
 #endif  // _MetaboliteGraph_H

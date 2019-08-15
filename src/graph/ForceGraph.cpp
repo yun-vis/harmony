@@ -33,7 +33,7 @@
 //  Outputs
 //  none
 //
-void printGraph( ForceGraph & graph )
+void printGraph( const ForceGraph & graph )
 {
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;

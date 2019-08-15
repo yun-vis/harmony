@@ -30,6 +30,23 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Protected functions
 //------------------------------------------------------------------------------
+bool Road::_findVertexInTree( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target )
+{
+    UndirectedBaseGraph & g = _curvytree.tree();
+
+    bool isFound = false;
+    BGL_FORALL_VERTICES( vd, g, UndirectedBaseGraph )
+    {
+        if( ( coord - *g[vd].coordPtr ).norm() < 1e-2 ){
+            target = vd;
+            isFound = true;
+        }
+    }
+
+    //cerr << "isFound = " << isFound << endl;
+    return isFound;
+}
+
 bool Road::_findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target )
 {
     bool isFound = false;
@@ -1079,7 +1096,7 @@ void Road::_initLaneChaikinCurve( void )
         Coord2 & coordF = path[ 0 ];
         Coord2 & coordB = path[ path.size()-1 ];
 
-        // cerr << " coordF = " << coordF << " coordB = " << coordB << endl;
+        cerr << " coordF = " << coordF << " coordB = " << coordB << endl;
         map< int, pair< Coord2, Coord2 > >::iterator itF = pathmap.end(), itB = pathmap.end();
         for( itM = pathmap.begin(); itM != pathmap.end(); itM++ ){
 
@@ -1115,12 +1132,12 @@ void Road::_initLaneChaikinCurve( void )
         _laneChaikinCurve.push_back( path[i] );
     }
 
-#ifdef DEBUG
+//#ifdef DEBUG
     for( unsigned int i = 0; i < path.size(); i++ ){
 
         cout << path[i];
     }
-#endif // DEBUG
+//#endif // DEBUG
 
 }
 
@@ -1372,23 +1389,72 @@ void Road::steinerTree( void )
     //cerr << endl;
 
     //printGraph( _road );
-    cerr << "nV = " << num_vertices( _road ) << " nE = " << num_vertices( _road ) << endl;
+    //cerr << "nV = " << num_vertices( _road ) << " nE = " << num_vertices( _road ) << endl;
     vector< pair< unsigned int, unsigned int > > treeedges;
     steinertree( num_vertices( _road ), num_edges( _road ), graph, terminals, treeedges );
 
-    //cerr << "treeedges:" << endl;
+    cerr << "treeedges:" << endl;
     for( unsigned int j = 0; j < treeedges.size(); j++ ){
-        //cerr << treeedges[j].first << "," << treeedges[j].second << endl;
+        cerr << treeedges[j].first << "," << treeedges[j].second << endl;
         UndirectedBaseGraph::vertex_descriptor vdS = vertex( treeedges[j].first, _road );
         UndirectedBaseGraph::vertex_descriptor vdT = vertex( treeedges[j].second, _road );
         _treeEdgeVec.push_back( pair< UndirectedBaseGraph::vertex_descriptor,
                 UndirectedBaseGraph::vertex_descriptor >( vdS, vdT ) );
     }
-    //cerr << endl;
+    cerr << endl;
 
     // compute lane Chaikin curve
-    _initLaneChaikinCurve();
-    _runLaneChaikinCurve( 10 );
+    // _initLaneChaikinCurve();
+    // _runLaneChaikinCurve( 5 );
+
+    // compute the curvy tree
+    unsigned int nVertices = 0, nEdges = 0;
+    UndirectedBaseGraph & tree = _curvytree.tree();
+    for( unsigned int i = 0; i < _treeEdgeVec.size(); i++ ){
+
+        // add vertices
+        UndirectedBaseGraph::vertex_descriptor vdS, vdT;
+        for( unsigned int j = 0; j < 2; j++ ){
+
+            UndirectedBaseGraph::vertex_descriptor vd;
+            if( j == 0 ) vd = _treeEdgeVec[i].first;
+            else vd = _treeEdgeVec[i].second;
+
+            UndirectedBaseGraph::vertex_descriptor vdNew;
+            Coord2 &coord = *_road[ vd ].coordPtr;
+            bool isFound = _findVertexInTree( coord, vdNew );
+
+            if( isFound == false ){
+
+                vdNew = add_vertex( tree );
+                tree[ vdNew ].id = nVertices;
+                tree[ vdNew ].initID = _road[ vd ].id;      // record road ID
+                tree[ vdNew ].coordPtr = &coord;
+
+                nVertices++;
+            }
+
+            if( j == 0 ) vdS = vdNew;
+            else vdT = vdNew;
+        }
+
+        // add edges
+        bool found = false;
+        UndirectedBaseGraph::edge_descriptor oldED;
+        tie( oldED, found ) = edge( vdS, vdT, tree );
+        if( found == false ) {
+
+            pair< UndirectedBaseGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, tree );
+            UndirectedBaseGraph::edge_descriptor foreED = foreE.first;
+            tree[ foreED ].id = nEdges;
+            tree[ foreED ].weight = 1.0;
+
+            nEdges++;
+        }
+    }
+
+    printGraph( tree );
+    _curvytree.computeFineCurve( 5, 100 );
 
 }
 

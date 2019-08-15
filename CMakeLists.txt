@@ -100,6 +100,7 @@ set(HEADERS
         include/base/PathwayData.h
         include/base/RegionData.h
         include/base/Package.h
+        include/base/CurvyTree.h
         include/graph/TreeEdgeProperty.h
         include/graph/TreeGraph.h
         include/graph/TreeGraphProperty.h
@@ -170,6 +171,7 @@ set(SOURCES
         src/base/PathwayData.cpp
         src/base/RegionData.cpp
         src/base/Package.cpp
+        src/base/CurvyTree.cpp
         src/graph/TreeEdgeProperty.cpp
         src/graph/TreeGraph.cpp
         src/graph/TreeGraphProperty.cpp

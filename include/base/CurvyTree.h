@@ -1,6 +1,6 @@
 //******************************************************************************
-// Line2.h
-//	: header file for 2D Line2 coordinates
+// CurvyTree.h
+//	: header file for 2D CurvyTree coordinates
 //
 //------------------------------------------------------------------------------
 //
@@ -8,8 +8,8 @@
 //
 //******************************************************************************
 
-#ifndef	_Line2_H
-#define _Line2_H
+#ifndef	_CurvyTree_H
+#define _CurvyTree_H
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -20,7 +20,8 @@
 
 using namespace std;
 
-#include "Coord2.h"
+#include "base/Line2.h"
+#include "graph/UndirectedBaseGraph.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -31,26 +32,28 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class Line2 {
+class CurvyTree {
 
   protected:
 
-    vector< Coord2 >	_samples;	    // Line2 sample points
-    vector< Coord2 >	_fineSamples;	// Line2 curve sample points
+    UndirectedBaseGraph _tree;
 
-    virtual void	    _init( void );	// initialize all coordinates to zero
-    void _initChaikinCurve( double unit );
+    vector< Line2 >	    _paths;	    // steinter tree paths
 
-  public:
+    virtual void	    _init( void );	// initialization
+
+    bool _isKeyOnPath( vector< UndirectedBaseGraph::vertex_descriptor > &pathVec,
+                       vector< UndirectedBaseGraph::vertex_descriptor > &keyVec );
+    void _pathPartition( void );
+
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    Line2();				// constructor (default)
-    Line2( const Line2 & v ) {
-    	_samples	= v._samples;
-	}					// copy constructor
-    virtual ~Line2() {}	// destructor
+    CurvyTree();				        // constructor (default)
+    CurvyTree( const CurvyTree & v );   // copy constructor
+    virtual ~CurvyTree();	            // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -61,19 +64,16 @@ class Line2 {
 //------------------------------------------------------------------------------
     void		init( void )		{ _init(); }
 
-    vector< Coord2> &	        samples( void ) 	    { return _samples; }
-    const vector< Coord2 > &	samples( void ) const	{ return _samples; }
+    UndirectedBaseGraph &	    tree( void ) 	        { return _tree; }
+    const UndirectedBaseGraph &	tree( void ) const	    { return _tree; }
 
-    vector< Coord2> &	        fineSamples( void ) 	    { return _fineSamples; }
-    const vector< Coord2 > &	fineSamples( void ) const	{ return _fineSamples; }
+    vector< Line2 > &	        paths( void ) 	        { return _paths; }
+    const vector< Line2 > &	    paths( void ) const	    { return _paths; }
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-    void        addSample( Coord2 & coord );
-    static bool isOnLine( Coord2 &a, Coord2 &b, Coord2 &c );
-
-    void computeChaikinCurve( int num, double unit );
+    void computeFineCurve( int num, double unit );
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -88,13 +88,13 @@ class Line2 {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const Line2 & v );
+    friend ostream &	operator << ( ostream & s, const CurvyTree & v );
 				// Output
-    friend istream &	operator >> ( istream & s, Line2 & v );
+    friend istream &	operator >> ( istream & s, CurvyTree & v );
 				// Input
-    virtual const char * className( void ) const { return "Line2"; }
+    virtual const char * className( void ) const { return "CurvyTree"; }
 				// Class name
 };
 
 
-#endif // _Line2_H
+#endif // _CurvyTree_H

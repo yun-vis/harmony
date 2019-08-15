@@ -33,7 +33,7 @@
 //  Outputs
 //  none
 //
-void printGraph( TreeGraph & graph )
+void printGraph( const TreeGraph & graph )
 {
     cerr << "num_vertices = " << num_vertices( graph ) << endl;
     cerr << "num_edges = " << num_edges( graph ) << endl;

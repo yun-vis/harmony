@@ -42,7 +42,7 @@ typedef adjacency_list< listS, listS, undirectedS,
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( ForceGraph & g );
+void printGraph( const ForceGraph & g );
 void clearGraph( ForceGraph & g );
 
 #endif  // _ForceGraph_H

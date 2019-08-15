@@ -19,6 +19,7 @@ using namespace std;
 
 #include "base/PathwayData.h"
 #include "base/Cell.h"
+#include "base/CurvyTree.h"
 #include "optimization/Force.h"
 #include "graph/UndirectedBaseGraph.h"
 
@@ -78,11 +79,14 @@ private:
     vector< pair< UndirectedBaseGraph::vertex_descriptor,
             UndirectedBaseGraph::vertex_descriptor > > _treeEdgeVec;
 
+    CurvyTree                       _curvytree;
+
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
     bool _findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     bool _findClosestVertexInLane( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
+    bool _findVertexInTree( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     bool _findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     void _findShortestPaths( void );
     bool _findVertexOnLine( Coord2 &coord, UndirectedBaseGraph::edge_descriptor &edT );
@@ -127,6 +131,9 @@ public:
 
     vector< Coord2 > &          laneChaikinCurve( void )        { return _laneChaikinCurve; }
     const vector< Coord2 > &    laneChaikinCurve( void ) const  { return _laneChaikinCurve; }
+
+    CurvyTree &                 curvytree( void )           { return _curvytree; }
+    const CurvyTree &           curvytree( void ) const     { return _curvytree; }
 
 
 //------------------------------------------------------------------------------

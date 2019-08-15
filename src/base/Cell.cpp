@@ -1685,7 +1685,7 @@ void Cell::updateMCLCoords( void )
 void Cell::updateCenterCoords( void )
 {
     unsigned int nSystems   = _cellVec.size();
-    double radius = 100.0;
+    double radius = 30.0;
 
     cerr << "my w = " << _pathway->width() << " h = " << _pathway->height() << endl;
     double w = *_pathway->width();

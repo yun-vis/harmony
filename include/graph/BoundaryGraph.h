@@ -47,7 +47,7 @@ typedef map< Grid2, VEPair >                    VEMap;
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( BoundaryGraph & g );
+void printGraph( const BoundaryGraph & g );
 void clearGraph( BoundaryGraph & g );
 void resetVisitedTimes( BoundaryGraph & g );
 

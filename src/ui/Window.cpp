@@ -416,8 +416,9 @@ void Window::steinertree( void )
         if( g[ vd ].type == "metabolite" ){
             //if( *g[ vd ].namePtr == "Glucose" ){
             //if( *g[ vd ].namePtr == "glu_L[c]" ){
-            if( *g[ vd ].namePtr == "glu_L[c]" ){
-            //if( *g[ vd ].namePtr == "Soy_Sauce" ){
+            //if( *g[ vd ].namePtr == "glu_L[c]" ){
+            if( *g[ vd ].namePtr == "Soy_Sauce" ){
+            //if( *g[ vd ].namePtr == "Sunflower_Oil" ){
                 *g[ vd ].isSelectedPtr = true;
             }
         }
@@ -505,7 +506,7 @@ void Window::steinertree( void )
 void Window::threadOctilinearBoundary( void )
 {
     // initialization
-    const int iter = 200;
+    const int iter = 100;
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 
     vector< Boundary > &boundaryVec = *_boundaryVecPtr;
@@ -1834,8 +1835,8 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // optimization
             //----------------------------------------
-            threadOctilinearBoundary();
-            //simulateKey( Qt::Key_E );
+            //threadOctilinearBoundary();
+            simulateKey( Qt::Key_E );
 
             simulateKey( Qt::Key_O );
 
@@ -1858,6 +1859,7 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // steiner tree
             steinertree();
+            cerr << "end" << endl;
             simulateKey( Qt::Key_E );
             break;
         }
