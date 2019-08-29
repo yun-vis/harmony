@@ -944,7 +944,8 @@ void Cell::updateCenterCoords( void )
 {
     unsigned int nSystems   = _cellVec.size();
     // double radius = 10.0;
-    double radius = 30.0;
+    // double radius = 60.0;    // VHM
+    double radius = 100.0;       // KEGG
 
     double w = *_pathway->width();
     double h = *_pathway->height();
@@ -1353,11 +1354,11 @@ void Cell::additionalForcesCenter( void )
         double LB = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgT ) ) );
         double L = 0.5*( LA+LB );
 
-//#ifdef DEBUG
+#ifdef DEBUG
         cerr << "side = " << side << endl;
         cerr << "L = " << L << endl;
         cerr << "( " << idS << ", " << idT << " ) = ( " << fgS[ vdS ].id << ", " << fgT[ vdT ].id << " )" << endl;
-//#endif // DEBUG
+#endif // DEBUG
 
         Coord2 diff, unit;
         double dist;

@@ -12,6 +12,7 @@ ThreadBase::ThreadBase( void )
     _energyType = ENERGY_FORCE;
     _cellIndex = _groupIndex = 0;
     _count = 0;
+    _maxLoop = 0;
 }
 
 ThreadBase::~ThreadBase()

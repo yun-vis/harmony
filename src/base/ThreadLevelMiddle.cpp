@@ -21,7 +21,7 @@ void ThreadLevelMiddle::force( void )
     double err = INFINITY;
     cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
 
-    while( ( err > _cellPtr->cellVec()[_cellIndex].forceBone().finalEpsilon() ) && ( _count < 100 ) ) {
+    while( ( err > _cellPtr->cellVec()[_cellIndex].forceBone().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 
         cerr << "err = " << err << " _count = " << _count << endl;
         switch (_cellPtr->cellVec()[_cellIndex].forceBone().mode()) {

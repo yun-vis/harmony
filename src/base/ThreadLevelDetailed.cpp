@@ -28,7 +28,7 @@ void ThreadLevelDetailed::force( void )
     multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
     advance( itC, _groupIndex );
 
-    while( ( err > itC->second.detail.forceBone().finalEpsilon() ) && ( _count < 100 ) ) {
+    while( ( err > itC->second.detail.forceBone().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 
         switch ( itC->second.detail.forceBone().mode() ) {
             case TYPE_FORCE:

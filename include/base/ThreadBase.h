@@ -23,6 +23,7 @@ protected:
     ENERGYTYPE  _energyType;
     // vector < unsigned int > _indexVec;
     unsigned int _cellIndex, _groupIndex;
+    unsigned int _maxLoop;
 
     // stress-based approach
     unsigned int _iterCG;
@@ -38,11 +39,13 @@ public:
     virtual const char * className( void ) const { return "ThreadBase"; }
 
     void init( THREADTYPE threadtype, ENERGYTYPE energytype,
-               unsigned int cellIndex, unsigned int groupIndex ){
+               unsigned int cellIndex, unsigned int groupIndex,
+               unsigned int maxLoop ){
         _threadType = threadtype;
         _energyType = energytype;
         _cellIndex = cellIndex;
         _groupIndex = groupIndex;
+        _maxLoop    = maxLoop;
         // _indexVec = indexVec;
     }
 

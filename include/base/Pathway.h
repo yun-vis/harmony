@@ -172,6 +172,7 @@ public:
     void genLayoutSubGraphs( void );
 	void genDependencyGraph( void );
 
+	void pickColor( COLORTYPE colorType, unsigned int id, vector< double > &rgb );
 	void loadDot( UndirectedPropertyGraph &graph, string filename );
 	void exportDot( void );
 	void normalization( void );

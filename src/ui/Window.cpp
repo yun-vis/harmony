@@ -154,7 +154,7 @@ void Window::threadBoundaryForce( void )
     tlh.setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     tlh.setRegionData( _levelhighPtr, _boundaryVecPtr,
                        _cellPtr, _roadPtr, _lanePtr );
-    tlh.init( THREAD_BOUNDARY, _gv->energyType(), 0, 0 );
+    tlh.init( THREAD_BOUNDARY, _gv->energyType(), 0, 0,  _levelhighPtr->forceBone().paramForceLoop() );
 
     pool.push([]( int id, ThreadLevelHigh* tlh ){ tlh->run( id ); }, &tlh );
     //string name = "w";
@@ -205,7 +205,7 @@ void Window::threadCenterForce( void )
         tlc[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
                                _cellPtr, _roadPtr, _lanePtr );
 
-        tlc[i]->init( THREAD_CENTER, _gv->energyType(), i, 0 );
+        tlc[i]->init( THREAD_CENTER, _gv->energyType(), i, 0, _cellPtr->centerVec()[i].forceBone().paramForceLoop() );
         pool.push([]( int id, ThreadLevelCenter* t ){ t->run( id ); }, tlc[i] );
     }
 
@@ -246,7 +246,7 @@ void Window::threadCellForce( void )
         tlm[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
                            _cellPtr, _roadPtr, _lanePtr );
 
-        tlm[i]->init( THREAD_CELL, _gv->energyType(), i, 0 );
+        tlm[i]->init( THREAD_CELL, _gv->energyType(), i, 0, _cellPtr->cellVec()[i].forceBone().paramForceLoop() );
         pool.push([]( int id, ThreadLevelMiddle* t ){ t->run( id ); }, tlm[i] );
     }
 
@@ -390,7 +390,7 @@ void Window::threadPathwayForce( void )
             tld[i][j]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
             tld[i][j]->setRegionData( _levelhighPtr, _boundaryVecPtr,
                                    _cellPtr, _roadPtr, _lanePtr );
-            tld[i][j]->init( THREAD_PATHWAY, _gv->energyType(), i, j );
+            tld[i][j]->init( THREAD_PATHWAY, _gv->energyType(), i, j, c.detail.forceBone().paramForceLoop() );
             pool.push([]( int id, ThreadLevelDetailed* t ){ t->run( id ); }, tld[i][j] );
 
             idC++;
@@ -414,11 +414,11 @@ void Window::steinertree( void )
     // highlight
     BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
         if( g[ vd ].type == "metabolite" ){
-            //if( *g[ vd ].namePtr == "Glucose" ){
-            if( *g[ vd ].namePtr == "coke[r]" ){
-            //if( *g[ vd ].namePtr == "glu_L[c]" ){
-            //if( *g[ vd ].namePtr == "Soy_Sauce" ){
-            //if( *g[ vd ].namePtr == "Sunflower_Oil" ){
+            //if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
+            //if( *g[ vd ].namePtr == "coke[r]" ){            // VHM
+            //if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
+            if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+            //if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
                 *g[ vd ].isSelectedPtr = true;
             }
         }
@@ -1440,10 +1440,17 @@ double computeCV( vector< double > data )
 #ifdef GMAP
 void Window::spaceCoverage( void )
 {
+    cerr << "HERE" << endl;
     UndirectedPropertyGraph g;
-    //_pathway->loadDot( g, "../dot/gmap-pathway.dot" );
-    //_pathway->loadDot( g, "../dot/gmap-recipe.dot" );
-    _pathway->loadDot( g, "../dot/gmap-metabolic.dot" );
+    //_pathway->loadDot( g, "../dot/small-gmap.dot" );
+    //_pathway->loadDot( g, "../dot/small-bubblesets.dot" );
+    //_pathway->loadDot( g, "../dot/small-mapsets.dot" );
+    //_pathway->loadDot( g, "../dot/metabolic-gmap.dot" );
+    //_pathway->loadDot( g, "../dot/metabolic-bubblesets.dot" );
+    _pathway->loadDot( g, "../dot/metabolic-mapsets.dot" );
+    //_pathway->loadDot( g, "../dot/recipe-gmap.dot" );
+    //_pathway->loadDot( g, "../dot/recipe-bubblesets.dot" );
+    //_pathway->loadDot( g, "../dot/recipe-mapsets.dot" );
 
     VertexIndexMap              vertexIndex     = get( vertex_index, g );
     VertexPosMap                vertexPos       = get( vertex_mypos, g );
@@ -1467,24 +1474,25 @@ void Window::spaceCoverage( void )
         if( maxX < vertexX[vd] ) maxX = vertexX[vd];
         if( maxY < vertexY[vd] ) maxY = vertexY[vd];
     }
+
     cerr << "mixX = " << minX << " minY = " << minY << endl;
     cerr << "maxX = " << maxX << " maxY = " << maxY << endl;
+
     // pathway
-    //contour.elements().push_back( Coord2( -51.067, -65.033 ) );
-    //contour.elements().push_back( Coord2( 2236.6, -65.033 ) );
-    //contour.elements().push_back( Coord2( 2236.6, 1616.8 ) );
-    //contour.elements().push_back( Coord2( -51.067, 1616.8 ) );
-    // recipe
-    //contour.elements().push_back( Coord2( -66.788, -85.048 ) );
-    //contour.elements().push_back( Coord2( 5404.7, -85.048 ) );
-    //contour.elements().push_back( Coord2( 5404.7, 4966.6 ) );
-    //contour.elements().push_back( Coord2( -66.788, 4966.6 ) );
+    //contour.elements().push_back( Coord2( -13.56, 35.725 ) );
+    //contour.elements().push_back( Coord2( 2226.7, 35.725 ) );
+    //contour.elements().push_back( Coord2( 2226.7, 1668.6 ) );
+    //contour.elements().push_back( Coord2( -13.56, 1668.6 ) );
     // metabolic
-    // "-99.785,-68.388,4445.4,4205.1"
-    contour.elements().push_back( Coord2( -99.785, -68.388 ) );
-    contour.elements().push_back( Coord2( 4445.4 , -68.388 ) );
-    contour.elements().push_back( Coord2( 4445.4, 4205.1 ) );
-    contour.elements().push_back( Coord2( -99.785 , 4205.1) );
+    contour.elements().push_back( Coord2( 84.629, 210.51 ) );
+    contour.elements().push_back( Coord2( 4430.1 , 210.51 ) );
+    contour.elements().push_back( Coord2( 4430.1, 3889.4 ) );
+    contour.elements().push_back( Coord2( 84.6297 , 3889.4 ) );
+    // recipe
+    //contour.elements().push_back( Coord2( 0.45266, 9.6315 ) );
+    //contour.elements().push_back( Coord2( 5199.9, 9.6315 ) );
+    //contour.elements().push_back( Coord2( 5199.9, 4588.6 ) );
+    //contour.elements().push_back( Coord2( 0.45266, 4588.69 ) );
 
     // voronoi
     Voronoi v;
@@ -1499,13 +1507,14 @@ void Window::spaceCoverage( void )
     }
     v.init( seedVec, contour );
     v.id() = 0;
+    cerr << "HERE" << endl;
     v.createVoronoiDiagram( false );  // true: weighted, false: uniformed
-
+    cerr << "HERE" << endl;
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
         Polygon2 &p = seedVec[i].cellPolygon;
         p.updateCentroid();
         area.push_back( p.area() );
-        //cerr << "area = " << p.area() << endl;
+        cerr << "area = " << p.area() << endl;
     }
 
     // neighbor
@@ -1839,9 +1848,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // optimization
             //----------------------------------------
-            threadOctilinearBoundary();
-            simulateKey( Qt::Key_E );
+            //threadOctilinearBoundary();
 
+            simulateKey( Qt::Key_E );
             simulateKey( Qt::Key_O );
 
             //----------------------------------------
@@ -2063,6 +2072,8 @@ void Window::keyPressEvent( QKeyEvent *event )
             // _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
             _gv->exportPNG( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
+            _gv->exportSVG( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
+                            _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
             break;
         }
         case Qt::Key_Minus:

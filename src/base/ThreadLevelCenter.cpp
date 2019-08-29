@@ -21,9 +21,9 @@ void ThreadLevelCenter::force( void )
     double err = INFINITY;
     cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
 
-    while( ( err > _cellPtr->centerVec()[_cellIndex].forceBone().finalEpsilon() ) && ( _count < 100 ) ) {
+    while( ( err > _cellPtr->centerVec()[_cellIndex].forceBone().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 
-        cerr << "err = " << err << " _count = " << _count << endl;
+        // cerr << "err = " << err << " _count = " << _count << endl;
         switch (_cellPtr->centerVec()[_cellIndex].forceBone().mode()) {
             case TYPE_FORCE:
             case TYPE_BARNES_HUT: {
@@ -49,7 +49,7 @@ void ThreadLevelCenter::force( void )
                 _cellPtr->centerVec()[_cellIndex].forceBone().force();
                 _cellPtr->additionalForcesCenter();
                 int freq = VORONOI_FREQUENCE - MIN2(_count / 20, VORONOI_FREQUENCE - 1);
-                if (_count % freq == 0)
+                if ( _count % freq == 0 )
                     _cellPtr->centerVec()[_cellIndex].forceBone().centroidGeometry();
                 err = _cellPtr->centerVec()[_cellIndex].forceBone().verletIntegreation();
                 _pathway->pathwayMutex().unlock();

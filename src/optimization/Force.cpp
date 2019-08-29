@@ -82,6 +82,11 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour,
         _paramKc = stringToDouble( paramKc );
     }
 
+    if ( conf.has( "kv" ) ){
+        string paramKv = conf.gets( "kv" );
+        _paramKv = stringToDouble( paramKv );
+    }
+
     if ( conf.has( "kd" ) ){
         string paramKd = conf.gets( "kd" );
         _paramKd = stringToDouble( paramKd );
@@ -95,6 +100,16 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour,
     if ( conf.has( "ko" ) ){
         string paramKo = conf.gets( "ko" );
         _paramKo = stringToDouble( paramKo );
+    }
+
+    if ( conf.has( "force_loop" ) ){
+        string paramDegreeOneMagnitude = conf.gets( "degreeOneMagnitude" );
+        _paramDegreeOneMagnitude = (unsigned int)stringToDouble( paramDegreeOneMagnitude );
+    }
+
+    if ( conf.has( "force_loop" ) ){
+        string paramForceLoop = conf.gets( "force_loop" );
+        _paramForceLoop = (unsigned int)stringToDouble( paramForceLoop );
     }
 
     if ( conf.has( "ratio_force" ) ){
@@ -162,9 +177,12 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour,
         }
     }
 
+    cerr << "level: " << _level << endl;
     cerr << "filepath: " << _configFilePath << endl;
     cerr << "ka: " << _paramKa << endl;
     cerr << "kr: " << _paramKr << endl;
+    cerr << "degreeOneMagnitude: " << _paramDegreeOneMagnitude << endl;
+    cerr << "force_loop: " << _paramForceLoop << endl;
     cerr << "transformation_step: " << _paramTransformationStep << endl;
     cerr << "displacement_limit: " << _paramDisplacementLimit << endl;
     cerr << "final_epsilon: " << _paramFinalEpsilon << endl;
@@ -323,6 +341,7 @@ void Force::_force( void )
 
         // initialization
         g[ vdi ].forcePtr->zero();
+        ForceGraph::degree_size_type degrees = out_degree( vdi, g );
 
         BGL_FORALL_VERTICES( vdj, g, ForceGraph ) {
 
@@ -348,7 +367,10 @@ void Force::_force( void )
                     // double l = L * g[ed].weight;
                     double l = L;
 
-                    *g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
+                    if( (_level == LEVEL_DETAIL) && (degrees == 1) )
+                        *g[ vdi ].forcePtr += _paramDegreeOneMagnitude*_paramKa * ( dist - l ) * unit;
+                    else
+                        *g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
                     // cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
                 }
                 // Replusive force by Couloum's power
@@ -561,7 +583,7 @@ void Force::_centroidGeometry( void )
                  << " center = " << _seedVec[ g[vd].id ].cellPolygon.center() << endl;
 #endif // DEBUG
             Coord2 dest = _seedVec[ g[vd].id ].cellPolygon.center();
-            *g[ vd ].placePtr = dest - *g[ vd ].coordPtr;
+            *g[ vd ].placePtr = _paramKv * ( dest - *g[ vd ].coordPtr );
         }
         else {
             cerr << "%%%%%%%%%% Number of pixels vanishes!!!" << endl;
@@ -625,8 +647,18 @@ void Force::_BarnesHut( void )
         //double l = L * g[ed].weight;
         double l = L;
 
-        *g[ vdS ].forcePtr += _paramKa * strength * ( dist - l ) * unit;
-        *g[ vdT ].forcePtr -= _paramKa * strength * ( dist - l ) * unit;
+        ForceGraph::degree_size_type degreeS = out_degree( vdS, g );
+        ForceGraph::degree_size_type degreeT = out_degree( vdT, g );
+
+        if( (_level == LEVEL_DETAIL) && (degreeS == 1) )
+            *g[ vdS ].forcePtr += _paramDegreeOneMagnitude*_paramKa * strength * ( dist - l ) * unit;
+        else
+            *g[ vdS ].forcePtr += _paramKa * strength * ( dist - l ) * unit;
+
+        if( (_level == LEVEL_DETAIL) && (degreeT == 1) )
+            *g[ vdT ].forcePtr -= _paramDegreeOneMagnitude*_paramKa * strength * ( dist - l ) * unit;
+        else
+            *g[ vdT ].forcePtr -= _paramKa * strength * ( dist - l ) * unit;
     }
 
 
@@ -952,6 +984,8 @@ Force::Force()
     // configuration parameter
     _paramKa                    = 0.0;
     _paramKr                    = 0.0;
+    _paramDegreeOneMagnitude    = 1.0;
+    _paramForceLoop             = 0;
     _paramRatioForce            = 0.0;
     _paramRatioVoronoi          = 0.0;
     _paramTransformationStep    = 0.0;
@@ -998,6 +1032,8 @@ Force::Force( const Force & obj )
     // configuration parameter
     _paramKa                    = obj._paramKa;
     _paramKr                    = obj._paramKr;
+    _paramDegreeOneMagnitude    = obj._paramDegreeOneMagnitude;
+    _paramForceLoop             = obj._paramForceLoop;
     _paramRatioForce            = obj._paramRatioForce;
     _paramRatioVoronoi          = obj._paramRatioVoronoi;
     _paramTransformationStep    = obj._paramTransformationStep;
@@ -1071,6 +1107,7 @@ Force & Force::operator = ( const Force & obj )
     // configuration parameter
     _paramKa                    = obj._paramKa;
     _paramKr                    = obj._paramKr;
+    _paramForceLoop             = obj._paramForceLoop;
     _paramRatioForce            = obj._paramRatioForce;
     _paramRatioVoronoi          = obj._paramRatioVoronoi;
     _paramTransformationStep    = obj._paramTransformationStep;

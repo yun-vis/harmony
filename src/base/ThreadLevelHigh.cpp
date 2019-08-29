@@ -22,7 +22,7 @@ void ThreadLevelHigh::force( void )
     cerr << "epsilon = " << _levelhighPtr->forceBone().finalEpsilon() << endl;
 
     double err = INFINITY;
-    while( ( err > _levelhighPtr->forceBone().finalEpsilon() ) && ( _count < 200 ) ) {
+    while( ( err > _levelhighPtr->forceBone().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 
         switch (_levelhighPtr->forceBone().mode()) {
 

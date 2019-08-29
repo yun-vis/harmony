@@ -144,7 +144,10 @@ void GraphicsView::_item_polygonComplex( void )
         vector< double > rgb;
         ForceGraph::vertex_descriptor vd = vertex( itP->first, s );
         unsigned int gid = s[vd].initID;
-        pickBrewerColor( gid, rgb );
+
+        // pickBrewerColor( gid, rgb );
+        _pathway->pickColor( _colorType, gid, rgb );
+
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
         itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
         itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
@@ -179,7 +182,7 @@ void GraphicsView::_item_polygons( void )
         ForceGraph::vertex_descriptor vd = vertex( i, s );
 
         unsigned int gid = s[vd].initID;
-        pickBrewerColor( gid, rgb );
+        _pathway->pickColor( _colorType, gid, rgb );
         // cerr << rgb[0]*255 << ", " << rgb[1]*255 << ", " << rgb[2]*255 << endl;
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
         itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
@@ -438,7 +441,7 @@ void GraphicsView::_item_centerPolygons( void )
             ForceGraph::vertex_descriptor vd = vertex( i, cb );
 
             unsigned int gid = cb[vd].groupID;
-            pickBrewerColor( gid, rgb );
+            _pathway->pickColor( _colorType, gid, rgb );
             // cerr << rgb[0]*255 << ", " << rgb[1]*255 << ", " << rgb[2]*255 << endl;
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
@@ -654,7 +657,7 @@ void GraphicsView::_item_cellPolygons( void )
             GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
             vector< double > rgb;
             unsigned int gid = i;
-            pickBrewerColor( gid, rgb );
+            _pathway->pickColor( _colorType, it->second->id, rgb );
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
@@ -690,7 +693,7 @@ void GraphicsView::_item_cellPolygons( void )
             ForceGraph::vertex_descriptor vd = vertex( i, cellVec[k].bone() );
 
             unsigned int gid = cellVec[k].bone()[vd].groupID;
-            pickBrewerColor( gid, rgb );
+            _pathway->pickColor( _colorType, gid, rgb );
             QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
             itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
             itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
@@ -731,7 +734,7 @@ void GraphicsView::_item_cellPolygonComplex( bool fineFlag )
             if( vd != NULL ) {
 
                 unsigned int gid = cellVec[k].bone()[vd].groupID;
-                pickBrewerColor( gid, rgb );
+                _pathway->pickColor( _colorType, gid, rgb );
                 QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
                 itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 6 ) );
                 //itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 8 ) );
@@ -791,7 +794,7 @@ void GraphicsView::_item_mclPolygons( void )
                     GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
                     vector< double > rgb;
 
-                    pickBrewerColor( k, rgb );
+                    _pathway->pickColor( _colorType, k, rgb );
                     QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
                     itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
                     itemptr->setBrush( QBrush( QColor( color.red(), color.green(), color.blue(), 100 ), Qt::SolidPattern ) );
@@ -837,7 +840,7 @@ void GraphicsView::_item_pathwayPolygons( void )
                     GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
                     vector< double > rgb;
 
-                    pickBrewerColor( k, rgb );
+                    _pathway->pickColor( _colorType, k, rgb );
                     QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
                     //itemptr->setPen( QPen( QColor( 220, 220, 220, 100 ), 4 ) );
                     if( _is_pathwayPolygonContourFlag == true )
@@ -930,7 +933,7 @@ void GraphicsView::_item_road( void )
         GraphicsPolygonItem *itemptr = new GraphicsPolygonItem;
         vector< double > rgb;
 
-        pickBrewerColor( i, rgb );
+        _pathway->pickColor( _colorType, i, rgb );
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
 
         itemptr->setPen( QPen( QColor( color.red(), color.green(), color.blue(), 255 ), 2 ) );
@@ -1020,7 +1023,7 @@ void GraphicsView::_item_road( void )
                 GraphicsBallItem *itemptrB = new GraphicsBallItem;
 
                 vector< double > rgb;
-                pickBrewerColor( i, rgb );
+                _pathway->pickColor( _colorType, i, rgb );
                 QColor colorB( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 );
                 itemptrB->fontSize() = _font_size;
                 itemptrB->setPen( QPen( QColor( colorB.red(), colorB.green(), colorB.blue(), 255 ), 10 ) );
@@ -1034,7 +1037,7 @@ void GraphicsView::_item_road( void )
                 // foreground
                 GraphicsBallItem *itemptrF = new GraphicsBallItem;
 
-                pickBrewerColor( j, rgb );
+                _pathway->pickColor( _colorType, j, rgb );
                 QColor colorF( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 );
                 itemptrF->fontSize() = _font_size;
                 itemptrF->setPen( QPen( QColor( colorF.red(), colorF.green(), colorF.blue(), 255 ), 3 ) );
@@ -1464,6 +1467,36 @@ void GraphicsView::exportPNG ( double x, double y, double w, double h )
     id++;
 }
 
+void GraphicsView::exportSVG ( double x, double y, double w, double h )
+{
+    // Take file path and name that will create
+    //QString newPath = QFileDialog::getSaveFileName(this, trUtf8("Save SVG"),
+    //                                               path, tr("SVG files (*.svg)"));
+    static int id = 0;
+    ostringstream ss;
+    ss << setw(8) << std::setfill('0') << id;
+    string s2( ss.str() );
+    QString idStr = QString::fromStdString( s2 );
+    // cerr << "s2 = " << s2 << endl;
+    QString newPath = QString( QLatin1String( "../svg/pathway-" ) ) + idStr + QString( QLatin1String( ".svg" ) );
+    _scene->setSceneRect( x, y, w, h );  // x, y, w, h
+
+    if ( newPath.isEmpty() ) return;
+
+    QSvgGenerator generator;            // Create a file generator object
+    generator.setFileName( newPath );    // We set the path to the file where to save vector graphics
+    generator.setSize( QSize( w, h ) );  // Set the dimensions of the working area of the document in millimeters
+    generator.setViewBox( QRect( 0, 0, w, h ) ); // Set the work area in the coordinates
+    generator.setTitle( trUtf8("SVG Example") );                                // The title document
+    generator.setDescription( trUtf8( "File created by SVG Example") );
+
+    QPainter painter;
+    painter.begin( &generator );
+    _scene->render( &painter );
+    painter.end();
+
+    id++;
+}
 
 GraphicsView::GraphicsView( QWidget *parent )
         : QGraphicsView( parent )
@@ -1556,6 +1589,8 @@ GraphicsView::GraphicsView( QWidget *parent )
     _scene->setSceneRect( -default_width/2.0, -default_height/2.0,
                           default_width, default_height );  // x, y, w, h
 
+    //_colorType = COLOR_PREDEFINED;
+    _colorType = COLOR_BREWER;
     _is_simplifiedFlag = false;
     _is_skeletonFlag = false;
     _is_compositeFlag = false;

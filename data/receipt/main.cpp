@@ -27,7 +27,7 @@ public:
     string  name;
     string  formula;
     string  description;
-    unsigned int freq;              // frequency of the metabolite
+    unsigned int freq;              // frequency of the ingredient
 
     Ingredient(){ freq = 0; };      // default constructor
 };
@@ -35,19 +35,20 @@ public:
 class Meal
 {
 public:
-    string id;              // reaction id
-    string name;            // reaction name
-    vector< string > reactantVec;
-    vector< string > productVec;
+    string id;              // meal id
+    string name;            // meal name
+    vector< string > reactantVec;   // input
+    vector< string > productVec;    // output
     string reversible;      // reversible
-    string area;       // subsystem
+    string area;            // country
+    string category;        // category
 };
 
 class Area
 {
 public:
-    string name;        // subsystem name
-    unsigned int id;    // subsystem id
+    string name;        // category name
+    unsigned int id;    // category id
 };
 
 string replaceSpaceWithUnderbar( string str )
@@ -61,7 +62,7 @@ string replaceSpaceWithUnderbar( string str )
     return str;
 }
 
-bool findMetabolite( vector< Ingredient > &meta, string name, int &index )
+bool findIngredient( vector< Ingredient > &meta, string name, int &index )
 {
 	for( unsigned int i = 0; i < meta.size(); i++ ){
 
@@ -95,6 +96,7 @@ void saveXml( string sysName, vector< Ingredient > &meta,
 
             //cerr << "name = " << name << endl;
             if( sysName == react[i].area ){
+            //if( sysName == react[i].category ){
 
                 //string buf; // have a buffer string
                 //stringstream ss( name ); // insert the string into a stream
@@ -104,8 +106,8 @@ void saveXml( string sysName, vector< Ingredient > &meta,
                 //while (ss >> buf) tokens.push_back( buf );
 
                 // check info in the metabolite list
-                findMetabolite( meta, name, index );
-				//findMetabolite( meta, tokens[ tokens.size()-1 ], index );
+                findIngredient( meta, name, index );
+				//findIngredient( meta, tokens[ tokens.size()-1 ], index );
                 //cerr << "  name = " << name << " index = " << index << endl;
                 //cerr << "sysName = " << sysName << endl;
                 assert( index != -1 );
@@ -132,6 +134,7 @@ void saveXml( string sysName, vector< Ingredient > &meta,
     for( unsigned int i = 0; i < react.size(); i++ ){
 
         if( sysName == react[i].area ){
+        //if( sysName == react[i].category ){
 
             TiXmlNode* newNode = new TiXmlElement( "reaction" );
 
@@ -142,6 +145,7 @@ void saveXml( string sysName, vector< Ingredient > &meta,
             }
             newNode->InsertEndChild( TiXmlElement( "reversible" ) )->InsertEndChild( TiXmlText( react[i].reversible ) );
             newNode->InsertEndChild( TiXmlElement( "subsystem" ) )->InsertEndChild( TiXmlText( react[i].area ) );
+            //newNode->InsertEndChild( TiXmlElement( "subsystem" ) )->InsertEndChild( TiXmlText( react[i].category ) );
 
             reactionElement->InsertEndChild( *newNode );
         }
@@ -178,6 +182,7 @@ int main( int argc, char **argv )
     // areas
     boost::property_tree::ptree ptA;
     boost::property_tree::read_json( "meal/areas.json", ptA );
+    //boost::property_tree::read_json( "meal/categories.json", ptA );
 
     BOOST_FOREACH( boost::property_tree::ptree::value_type &v, ptA ){
 
@@ -249,10 +254,14 @@ int main( int argc, char **argv )
            m.reactantVec.push_back( replaceSpaceWithUnderbar( c.second.data() ) );
        }
        BOOST_FOREACH( boost::property_tree::ptree::value_type &c, ptM.get_child( v.first ) ){
+           if( c.first == "category" ){
+               m.category = c.second.data();     // category
+               // cerr << "category = " << m.category << endl;
+           }
            if( c.first == "area" ){
               //cerr << "area = " << c.second.data() << endl;
               m.reversible = "true";        // reversible
-              m.area = c.second.data();     // subsystem
+              m.area = c.second.data();     // category
            }
        }
        //cerr << endl;

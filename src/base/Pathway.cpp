@@ -15,7 +15,7 @@
 #include <QtWidgets/QFileDialog>
 
 #include "base/Pathway.h"
-
+#include "base/Color.h"
 //#define STRAIGHT_LINE_DRAWING
 
 struct coord_t
@@ -411,6 +411,40 @@ void Pathway::exportEdges( void )
     ofsc.close();
 }
 
+void Pathway::pickColor( COLORTYPE colorType, unsigned int id, vector< double > &rgb )
+{
+    switch( colorType ){
+
+        case COLOR_PREDEFINED:
+        {
+            rgb.resize( 3 );
+
+            map< string, Subdomain * >::iterator it = _sub.begin();
+            advance( it, id );
+
+            QColor color;
+            color.setNamedColor( QString::fromStdString( it->second->defaultColor ) );
+            rgb[ 0 ] = color.redF();
+            rgb[ 1 ] = color.greenF();
+            rgb[ 2 ] = color.blueF();
+
+        }
+            break;
+        case COLOR_MONOTONE:
+            pickMonotoneColor( id, rgb );
+            break;
+        case COLOR_PASTEL:
+            pickPastelColor( id, rgb );
+            break;
+        case COLOR_BREWER:
+            pickBrewerColor( id, rgb );
+            break;
+        default:
+            cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+            break;
+    }
+}
+
 void Pathway::loadDot( UndirectedPropertyGraph &graph, string filename )
 {
     VertexIndexMap              vertexIndex     = get( vertex_index, graph );
@@ -486,31 +520,52 @@ void Pathway::exportDot( void )
 	unsigned int index = 0;
 	for( unsigned int i = 0; i < _subGraph.size(); i++ ){
 
+        vector< double > rgb;
+        unsigned int id = i;
+
+        pickBrewerColor( ( id )%_subGraph.size(), rgb );
+        QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
+        // cerr << "nV = " << num_vertices( _subGraph[i] ) << endl;
 		BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ) {
 
             MetaboliteGraph::vertex_descriptor initVD = vertex( _subGraph[i][vd].initID, _graph );
             if( *_graph[initVD].isClonedPtr == true ){
+                string str = *_subGraph[i][vd].namePtr;
+                //str.replace( str.end()-1, str.end(),1, 'l' );
+                //str.replace( str.end()-3, str.end()-2,1, 'l' );
                 ofs << " \"" << _subGraph[i][vd].id+index
-                    << "\" [cluster=\"" << i
-                    << "\", label=\"" << *_subGraph[i][vd].namePtr
+                    << "\" [cluster=" << i+1
+                    << ", clustercolor=\"" << color.name( QColor::HexRgb ).toStdString()
+                    << "\", label=\"" << str
+//                    << ",label=\"" << *_subGraph[i][vd].namePtr
                     << "\", color=\"" << "#48d1cc"
                         << "\", style=\"filled,rounded"
                         << "\"];"<< endl;
 		    }
             else if( _subGraph[i][vd].isAlias == true )
             {
+                string str = *_subGraph[i][vd].namePtr;
+                //str.replace( str.end()-1, str.end(),1, 'l' );
+                //str.replace( str.end()-3, str.end()-2,1, 'l' );
                 ofs << " \"" << _subGraph[i][vd].id+index
-                    << "\" [cluster=\"" << i
-                    << "\", label=\"" << *_subGraph[i][vd].namePtr
+                    << "\" [cluster=" << i+1
+                    << ", clustercolor=\"" << color.name( QColor::HexRgb ).toStdString()
+                    << "\", label=\"" << str
+//                    << ",label=\"" << *_subGraph[i][vd].namePtr
                     << "\", color=\"" << "#ffc0cb"
                         << "\", style=\"filled,rounded"
                         << "\"];"<< endl;
             }
             else{
+                string str = *_subGraph[i][vd].namePtr;
+                //str.replace( str.end()-1, str.end(),1, 'l' );
+                //str.replace( str.end()-3, str.end()-2,1, 'l' );
                 if( _graph[initVD].type == "metabolite" ){
                     ofs << " \"" << _subGraph[i][vd].id+index
-                        << "\" [cluster=\"" << i
-                        << "\", label=\"" << *_subGraph[i][vd].namePtr
+                        << "\" [cluster=" << i+1
+                        << ", clustercolor=\"" << color.name( QColor::HexRgb ).toStdString()
+                        << "\", label=\"" << str
+//                    << ",label=\"" << *_subGraph[i][vd].namePtr
                         << "\", color=\"#ffffff"
 						<< "\", fontcolor=\"#666666"
                         << "\", style=\"filled,rounded"
@@ -518,7 +573,8 @@ void Pathway::exportDot( void )
                 }
                 else{
                     ofs << " \"" << _subGraph[i][vd].id+index
-                        << "\" [cluster=\"" << i
+                        << "\" [cluster=" << i+1
+                        << ", clustercolor=\"" << color.name( QColor::HexRgb ).toStdString()
                         << "\", label=\"" << *_subGraph[i][vd].namePtr
                         << "\", color=\"#ffffff"
                         << "\", style=\"filled"
@@ -537,7 +593,9 @@ void Pathway::exportDot( void )
 			ForceGraph::vertex_descriptor vdT = target( ed, _layoutSubGraph[i] );
 
 			ofs << " \"" << _layoutSubGraph[i][vdS].id+index << "\" -- "
-				<< "\"" << _layoutSubGraph[i][vdT].id+index << "\" [color=\"#000000\"];" << endl;
+				<< "\"" << _layoutSubGraph[i][vdT].id+index
+			    << "\" [color=\"#000000\"];" << endl;
+//                << "\";" << endl;
 		}
 		index += num_vertices( _layoutSubGraph[i] );
 	}

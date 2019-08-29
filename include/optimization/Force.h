@@ -55,10 +55,13 @@ class Force : public Stress
     // configuration parameter
     double          _paramKa;               // attractive force
     double          _paramKr;               // repulsive force
+    double          _paramKv;               // voronoie force
     double          _paramKc;               // k1 force
     double          _paramKd;               // k2 force
     double          _paramKe;               // k3 force
-    double          _paramKo;               // opverlap repulsive force
+    double          _paramKo;               // overlap repulsive force
+    unsigned int    _paramForceLoop;        // maximum loop num
+    double          _paramDegreeOneMagnitude;   // force magnitude for degree one node
 
     double          _paramRatioForce;
     double          _paramRatioVoronoi;
@@ -91,7 +94,7 @@ class Force : public Stress
     bool            _inContour( Coord2 &coord );
     void            _normalizeWeight();
 
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
@@ -133,6 +136,9 @@ class Force : public Stress
 
     double                  gap ( void )	                { return _gap(); }
     double                  verletIntegreation( void )      { return _verletIntegreation(); }
+
+    const unsigned int &    paramForceLoop( void ) const   { return _paramForceLoop; }
+    unsigned int &          paramForceLoop( void )	       { return _paramForceLoop; }
 
 //------------------------------------------------------------------------------
 //	Fundamental functions

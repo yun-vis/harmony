@@ -1,6 +1,108 @@
 #include "base/Color.h"
 #include "base/Common.h"
 
+unsigned long RGBtoHex( int r, int g, int b )
+{
+    return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}
+
+void pickMonotoneColor( unsigned int id, vector< double > &rgb )
+{
+    int index = id % MAX_COLOR_TYPE;
+    int shift = -2*(id / MAX_COLOR_TYPE);
+
+    rgb.resize( 3 );
+
+//#define GRAY
+#ifdef GRAY
+    // gray
+    rgb[ 0 ] = 217.0/255.0;
+    rgb[ 1 ] = 217.0/255.0;
+    rgb[ 2 ] = 217.0/255.0;
+#else
+    // blue
+    rgb[ 0 ] = 198.0/255.0;
+    rgb[ 1 ] = 219.0/255.0;
+    rgb[ 2 ] = 239.0/255.0;
+#endif // GRAY
+
+}
+
+void pickPastelColor( unsigned int id, vector< double > &rgb )
+{
+    int index = id % MAX_COLOR_TYPE;
+    int shift = -2*(id / MAX_COLOR_TYPE);
+
+    rgb.resize( 3 );
+
+    switch( index ){
+        case 0:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+169 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+207 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+244 )/255.0 );
+            break;
+        case 1:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+255 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+235 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+176 )/255.0 );
+            break;
+        case 2:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+255 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+211 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+247 )/255.0 );
+            break;
+        case 3:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+219 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+231 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+155 )/255.0 );
+            break;
+        case 4:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+236 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+236 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+236 )/255.0 );
+            break;
+        case 5:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+138 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+214 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+237 )/255.0 );
+            break;
+        case 6:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+254 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+212 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+190 )/255.0 );
+            break;
+        case 7:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+233 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+212 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+241 )/255.0 );
+            break;
+        case 8:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+254 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+244 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+217 )/255.0 );
+            break;
+        case 9:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+251 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+220 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+226 )/255.0 );
+            break;
+        case 10:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+162 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+232 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+172 )/255.0 );
+            break;
+        case 11:
+            rgb[ 0 ] = MIN2( 1.0, ( shift+256 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( shift+183 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( shift+174 )/255.0 );
+            break;
+        default:
+            cerr << "sth is wrong here" << endl;
+            break;
+    }
+}
+
+
 void pickBrewerColor( unsigned int id, vector< double > &rgb )
 {
     int colorType = 12;
@@ -75,3 +177,4 @@ void pickBrewerColor( unsigned int id, vector< double > &rgb )
             break;
     }
 }
+

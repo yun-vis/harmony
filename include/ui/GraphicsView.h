@@ -63,6 +63,7 @@ private:
     string 				_inputpath, _tmppath,       // input output files
                         _fileFreq, _fileType;       // metabolite frequency
     ENERGYTYPE          _energyType;
+    COLORTYPE           _colorType;
     unsigned int        _maxThread;                 // maximum thread number
 
     // ui
@@ -175,6 +176,7 @@ public:
     void    initSceneItems      ( void );
 
     void exportPNG ( double x, double y, double w, double h );
+    void exportSVG ( double x, double y, double w, double h );
 
 Q_SIGNALS:
 
