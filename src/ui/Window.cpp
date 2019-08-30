@@ -416,8 +416,8 @@ void Window::steinertree( void )
         if( g[ vd ].type == "metabolite" ){
             //if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
             //if( *g[ vd ].namePtr == "coke[r]" ){            // VHM
-            //if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
-            if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+            if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
+            //if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
             //if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
                 *g[ vd ].isSelectedPtr = true;
             }

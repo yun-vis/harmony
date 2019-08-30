@@ -308,9 +308,9 @@ void GraphicsView::_item_subpathways( void )
 
                     if( *g[ initVD ].isSelectedPtr == true )
                         itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
-                    else if( *g[ initVD ].isClonedPtr == true )
-                        itemptr->setBrush( QBrush( QColor( 72, 209, 204, 255 ), Qt::SolidPattern ) );
-                    else if( subg[itC->second.groupID][vdF].isAlias == true )
+                    else if( *g[ initVD ].isClonedPtr == true )                 // blue
+                        itemptr->setBrush( QBrush( QColor( 158, 219, 255, 255 ), Qt::SolidPattern ) );
+                    else if( subg[itC->second.groupID][vdF].isAlias == true )   // pink
                         itemptr->setBrush( QBrush( QColor( 255, 192, 203, 255 ), Qt::SolidPattern ) );
                     else
                         itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
@@ -1457,6 +1457,10 @@ void GraphicsView::exportPNG ( double x, double y, double w, double h )
     if ( newPath.isEmpty() ) return;
 
     QImage  screenshot( w, h, QImage::Format_RGB32 ); // maximum 32767x32767
+
+    //int dpm = 300 / 0.0254; // ~300 DPI
+    //screenshot.setDotsPerMeterX( dpm );
+    //screenshot.setDotsPerMeterY( dpm );
 
     QPainter painter( &screenshot );
     painter.setRenderHint( QPainter::Antialiasing );
