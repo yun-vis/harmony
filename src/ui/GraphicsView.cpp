@@ -306,8 +306,12 @@ void GraphicsView::_item_subpathways( void )
                     }
 
 
-                    if( *g[ initVD ].isSelectedPtr == true )
-                        itemptr->setBrush( QBrush( QColor( 255, 0, 0, 255 ), Qt::SolidPattern ) );
+                    if( *g[ initVD ].isSelectedPtr == true ){
+
+                        vector< double > rgb;
+                        pickRouteColor( *g[ initVD ].selectedIDPtr , rgb );
+                        itemptr->setBrush( QBrush( QColor( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 ), Qt::SolidPattern ) );
+                    }
                     else if( *g[ initVD ].isClonedPtr == true )                 // blue
                         itemptr->setBrush( QBrush( QColor( 158, 219, 255, 255 ), Qt::SolidPattern ) );
                     else if( subg[itC->second.groupID][vdF].isAlias == true )   // pink
@@ -861,10 +865,10 @@ void GraphicsView::_item_pathwayPolygons( void )
 void GraphicsView::_item_road( void )
 {
     vector< MetaboliteGraph >   &subg       = _pathway->subG();
-    UndirectedBaseGraph &road               = _roadPtr->road();
-    vector< vector < Highway > > & highwayMat = _roadPtr->highwayMat();
+    UndirectedBaseGraph &road               = (*_roadPtr)[0].road();
+    vector< vector < Highway > > & highwayMat = (*_roadPtr)[0].highwayMat();
     // vector< vector< Coord2 > > & roadChaikinCurveVec = _roadPtr->roadChaikinCurve();
-    vector< Contour2 > & subsysContour = _roadPtr->subsysContour();
+    vector< Contour2 > & subsysContour = (*_roadPtr)[0].subsysContour();
 
 #ifdef SKIP
     // draw edges
@@ -1279,7 +1283,10 @@ void GraphicsView::_item_lane( void )
             GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
 
             //itemptr->setPen( QPen( QColor( 0, 0, 255, 255 ), 3 ) );
-            itemptr->setPen( QPen( QColor( 255, 0, 0, 255 ), 4 ) );
+            vector< double > rgb;
+            pickRouteColor( i , rgb );
+
+            itemptr->setPen( QPen( QColor( rgb[0]*255, rgb[1]*255, rgb[2]*255, 255 ), 4 ) );
             itemptr->setPath( path );
             _scene->addItem( itemptr );
         }

@@ -943,9 +943,9 @@ void Cell::updateMCLCoords( void )
 void Cell::updateCenterCoords( void )
 {
     unsigned int nSystems   = _cellVec.size();
-    // double radius = 10.0;
+    double radius = 30.0;
     // double radius = 60.0;    // VHM
-    double radius = 100.0;       // KEGG
+    // double radius = 100.0;       // KEGG
 
     double w = *_pathway->width();
     double h = *_pathway->height();
@@ -980,7 +980,8 @@ void Cell::updateCenterCoords( void )
 void Cell::updatePathwayCoords( void )
 {
     vector< ForceGraph >            &lsubg  = _pathway->lsubG();
-    double radius = 50.0;
+    double radius = 30.0;
+    // double radius = 50.0;
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();

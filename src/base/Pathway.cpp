@@ -833,6 +833,7 @@ void Pathway::genGraph( void )
         //_graph[ reactVD ].isNeighbor	= false;
         _graph[ reactVD ].isClonedPtr   = new bool( false );
         _graph[ reactVD ].isSelectedPtr = new bool( false );
+        _graph[ reactVD ].selectedIDPtr = new int( -1 );
         _graph[ reactVD ].isAlias       = false;
         _graph[ reactVD ].type 			= "reaction";
 		_graph[ reactVD ].coordPtr		= new Coord2;
@@ -902,6 +903,7 @@ void Pathway::genGraph( void )
                 //_graph[ metaVD ].isNeighbor	    = false;
                 _graph[ metaVD ].isClonedPtr    = &_meta[ index ].isCloned;
                 _graph[ metaVD ].isSelectedPtr  = new bool( false );
+                _graph[ metaVD ].selectedIDPtr  = new int( -1 );
                 _graph[ metaVD ].isAlias        = false;
 				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr		= new Coord2;
@@ -1003,6 +1005,7 @@ void Pathway::genGraph( void )
                 //_graph[ metaVD ].isNeighbor		= false;
 				_graph[ metaVD ].isClonedPtr    = &_meta[ index ].isCloned;
                 _graph[ metaVD ].isSelectedPtr  = new bool( false );
+                _graph[ metaVD ].selectedIDPtr  = new int( -1 );
                 _graph[ metaVD ].isAlias        = false;
   				_graph[ metaVD ].type 			= "metabolite";
 				_graph[ metaVD ].coordPtr 		= new Coord2;
@@ -1482,6 +1485,7 @@ void Pathway::genSubGraphs( void )
 						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
                         g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
                         g[ newSVD ].isSelectedPtr   = _graph[ vdS ].isSelectedPtr;
+                        g[ newSVD ].selectedIDPtr   = _graph[ vdS ].selectedIDPtr;
                         g[ newSVD ].isAlias    	    = false;
 						g[ newSVD ].type        	= _graph[ vdS ].type;
                         g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
@@ -1515,6 +1519,7 @@ void Pathway::genSubGraphs( void )
 								g[ newSVD ].groupID         = _graph[ vdS ].groupID;
 								g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
                                 g[ newSVD ].isSelectedPtr   = _graph[ vdS ].isSelectedPtr;
+                                g[ newSVD ].selectedIDPtr   = _graph[ vdS ].selectedIDPtr;
 								g[ newSVD ].isAlias    	    = true;
 								g[ newSVD ].type        	= _graph[ vdS ].type;
 								g[ newSVD ].coordPtr    	= new Coord2( _graph[ vdS ].coordPtr->x(), _graph[ vdS ].coordPtr->x() );
@@ -1548,6 +1553,7 @@ void Pathway::genSubGraphs( void )
 						g[ newSVD ].groupID         = _graph[ vdS ].groupID;
                         g[ newSVD ].isClonedPtr    	= _graph[ vdS ].isClonedPtr;
                         g[ newSVD ].isSelectedPtr   = _graph[ vdS ].isSelectedPtr;
+                        g[ newSVD ].selectedIDPtr   = _graph[ vdS ].selectedIDPtr;
                         g[ newSVD ].isAlias    	    = false;
                         g[ newSVD ].type        	= _graph[ vdS ].type;
 						g[ newSVD ].coordPtr    	= _graph[ vdS ].coordPtr;
@@ -1579,6 +1585,7 @@ void Pathway::genSubGraphs( void )
 						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
                         g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
                         g[ newTVD ].isSelectedPtr   = _graph[ vdT ].isSelectedPtr;
+                        g[ newTVD ].selectedIDPtr   = _graph[ vdT ].selectedIDPtr;
                         g[ newTVD ].isAlias    	    = false;
 						g[ newTVD ].type       		= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;
@@ -1609,6 +1616,7 @@ void Pathway::genSubGraphs( void )
 								g[ newTVD ].groupID         = _graph[ vdT ].groupID;
 								g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
                                 g[ newTVD ].isSelectedPtr   = _graph[ vdT ].isSelectedPtr;
+                                g[ newTVD ].selectedIDPtr   = _graph[ vdT ].selectedIDPtr;
 								g[ newTVD ].isAlias    	    = true;
 								g[ newTVD ].type       		= _graph[ vdT ].type;
 								g[ newTVD ].coordPtr    	= new Coord2( _graph[ vdT ].coordPtr->x(), _graph[ vdT ].coordPtr->y() );
@@ -1643,6 +1651,7 @@ void Pathway::genSubGraphs( void )
 						g[ newTVD ].groupID         = _graph[ vdT ].groupID;
                         g[ newTVD ].isClonedPtr    	= _graph[ vdT ].isClonedPtr;
                         g[ newTVD ].isSelectedPtr 	= _graph[ vdT ].isSelectedPtr;;
+                        g[ newTVD ].selectedIDPtr 	= _graph[ vdT ].selectedIDPtr;;
                         g[ newTVD ].isAlias    	    = false;
                         g[ newTVD ].type          	= _graph[ vdT ].type;
 						g[ newTVD ].coordPtr    	= _graph[ vdT ].coordPtr;

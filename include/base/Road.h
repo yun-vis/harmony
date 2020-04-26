@@ -65,6 +65,8 @@ class Road : public PathwayData
 {
 private:
 
+    int                             _selectedID;
+
     UndirectedBaseGraph             _road;
     vector< vector < Highway > >    _highwayMat;
 
@@ -90,10 +92,15 @@ private:
     bool _findVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_descriptor &target );
     void _findShortestPaths( void );
     bool _findVertexOnLine( Coord2 &coord, UndirectedBaseGraph::edge_descriptor &edT );
-    void _initRoad( Cell *cellPtr );
-    void _initLane( unsigned int gid,  multimap< int, CellComponent > & cellComponent, vector < Highway > * highwayRoadPtr );
+    void _initRoad( Cell *cellPtr, int __selectedID );
+/*
+    void _initLane( unsigned int __gid, int __selectedID,
+                    multimap< int, CellComponent > & cellComponent,
+                    vector < Highway > * highwayRoadPtr );
+*/
     void _clear( void );
-    void _initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec );
+    void _initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec,
+                          int selectedID );
 
     // curve computation
     void _runRoadChaikinCurve( int num );
@@ -149,16 +156,21 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec )
+    void initSteinerNet( vector< multimap< int, CellComponent > > & __cellComponentVec,
+                         int __selectedID )
     {
-        _initSteinerNet( __cellComponentVec );
+        _initSteinerNet( __cellComponentVec, __selectedID );
     }
-    void initRoad( Cell *__cellPtr ) {
-        _initRoad( __cellPtr );
+    void initRoad( Cell *__cellPtr, int __selectedID ) {
+        _initRoad( __cellPtr, __selectedID );
     }
-    void initLane( unsigned int gid, multimap< int, CellComponent > & __cellComponent, vector < Highway > *__highwayRoadPtr ) {
-        _initLane( gid, __cellComponent, __highwayRoadPtr );
+/*
+    void initLane( unsigned int __gid, int __selectedID,
+                    multimap< int, CellComponent > & __cellComponent,
+                    vector < Highway > *__highwayRoadPtr ) {
+        _initLane( __gid, __selectedID, __cellComponent, __highwayRoadPtr );
     }
+*/
     void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------

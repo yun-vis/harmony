@@ -36,7 +36,7 @@ protected:
 
     // cells of subgraphs
     Cell            *_cellPtr;
-    Road            *_roadPtr;
+    vector< Road >  *_roadPtr;
     vector< Road >  *_lanePtr;
 
 public:
@@ -51,7 +51,8 @@ public:
 
     void setRegionData( LevelHigh * __levelhigh,
                         vector< Boundary > *__boundaryVecPtr,
-                        Cell * __cellPtr, Road * __roadPtr,
+                        Cell * __cellPtr,
+                        vector< Road > * __roadPtr,
                         vector< Road > * __lanePtr ){
         _levelhighPtr = __levelhigh;
         _boundaryVecPtr = __boundaryVecPtr;

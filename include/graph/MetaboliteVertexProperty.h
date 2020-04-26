@@ -59,6 +59,7 @@ class MetaboliteVertexProperty : public BaseVertexProperty {
 	bool			activate;
 	int 			stoichiometry;
 	bool * 			isSelectedPtr;
+	int * 			selectedIDPtr;
 	bool *			isClonedPtr;
     bool 			isAlias;
 

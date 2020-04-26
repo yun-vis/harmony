@@ -22,6 +22,8 @@ endif()
 
 ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 
+message( QT5_PATH_DIR ${QT5_PATH_DIR})
+
 if (UNIX AND NOT APPLE)
 
   message(status "Setting G++ flags")

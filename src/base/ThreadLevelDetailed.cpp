@@ -83,7 +83,7 @@ void ThreadLevelDetailed::force( void )
                 break;
         }
 
-        //cerr << "count = " << _count << endl;
+        cerr << "count = " << _count << endl;
         if( _count%50 == 0 ) {
             // QCoreApplication::processEvents();
             cerr << "#";

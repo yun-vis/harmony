@@ -54,11 +54,10 @@ void Window::_init( void )
     _boundaryVecPtr = new vector< Boundary >;
     //_simplifiedBoundaryPtr = new Boundary;
     _cellPtr = new Cell;
-    _roadPtr = new Road;
+    _roadPtr = new vector< Road >;
     _lanePtr = new vector< Road >;
 
     _cellPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    _roadPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
 
     _gv->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
     _gv->setRegionData( _levelhighPtr, _boundaryVecPtr,
@@ -410,31 +409,59 @@ void Window::steinertree( void )
 {
     // select a target metabolite
     MetaboliteGraph             &g         = _pathway->g();
+    unsigned int                treeSize   = 1;
 
     // highlight
     BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
+
         if( g[ vd ].type == "metabolite" ){
             //if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
-            //if( *g[ vd ].namePtr == "coke[r]" ){            // VHM
+            //if( *g[ vd ].namePtr == "coke[r]" ){            // tiny
+            //if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
             if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
             //if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+            //if( *g[ vd ].namePtr == "Beans" ){        // food
+            //if( *g[ vd ].namePtr == "Prawns" ){        // food
+            //if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
             //if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
                 *g[ vd ].isSelectedPtr = true;
+                *g[ vd ].selectedIDPtr = 0;
             }
+#ifdef SKIP
+            if( *g[ vd ].namePtr == "Worcestershire_Sauce" ){
+                *g[ vd ].isSelectedPtr = true;
+                *g[ vd ].selectedIDPtr = 1;
+	        }
+            if(	*g[ vd ].namePtr == "Puff_Pastry" ){
+                *g[ vd ].isSelectedPtr = true;
+                *g[ vd ].selectedIDPtr = 2;
+	        }
+            if(	*g[ vd ].namePtr == "Egg_White" ) {            // tiny
+                *g[ vd ].isSelectedPtr = true;
+                *g[ vd ].selectedIDPtr = 3;
+            }
+#endif // SKIP
         }
     }
 
-    // compute steiner tree
-    _roadPtr->initRoad( _cellPtr );
-    // _roadPtr->initRoad( _cellPtr->cellComponentVec() );
-    _roadPtr->buildRoad();
-    // cerr << "road built..." << endl;
-
+    // initialization
+    _roadPtr->clear();
+    _roadPtr->resize( treeSize );
     _lanePtr->clear();
-    _lanePtr->resize( 1 );
-    (*_lanePtr)[0].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    (*_lanePtr)[0].initSteinerNet( _cellPtr->cellComponentVec() );
-    (*_lanePtr)[0].steinerTree();
+    _lanePtr->resize( treeSize );
+
+    for( int i = 0; i < treeSize; i++ ){
+
+        // compute steiner tree
+        (*_roadPtr)[i].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_roadPtr)[i].initRoad( _cellPtr, i );
+        (*_roadPtr)[i].buildRoad();
+        // cerr << "road built..." << endl;
+
+        (*_lanePtr)[i].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_lanePtr)[i].initSteinerNet( _cellPtr->cellComponentVec(), i );
+        (*_lanePtr)[i].steinerTree();
+    }
 
 
 #ifdef SKIP
@@ -2015,7 +2042,7 @@ void Window::keyPressEvent( QKeyEvent *event )
 #endif // DEBUG
 
             double ratio = (double)width()/(double)height();
-            double x = sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / ratio );
+            double x = 0.25*sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / ratio );
             _content_width = ratio * x;
             _content_height = x;
             // _content_width = ratio * x;

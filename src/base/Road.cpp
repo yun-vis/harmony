@@ -141,7 +141,7 @@ void Road::_findShortestPaths( void )
                 }
                 _highwayMat[i][j].path.push_back( vdTarget );
 
-//#ifdef DEBUG
+#ifdef DEBUG
 
                 cerr << "( " << _road[_highwayMat[i][j].routerVD].id
                      << ", " << _road[_highwayMat[j][i].routerVD].id << " ): ";
@@ -149,7 +149,7 @@ void Road::_findShortestPaths( void )
                     cerr << _road[ _highwayMat[i][j].path[k] ].id << " ";
                 }
                 cerr << endl;
-//#endif // DEBUG
+#endif // DEBUG
             }
         }
     }
@@ -187,7 +187,8 @@ bool Road::_findVertexOnLine( Coord2 &coord, UndirectedBaseGraph::edge_descripto
 //  Outputs
 //  none
 //
-void Road::_initLane( unsigned int gid,
+/*
+void Road::_initLane( unsigned int gid, int selectedID,
                       multimap< int, CellComponent > & cellComponent,
                       vector < Highway > *highwayRoadPtr )
 {
@@ -470,11 +471,11 @@ void Road::_initLane( unsigned int gid,
             edVec.push_back( ed );
         }
     }
-/*
+#ifdef SKIP
     for( unsigned int i = 0; i < edVec.size(); i++ ){
         remove_edge( edVec[i], _road );
     }
-*/
+#endif // SKIP
     // reorder edge id
     nEdges = 0;
     BGL_FORALL_EDGES( ed, _road, UndirectedBaseGraph ){
@@ -529,7 +530,7 @@ void Road::_initLane( unsigned int gid,
             nEdges++;
         }
 
-/*
+#ifdef SKIP
         UndirectedBaseGraph::vertex_descriptor minVD;
         unsigned int id = _road[ gates[i] ].initID;
         map < unsigned int , vector < UndirectedBaseGraph::vertex_descriptor > > ::iterator itV = polygonVD.begin();
@@ -595,9 +596,10 @@ void Road::_initLane( unsigned int gid,
                 }
             }
         }
-*/
+#endif // SKIP
     }
 }
+*/
 
 //
 //  Road::init -- initialize
@@ -608,8 +610,10 @@ void Road::_initLane( unsigned int gid,
 //  Outputs
 //  none
 //
-void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellComponentVec )
+void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellComponentVec,
+                            int selectedID )
 {
+    _selectedID = selectedID;
     vector< MetaboliteGraph >   &subG    = _pathway->subG();
     vector< ForceGraph >        &lsubg   = _pathway->lsubG();
     unsigned int nVertices = 0, nEdges = 0;
@@ -660,7 +664,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
         // add selected
         BGL_FORALL_VERTICES( vd, subG[m], MetaboliteGraph ) {
 
-            if( *subG[m][vd].isSelectedPtr == true ){
+            if( ( *subG[m][vd].isSelectedPtr == true ) && ( *subG[m][vd].selectedIDPtr == _selectedID ) ){
 
                 Coord2 &coord = *subG[m][vd].coordPtr;
 
@@ -670,8 +674,8 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
                 _road[ vdNew ].coordPtr = new Coord2( coord.x(), coord.y() );
                 gates.push_back( vdNew );
                 _citeVec.push_back( vdNew );
-                cerr << "isselected = " << *subG[m][vd].isSelectedPtr << endl;
-                cerr << "vid = " << _road[ vdNew ].id << " initID = " << _road[ vdNew ].initID << endl;
+                //cerr << "isselected = " << *subG[m][vd].isSelectedPtr << endl;
+                //cerr << "vid = " << _road[ vdNew ].id << " initID = " << _road[ vdNew ].initID << endl;
                 nVertices++;
             }
         }
@@ -929,7 +933,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
 //  Outputs
 //  none
 //
-void Road::_initRoad( Cell *cellPtr )
+void Road::_initRoad( Cell *cellPtr, int __selectedID )
 {
     _clear();
 
@@ -954,7 +958,7 @@ void Road::_initRoad( Cell *cellPtr )
             unsigned int subsysID = component.groupID;
             Polygon2 &c = component.contour.contour();
 
-            if( subsysID == 2 ) cerr << "myc = " << c << endl;
+            // if( subsysID == 2 ) cerr << "myc = " << c << endl;
             _contourVec[ subsysID ].polygons().push_back( c );
         }
     }
@@ -1217,7 +1221,7 @@ void Road::buildRoad( void )
         // aliases in the subsystem
         map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor > aliasVDMapO;
         BGL_FORALL_VERTICES( vd, subg[i], MetaboliteGraph ) {
-            if( *subg[i][vd].isSelectedPtr == true ){
+            if( ( *subg[i][vd].isSelectedPtr == true ) && ( *subg[i][vd].selectedIDPtr == _selectedID ) ) {
                 aliasVDMapO.insert( pair< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >( vd, vd ) );
             }
         }
@@ -1237,7 +1241,7 @@ void Road::buildRoad( void )
             map< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor > aliasVDMapI;
             BGL_FORALL_VERTICES( vd, subg[j], MetaboliteGraph ) {
 
-                if( *subg[j][vd].isSelectedPtr == true ){
+                if( ( *subg[j][vd].isSelectedPtr == true ) && ( *subg[j][vd].selectedIDPtr == _selectedID ) ){
                     aliasVDMapI.insert( pair< MetaboliteGraph::vertex_descriptor, MetaboliteGraph::vertex_descriptor >( vd, vd ) );
                 }
             }
@@ -1393,19 +1397,15 @@ void Road::steinerTree( void )
     vector< pair< unsigned int, unsigned int > > treeedges;
     steinertree( num_vertices( _road ), num_edges( _road ), graph, terminals, treeedges );
 
-    cerr << "treeedges:" << endl;
+    // cerr << "treeedges:" << endl;
     for( unsigned int j = 0; j < treeedges.size(); j++ ){
-        cerr << treeedges[j].first << "," << treeedges[j].second << endl;
+        // cerr << treeedges[j].first << "," << treeedges[j].second << endl;
         UndirectedBaseGraph::vertex_descriptor vdS = vertex( treeedges[j].first, _road );
         UndirectedBaseGraph::vertex_descriptor vdT = vertex( treeedges[j].second, _road );
         _treeEdgeVec.push_back( pair< UndirectedBaseGraph::vertex_descriptor,
                 UndirectedBaseGraph::vertex_descriptor >( vdS, vdT ) );
     }
-    cerr << endl;
-
-    // compute lane Chaikin curve
-    // _initLaneChaikinCurve();
-    // _runLaneChaikinCurve( 5 );
+    // cerr << endl;
 
     // compute the curvy tree
     unsigned int nVertices = 0, nEdges = 0;
@@ -1453,58 +1453,10 @@ void Road::steinerTree( void )
         }
     }
 
-    printGraph( tree );
+    // printGraph( tree );
     _curvytree.computeFineCurve( 5, 100 );
 
 }
-
-#ifdef SKIP
-void Road::steinerTree( void )
-{
-    //for( unsigned int i = 0; i < _terminalVec.size(); i++ ){
-    for( unsigned int i = 0; i < _terminalVec.size(); i++ ){
-
-        if( i != _gid ){
-
-            vector< pair< unsigned int, unsigned int > > graph;
-            vector< unsigned int > terminals;
-
-            // cerr << "gid = " << _gid << endl;
-            // add edges
-            BGL_FORALL_EDGES( ed, _road, UndirectedBaseGraph ) {
-                UndirectedBaseGraph::vertex_descriptor vdS = source( ed, _road );
-                UndirectedBaseGraph::vertex_descriptor vdT = target( ed, _road );
-
-                graph.push_back( pair< unsigned int, unsigned int >( _road[vdS].id+1, _road[vdT].id+1 ) );
-                //cerr << "( " << _road[vdS].id << ", " << _road[vdT].id << " )" << endl;
-            }
-
-            // add terminals
-            map< UndirectedBaseGraph::vertex_descriptor,
-                    UndirectedBaseGraph::vertex_descriptor >::iterator itT;
-            for( itT = _terminalVec[i].terminals.begin(); itT != _terminalVec[i].terminals.end(); itT++ ){
-                terminals.push_back( _road[ itT->first ].id+1 );
-                //cerr << _road[ itT->first ].id << ", ";
-            }
-            //cerr << endl;
-
-            vector< pair< unsigned int, unsigned int > > treeedges;
-            steinertree( num_vertices( _road ), num_edges( _road ), graph, terminals, treeedges );
-
-            //cerr << "treeedges:" << endl;
-            for( unsigned int j = 0; j < treeedges.size(); j++ ){
-                //cerr << treeedges[j].first << "," << treeedges[j].second << endl;
-                UndirectedBaseGraph::vertex_descriptor vdS = vertex( treeedges[j].first, _road );
-                UndirectedBaseGraph::vertex_descriptor vdT = vertex( treeedges[j].second, _road );
-                _terminalVec[i].treeEdges.push_back( pair< UndirectedBaseGraph::vertex_descriptor,
-                        UndirectedBaseGraph::vertex_descriptor >( vdS, vdT ) );
-            }
-            //cerr << endl;
-        }
-    }
-}
-#endif // SKIP
-
 
 
 //
@@ -1518,7 +1470,7 @@ void Road::steinerTree( void )
 //
 Road::Road( void )
 {
-    ;
+    _selectedID = -1;
 }
 
 //

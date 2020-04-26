@@ -178,3 +178,34 @@ void pickBrewerColor( unsigned int id, vector< double > &rgb )
     }
 }
 
+void pickRouteColor( unsigned int id, vector< double > &rgb )
+{
+    int index = id;// % MAX_COLOR_TYPE;
+    rgb.resize( 3 );
+
+    switch( index ){
+        case 0:
+            rgb[ 0 ] = MIN2( 1.0, ( 255.0 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( 0.0 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( 0.0 )/255.0 );
+            break;
+        case 1:
+            rgb[ 0 ] = MIN2( 1.0, ( 0.0 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( 0.0 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( 255.0 )/255.0 );
+            break;
+        case 2:
+            rgb[ 0 ] = MIN2( 1.0, ( 102.0 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( 211.0 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( 250.0 )/255.0 );
+	    break;
+        case 3:
+            rgb[ 0 ] = MIN2( 1.0, ( 37.0 )/255.0 );
+            rgb[ 1 ] = MIN2( 1.0, ( 101.0 )/255.0 );
+            rgb[ 2 ] = MIN2( 1.0, ( 174.0 )/255.0 );
+            break;
+        default:
+            cerr << "sth is wrong here" << endl;
+            break;
+    }
+}
