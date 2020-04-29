@@ -41,8 +41,7 @@ using namespace std;
 //  Outputs
 //  none
 //
-void SkeletonEdgeProperty::_init( void )
-{
+void SkeletonEdgeProperty::_init( void ) {
 	id = 0;
 	weight = 1.0;
 }
@@ -64,9 +63,8 @@ void SkeletonEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-SkeletonEdgeProperty::SkeletonEdgeProperty()
-{
-    _init();
+SkeletonEdgeProperty::SkeletonEdgeProperty() {
+	_init();
 }
 
 
@@ -90,14 +88,13 @@ SkeletonEdgeProperty::SkeletonEdgeProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const SkeletonEdgeProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const SkeletonEdgeProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -111,7 +108,6 @@ ostream & operator << ( ostream & stream, const SkeletonEdgeProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, SkeletonEdgeProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, SkeletonEdgeProperty &obj ) {
+	return stream;
 }

@@ -33,31 +33,30 @@
 //  Outputs
 //  none
 //
-void printGraph( const UndirectedBaseGraph & graph )
-{
-    cerr << "num_vertices = " << num_vertices( graph ) << endl;
-    cerr << "num_edges = " << num_edges( graph ) << endl;
+void printGraph( const UndirectedBaseGraph &graph ) {
+	cerr << "num_vertices = " << num_vertices( graph ) << endl;
+	cerr << "num_edges = " << num_edges( graph ) << endl;
 
 //#ifdef  DEBUG
-    // print vertex information
-    BGL_FORALL_VERTICES( vd, graph, UndirectedBaseGraph ) {
-
-        //UndirectedBaseGraph::degree_size_type      degrees         = out_degree( vd, graph );
-		cerr << " id = " << graph[vd].id << " initID = " << graph[vd].initID
-		     << " coord = " << *graph[ vd ].coordPtr;
-    }
+	// print vertex information
+	BGL_FORALL_VERTICES( vd, graph, UndirectedBaseGraph ) {
+			
+			//UndirectedBaseGraph::degree_size_type      degrees         = out_degree( vd, graph );
+			cerr << " id = " << graph[ vd ].id << " initID = " << graph[ vd ].initID
+			     << " coord = " << *graph[ vd ].coordPtr;
+		}
 //#endif  // DEBUG
 
 //#ifdef  DEBUG
-    // print edge information
-    BGL_FORALL_EDGES( ed, graph, UndirectedBaseGraph ) {
-
-        UndirectedBaseGraph::vertex_descriptor vdS = source( ed, graph );
-        UndirectedBaseGraph::vertex_descriptor vdT = target( ed, graph );
-
-        cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) "
-         	 << " w = " << graph[ ed ].weight << endl;
-    }
+	// print edge information
+	BGL_FORALL_EDGES( ed, graph, UndirectedBaseGraph ) {
+			
+			UndirectedBaseGraph::vertex_descriptor vdS = source( ed, graph );
+			UndirectedBaseGraph::vertex_descriptor vdT = target( ed, graph );
+			
+			cerr << "eid = " << graph[ ed ].id << " ( " << graph[ vdS ].id << " == " << graph[ vdT ].id << " ) "
+			     << " w = " << graph[ ed ].weight << endl;
+		}
 //#endif  // DEBUG
 }
 
@@ -70,29 +69,28 @@ void printGraph( const UndirectedBaseGraph & graph )
 //  Outputs
 //  none
 //
-void clearGraph( UndirectedBaseGraph & graph )
-{
-    // clear edges
+void clearGraph( UndirectedBaseGraph &graph ) {
+	// clear edges
 	UndirectedBaseGraph::edge_iterator ei, ei_end, e_next;
 	tie( ei, ei_end ) = edges( graph );
-	for ( e_next = ei; ei != ei_end; ei = e_next ) {
+	for( e_next = ei; ei != ei_end; ei = e_next ) {
 		e_next++;
 		remove_edge( *ei, graph );
 	}
 
 #ifdef  SKIP
-    BGL_FORALL_EDGES( edge, graph, BaseGraph )
-    {
-        remove_edge( edge, graph );
-    }
+	BGL_FORALL_EDGES( edge, graph, BaseGraph )
+	{
+		remove_edge( edge, graph );
+	}
 #endif  // SKIP
-
-    // clear vertices
-    pair< UndirectedBaseGraph::vertex_iterator, UndirectedBaseGraph::vertex_iterator > vp;
-    for ( vp = vertices( graph ); vp.first != vp.second;  ) {
-		UndirectedBaseGraph::vertex_descriptor vd = (*vp.first);
+	
+	// clear vertices
+	pair< UndirectedBaseGraph::vertex_iterator, UndirectedBaseGraph::vertex_iterator > vp;
+	for( vp = vertices( graph ); vp.first != vp.second; ) {
+		UndirectedBaseGraph::vertex_descriptor vd = ( *vp.first );
 		++vp.first;
 		clear_vertex( vd, graph );
 		remove_vertex( vd, graph );
-    }
+	}
 }

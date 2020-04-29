@@ -25,80 +25,86 @@ using namespace std;
 //------------------------------------------------------------------------------
 
 namespace Base {
-
-    //------------------------------------------------------------------------------
-    //	Defining Classes
-    //------------------------------------------------------------------------------
-    template< typename T >
-    class Timer {
-
-    private:
-
-        string _unit;
-        chrono::steady_clock::time_point _begin;
-        chrono::steady_clock::time_point _end;
-
-        //------------------------------------------------------------------------------
-        //	Special functions
-        //------------------------------------------------------------------------------
-
-    public:
-
-        //------------------------------------------------------------------------------
-        //	Constructors & Destructors
-        //------------------------------------------------------------------------------
-        // default constructor
-        Timer( void ) {}
-        // copy constructor
-        Timer( const string & s ) {
-            _unit = s;
-        }
-        // destructor
-        ~Timer( void ){}
-
-        //------------------------------------------------------------------------------
-        //	Assignment operators
-        //------------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------------
-        //	Reference to elements
-        //------------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------------
-        //	Special functions
-        //------------------------------------------------------------------------------
-        void begin( void ) {
-            _begin = chrono::steady_clock::now();
-        }
-        void end( void ) {
-            _end = chrono::steady_clock::now();
-        }
-        void elapsed( void ) {
-
-            // chrono::nanoseconds, ns, 1e9
-            // chrono::microseconds, µs, 1e6
-            // chrono::milliseconds, ms, 1e3
-            // chrono::seconds, sec, 1
-            cerr << "Computation Time: " << chrono::duration_cast< T >( _end-_begin ).count()
-                 << " in " << _unit << endl;
-        }
-
-        //------------------------------------------------------------------------------
-        //	Friend functions
-        //------------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------------
-        //	I/O functions
-        //------------------------------------------------------------------------------
-        // output
-        friend ostream &	operator << ( ostream & s, const Timer & t );
-        // input
-        friend istream &	operator >> ( istream & s, Timer & t );
-        // class name
-        virtual const char * className( void ) const { return "Timer"; }
-
-    };
-
+	
+	//------------------------------------------------------------------------------
+	//	Defining Classes
+	//------------------------------------------------------------------------------
+	template< typename T >
+	class Timer {
+	
+	private:
+		
+		string _unit;
+		chrono::steady_clock::time_point _begin;
+		chrono::steady_clock::time_point _end;
+		
+		//------------------------------------------------------------------------------
+		//	Special functions
+		//------------------------------------------------------------------------------
+	
+	public:
+		
+		//------------------------------------------------------------------------------
+		//	Constructors & Destructors
+		//------------------------------------------------------------------------------
+		// default constructor
+		Timer( void ) {}
+		
+		// copy constructor
+		Timer( const string &s ) {
+			_unit = s;
+		}
+		
+		// destructor
+		~Timer( void ) {}
+		
+		//------------------------------------------------------------------------------
+		//	Assignment operators
+		//------------------------------------------------------------------------------
+		
+		//------------------------------------------------------------------------------
+		//	Reference to elements
+		//------------------------------------------------------------------------------
+		
+		//------------------------------------------------------------------------------
+		//	Special functions
+		//------------------------------------------------------------------------------
+		void begin( void ) {
+			_begin = chrono::steady_clock::now();
+		}
+		
+		void end( void ) {
+			_end = chrono::steady_clock::now();
+		}
+		
+		void elapsed( void ) {
+			
+			// chrono::nanoseconds, ns, 1e9
+			// chrono::microseconds, µs, 1e6
+			// chrono::milliseconds, ms, 1e3
+			// chrono::seconds, sec, 1
+			cerr << "Computation Time: " << chrono::duration_cast< T >( _end - _begin ).count()
+			     << " in " << _unit << endl;
+		}
+		
+		//------------------------------------------------------------------------------
+		//	Friend functions
+		//------------------------------------------------------------------------------
+		
+		//------------------------------------------------------------------------------
+		//	I/O functions
+		//------------------------------------------------------------------------------
+		// output
+		friend ostream &operator<<( ostream &s, const Timer &t );
+		
+		// input
+		friend istream &operator>>( istream &s, Timer &t );
+		
+		// class name
+		virtual const char *className( void ) const { return "Timer"; }
+		
+	};
+	
 } // namespace Base
 
 #endif // _Base_Timer_H

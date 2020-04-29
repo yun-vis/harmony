@@ -26,8 +26,7 @@
 //  Outputs
 //  none
 //
-RegionData::RegionData( void )
-{
+RegionData::RegionData( void ) {
 }
 
 //
@@ -39,8 +38,7 @@ RegionData::RegionData( void )
 //  Outputs
 //  none
 //
-RegionData::RegionData( const RegionData & obj )
-{
+RegionData::RegionData( const RegionData &obj ) {
 }
 
 
@@ -56,8 +54,7 @@ RegionData::RegionData( const RegionData & obj )
 //  Outputs
 //  none
 //
-RegionData::~RegionData( void )
-{
+RegionData::~RegionData( void ) {
 }
 
 //------------------------------------------------------------------------------
@@ -77,11 +74,10 @@ RegionData::~RegionData( void )
 //  Outputs
 //      output stream
 //
-ostream & operator << ( ostream & stream, const RegionData & obj )
-{
+ostream &operator<<( ostream &stream, const RegionData &obj ) {
 	stream << "-- regiondata --" << endl;
-
-    return stream;
+	
+	return stream;
 }
 
 //
@@ -94,10 +90,9 @@ ostream & operator << ( ostream & stream, const RegionData & obj )
 //  Outputs
 //      input stream
 //
-istream & operator >> ( istream & stream, RegionData & obj )
-{
-    // do nothing
-    return stream;
+istream &operator>>( istream &stream, RegionData &obj ) {
+	// do nothing
+	return stream;
 }
 
 // end of header file

@@ -41,9 +41,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void SkeletonGraphProperty::_init( double &width, double &height )
-{
-    BaseGraphProperty::_init( width, height );
+void SkeletonGraphProperty::_init( double &width, double &height ) {
+	BaseGraphProperty::_init( width, height );
 }
 
 //------------------------------------------------------------------------------
@@ -63,9 +62,8 @@ void SkeletonGraphProperty::_init( double &width, double &height )
 //  Outputs
 //  none
 //
-SkeletonGraphProperty::SkeletonGraphProperty()
-{
-    //BaseGraphProperty::init();
+SkeletonGraphProperty::SkeletonGraphProperty() {
+	//BaseGraphProperty::init();
 }
 
 
@@ -89,14 +87,13 @@ SkeletonGraphProperty::SkeletonGraphProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const SkeletonGraphProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const SkeletonGraphProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const SkeletonGraphProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, SkeletonGraphProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, SkeletonGraphProperty &obj ) {
+	return stream;
 }

@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_BoundaryGraphProperty_H
+#ifndef _BoundaryGraphProperty_H
 #define _BoundaryGraphProperty_H
 
 //------------------------------------------------------------------------------
@@ -32,21 +32,21 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryGraphProperty : public BaseGraphProperty{
+class BoundaryGraphProperty : public BaseGraphProperty {
 
-  protected:
+protected:
+	
+	void _init( double &width, double &height );
 
-    void		        _init( double &width, double &height );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BoundaryGraphProperty();				// constructor (default)
-    BoundaryGraphProperty( const BoundaryGraphProperty & v ) {
-    }					// copy constructor
-    virtual ~BoundaryGraphProperty() {}		// destructor
+	BoundaryGraphProperty();                // constructor (default)
+	BoundaryGraphProperty( const BoundaryGraphProperty &v ) {
+	}                    // copy constructor
+	virtual ~BoundaryGraphProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -72,13 +72,15 @@ class BoundaryGraphProperty : public BaseGraphProperty{
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const BoundaryGraphProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, BoundaryGraphProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "BoundaryGraphProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const BoundaryGraphProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, BoundaryGraphProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "BoundaryGraphProperty"; }
+	// class name
+	
 };
 
 #endif // _BoundaryGraphProperty_H

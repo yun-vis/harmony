@@ -16,8 +16,10 @@
 using namespace std;
 
 #ifndef Q_MOC_RUN
+
 #include "base/Common.h"
 #include "ui/GraphicsBase.h"
+
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -34,34 +36,35 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsEdgeItem : public  QGraphicsPathItem, public GraphicsBase
-{
+class GraphicsEdgeItem : public QGraphicsPathItem, public GraphicsBase {
 private:
 
 protected:
 
 
 public:
-    explicit GraphicsEdgeItem( QGraphicsItem *parent = Q_NULLPTR );
-    explicit GraphicsEdgeItem( const QPainterPath &path, QGraphicsItem *parent = Q_NULLPTR );
-    ~GraphicsEdgeItem();
-
-    int type( void ) const Q_DECL_OVERRIDE;
-
-    // source from the qt library
-    //QPainterPath path() const;
-    //void setPath(const QPainterPath &path);
-
-    //QPainterPath shape() const Q_DECL_OVERRIDE;
-    //bool contains(const QPointF &point) const Q_DECL_OVERRIDE;
+	explicit GraphicsEdgeItem( QGraphicsItem *parent = Q_NULLPTR );
+	
+	explicit GraphicsEdgeItem( const QPainterPath &path, QGraphicsItem *parent = Q_NULLPTR );
+	
+	~GraphicsEdgeItem();
+	
+	int type( void ) const Q_DECL_OVERRIDE;
+	
+	// source from the qt library
+	//QPainterPath path() const;
+	//void setPath(const QPainterPath &path);
+	
+	//QPainterPath shape() const Q_DECL_OVERRIDE;
+	//bool contains(const QPointF &point) const Q_DECL_OVERRIDE;
 
 //------------------------------------------------------------------------------
 //      Reimplementation
 //------------------------------------------------------------------------------
-    QRectF boundingRect() const Q_DECL_OVERRIDE;
-
-    void paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
-                QWidget *widget = Q_NULLPTR ) Q_DECL_OVERRIDE;
+	QRectF boundingRect() const Q_DECL_OVERRIDE;
+	
+	void paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
+	            QWidget *widget = Q_NULLPTR ) Q_DECL_OVERRIDE;
 
 
 //------------------------------------------------------------------------------

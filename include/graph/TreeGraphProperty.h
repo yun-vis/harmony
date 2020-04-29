@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_TreeGraphProperty_H
+#ifndef _TreeGraphProperty_H
 #define _TreeGraphProperty_H
 
 //------------------------------------------------------------------------------
@@ -32,21 +32,21 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class TreeGraphProperty: public BaseGraphProperty {
+class TreeGraphProperty : public BaseGraphProperty {
 
-  protected:
+protected:
+	
+	void _init( double &width, double &height );
 
-      void		    _init( double &width, double &height );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    TreeGraphProperty();				// constructor (default)
-    TreeGraphProperty( const TreeGraphProperty & v ) {
-    }					// copy constructor
-    virtual ~TreeGraphProperty() {}		// destructor
+	TreeGraphProperty();                // constructor (default)
+	TreeGraphProperty( const TreeGraphProperty &v ) {
+	}                    // copy constructor
+	virtual ~TreeGraphProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -55,10 +55,10 @@ class TreeGraphProperty: public BaseGraphProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-
-    void		                init( double &__width, double &__height ) {
-        _init( __width, __height );
-    }
+	
+	void init( double &__width, double &__height ) {
+		_init( __width, __height );
+	}
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -76,13 +76,15 @@ class TreeGraphProperty: public BaseGraphProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const TreeGraphProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, TreeGraphProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "TreeGraphProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const TreeGraphProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, TreeGraphProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "TreeGraphProperty"; }
+	// class name
+	
 };
 
 #endif // _TreeGraphProperty_H

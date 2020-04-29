@@ -41,9 +41,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void ForceGraphProperty::_init( void )
-{
-    //BaseGraphProperty::init();
+void ForceGraphProperty::_init( void ) {
+	//BaseGraphProperty::init();
 }
 
 //------------------------------------------------------------------------------
@@ -63,9 +62,8 @@ void ForceGraphProperty::_init( void )
 //  Outputs
 //  none
 //
-ForceGraphProperty::ForceGraphProperty()
-{
-    _init();
+ForceGraphProperty::ForceGraphProperty() {
+	_init();
 }
 
 
@@ -89,14 +87,13 @@ ForceGraphProperty::ForceGraphProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const ForceGraphProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const ForceGraphProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const ForceGraphProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, ForceGraphProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, ForceGraphProperty &obj ) {
+	return stream;
 }

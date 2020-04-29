@@ -41,9 +41,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void TreeGraphProperty::_init( double &width, double &height )
-{
-    BaseGraphProperty::_init( width, height );
+void TreeGraphProperty::_init( double &width, double &height ) {
+	BaseGraphProperty::_init( width, height );
 }
 
 //------------------------------------------------------------------------------
@@ -63,9 +62,8 @@ void TreeGraphProperty::_init( double &width, double &height )
 //  Outputs
 //  none
 //
-TreeGraphProperty::TreeGraphProperty()
-{
-    //BaseGraphProperty::init();
+TreeGraphProperty::TreeGraphProperty() {
+	//BaseGraphProperty::init();
 }
 
 
@@ -89,14 +87,13 @@ TreeGraphProperty::TreeGraphProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const TreeGraphProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const TreeGraphProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const TreeGraphProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, TreeGraphProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, TreeGraphProperty &obj ) {
+	return stream;
 }

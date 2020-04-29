@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_MetaboliteGraphProperty_H
+#ifndef _MetaboliteGraphProperty_H
 #define _MetaboliteGraphProperty_H
 
 //------------------------------------------------------------------------------
@@ -33,19 +33,19 @@ using namespace std;
 //------------------------------------------------------------------------------
 class MetaboliteGraphProperty : public BaseGraphProperty {
 
-  protected:
-
+protected:
+	
 	void _init( double &width, double &height );
 
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    MetaboliteGraphProperty();				// constructor (default)
-    MetaboliteGraphProperty( const MetaboliteGraphProperty & m ) {
-    }					// copy constructor
-    virtual ~MetaboliteGraphProperty() {}		// destructor
+	MetaboliteGraphProperty();                // constructor (default)
+	MetaboliteGraphProperty( const MetaboliteGraphProperty &m ) {
+	}                    // copy constructor
+	virtual ~MetaboliteGraphProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -71,13 +71,15 @@ class MetaboliteGraphProperty : public BaseGraphProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const MetaboliteGraphProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, MetaboliteGraphProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "MetaboliteGraphProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const MetaboliteGraphProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, MetaboliteGraphProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "MetaboliteGraphProperty"; }
+	// class name
+	
 };
 
 #endif // _MetaboliteGraphProperty_H

@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_MetaboliteEdgeProperty_H
+#ifndef _MetaboliteEdgeProperty_H
 #define _MetaboliteEdgeProperty_H
 
 //------------------------------------------------------------------------------
@@ -32,20 +32,20 @@ using namespace std;
 
 class MetaboliteEdgeProperty : public BaseEdgeProperty {
 
-  protected:
+protected:
 
 
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constuructors
 //------------------------------------------------------------------------------
-    MetaboliteEdgeProperty();				// constructor (default)
-    MetaboliteEdgeProperty( const MetaboliteEdgeProperty & e ) {
-	   //_id	    = e._id;
-	   //_weight	= e._weight;
-    }					// copy constructor
-    virtual ~MetaboliteEdgeProperty() {}		// destructor
+	MetaboliteEdgeProperty();                // constructor (default)
+	MetaboliteEdgeProperty( const MetaboliteEdgeProperty &e ) {
+		//_id	    = e._id;
+		//_weight	= e._weight;
+	}                    // copy constructor
+	virtual ~MetaboliteEdgeProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment opereators
@@ -54,14 +54,14 @@ class MetaboliteEdgeProperty : public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    string      type;
-    bool        fore;
-
-    //string &	               type( void ) 	      { return _type; }
-    //const string &	           type( void ) const     { return _type; }
-
-    //bool &	                   fore( void ) 	      { return _fore; }
-    //const bool &	           fore( void ) const     { return _fore; }
+	string type;
+	bool fore;
+	
+	//string &	               type( void ) 	      { return _type; }
+	//const string &	           type( void ) const     { return _type; }
+	
+	//bool &	                   fore( void ) 	      { return _fore; }
+	//const bool &	           fore( void ) const     { return _fore; }
 
 
 
@@ -81,13 +81,15 @@ class MetaboliteEdgeProperty : public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const MetaboliteEdgeProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, MetaboliteEdgeProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "MetaboliteEdgeProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const MetaboliteEdgeProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, MetaboliteEdgeProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "MetaboliteEdgeProperty"; }
+	// class name
+	
 };
 
 #endif // _MetaboliteEdgeProperty_H

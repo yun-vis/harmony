@@ -41,15 +41,14 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BaseEdgeProperty::_init( void )
-{
+void BaseEdgeProperty::_init( void ) {
 	id = 0;
 	angle = 0;
 	weight = 1.0;
 	visit = 0;
 	visitedTimes = 0;
-    isFore = false;
-    isBack = false;
+	isFore = false;
+	isBack = false;
 }
 
 //------------------------------------------------------------------------------
@@ -69,9 +68,8 @@ void BaseEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-BaseEdgeProperty::BaseEdgeProperty()
-{
-    _init();
+BaseEdgeProperty::BaseEdgeProperty() {
+	_init();
 }
 
 
@@ -95,14 +93,13 @@ BaseEdgeProperty::BaseEdgeProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BaseEdgeProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const BaseEdgeProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -116,7 +113,6 @@ ostream & operator << ( ostream & stream, const BaseEdgeProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BaseEdgeProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, BaseEdgeProperty &obj ) {
+	return stream;
 }

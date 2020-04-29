@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_ForceGraphProperty_H
+#ifndef _ForceGraphProperty_H
 #define _ForceGraphProperty_H
 
 //------------------------------------------------------------------------------
@@ -31,22 +31,22 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceGraphProperty: public BoundaryGraphProperty {
+class ForceGraphProperty : public BoundaryGraphProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    ForceGraphProperty();				// constructor (default)
-    ForceGraphProperty( const ForceGraphProperty & g )
-            : BoundaryGraphProperty ( g ) {
-    }					// copy constructor
-    virtual ~ForceGraphProperty() {}		// destructor
+	ForceGraphProperty();                // constructor (default)
+	ForceGraphProperty( const ForceGraphProperty &g )
+			: BoundaryGraphProperty( g ) {
+	}                    // copy constructor
+	virtual ~ForceGraphProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -55,8 +55,8 @@ class ForceGraphProperty: public BoundaryGraphProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-
-    void		                init( void )		{ _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -74,13 +74,15 @@ class ForceGraphProperty: public BoundaryGraphProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const ForceGraphProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, ForceGraphProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "ForceGraphProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const ForceGraphProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, ForceGraphProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "ForceGraphProperty"; }
+	// class name
+	
 };
 
 #endif // _ForceGraphProperty_H

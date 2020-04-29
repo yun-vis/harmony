@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <cctype>
 #include <cmath>
+
 using namespace std;
 
 #include "base/Grid2.h"
@@ -40,9 +41,8 @@ using namespace std;
 //  返り値
 //	なし
 //
-void Grid2::_init( void )
-{
-    _element[ 0 ] = _element[ 1 ] = 0;
+void Grid2::_init( void ) {
+	_element[ 0 ] = _element[ 1 ] = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -62,9 +62,8 @@ void Grid2::_init( void )
 //  返り値
 //	なし
 //
-Grid2::Grid2()
-{
-    _init();
+Grid2::Grid2() {
+	_init();
 }
 
 
@@ -77,10 +76,9 @@ Grid2::Grid2()
 //  返り値
 //	なし
 //
-Grid2::Grid2( const int x, const int y )
-{
-    _element[ 0 ]	= x;
-    _element[ 1 ]	= y;
+Grid2::Grid2( const int x, const int y ) {
+	_element[ 0 ] = x;
+	_element[ 1 ] = y;
 }
 
 //
@@ -92,11 +90,10 @@ Grid2::Grid2( const int x, const int y )
 //  返り値
 //	なし
 //
-Grid2::Grid2( const Grid2 & v )
-{
-    _element[ 0 ]	= v._element[ 0 ];
-    _element[ 1 ]	= v._element[ 1 ];
- }
+Grid2::Grid2( const Grid2 &v ) {
+	_element[ 0 ] = v._element[ 0 ];
+	_element[ 1 ] = v._element[ 1 ];
+}
 
 
 //------------------------------------------------------------------------------
@@ -112,13 +109,12 @@ Grid2::Grid2( const Grid2 & v )
 //  Outputs
 //	reference to this object
 //
-Grid2 & Grid2::operator = ( const Grid2 & v )
-{
-    if ( this != &v ) {
-	_element[ 0 ]	= v._element[ 0 ];
-	_element[ 1 ]	= v._element[ 1 ];
-    }
-    return *this;
+Grid2 &Grid2::operator=( const Grid2 &v ) {
+	if( this != &v ) {
+		_element[ 0 ] = v._element[ 0 ];
+		_element[ 1 ] = v._element[ 1 ];
+	}
+	return *this;
 }
 
 
@@ -131,11 +127,10 @@ Grid2 & Grid2::operator = ( const Grid2 & v )
 //  Outputs
 //	reference to this object
 //
-Grid2 & Grid2::operator += ( const Grid2 & v )
-{
-    _element[ 0 ]	+= v._element[ 0 ];
-    _element[ 1 ]	+= v._element[ 1 ];
-    return *this;
+Grid2 &Grid2::operator+=( const Grid2 &v ) {
+	_element[ 0 ] += v._element[ 0 ];
+	_element[ 1 ] += v._element[ 1 ];
+	return *this;
 }
 
 
@@ -148,11 +143,10 @@ Grid2 & Grid2::operator += ( const Grid2 & v )
 //  Outputs
 //	reference to this object
 //
-Grid2 & Grid2::operator -= ( const Grid2 & v )
-{
-    _element[ 0 ]	-= v._element[ 0 ];
-    _element[ 1 ]	-= v._element[ 1 ];
-    return *this;
+Grid2 &Grid2::operator-=( const Grid2 &v ) {
+	_element[ 0 ] -= v._element[ 0 ];
+	_element[ 1 ] -= v._element[ 1 ];
+	return *this;
 }
 
 
@@ -165,11 +159,10 @@ Grid2 & Grid2::operator -= ( const Grid2 & v )
 //  Outputs
 //	reference to this object
 //
-Grid2 & Grid2::operator *= ( const int d )
-{
-    _element[ 0 ]	*= d;
-    _element[ 1 ]	*= d;
-    return *this;
+Grid2 &Grid2::operator*=( const int d ) {
+	_element[ 0 ] *= d;
+	_element[ 1 ] *= d;
+	return *this;
 }
 
 
@@ -182,16 +175,15 @@ Grid2 & Grid2::operator *= ( const int d )
 //  Outputs
 //	the corresponding coordinate
 //
-const int & Grid2::operator [] ( int i ) const
-{
+const int &Grid2::operator[]( int i ) const {
 #ifdef GRID2_INDEX_CHECK
-    const char theName[] = "Grid2::operator [] : ";
-    if ( ( i < 0 ) || ( i > 1 ) ) {
+	const char theName[] = "Grid2::operator [] : ";
+	if ( ( i < 0 ) || ( i > 1 ) ) {
 	cerr << theName << " index = " << i << endl;
 	assert( ( 0 <= i ) && ( i <= 1 ) );
-    }
-#endif	// GRID2_INDEX_CHECK
-    return _element[ i ];
+	}
+#endif    // GRID2_INDEX_CHECK
+	return _element[ i ];
 }
 
 
@@ -204,16 +196,15 @@ const int & Grid2::operator [] ( int i ) const
 //  Outputs
 //	the corresponding coordinate
 //
-int & Grid2::operator [] ( int i )
-{
+int &Grid2::operator[]( int i ) {
 #ifdef GRID2_INDEX_CHECK
-    const char theName[] = "Grid2::operator [] : ";
-    if ( ( i < 0 ) || ( i > 1 ) ) {
+	const char theName[] = "Grid2::operator [] : ";
+	if ( ( i < 0 ) || ( i > 1 ) ) {
 	cerr << theName << " index = " << i << endl;
 	assert( ( 0 <= i ) && ( i <= 1 ) );
-    }
-#endif	// GRID2_INDEX_CHECK
-    return _element[ i ];
+	}
+#endif    // GRID2_INDEX_CHECK
+	return _element[ i ];
 }
 
 
@@ -226,10 +217,9 @@ int & Grid2::operator [] ( int i )
 //  Returns
 //	none
 //
-void Grid2::set( const int x, const int y )
-{
-    _element[ 0 ]	= x;
-    _element[ 1 ]	= y;
+void Grid2::set( const int x, const int y ) {
+	_element[ 0 ] = x;
+	_element[ 1 ] = y;
 }
 
 
@@ -246,9 +236,8 @@ void Grid2::set( const int x, const int y )
 //  Outputs
 //	2D coordinates in the opposite direction
 //
-Grid2 operator - ( const Grid2 & a )
-{
-    return Grid2( -a._element[ 0 ], -a._element[ 1 ] );
+Grid2 operator-( const Grid2 &a ) {
+	return Grid2( -a._element[ 0 ], -a._element[ 1 ] );
 }
 
 
@@ -261,10 +250,9 @@ Grid2 operator - ( const Grid2 & a )
 //  Outputs
 //	addition of the two 2D coordinates
 //
-Grid2 operator + ( const Grid2 & a, const Grid2 & b )
-{
-    return Grid2( a._element[ 0 ] + b._element[ 0 ],
-		  a._element[ 1 ] + b._element[ 1 ] );
+Grid2 operator+( const Grid2 &a, const Grid2 &b ) {
+	return Grid2( a._element[ 0 ] + b._element[ 0 ],
+	              a._element[ 1 ] + b._element[ 1 ] );
 }
 
 
@@ -277,10 +265,9 @@ Grid2 operator + ( const Grid2 & a, const Grid2 & b )
 //  Outputs
 //	difference of the two 2D coordinates
 //
-Grid2 operator - ( const Grid2 & a, const Grid2 & b )
-{
-    return Grid2( a._element[ 0 ] - b._element[ 0 ],
-		  a._element[ 1 ] - b._element[ 1 ] );
+Grid2 operator-( const Grid2 &a, const Grid2 &b ) {
+	return Grid2( a._element[ 0 ] - b._element[ 0 ],
+	              a._element[ 1 ] - b._element[ 1 ] );
 }
 
 
@@ -294,9 +281,8 @@ Grid2 operator - ( const Grid2 & a, const Grid2 & b )
 //  Outputs
 //	scalar product 
 //
-Grid2 operator * ( const int d, const Grid2 & a )
-{
-    return Grid2( d * a._element[ 0 ], d * a._element[ 1 ] );
+Grid2 operator*( const int d, const Grid2 &a ) {
+	return Grid2( d * a._element[ 0 ], d * a._element[ 1 ] );
 }
 
 
@@ -309,10 +295,9 @@ Grid2 operator * ( const int d, const Grid2 & a )
 //  Outputs
 //	inner product
 //
-int operator * ( const Grid2 & a, const Grid2 & b )
-{
-    return ( a._element[ 0 ] * b._element[ 0 ] +
-	     a._element[ 1 ] * b._element[ 1 ] );
+int operator*( const Grid2 &a, const Grid2 &b ) {
+	return ( a._element[ 0 ] * b._element[ 0 ] +
+	         a._element[ 1 ] * b._element[ 1 ] );
 }
 
 
@@ -325,10 +310,9 @@ int operator * ( const Grid2 & a, const Grid2 & b )
 //  Outputs
 //	boolean value
 //
-int operator == ( const Grid2 & a, const Grid2 & b )
-{
-    return ( ( a._element[ 0 ] == b._element[ 0 ] ) &&
-	     ( a._element[ 1 ] == b._element[ 1 ] ) );
+int operator==( const Grid2 &a, const Grid2 &b ) {
+	return ( ( a._element[ 0 ] == b._element[ 0 ] ) &&
+	         ( a._element[ 1 ] == b._element[ 1 ] ) );
 }
 
 
@@ -341,15 +325,14 @@ int operator == ( const Grid2 & a, const Grid2 & b )
 //  Outputs
 //	boolean value
 //
-int operator < ( const Grid2 & a, const Grid2 & b )
-{
-    if ( a._element[ 0 ] < b._element[ 0 ] ) return true;
-    else if ( a._element[ 0 ] > b._element[ 0 ] ) return false;
-    else {
-	if ( a._element[ 1 ] < b._element[ 1 ] ) return true;
-	else if ( a._element[ 1 ] > b._element[ 1 ] ) return false;
-	else return false;
-    }
+int operator<( const Grid2 &a, const Grid2 &b ) {
+	if( a._element[ 0 ] < b._element[ 0 ] ) return true;
+	else if( a._element[ 0 ] > b._element[ 0 ] ) return false;
+	else {
+		if( a._element[ 1 ] < b._element[ 1 ] ) return true;
+		else if( a._element[ 1 ] > b._element[ 1 ] ) return false;
+		else return false;
+	}
 }
 
 
@@ -362,15 +345,14 @@ int operator < ( const Grid2 & a, const Grid2 & b )
 //  Outputs
 //	boolean value
 //
-int operator > ( const Grid2 & a, const Grid2 & b )
-{
-    if ( a._element[ 0 ] > b._element[ 0 ] ) return true;
-    else if ( a._element[ 0 ] < b._element[ 0 ] ) return false;
-    else {
-	if ( a._element[ 1 ] > b._element[ 1 ] ) return true;
-	else if ( a._element[ 1 ] < b._element[ 1 ] ) return false;
-	else return false;
-    }
+int operator>( const Grid2 &a, const Grid2 &b ) {
+	if( a._element[ 0 ] > b._element[ 0 ] ) return true;
+	else if( a._element[ 0 ] < b._element[ 0 ] ) return false;
+	else {
+		if( a._element[ 1 ] > b._element[ 1 ] ) return true;
+		else if( a._element[ 1 ] < b._element[ 1 ] ) return false;
+		else return false;
+	}
 }
 
 
@@ -388,18 +370,17 @@ int operator > ( const Grid2 & a, const Grid2 & b )
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const Grid2 & obj )
-{
-    // set the output formatting
-    int width = 16;
-    // print out the elements
-    for ( int i = 0; i < 2; i++ ) {
-	stream << setw( width ) << obj._element[ i ];
-	if ( i != 1 ) stream << "\t";
-    }
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const Grid2 &obj ) {
+	// set the output formatting
+	int width = 16;
+	// print out the elements
+	for( int i = 0; i < 2; i++ ) {
+		stream << setw( width ) << obj._element[ i ];
+		if( i != 1 ) stream << "\t";
+	}
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -413,12 +394,11 @@ ostream & operator << ( ostream & stream, const Grid2 & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, Grid2 & obj )
-{
-    // reading the elements
-    for ( int i = 0; i < 2; i++ )
-	stream >> obj._element[ i ];
-    return stream;
+istream &operator>>( istream &stream, Grid2 &obj ) {
+	// reading the elements
+	for( int i = 0; i < 2; i++ )
+		stream >> obj._element[ i ];
+	return stream;
 }
 
 

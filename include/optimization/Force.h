@@ -8,8 +8,8 @@
 //
 //==============================================================================
 
-#ifndef _Force_H		// beginning of header file
-#define _Force_H		// notifying that this file is included
+#ifndef _Force_H        // beginning of header file
+#define _Force_H        // notifying that this file is included
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -32,129 +32,148 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class Force : public EnergyBase
-{
+class Force : public EnergyBase {
 
-  private:
+private:
+	
+	unsigned int _id;
+	LEVELTYPE _level;                 // force level
+	string _configFilePath;        // config file path
+	Coord2 _boxCenter;             // bounding box center of the contour
+	double _width, _height;        // bounding box of the contour
+	ForceGraph *_forceGraphPtr;
+	
+	QImage *_diagram;               // image for computing GPU base voronoi diagram
+	QuardTree _quardTree;
+	unsigned int _iteration;             // iteration of the simulation
+	double _temperatureDecay;      // decay of the temperature (simulated annealing)
+	
+	// configuration parameter
+	double _paramKa;               // attractive force
+	double _paramKr;               // repulsive force
+	double _paramKv;               // voronoi force
+	double _paramKc;               // k1 force
+	double _paramKd;               // k2 force
+	double _paramKe;               // k3 force
+	double _paramKo;               // overlap repulsive force
+	unsigned int _paramForceLoop;        // maximum loop num
+	double _paramDegreeOneMagnitude;   // force magnitude for degree one node
+	
+	double _paramRatioForce;
+	double _paramRatioVoronoi;
+	double _paramTransformationStep;
+	double _paramCellRatio;
+	double _paramDisplacementLimit;
+	double _paramFinalEpsilon;
+	double _paramThetaThreshold;
+	double _paramMinTemperature;
+	double _paramAlphaTemperature;
+	bool _paramEnableTemperature;
+	FORCETYPE _paramMode;             // TYPE_FORCE, TYPE_BARNES_HUT
 
-    unsigned int    _id;
-    LEVELTYPE       _level;                 // force level
-    string          _configFilePath;        // config file path
-    Coord2          _boxCenter;             // bounding box center of the contour
-    double			_width, _height;        // bounding box of the contour
-    ForceGraph     *_forceGraphPtr;
-
-    QImage *		_diagram;               // image for computing GPU base voronoi diagram
-    QuardTree       _quardTree;
-    unsigned int    _iteration;             // iteration of the simulation
-    double          _temperatureDecay;      // decay of the temperature (simulated annealing)
-
-    // configuration parameter
-    double          _paramKa;               // attractive force
-    double          _paramKr;               // repulsive force
-    double          _paramKv;               // voronoi force
-    double          _paramKc;               // k1 force
-    double          _paramKd;               // k2 force
-    double          _paramKe;               // k3 force
-    double          _paramKo;               // overlap repulsive force
-    unsigned int    _paramForceLoop;        // maximum loop num
-    double          _paramDegreeOneMagnitude;   // force magnitude for degree one node
-
-    double          _paramRatioForce;
-    double          _paramRatioVoronoi;
-    double          _paramTransformationStep;
-    double          _paramCellRatio;
-    double          _paramDisplacementLimit;
-    double          _paramFinalEpsilon;
-    double          _paramThetaThreshold;
-    double          _paramMinTemperature;
-    double          _paramAlphaTemperature;
-    bool            _paramEnableTemperature;
-    FORCETYPE       _paramMode;             // TYPE_FORCE, TYPE_BARNES_HUT
-
-  protected:
-
-    void		    _init	( ForceGraph * __forceGraphPtr, Polygon2 *__contourPtr,
-                              LEVELTYPE __leveltype, string __configFilePath );
-    void            _clear  ( void );
-    void		    _random	( void );
-
-    void		    _force		        ( void );
-    void		    _BarnesHut  		( void );
-
-    void            _updateForceSeed    ( void );
-    void		    _centroidGeometry   ( void );
-
-    double		    _gap		        ( void );
-    double		    _verletIntegreation ( void );
-
-    bool            _inContour( Coord2 &coord );
-    void            _normalizeWeight();
+protected:
+	
+	void _init( ForceGraph *__forceGraphPtr, Polygon2 *__contourPtr,
+	            LEVELTYPE __leveltype, string __configFilePath );
+	
+	void _clear( void );
+	
+	void _random( void );
+	
+	void _force( void );
+	
+	void _BarnesHut( void );
+	
+	void _updateForceSeed( void );
+	
+	void _centroidGeometry( void );
+	
+	double _gap( void );
+	
+	double _verletIntegreation( void );
+	
+	bool _inContour( Coord2 &coord );
+	
+	void _normalizeWeight();
 
 public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    Force();			// default constructor
-    Force( const Force & obj );
-				// copy constructor
+	Force();            // default constructor
+	Force( const Force &obj );
+	// copy constructor
 
 //------------------------------------------------------------------------------
 //	Destructor
 //------------------------------------------------------------------------------
-    ~Force();			// destructor
+	~Force();            // destructor
 
 //------------------------------------------------------------------------------
 //	Referencing to members
 //------------------------------------------------------------------------------
-    const unsigned int &    id( void )      const   { return _id; }
-    unsigned int &          id( void )              { return _id; }
-
-    // const LEVELTYPE &       level( void )   const   { return _level; }
-    // LEVELTYPE &             level( void )           { return _level; }
-
-    const double &		    width ( void )	const	{ return _width; }
-    double &			    width ( void )		    { return _width; }
-    const double &			height( void )	const	{ return _height; }
-    double &			    height( void )		    { return _height; }
-
-    const FORCETYPE &		mode( void )	const	{ return _paramMode; }
-    FORCETYPE &			    mode( void )		    { return _paramMode; }
-
-    const double &			finalEpsilon ( void )	const	{ return _paramFinalEpsilon; }
-    double &			    finalEpsilon ( void )		    { return _paramFinalEpsilon; }
-
-    const QImage *          diagram( void )         const   { return _diagram; }
-    QImage *                diagram( void )                 { return _diagram; }
-
-    const QuardTree &       quardTree( void )       const   { return _quardTree; }
-    QuardTree &             quardTree( void )               { return _quardTree; }
-
-    double                  gap ( void )	                { return _gap(); }
-    double                  verletIntegreation( void )      { return _verletIntegreation(); }
-
-    const unsigned int &    paramForceLoop( void ) const   { return _paramForceLoop; }
-    unsigned int &          paramForceLoop( void )	       { return _paramForceLoop; }
+	const unsigned int &id( void ) const { return _id; }
+	
+	unsigned int &id( void ) { return _id; }
+	
+	// const LEVELTYPE &       level( void )   const   { return _level; }
+	// LEVELTYPE &             level( void )           { return _level; }
+	
+	const double &width( void ) const { return _width; }
+	
+	double &width( void ) { return _width; }
+	
+	const double &height( void ) const { return _height; }
+	
+	double &height( void ) { return _height; }
+	
+	const FORCETYPE &mode( void ) const { return _paramMode; }
+	
+	FORCETYPE &mode( void ) { return _paramMode; }
+	
+	const double &finalEpsilon( void ) const { return _paramFinalEpsilon; }
+	
+	double &finalEpsilon( void ) { return _paramFinalEpsilon; }
+	
+	const QImage *diagram( void ) const { return _diagram; }
+	
+	QImage *diagram( void ) { return _diagram; }
+	
+	const QuardTree &quardTree( void ) const { return _quardTree; }
+	
+	QuardTree &quardTree( void ) { return _quardTree; }
+	
+	double gap( void ) { return _gap(); }
+	
+	double verletIntegreation( void ) { return _verletIntegreation(); }
+	
+	const unsigned int &paramForceLoop( void ) const { return _paramForceLoop; }
+	
+	unsigned int &paramForceLoop( void ) { return _paramForceLoop; }
 
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
-    void init( ForceGraph * __forceGraphPtr, Polygon2 *__contourPtr,
-               LEVELTYPE __leveltype, string __configFilePath ) {
-        _init( __forceGraphPtr, __contourPtr, __leveltype, __configFilePath );
-    }
-    void _initSeed           ( void );
-
-    void clear( void )				{ _clear(); }
-    void random( void )				{ _random(); }
+	void init( ForceGraph *__forceGraphPtr, Polygon2 *__contourPtr,
+	           LEVELTYPE __leveltype, string __configFilePath ) {
+		_init( __forceGraphPtr, __contourPtr, __leveltype, __configFilePath );
+	}
+	
+	void _initSeed( void );
+	
+	void clear( void ) { _clear(); }
+	
+	void random( void ) { _random(); }
 
 //------------------------------------------------------------------------------
 //	Force functions
 //------------------------------------------------------------------------------
-    void force	            ( void )        { _force(); }
-    void centroidGeometry   ( void )	    { _centroidGeometry(); }
-    void BarnesHut          ( void )        { _BarnesHut(); }
+	void force( void ) { _force(); }
+	
+	void centroidGeometry( void ) { _centroidGeometry(); }
+	
+	void BarnesHut( void ) { _BarnesHut(); }
 
 //------------------------------------------------------------------------------
 //	Specific functions
@@ -163,22 +182,23 @@ public:
 //------------------------------------------------------------------------------
 //	Assignment operators
 //------------------------------------------------------------------------------
-    Force & operator = ( const Force & obj );
-				// assignment
+	Force &operator=( const Force &obj );
+	// assignment
 
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const Force & obj );
-				// output
-    friend istream & operator >> ( istream & stream, Force & obj );
-				// input
+	friend ostream &operator<<( ostream &stream, const Force &obj );
+	
+	// output
+	friend istream &operator>>( istream &stream, Force &obj );
+	// input
 
 //------------------------------------------------------------------------------
 //	Class name
 //------------------------------------------------------------------------------
-    virtual const char * className( void ) const { return "Force"; }
-				// class name
+	virtual const char *className( void ) const { return "Force"; }
+	// class name
 };
 
 

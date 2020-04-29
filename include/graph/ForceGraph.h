@@ -36,13 +36,14 @@ using namespace boost;
 
 typedef adjacency_list< listS, listS, undirectedS,
 		ForceVertexProperty, ForceEdgeProperty,
-		ForceGraphProperty >  ForceGraph;
+		ForceGraphProperty > ForceGraph;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( const ForceGraph & g );
-void clearGraph( ForceGraph & g );
+void printGraph( const ForceGraph &g );
+
+void clearGraph( ForceGraph &g );
 
 #endif  // _ForceGraph_H

@@ -37,18 +37,20 @@ using namespace boost;
 
 typedef adjacency_list< listS, listS, undirectedS,
 		BoundaryVertexProperty, BoundaryEdgeProperty,
-		BoundaryGraphProperty >  BoundaryGraph;
+		BoundaryGraphProperty > BoundaryGraph;
 
 typedef pair< BoundaryGraph::vertex_descriptor,
-			  BoundaryGraph::edge_descriptor >	VEPair;
-typedef map< Grid2, VEPair >                    VEMap;
+		BoundaryGraph::edge_descriptor > VEPair;
+typedef map< Grid2, VEPair > VEMap;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( const BoundaryGraph & g );
-void clearGraph( BoundaryGraph & g );
-void resetVisitedTimes( BoundaryGraph & g );
+void printGraph( const BoundaryGraph &g );
+
+void clearGraph( BoundaryGraph &g );
+
+void resetVisitedTimes( BoundaryGraph &g );
 
 #endif  // _BoundaryGraph_H

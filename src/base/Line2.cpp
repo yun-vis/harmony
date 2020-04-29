@@ -17,6 +17,7 @@
 #include <cctype>
 #include <cmath>
 #include <algorithm>
+
 using namespace std;
 
 #include "base/Line2.h"
@@ -40,9 +41,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void Line2::_init( void )
-{
-    _samples.clear();
+void Line2::_init( void ) {
+	_samples.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -60,9 +60,8 @@ void Line2::_init( void )
 //
 //  Outputs
 //  none
-Line2::Line2()
-{
-    _init();
+Line2::Line2() {
+	_init();
 }
 
 
@@ -74,11 +73,9 @@ Line2::Line2()
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-void Line2::addSample( Coord2 & coord )
-{
-    _samples.push_back( coord );
+void Line2::addSample( Coord2 &coord ) {
+	_samples.push_back( coord );
 }
-
 
 
 //
@@ -90,87 +87,84 @@ void Line2::addSample( Coord2 & coord )
 //  Outputs
 //      bool
 //
-bool Line2::isOnLine( Coord2 &a, Coord2 &b, Coord2 &c )
-{
-    bool isOnLine = false;
-
-    Coord2 ab = b - a;
-    Coord2 ac = c - a;
-
-    double cross = ab.x() * ac.y() - ab.y() * ac.x();
-    if( fabs( cross ) < 0.01 ) {
-
-        if ( ( MIN2( b.x(), c.x() ) <= a.x() ) && ( a.x() <= MAX2( b.x(), c.x() ) ) &&
-             ( MIN2( b.y(), c.y() ) <= a.y() ) && ( a.y() <= MAX2( b.y(), c.y() ) ) )
-            isOnLine = true;
-    }
-
-    return isOnLine;
+bool Line2::isOnLine( Coord2 &a, Coord2 &b, Coord2 &c ) {
+	bool isOnLine = false;
+	
+	Coord2 ab = b - a;
+	Coord2 ac = c - a;
+	
+	double cross = ab.x() * ac.y() - ab.y() * ac.x();
+	if( fabs( cross ) < 0.01 ) {
+		
+		if( ( MIN2( b.x(), c.x() ) <= a.x() ) && ( a.x() <= MAX2( b.x(), c.x() ) ) &&
+		    ( MIN2( b.y(), c.y() ) <= a.y() ) && ( a.y() <= MAX2( b.y(), c.y() ) ) )
+			isOnLine = true;
+	}
+	
+	return isOnLine;
 }
 
 
-void Line2::_initChaikinCurve( double unit = 100 )
-{
-    // initialization
-    _fineSamples.clear();
-
-    // store initial the path
-    vector< Coord2 > &samples = _samples;
-
-    cerr << "sample.size() = " << samples.size() << endl;
-    if( samples.size() > 0 )
-        _fineSamples.push_back( samples[0] );
-    for( unsigned int j = 1; j < samples.size(); j++ ){
-
-        Coord2 diff = ( samples[ j%samples.size() ]- samples[ j-1 ] );
-        // cerr << "dist = " << diff.norm() << endl;
-        if( diff.norm() > unit ) {
-
-            int num = floor( diff.norm()/unit );
-            double interval = diff.norm()/(double)num;
-
-            for( int k = 1; k < num; k++ ){
-
-                Coord2 c = samples[j-1] + (double)k * interval * diff / diff.norm();
-                _fineSamples.push_back( c );
-            }
-        }
-        _fineSamples.push_back( samples[ j ] );
-    }
+void Line2::_initChaikinCurve( double unit = 100 ) {
+	// initialization
+	_fineSamples.clear();
+	
+	// store initial the path
+	vector< Coord2 > &samples = _samples;
+	
+	cerr << "sample.size() = " << samples.size() << endl;
+	if( samples.size() > 0 )
+		_fineSamples.push_back( samples[ 0 ] );
+	for( unsigned int j = 1; j < samples.size(); j++ ) {
+		
+		Coord2 diff = ( samples[ j % samples.size() ] - samples[ j - 1 ] );
+		// cerr << "dist = " << diff.norm() << endl;
+		if( diff.norm() > unit ) {
+			
+			int num = floor( diff.norm() / unit );
+			double interval = diff.norm() / ( double ) num;
+			
+			for( int k = 1; k < num; k++ ) {
+				
+				Coord2 c = samples[ j - 1 ] + ( double ) k * interval * diff / diff.norm();
+				_fineSamples.push_back( c );
+			}
+		}
+		_fineSamples.push_back( samples[ j ] );
+	}
 
 #ifdef DEBUG
-    cerr << "fineP = ";
-    for( unsigned int i = 0; i < _fineSamples.size(); i++ ){
-        cerr << "( " << _fineSamples[i].x() << ", " << _fineSamples[i].y() << ") ";
-    }
-    cerr << endl;
+	cerr << "fineP = ";
+	for( unsigned int i = 0; i < _fineSamples.size(); i++ ){
+		cerr << "( " << _fineSamples[i].x() << ", " << _fineSamples[i].y() << ") ";
+	}
+	cerr << endl;
 #endif // DEBUG
 }
 
-void Line2::computeChaikinCurve( int num = 5, double unit = 100 )
-{
-    _initChaikinCurve( unit );
-
-    double interval = 4.0;
-    for( int k = 0; k < num; k++ ){
-
-        vector< Coord2 > core = _fineSamples;
-
-        // compute Chaikin Curve
-        _fineSamples.clear();
-        _fineSamples.push_back( core[0] );
-        for( unsigned int j = 0; j < core.size()-1; j++ ){
-
-            Coord2 &p1 = core[j];
-            Coord2 &p2 = core[(j+1)%core.size()];
-            Coord2 q = (1.0-1.0/interval)*p1 + (1.0/interval)*p2;
-            Coord2 r = (1.0/interval)*p1 + (1.0-1.0/interval)*p2;
-
-            _fineSamples.push_back( q );
-            _fineSamples.push_back( r );
-        }
-        _fineSamples.push_back( core[core.size()-1] );
-    }
+void Line2::computeChaikinCurve( int num = 5, double unit = 100 ) {
+	_initChaikinCurve( unit );
+	
+	double interval = 4.0;
+	for( int k = 0; k < num; k++ ) {
+		
+		vector< Coord2 > core = _fineSamples;
+		
+		// compute Chaikin Curve
+		_fineSamples.clear();
+		_fineSamples.push_back( core[ 0 ] );
+		for( unsigned int j = 0; j < core.size() - 1; j++ ) {
+			
+			Coord2 &p1 = core[ j ];
+			Coord2 &p2 = core[ ( j + 1 ) % core.size() ];
+			Coord2 q = ( 1.0 - 1.0 / interval ) * p1 + ( 1.0 / interval ) * p2;
+			Coord2 r = ( 1.0 / interval ) * p1 + ( 1.0 - 1.0 / interval ) * p2;
+			
+			_fineSamples.push_back( q );
+			_fineSamples.push_back( r );
+		}
+		_fineSamples.push_back( core[ core.size() - 1 ] );
+	}
 }
 //------------------------------------------------------------------------------
 //	Friend functions
@@ -191,20 +185,19 @@ void Line2::computeChaikinCurve( int num = 5, double unit = 100 )
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const Line2 & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-
-    int width = 8;
-    // print out the elements
-    for ( unsigned int i = 0; i < obj.samples().size(); i++ ) {
-    	stream << setw( width ) << "(" << obj.samples()[i].x() << ", " << obj.samples()[i].y() << ") ";
-    }
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const Line2 &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	
+	int width = 8;
+	// print out the elements
+	for( unsigned int i = 0; i < obj.samples().size(); i++ ) {
+		stream << setw( width ) << "(" << obj.samples()[ i ].x() << ", " << obj.samples()[ i ].y() << ") ";
+	}
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -218,9 +211,8 @@ ostream & operator << ( ostream & stream, const Line2 & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, Line2 & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, Line2 &obj ) {
+	return stream;
 }
 
 

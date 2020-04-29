@@ -27,14 +27,13 @@
 //  Outputs
 //  none
 //
-GraphVizAPI::GraphVizAPI( void )
-{
-	_g 					= NULL;
-	_gvc 				= NULL;			// context
+GraphVizAPI::GraphVizAPI( void ) {
+	_g = NULL;
+	_gvc = NULL;            // context
 	//_bg 				= NULL;			// boost graph
 	//_subg 		    = NULL;			// boost sub graph
-	_domain_width 		= 0;
-	_domain_height		= 0;
+	_domain_width = 0;
+	_domain_height = 0;
 }
 
 //
@@ -46,8 +45,7 @@ GraphVizAPI::GraphVizAPI( void )
 //  Outputs
 //  none
 //
-GraphVizAPI::GraphVizAPI( const GraphVizAPI & obj )
-{
+GraphVizAPI::GraphVizAPI( const GraphVizAPI &obj ) {
 }
 
 
@@ -63,16 +61,14 @@ GraphVizAPI::GraphVizAPI( const GraphVizAPI & obj )
 //  Outputs
 //  none
 //
-GraphVizAPI::~GraphVizAPI( void )
-{
+GraphVizAPI::~GraphVizAPI( void ) {
 }
 
 
-char * GraphVizAPI::str_to_char( string s )
-{
-	char* sName = new char[ s.length() ];
+char *GraphVizAPI::str_to_char( string s ) {
+	char *sName = new char[s.length()];
 	strcpy( sName, s.c_str() );
-
+	
 	return sName;
 }
 
@@ -88,8 +84,7 @@ char * GraphVizAPI::str_to_char( string s )
 //  Outputs
 //  node
 //
-void GraphVizAPI::init( string pathIn, string pathOut, int default_width, int default_height )
-{
+void GraphVizAPI::init( string pathIn, string pathOut, int default_width, int default_height ) {
 	inputpath = pathIn;
 	outputpath = pathOut;
 	_default_width = default_width;
@@ -105,11 +100,10 @@ void GraphVizAPI::init( string pathIn, string pathOut, int default_width, int de
 //  Outputs
 //  none
 //
-void GraphVizAPI::clear( void )
-{
-    gvFreeLayout( _gvc, _g );		// library function
-    agclose( _g ); 				// library function
-    gvFreeContext( _gvc );
+void GraphVizAPI::clear( void ) {
+	gvFreeLayout( _gvc, _g );        // library function
+	agclose( _g );                // library function
+	gvFreeContext( _gvc );
 }
 
 //------------------------------------------------------------------------------
@@ -125,11 +119,10 @@ void GraphVizAPI::clear( void )
 //  Outputs
 //      output stream
 //
-ostream & operator << ( ostream & stream, const GraphVizAPI & obj )
-{
+ostream &operator<<( ostream &stream, const GraphVizAPI &obj ) {
 	stream << "-- GraphVizAPI --" << endl;
-
-    return stream;
+	
+	return stream;
 }
 
 
@@ -143,10 +136,9 @@ ostream & operator << ( ostream & stream, const GraphVizAPI & obj )
 //  Outputs
 //      input stream
 //
-istream & operator >> ( istream & stream, GraphVizAPI & obj )
-{
-    // do nothing
-    return stream;
+istream &operator>>( istream &stream, GraphVizAPI &obj ) {
+	// do nothing
+	return stream;
 }
 
 

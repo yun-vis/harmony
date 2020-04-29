@@ -41,49 +41,49 @@ using namespace boost;
 //  Outputs
 //	none
 //
-bool Similarity::_isSimilar( void )
-{
-    bool isSimilar = false;
+bool Similarity::_isSimilar( void ) {
+	bool isSimilar = false;
 
 #ifdef DEBUG
-    _g1Ptr = new ForceGraph;
-    _g2Ptr = new ForceGraph;
+	_g1Ptr = new ForceGraph;
+	_g2Ptr = new ForceGraph;
 
-    ForceGraph::vertex_descriptor vd1 = add_vertex( *_g1Ptr );
-    (*_g1Ptr)[vd1].id = 0;
-    ForceGraph::vertex_descriptor vd2 = add_vertex( *_g1Ptr );
-    (*_g1Ptr)[vd2].id = 1;
-    ForceGraph::vertex_descriptor vd3 = add_vertex( *_g1Ptr );
-    (*_g1Ptr)[vd3].id = 2;
-    add_edge( vd1, vd2, *_g1Ptr );
-    add_edge( vd2, vd3, *_g1Ptr );
+	ForceGraph::vertex_descriptor vd1 = add_vertex( *_g1Ptr );
+	(*_g1Ptr)[vd1].id = 0;
+	ForceGraph::vertex_descriptor vd2 = add_vertex( *_g1Ptr );
+	(*_g1Ptr)[vd2].id = 1;
+	ForceGraph::vertex_descriptor vd3 = add_vertex( *_g1Ptr );
+	(*_g1Ptr)[vd3].id = 2;
+	add_edge( vd1, vd2, *_g1Ptr );
+	add_edge( vd2, vd3, *_g1Ptr );
 
-    ForceGraph::vertex_descriptor vd4 = add_vertex( *_g2Ptr );
-    (*_g2Ptr)[vd4].id = 0;
-    ForceGraph::vertex_descriptor vd5 = add_vertex( *_g2Ptr );
-    (*_g2Ptr)[vd5].id = 1;
-    ForceGraph::vertex_descriptor vd6 = add_vertex( *_g2Ptr );
-    (*_g2Ptr)[vd6].id = 2;
-    add_edge( vd4, vd6, *_g2Ptr );
-    add_edge( vd6, vd5, *_g2Ptr );
+	ForceGraph::vertex_descriptor vd4 = add_vertex( *_g2Ptr );
+	(*_g2Ptr)[vd4].id = 0;
+	ForceGraph::vertex_descriptor vd5 = add_vertex( *_g2Ptr );
+	(*_g2Ptr)[vd5].id = 1;
+	ForceGraph::vertex_descriptor vd6 = add_vertex( *_g2Ptr );
+	(*_g2Ptr)[vd6].id = 2;
+	add_edge( vd4, vd6, *_g2Ptr );
+	add_edge( vd6, vd5, *_g2Ptr );
 
-    cerr << "num_vertices( *_g1Ptr ) = " << num_vertices( *_g1Ptr ) << endl;
-    cerr << "num_vertices( *_g2Ptr ) = " << num_vertices( *_g2Ptr ) << endl;
+	cerr << "num_vertices( *_g1Ptr ) = " << num_vertices( *_g1Ptr ) << endl;
+	cerr << "num_vertices( *_g2Ptr ) = " << num_vertices( *_g2Ptr ) << endl;
 #endif // DEBUG
-
-    if( num_vertices( *_g1Ptr ) != num_vertices( *_g2Ptr ) )
-        return false;
-
-    vector< graph_traits< ForceGraph >::vertex_descriptor > f( num_vertices( *_g1Ptr ) );
-
-    isSimilar = isomorphism( *_g1Ptr, *_g2Ptr, isomorphism_map( make_iterator_property_map( f.begin(),
-                                                                                  get( &ForceVertexProperty::id, *_g1Ptr ), f[0] ) )
-            .vertex_index1_map( get( &ForceVertexProperty::id, *_g1Ptr ) )
-            .vertex_index2_map( get( &ForceVertexProperty::id, *_g2Ptr ) ) );   // topology only
+	
+	if( num_vertices( *_g1Ptr ) != num_vertices( *_g2Ptr ) )
+		return false;
+	
+	vector< graph_traits< ForceGraph >::vertex_descriptor > f( num_vertices( *_g1Ptr ) );
+	
+	isSimilar = isomorphism( *_g1Ptr, *_g2Ptr, isomorphism_map( make_iterator_property_map( f.begin(),
+	                                                                                        get( &ForceVertexProperty::id,
+	                                                                                             *_g1Ptr ), f[ 0 ] ) )
+			.vertex_index1_map( get( &ForceVertexProperty::id, *_g1Ptr ) )
+			.vertex_index2_map( get( &ForceVertexProperty::id, *_g2Ptr ) ) );   // topology only
 //            .vertex_invariant1( my_invariant1 )                               // name label
 //            .vertex_invariant2( my_invariant2 ) );
-
-    return isSimilar;
+	
+	return isSimilar;
 }
 
 //------------------------------------------------------------------------------
@@ -98,10 +98,9 @@ bool Similarity::_isSimilar( void )
 //  Outputs
 //	none
 //
-void Similarity::_init( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr )
-{
-    _g1Ptr = __g1Ptr;
-    _g2Ptr = __g2Ptr;
+void Similarity::_init( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr ) {
+	_g1Ptr = __g1Ptr;
+	_g2Ptr = __g2Ptr;
 }
 
 
@@ -114,8 +113,7 @@ void Similarity::_init( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr )
 //  Outputs
 //	none
 //
-void Similarity::_clear( void )
-{
+void Similarity::_clear( void ) {
 }
 
 //------------------------------------------------------------------------------
@@ -134,9 +132,8 @@ void Similarity::_clear( void )
 //  Outputs
 //	none
 //
-Similarity::Similarity()
-{
-    _id = 0;
+Similarity::Similarity() {
+	_id = 0;
 }
 
 
@@ -149,9 +146,8 @@ Similarity::Similarity()
 //  Outputs
 //	none
 //
-Similarity::Similarity( const Similarity & obj )
-{
-    _id = obj._id;
+Similarity::Similarity( const Similarity &obj ) {
+	_id = obj._id;
 }
 
 
@@ -168,8 +164,7 @@ Similarity::Similarity( const Similarity & obj )
 //  Outputs
 //	none
 //
-Similarity::~Similarity()
-{
+Similarity::~Similarity() {
 }
 
 
@@ -190,11 +185,10 @@ Similarity::~Similarity()
 //  Outputs
 //	this object
 //
-Similarity & Similarity::operator = ( const Similarity & obj )
-{
-    _id = obj._id;
-
-    return *this;
+Similarity &Similarity::operator=( const Similarity &obj ) {
+	_id = obj._id;
+	
+	return *this;
 }
 
 
@@ -212,10 +206,9 @@ Similarity & Similarity::operator = ( const Similarity & obj )
 //  Outputs
 //	output stream
 //
-ostream & operator << ( ostream & stream, const Similarity & obj )
-{
-    // stream << ( const Graph & )obj;	
-    return stream;
+ostream &operator<<( ostream &stream, const Similarity &obj ) {
+	// stream << ( const Graph & )obj;
+	return stream;
 }
 
 
@@ -229,10 +222,9 @@ ostream & operator << ( ostream & stream, const Similarity & obj )
 //  Outputs
 //	input stream
 //
-istream & operator >> ( istream & stream, Similarity & obj )
-{
-    // stream >> ( Graph & )obj;
-    return stream;
+istream &operator>>( istream &stream, Similarity &obj ) {
+	// stream >> ( Graph & )obj;
+	return stream;
 }
 
 

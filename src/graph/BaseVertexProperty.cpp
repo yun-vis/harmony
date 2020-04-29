@@ -41,13 +41,12 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BaseVertexProperty::_init( void )
-{
-    id          = 0;
-
-    coordPtr    = NULL;
-    widthPtr    = NULL;
-    heightPtr   = NULL;
+void BaseVertexProperty::_init( void ) {
+	id = 0;
+	
+	coordPtr = NULL;
+	widthPtr = NULL;
+	heightPtr = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -67,9 +66,8 @@ void BaseVertexProperty::_init( void )
 //  Outputs
 //  none
 //
-BaseVertexProperty::BaseVertexProperty()
-{
-    _init();
+BaseVertexProperty::BaseVertexProperty() {
+	_init();
 }
 
 
@@ -93,14 +91,13 @@ BaseVertexProperty::BaseVertexProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BaseVertexProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const BaseVertexProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -114,7 +111,6 @@ ostream & operator << ( ostream & stream, const BaseVertexProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BaseVertexProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, BaseVertexProperty &obj ) {
+	return stream;
 }

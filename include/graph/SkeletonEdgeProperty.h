@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_SkeletonEdgeProperty_H
+#ifndef _SkeletonEdgeProperty_H
 #define _SkeletonEdgeProperty_H
 
 //------------------------------------------------------------------------------
@@ -33,24 +33,24 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class SkeletonEdgeProperty: public BaseEdgeProperty {
+class SkeletonEdgeProperty : public BaseEdgeProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
 
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    SkeletonEdgeProperty();				// constructor (default)
-    SkeletonEdgeProperty( const SkeletonEdgeProperty & e ) {
-	   id	    = e.id;
-	   weight	= e.weight;
-    }					// copy constructor
-    virtual ~SkeletonEdgeProperty() {}		// destructor
+	SkeletonEdgeProperty();                // constructor (default)
+	SkeletonEdgeProperty( const SkeletonEdgeProperty &e ) {
+		id = e.id;
+		weight = e.weight;
+	}                    // copy constructor
+	virtual ~SkeletonEdgeProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -59,8 +59,8 @@ class SkeletonEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-
-    void		                init( void )		      { _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -78,13 +78,15 @@ class SkeletonEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const SkeletonEdgeProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, SkeletonEdgeProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "SkeletonEdgeProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const SkeletonEdgeProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, SkeletonEdgeProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "SkeletonEdgeProperty"; }
+	// class name
+	
 };
 
 #endif // _SkeletonEdgeProperty_H

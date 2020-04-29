@@ -41,17 +41,16 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BoundaryVertexProperty::_init( void )
-{
-    BaseVertexProperty::init();
-
-    initID = 0;
-    lineID.clear();
-    isFixed    = false;
-
-    geoPtr = NULL;
-    smoothPtr = NULL;
-    centroidPtr = NULL;
+void BoundaryVertexProperty::_init( void ) {
+	BaseVertexProperty::init();
+	
+	initID = 0;
+	lineID.clear();
+	isFixed = false;
+	
+	geoPtr = NULL;
+	smoothPtr = NULL;
+	centroidPtr = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -71,9 +70,8 @@ void BoundaryVertexProperty::_init( void )
 //  Outputs
 //  none
 //
-BoundaryVertexProperty::BoundaryVertexProperty()
-{
-    _init();
+BoundaryVertexProperty::BoundaryVertexProperty() {
+	_init();
 }
 
 
@@ -97,14 +95,13 @@ BoundaryVertexProperty::BoundaryVertexProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BoundaryVertexProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const BoundaryVertexProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -118,7 +115,6 @@ ostream & operator << ( ostream & stream, const BoundaryVertexProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BoundaryVertexProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, BoundaryVertexProperty &obj ) {
+	return stream;
 }

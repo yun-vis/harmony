@@ -36,13 +36,14 @@ using namespace boost;
 
 typedef adjacency_list< listS, listS, undirectedS,
 		TreeVertexProperty, TreeEdgeProperty,
-		TreeGraphProperty >  TreeGraph;
+		TreeGraphProperty > TreeGraph;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( const TreeGraph & g );
-void clearGraph( TreeGraph & g );
+void printGraph( const TreeGraph &g );
+
+void clearGraph( TreeGraph &g );
 
 #endif  // _TreeGraph_H

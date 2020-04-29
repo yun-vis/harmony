@@ -41,18 +41,21 @@ using namespace boost;
 
 typedef adjacency_list< vecS, listS, undirectedS,
 		SkeletonVertexProperty, SkeletonEdgeProperty,
-		SkeletonGraphProperty >  SkeletonGraph;
+		SkeletonGraphProperty > SkeletonGraph;
 
-typedef pair< SkeletonGraph::vertex_descriptor, SkeletonGraph::vertex_descriptor >	SkeletonGraphVVPair;
+typedef pair< SkeletonGraph::vertex_descriptor, SkeletonGraph::vertex_descriptor > SkeletonGraphVVPair;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
-void geodesicAssignment( SkeletonGraph & graph );
-unsigned int zoneAssignment( SkeletonGraph & graph );
-void radialPlacement( SkeletonGraph & graph, int width, int height );
+void geodesicAssignment( SkeletonGraph &graph );
 
-void printGraph( const SkeletonGraph & graph );
-void clearGraph( SkeletonGraph & graph );
+unsigned int zoneAssignment( SkeletonGraph &graph );
+
+void radialPlacement( SkeletonGraph &graph, int width, int height );
+
+void printGraph( const SkeletonGraph &graph );
+
+void clearGraph( SkeletonGraph &graph );
 
 #endif  // _SkeletonGraph_H

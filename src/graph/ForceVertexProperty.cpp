@@ -41,9 +41,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void ForceVertexProperty::_init( void )
-{
-    BaseVertexProperty::init();
+void ForceVertexProperty::_init( void ) {
+	BaseVertexProperty::init();
 }
 
 //------------------------------------------------------------------------------
@@ -63,9 +62,8 @@ void ForceVertexProperty::_init( void )
 //  Outputs
 //  none
 //
-ForceVertexProperty::ForceVertexProperty()
-{
-    _init();
+ForceVertexProperty::ForceVertexProperty() {
+	_init();
 }
 
 
@@ -89,14 +87,13 @@ ForceVertexProperty::ForceVertexProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const ForceVertexProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const ForceVertexProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const ForceVertexProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, ForceVertexProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, ForceVertexProperty &obj ) {
+	return stream;
 }

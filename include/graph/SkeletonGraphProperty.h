@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_SkeletonGraphProperty_H
+#ifndef _SkeletonGraphProperty_H
 #define _SkeletonGraphProperty_H
 
 //------------------------------------------------------------------------------
@@ -32,21 +32,21 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class SkeletonGraphProperty : public BaseGraphProperty{
+class SkeletonGraphProperty : public BaseGraphProperty {
 
-  protected:
+protected:
+	
+	void _init( double &width, double &height );
 
-      void		    _init( double &width, double &height );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    SkeletonGraphProperty();				// constructor (default)
-    SkeletonGraphProperty( const SkeletonGraphProperty & v ) {
-    }					// copy constructor
-    virtual ~SkeletonGraphProperty() {}		// destructor
+	SkeletonGraphProperty();                // constructor (default)
+	SkeletonGraphProperty( const SkeletonGraphProperty &v ) {
+	}                    // copy constructor
+	virtual ~SkeletonGraphProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -72,13 +72,15 @@ class SkeletonGraphProperty : public BaseGraphProperty{
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const SkeletonGraphProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, SkeletonGraphProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "SkeletonGraphProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const SkeletonGraphProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, SkeletonGraphProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "SkeletonGraphProperty"; }
+	// class name
+	
 };
 
 #endif // _SkeletonGraphProperty_H

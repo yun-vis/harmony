@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_Line2_H
+#ifndef _Line2_H
 #define _Line2_H
 
 //------------------------------------------------------------------------------
@@ -33,24 +33,24 @@ using namespace std;
 
 class Line2 {
 
-  protected:
+protected:
+	
+	vector< Coord2 > _samples;        // Line2 sample points
+	vector< Coord2 > _fineSamples;    // Line2 curve sample points
+	
+	virtual void _init( void );    // initialize all coordinates to zero
+	void _initChaikinCurve( double unit );
 
-    vector< Coord2 >	_samples;	    // Line2 sample points
-    vector< Coord2 >	_fineSamples;	// Line2 curve sample points
-
-    virtual void	    _init( void );	// initialize all coordinates to zero
-    void _initChaikinCurve( double unit );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    Line2();				// constructor (default)
-    Line2( const Line2 & v ) {
-    	_samples	= v._samples;
-	}					// copy constructor
-    virtual ~Line2() {}	// destructor
+	Line2();                // constructor (default)
+	Line2( const Line2 &v ) {
+		_samples = v._samples;
+	}                    // copy constructor
+	virtual ~Line2() {}    // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -59,21 +59,24 @@ class Line2 {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    void		init( void )		{ _init(); }
-
-    vector< Coord2> &	        samples( void ) 	    { return _samples; }
-    const vector< Coord2 > &	samples( void ) const	{ return _samples; }
-
-    vector< Coord2> &	        fineSamples( void ) 	    { return _fineSamples; }
-    const vector< Coord2 > &	fineSamples( void ) const	{ return _fineSamples; }
+	void init( void ) { _init(); }
+	
+	vector< Coord2 > &samples( void ) { return _samples; }
+	
+	const vector< Coord2 > &samples( void ) const { return _samples; }
+	
+	vector< Coord2 > &fineSamples( void ) { return _fineSamples; }
+	
+	const vector< Coord2 > &fineSamples( void ) const { return _fineSamples; }
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-    void        addSample( Coord2 & coord );
-    static bool isOnLine( Coord2 &a, Coord2 &b, Coord2 &c );
-
-    void computeChaikinCurve( int num, double unit );
+	void addSample( Coord2 &coord );
+	
+	static bool isOnLine( Coord2 &a, Coord2 &b, Coord2 &c );
+	
+	void computeChaikinCurve( int num, double unit );
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -88,12 +91,14 @@ class Line2 {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const Line2 & v );
-				// Output
-    friend istream &	operator >> ( istream & s, Line2 & v );
-				// Input
-    virtual const char * className( void ) const { return "Line2"; }
-				// Class name
+	friend ostream &operator<<( ostream &s, const Line2 &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, Line2 &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "Line2"; }
+	// Class name
 };
 
 

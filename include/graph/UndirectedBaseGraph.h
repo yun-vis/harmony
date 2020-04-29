@@ -36,13 +36,14 @@ using namespace boost;
 
 typedef adjacency_list< listS, listS, undirectedS,
 		BaseVertexProperty, BaseEdgeProperty,
-		BaseGraphProperty >  UndirectedBaseGraph;
+		BaseGraphProperty > UndirectedBaseGraph;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
 
-void printGraph( const UndirectedBaseGraph & g );
-void clearGraph( UndirectedBaseGraph & g );
+void printGraph( const UndirectedBaseGraph &g );
+
+void clearGraph( UndirectedBaseGraph &g );
 
 #endif  // _UndirectedBaseGraph_H

@@ -49,15 +49,14 @@ using namespace std;
 //  Outputs
 //  none
 //
-void MetaboliteVertexProperty::_init( void )
-{
+void MetaboliteVertexProperty::_init( void ) {
 	BaseVertexProperty::_init();
-	degree 		= 0;
-	activate	= true;
-	type 		= "unknown";
-	metaType 	= "unknown";
-    metaPtr 	= NULL;		// subsystems record all subsystems related to this metabolite
-    reactPtr 	= NULL;
+	degree = 0;
+	activate = true;
+	type = "unknown";
+	metaType = "unknown";
+	metaPtr = NULL;        // subsystems record all subsystems related to this metabolite
+	reactPtr = NULL;
 	subsystems.clear();
 }
 
@@ -70,9 +69,8 @@ void MetaboliteVertexProperty::_init( void )
 //  Outputs
 //  none
 //
-MetaboliteVertexProperty::MetaboliteVertexProperty()
-{
-    _init();
+MetaboliteVertexProperty::MetaboliteVertexProperty() {
+	_init();
 }
 
 
@@ -96,14 +94,13 @@ MetaboliteVertexProperty::MetaboliteVertexProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const MetaboliteVertexProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const MetaboliteVertexProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -117,7 +114,6 @@ ostream & operator << ( ostream & stream, const MetaboliteVertexProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, MetaboliteVertexProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, MetaboliteVertexProperty &obj ) {
+	return stream;
 }

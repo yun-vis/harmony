@@ -34,8 +34,7 @@ using namespace std;
 //  Outputs
 //      none
 //
-void EnergyBase::_clear( void )
-{
+void EnergyBase::_clear( void ) {
 }
 
 //------------------------------------------------------------------------------
@@ -51,9 +50,8 @@ void EnergyBase::_clear( void )
 //  Outputs
 //  none
 //
-EnergyBase::EnergyBase( void )
-{
-    _boundary                   = new Boundary;
+EnergyBase::EnergyBase( void ) {
+	_boundary = new Boundary;
 }
 
 //
@@ -65,8 +63,7 @@ EnergyBase::EnergyBase( void )
 //  Outputs
 //  none
 //
-EnergyBase::EnergyBase( const EnergyBase & obj )
-{
+EnergyBase::EnergyBase( const EnergyBase &obj ) {
 }
 
 
@@ -83,8 +80,7 @@ EnergyBase::EnergyBase( const EnergyBase & obj )
 //  Outputs
 //  none
 //
-EnergyBase::~EnergyBase( void )
-{
+EnergyBase::~EnergyBase( void ) {
 }
 
 // end of header file

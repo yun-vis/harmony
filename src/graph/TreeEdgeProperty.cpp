@@ -41,8 +41,7 @@ using namespace std;
 //  Outputs
 //  none
 //
-void TreeEdgeProperty::_init( void )
-{
+void TreeEdgeProperty::_init( void ) {
 	BaseEdgeProperty::_init();
 }
 
@@ -63,9 +62,8 @@ void TreeEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-TreeEdgeProperty::TreeEdgeProperty()
-{
-    _init();
+TreeEdgeProperty::TreeEdgeProperty() {
+	_init();
 }
 
 
@@ -89,14 +87,13 @@ TreeEdgeProperty::TreeEdgeProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const TreeEdgeProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const TreeEdgeProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const TreeEdgeProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, TreeEdgeProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, TreeEdgeProperty &obj ) {
+	return stream;
 }

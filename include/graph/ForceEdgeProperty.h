@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_ForceEdgeProperty_H
+#ifndef _ForceEdgeProperty_H
 #define _ForceEdgeProperty_H
 
 //------------------------------------------------------------------------------
@@ -32,23 +32,23 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceEdgeProperty: public BoundaryEdgeProperty {
+class ForceEdgeProperty : public BoundaryEdgeProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
 
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    ForceEdgeProperty();				// constructor (default)
-    ForceEdgeProperty( const ForceEdgeProperty & e )
-        : BoundaryEdgeProperty ( e ) {
-    }					                // copy constructor
-    virtual ~ForceEdgeProperty() {}		// destructor
+	ForceEdgeProperty();                // constructor (default)
+	ForceEdgeProperty( const ForceEdgeProperty &e )
+			: BoundaryEdgeProperty( e ) {
+	}                                    // copy constructor
+	virtual ~ForceEdgeProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -57,14 +57,14 @@ class ForceEdgeProperty: public BoundaryEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-
-    GraphicsEdgeItem *        itemPtr;        // pointer to graphic objects
+	
+	GraphicsEdgeItem *itemPtr;        // pointer to graphic objects
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-    void		                init( void )		      { _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -78,13 +78,15 @@ class ForceEdgeProperty: public BoundaryEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const ForceEdgeProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, ForceEdgeProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "ForceEdgeProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const ForceEdgeProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, ForceEdgeProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "ForceEdgeProperty"; }
+	// class name
+	
 };
 
 #endif // _ForceEdgeProperty_H

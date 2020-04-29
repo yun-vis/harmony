@@ -13,6 +13,7 @@
 using namespace std;
 
 #ifndef Q_MOC_RUN
+
 #include "ui/GraphicsView.h"
 #include "base/ThreadOctilinearBoundary.h"
 #include "base/ThreadLevelBorder.h"
@@ -21,6 +22,7 @@ using namespace std;
 #include "base/ThreadLevelDetail.h"
 #include "base/RegionData.h"
 #include "../third_party/CTPL/ctpl.h"
+
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
@@ -36,108 +38,122 @@ using namespace std;
 #define REMOVEBACKNUM   (15)
 //#define RECORD_VIDEO
 
-class Window : public QMainWindow, public PathwayData, public RegionData
-{
-    Q_OBJECT
+class Window : public QMainWindow, public PathwayData, public RegionData {
+Q_OBJECT
 private:
 
 #ifdef RECORD_VIDEO
-    unsigned int             _timerVideoID;
-    QBasicTimer              _timerVideo;
+	unsigned int             _timerVideoID;
+	QBasicTimer              _timerVideo;
 #endif // RECORD_VIDEO
-
-    // rendering
-    GraphicsView                *_gv;
-    LEVELTYPE                   _levelType;
-
-
-    // display
-    double             _content_width;
-    double             _content_height;
-    Polygon2           _contour;
-
-    //*******************************************
-    // menu
-    //*******************************************
-    // load
-    QMenu *loadMenu;
-    QAction *selDataAct;
-
-    // optimization
-    QMenu *optMenu;
-
-    QAction *selOctilinearLSAct;
-    QAction *selOctilinearCGAct;
-
-    void postLoad( void );
-
-    void simulateKey( Qt::Key key );
-
-    void _init( void );
+	
+	// rendering
+	GraphicsView *_gv;
+	LEVELTYPE _levelType;
+	
+	
+	// display
+	double _content_width;
+	double _content_height;
+	Polygon2 _contour;
+	
+	//*******************************************
+	// menu
+	//*******************************************
+	// load
+	QMenu *loadMenu;
+	QAction *selDataAct;
+	
+	// optimization
+	QMenu *optMenu;
+	
+	QAction *selOctilinearLSAct;
+	QAction *selOctilinearCGAct;
+	
+	void postLoad( void );
+	
+	void simulateKey( Qt::Key key );
+	
+	void _init( void );
 
 #ifdef RECORD_VIDEO
-    void _timerVideoStart( void );
-    void _timerVideoStop( void );
+	void _timerVideoStart( void );
+	void _timerVideoStop( void );
 #endif //RECORD_VIDEO
-
-    // thread
-    void threadBoundaryForce( void );
-    void threadCellForce( void );
-    // void threadBoneForce( void );
-    void threadCenterForce( void );
-    void threadPathwayForce( void );
-    void threadOctilinearBoundary( void );
-
-    void steinertree( void );
-
-    // octilinearity
-    void processOctilinearBoundary( void );
-    void spaceCoverage( void );
+	
+	// thread
+	void threadBoundaryForce( void );
+	
+	void threadCellForce( void );
+	
+	// void threadBoneForce( void );
+	void threadCenterForce( void );
+	
+	void threadPathwayForce( void );
+	
+	void threadOctilinearBoundary( void );
+	
+	void steinertree( void );
+	
+	// octilinearity
+	void processOctilinearBoundary( void );
+	
+	void spaceCoverage( void );
 
 public Q_SLOTS:
-
-    // optimization
-    //void selectSmooth( void );
-    //void selectOctilinear( void );
-
-    // level high
-    void selectLevelHighBuildBoundary( void );
-    void buildLevelHighBoundaryGraph( void );
-    void updateLevelHighPolygonComplex( void );
-
-    // level middle
-    void selectLevelMiddleBuildBoundary( void );
-    void buildLevelMiddleBoundaryGraph( void );
-    void updateLevelMiddlePolygonComplex( void );
-
-    // level low
-    // level detail
-    void selectLevelDetailBuildBoundary( void );
-    void buildLevelDetailBoundaryGraph( void );
-    void updateLevelDetailPolygonComplex( void );
-
-    // timer
+	
+	// optimization
+	//void selectSmooth( void );
+	//void selectOctilinear( void );
+	
+	// level high
+	void selectLevelHighBuildBoundary( void );
+	
+	void buildLevelHighBoundaryGraph( void );
+	
+	void updateLevelHighPolygonComplex( void );
+	
+	// level middle
+	void selectLevelMiddleBuildBoundary( void );
+	
+	void buildLevelMiddleBoundaryGraph( void );
+	
+	void updateLevelMiddlePolygonComplex( void );
+	
+	// level low
+	// level detail
+	void selectLevelDetailBuildBoundary( void );
+	
+	void buildLevelDetailBoundaryGraph( void );
+	
+	void updateLevelDetailPolygonComplex( void );
+	
+	// timer
 #ifdef RECORD_VIDEO
-    void timerVideo( void );
+	void timerVideo( void );
 #endif //RECORD_VIDEO
-
-    // display
-    void redrawAllScene( void );
-    void updateAllScene( void );
+	
+	// display
+	void redrawAllScene( void );
+	
+	void updateAllScene( void );
 
 public:
-    explicit Window( QWidget *parent = 0 );
-    explicit Window( const Window & obj );
-    ~Window();
-
-    void init( void ){
-        _init();
-    }
+	explicit Window( QWidget *parent = 0 );
+	
+	explicit Window( const Window &obj );
+	
+	~Window();
+	
+	void init( void ) {
+		_init();
+	}
 
 protected:
-
-    void keyPressEvent( QKeyEvent *event );
-    void timerEvent( QTimerEvent *event );
+	
+	void keyPressEvent( QKeyEvent *event );
+	
+	void timerEvent( QTimerEvent *event );
 };
 
 

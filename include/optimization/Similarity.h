@@ -8,8 +8,8 @@
 //
 //==============================================================================
 
-#ifndef _Similarity_H		// beginning of header file
-#define _Similarity_H		// notifying that this file is included
+#ifndef _Similarity_H        // beginning of header file
+#define _Similarity_H        // notifying that this file is included
 
 //------------------------------------------------------------------------------
 //	Including Header Files
@@ -31,51 +31,54 @@
 
 class Similarity {
 
-  private:
+private:
+	
+	unsigned int _id;
+	ForceGraph *_g1Ptr, *_g2Ptr;
 
-    unsigned int    _id;
-    ForceGraph      * _g1Ptr, * _g2Ptr;
+protected:
+	
+	void _init( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr );
+	
+	void _clear( void );
+	
+	bool _isSimilar( void );
 
-  protected:
-
-    void		    _init	    ( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr );
-    void            _clear      ( void );
-
-    bool            _isSimilar  ( void );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    Similarity();			// default constructor
-    Similarity( const Similarity & obj );
-				// copy constructor
+	Similarity();            // default constructor
+	Similarity( const Similarity &obj );
+	// copy constructor
 
 //------------------------------------------------------------------------------
 //	Destructor
 //------------------------------------------------------------------------------
-    ~Similarity();			// destructor
+	~Similarity();            // destructor
 
 //------------------------------------------------------------------------------
 //	Referencing to members
 //------------------------------------------------------------------------------
-    const unsigned int &    id( void )      const   { return _id; }
-    unsigned int &          id( void )              { return _id; }
+	const unsigned int &id( void ) const { return _id; }
+	
+	unsigned int &id( void ) { return _id; }
 
 
 //------------------------------------------------------------------------------
 //	Fundamental functions
 //------------------------------------------------------------------------------
-    void init( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr ) {
-        _init( __g1Ptr, __g2Ptr );
-    }
-    void clear( void )				{ _clear(); }
+	void init( ForceGraph *__g1Ptr, ForceGraph *__g2Ptr ) {
+		_init( __g1Ptr, __g2Ptr );
+	}
+	
+	void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------
 //	Similarity functions
 //------------------------------------------------------------------------------
-    bool isSimilar( void )          { return _isSimilar(); }
+	bool isSimilar( void ) { return _isSimilar(); }
 
 //------------------------------------------------------------------------------
 //	Specific functions
@@ -84,22 +87,23 @@ class Similarity {
 //------------------------------------------------------------------------------
 //	Assignment operators
 //------------------------------------------------------------------------------
-    Similarity & operator = ( const Similarity & obj );
-				// assignment
+	Similarity &operator=( const Similarity &obj );
+	// assignment
 
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const Similarity & obj );
-				// output
-    friend istream & operator >> ( istream & stream, Similarity & obj );
-				// input
+	friend ostream &operator<<( ostream &stream, const Similarity &obj );
+	
+	// output
+	friend istream &operator>>( istream &stream, Similarity &obj );
+	// input
 
 //------------------------------------------------------------------------------
 //	Class name
 //------------------------------------------------------------------------------
-    virtual const char * className( void ) const { return "Similarity"; }
-				// class name
+	virtual const char *className( void ) const { return "Similarity"; }
+	// class name
 };
 
 

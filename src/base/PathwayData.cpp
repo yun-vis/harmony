@@ -26,8 +26,7 @@
 //  Outputs
 //  none
 //
-PathwayData::PathwayData( void )
-{
+PathwayData::PathwayData( void ) {
 }
 
 //
@@ -39,8 +38,7 @@ PathwayData::PathwayData( void )
 //  Outputs
 //  none
 //
-PathwayData::PathwayData( const PathwayData & obj )
-{
+PathwayData::PathwayData( const PathwayData &obj ) {
 }
 
 
@@ -56,8 +54,7 @@ PathwayData::PathwayData( const PathwayData & obj )
 //  Outputs
 //  none
 //
-PathwayData::~PathwayData( void )
-{
+PathwayData::~PathwayData( void ) {
 }
 
 //------------------------------------------------------------------------------
@@ -72,11 +69,10 @@ PathwayData::~PathwayData( void )
 //  Outputs
 //  node
 //
-void PathwayData::setPathwayData( Pathway *pathway, double &width, double &height )
-{
-    _pathwayPtr            = pathway;
-    *_pathwayPtr->width()  = width;
-    *_pathwayPtr->height() = height;
+void PathwayData::setPathwayData( Pathway *pathway, double &width, double &height ) {
+	_pathwayPtr = pathway;
+	*_pathwayPtr->width() = width;
+	*_pathwayPtr->height() = height;
 }
 
 //------------------------------------------------------------------------------
@@ -92,11 +88,10 @@ void PathwayData::setPathwayData( Pathway *pathway, double &width, double &heigh
 //  Outputs
 //      output stream
 //
-ostream & operator << ( ostream & stream, const PathwayData & obj )
-{
+ostream &operator<<( ostream &stream, const PathwayData &obj ) {
 	stream << "-- pathwaydata --" << endl;
-
-    return stream;
+	
+	return stream;
 }
 
 //
@@ -109,10 +104,9 @@ ostream & operator << ( ostream & stream, const PathwayData & obj )
 //  Outputs
 //      input stream
 //
-istream & operator >> ( istream & stream, PathwayData & obj )
-{
-    // do nothing
-    return stream;
+istream &operator>>( istream &stream, PathwayData &obj ) {
+	// do nothing
+	return stream;
 }
 
 // end of header file

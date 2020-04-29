@@ -56,72 +56,75 @@ typedef CGAL::Regular_triangulation_2<Traits> RT2;
 #endif  // __linux__
 
 #ifdef __APPLE__
-typedef CGAL::Regular_triangulation_2<K> RT2;
+typedef CGAL::Regular_triangulation_2< K > RT2;
 #endif  // __MAC__
 
-typedef CGAL::Regular_triangulation_adaptation_traits_2<RT2>         AT;
-typedef CGAL::Regular_triangulation_degeneracy_removal_policy_2<RT2> DRP;
-typedef CGAL::Voronoi_diagram_2<RT2, AT, DRP> VD;
-typedef CGAL::Polygon_2< K >::Vertex_circulator                      Vertex_circulator;
+typedef CGAL::Regular_triangulation_adaptation_traits_2< RT2 > AT;
+typedef CGAL::Regular_triangulation_degeneracy_removal_policy_2< RT2 > DRP;
+typedef CGAL::Voronoi_diagram_2< RT2, AT, DRP > VD;
+typedef CGAL::Polygon_2< K >::Vertex_circulator Vertex_circulator;
 
 using CGAL::ORIGIN;
 
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
-class Seed
-{
+class Seed {
 public:
-    unsigned int    id;             // id
-    Coord2          coord;          // position
-    double          weight;         // weight
-    Polygon2        cellPolygon;    // cell polygon
+	unsigned int id;             // id
+	Coord2 coord;          // position
+	double weight;         // weight
+	Polygon2 cellPolygon;    // cell polygon
 };
 
-class Voronoi
-{
+class Voronoi {
 
 private:
-
-    unsigned                        _id;
-    // contour
-    Polygon2                       *_contourPtr;        // contour of the voronoi diagram
-
-    // seeds
-    vector< Seed >                 *_seedVecPtr;
-    vector< vector< K::Point_2 > >  _polyVec2D;         // map seed points and cell polygon
-
-    K::Segment_2 _convertToSeg( const CGAL::Object seg_obj, bool outgoing,
-                                bool &isLine, double &slope );
+	
+	unsigned _id;
+	// contour
+	Polygon2 *_contourPtr;        // contour of the voronoi diagram
+	
+	// seeds
+	vector< Seed > *_seedVecPtr;
+	vector< vector< K::Point_2 > > _polyVec2D;         // map seed points and cell polygon
+	
+	K::Segment_2 _convertToSeg( const CGAL::Object seg_obj, bool outgoing,
+	                            bool &isLine, double &slope );
 
 protected:
-
-    void    _init ( vector< Seed > & __seedVec, Polygon2 &__contour );
-    void    _clear();
+	
+	void _init( vector< Seed > &__seedVec, Polygon2 &__contour );
+	
+	void _clear();
 
 public:
-
-    Voronoi();                      // default constructor
-    Voronoi( const Voronoi & obj ); // Copy constructor
-    virtual ~Voronoi();             // Destructor
+	
+	Voronoi();                      // default constructor
+	Voronoi( const Voronoi &obj ); // Copy constructor
+	virtual ~Voronoi();             // Destructor
 
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
-    const unsigned int &        id( void )              const   { return _id; }
-    unsigned int &              id( void )                      { return _id; }
-
-    const vector< Seed > *      seedVec( void )         const   { return _seedVecPtr; }
-    vector< Seed > *            seedVec( void )                 { return _seedVecPtr; }
+	const unsigned int &id( void ) const { return _id; }
+	
+	unsigned int &id( void ) { return _id; }
+	
+	const vector< Seed > *seedVec( void ) const { return _seedVecPtr; }
+	
+	vector< Seed > *seedVec( void ) { return _seedVecPtr; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void init( vector< Seed > & __seedVec, Polygon2 &__contour ){
-        _init( __seedVec, __contour );
-    }
-    void createVoronoiDiagram( bool isWeighted );
-    void mapSeedsandPolygons( void );
+	void init( vector< Seed > &__seedVec, Polygon2 &__contour ) {
+		_init( __seedVec, __contour );
+	}
+	
+	void createVoronoiDiagram( bool isWeighted );
+	
+	void mapSeedsandPolygons( void );
 
 //------------------------------------------------------------------------------
 //  Initialization functions
@@ -130,18 +133,19 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void clear( void ) { _clear(); }
+	void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const Voronoi & obj );
-                                // Output
-    friend istream & operator >> ( istream & stream, Voronoi & obj );
-                                // Input
-
-    virtual const char * className( void ) const { return "Voronoi"; }
-                                // Class name
+	friend ostream &operator<<( ostream &stream, const Voronoi &obj );
+	
+	// Output
+	friend istream &operator>>( istream &stream, Voronoi &obj );
+	// Input
+	
+	virtual const char *className( void ) const { return "Voronoi"; }
+	// Class name
 };
 
 #endif // _Voronoi_H

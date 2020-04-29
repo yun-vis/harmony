@@ -41,8 +41,7 @@ using namespace std;
 //  Outputs
 //  none
 //
-void ForceEdgeProperty::_init( void )
-{
+void ForceEdgeProperty::_init( void ) {
 	BaseEdgeProperty::init();
 }
 
@@ -63,9 +62,8 @@ void ForceEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-ForceEdgeProperty::ForceEdgeProperty()
-{
-    _init();
+ForceEdgeProperty::ForceEdgeProperty() {
+	_init();
 }
 
 
@@ -89,14 +87,13 @@ ForceEdgeProperty::ForceEdgeProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const ForceEdgeProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const ForceEdgeProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const ForceEdgeProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, ForceEdgeProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, ForceEdgeProperty &obj ) {
+	return stream;
 }

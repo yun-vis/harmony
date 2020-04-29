@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_TreeEdgeProperty_H
+#ifndef _TreeEdgeProperty_H
 #define _TreeEdgeProperty_H
 
 //------------------------------------------------------------------------------
@@ -31,24 +31,24 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class TreeEdgeProperty: public BaseEdgeProperty {
+class TreeEdgeProperty : public BaseEdgeProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
 
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    TreeEdgeProperty();				// constructor (default)
-    TreeEdgeProperty( const TreeEdgeProperty & e ) {
-	   id	    = e.id;
-	   weight	= e.weight;
-    }					// copy constructor
-    virtual ~TreeEdgeProperty() {}		// destructor
+	TreeEdgeProperty();                // constructor (default)
+	TreeEdgeProperty( const TreeEdgeProperty &e ) {
+		id = e.id;
+		weight = e.weight;
+	}                    // copy constructor
+	virtual ~TreeEdgeProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -57,8 +57,8 @@ class TreeEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-
-    void		                init( void )		      { _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -76,13 +76,15 @@ class TreeEdgeProperty: public BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const TreeEdgeProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, TreeEdgeProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "TreeEdgeProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const TreeEdgeProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, TreeEdgeProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "TreeEdgeProperty"; }
+	// class name
+	
 };
 
 #endif // _TreeEdgeProperty_H

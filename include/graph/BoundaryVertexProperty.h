@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_BoundaryVertexProperty_H
+#ifndef _BoundaryVertexProperty_H
 #define _BoundaryVertexProperty_H
 
 //------------------------------------------------------------------------------
@@ -33,21 +33,21 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class BoundaryVertexProperty: public BaseVertexProperty {
+class BoundaryVertexProperty : public BaseVertexProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-    void		        _init( void );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BoundaryVertexProperty();				// constructor (default)
-    BoundaryVertexProperty( const BoundaryVertexProperty & v ) {
-    }					// copy constructor
-    virtual ~BoundaryVertexProperty() {}		// destructor
+	BoundaryVertexProperty();                // constructor (default)
+	BoundaryVertexProperty( const BoundaryVertexProperty &v ) {
+	}                    // copy constructor
+	virtual ~BoundaryVertexProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -56,22 +56,22 @@ class BoundaryVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                initID;
-    vector< unsigned int >      lineID;
-    bool                        isFixed;
-
-    Coord2 *                    geoPtr;         // initial position
-    Coord2 *                    smoothPtr;
-    Coord2 *                    centroidPtr;
-    // Coord2 *                    stressPtr;
-    // Coord2 *                    octilinearPtr;
-    GraphicsVertexItem *        itemPtr;
+	unsigned int initID;
+	vector< unsigned int > lineID;
+	bool isFixed;
+	
+	Coord2 *geoPtr;         // initial position
+	Coord2 *smoothPtr;
+	Coord2 *centroidPtr;
+	// Coord2 *                    stressPtr;
+	// Coord2 *                    octilinearPtr;
+	GraphicsVertexItem *itemPtr;
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-    void		                init( void )		{ _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -85,14 +85,16 @@ class BoundaryVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-
-    friend ostream &	operator << ( ostream & s, const BoundaryVertexProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, BoundaryVertexProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "BoundaryVertexProperty"; }
-				// class name
-
+	
+	friend ostream &operator<<( ostream &s, const BoundaryVertexProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, BoundaryVertexProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "BoundaryVertexProperty"; }
+	// class name
+	
 };
 
 #endif // _BoundaryVertexProperty_H

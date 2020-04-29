@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_BaseGraphProperty_H
+#ifndef _BaseGraphProperty_H
 #define _BaseGraphProperty_H
 
 //------------------------------------------------------------------------------
@@ -34,18 +34,18 @@ using namespace std;
 class BaseGraphProperty {
 
 protected:
-
-    void		    _init( double &width, double &height );
+	
+	void _init( double &width, double &height );
 
 public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BaseGraphProperty();				// constructor (default)
-    BaseGraphProperty( const BaseGraphProperty & v ) {
-    }					// copy constructor
-    virtual ~BaseGraphProperty() {}		// destructor
+	BaseGraphProperty();                // constructor (default)
+	BaseGraphProperty( const BaseGraphProperty &v ) {
+	}                    // copy constructor
+	virtual ~BaseGraphProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -54,13 +54,13 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    Coord2 *                    centerPtr;
-    double *                    widthPtr;
-    double *                    heightPtr;
-
-    void		                init( double &__width, double &__height ) {
-        _init( __width, __height );
-    }
+	Coord2 *centerPtr;
+	double *widthPtr;
+	double *heightPtr;
+	
+	void init( double &__width, double &__height ) {
+		_init( __width, __height );
+	}
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -78,13 +78,15 @@ public:
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const BaseGraphProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, BaseGraphProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "BaseGraphProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const BaseGraphProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, BaseGraphProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "BaseGraphProperty"; }
+	// class name
+	
 };
 
 #endif // _BaseGraphProperty_H

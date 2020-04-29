@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_BaseEdgeProperty_H
+#ifndef _BaseEdgeProperty_H
 #define _BaseEdgeProperty_H
 
 //------------------------------------------------------------------------------
@@ -32,22 +32,22 @@ using namespace std;
 
 class BaseEdgeProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
 
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    BaseEdgeProperty();				// constructor (default)
-    BaseEdgeProperty( const BaseEdgeProperty & e ) {
-        id	    = e.id;
-        weight	= e.weight;
-    }					// copy constructor
-    virtual ~BaseEdgeProperty() {}		// destructor
+	BaseEdgeProperty();                // constructor (default)
+	BaseEdgeProperty( const BaseEdgeProperty &e ) {
+		id = e.id;
+		weight = e.weight;
+	}                    // copy constructor
+	virtual ~BaseEdgeProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -56,17 +56,17 @@ class BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    unsigned int                id;
-
-    double                      angle;
-    double                      weight;
-    bool                        visit;
-    int                         visitedTimes;
-
-    bool                        isFore;
-    bool                        isBack;
-
-    void		                init( void )		      { _init(); }
+	unsigned int id;
+	
+	double angle;
+	double weight;
+	bool visit;
+	int visitedTimes;
+	
+	bool isFore;
+	bool isBack;
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Special functions
@@ -84,13 +84,15 @@ class BaseEdgeProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-    friend ostream &	operator << ( ostream & s, const BaseEdgeProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, BaseEdgeProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "BaseEdgeProperty"; }
-				// class name
-
+	friend ostream &operator<<( ostream &s, const BaseEdgeProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, BaseEdgeProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "BaseEdgeProperty"; }
+	// class name
+	
 };
 
 #endif // _BaseEdgeProperty_H

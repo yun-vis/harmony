@@ -41,11 +41,10 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BaseGraphProperty::_init( double &width, double &height )
-{
-    centerPtr   = NULL;
-    widthPtr    = &width;
-    heightPtr   = &height;
+void BaseGraphProperty::_init( double &width, double &height ) {
+	centerPtr = NULL;
+	widthPtr = &width;
+	heightPtr = &height;
 }
 
 //------------------------------------------------------------------------------
@@ -65,9 +64,8 @@ void BaseGraphProperty::_init( double &width, double &height )
 //  Outputs
 //  none
 //
-BaseGraphProperty::BaseGraphProperty()
-{
-    // _init();
+BaseGraphProperty::BaseGraphProperty() {
+	// _init();
 }
 
 
@@ -91,14 +89,13 @@ BaseGraphProperty::BaseGraphProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BaseGraphProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const BaseGraphProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -112,7 +109,6 @@ ostream & operator << ( ostream & stream, const BaseGraphProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BaseGraphProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, BaseGraphProperty &obj ) {
+	return stream;
 }

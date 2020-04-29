@@ -41,9 +41,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BoundaryGraphProperty::_init( double &width, double &height )
-{
-    BaseGraphProperty::_init( width, height );
+void BoundaryGraphProperty::_init( double &width, double &height ) {
+	BaseGraphProperty::_init( width, height );
 }
 
 //------------------------------------------------------------------------------
@@ -63,9 +62,8 @@ void BoundaryGraphProperty::_init( double &width, double &height )
 //  Outputs
 //  none
 //
-BoundaryGraphProperty::BoundaryGraphProperty()
-{
-    // BaseGraphProperty::_init( width, height );
+BoundaryGraphProperty::BoundaryGraphProperty() {
+	// BaseGraphProperty::_init( width, height );
 }
 
 
@@ -89,14 +87,13 @@ BoundaryGraphProperty::BoundaryGraphProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BoundaryGraphProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const BoundaryGraphProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const BoundaryGraphProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BoundaryGraphProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, BoundaryGraphProperty &obj ) {
+	return stream;
 }

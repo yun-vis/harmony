@@ -41,14 +41,13 @@ using namespace std;
 //  Outputs
 //  none
 //
-void TreeVertexProperty::_init( void )
-{
-    BaseVertexProperty::_init();
-
-    leafID              = -1;
-    meanCoord.x()       = 0.0;
-    meanCoord.y()       = 0.0;
-    leafVec.clear();
+void TreeVertexProperty::_init( void ) {
+	BaseVertexProperty::_init();
+	
+	leafID = -1;
+	meanCoord.x() = 0.0;
+	meanCoord.y() = 0.0;
+	leafVec.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -68,9 +67,8 @@ void TreeVertexProperty::_init( void )
 //  Outputs
 //  none
 //
-TreeVertexProperty::TreeVertexProperty()
-{
-    _init();
+TreeVertexProperty::TreeVertexProperty() {
+	_init();
 }
 
 
@@ -94,14 +92,13 @@ TreeVertexProperty::TreeVertexProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const TreeVertexProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const TreeVertexProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -115,7 +112,6 @@ ostream & operator << ( ostream & stream, const TreeVertexProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, TreeVertexProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, TreeVertexProperty &obj ) {
+	return stream;
 }

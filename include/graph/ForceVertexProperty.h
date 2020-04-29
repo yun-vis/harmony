@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_ForceVertexProperty_H
+#ifndef _ForceVertexProperty_H
 #define _ForceVertexProperty_H
 
 //------------------------------------------------------------------------------
@@ -34,22 +34,22 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class ForceVertexProperty: public BoundaryVertexProperty {
+class ForceVertexProperty : public BoundaryVertexProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    ForceVertexProperty();				// constructor (default)
-    ForceVertexProperty( const ForceVertexProperty & v )
-        : BoundaryVertexProperty ( v ) {
-    }					// copy constructor
-    virtual ~ForceVertexProperty() {}		// destructor
+	ForceVertexProperty();                // constructor (default)
+	ForceVertexProperty( const ForceVertexProperty &v )
+			: BoundaryVertexProperty( v ) {
+	}                    // copy constructor
+	virtual ~ForceVertexProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -58,23 +58,23 @@ class ForceVertexProperty: public BoundaryVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-
-    unsigned int                leafID;         // quadtree id
-    unsigned int                label;          // mcl clustering id
-
-    Coord2 *                    prevCoordPtr;   // previous position
-    Coord2 *                    forcePtr;       // spring force
-    Coord2 *                    placePtr;       // voronoi force
-    Coord2 *                    shiftPtr;       // displacement
-
-    Polygon2                    polygon;        // territory of each vertex
-    GraphicsVertexItem *        itemPtr;        // pointer to graphic objects
+	
+	unsigned int leafID;         // quadtree id
+	unsigned int label;          // mcl clustering id
+	
+	Coord2 *prevCoordPtr;   // previous position
+	Coord2 *forcePtr;       // spring force
+	Coord2 *placePtr;       // voronoi force
+	Coord2 *shiftPtr;       // displacement
+	
+	Polygon2 polygon;        // territory of each vertex
+	GraphicsVertexItem *itemPtr;        // pointer to graphic objects
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-    void		                init( void )		{ _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -88,14 +88,16 @@ class ForceVertexProperty: public BoundaryVertexProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-
-    friend ostream &	operator << ( ostream & s, const ForceVertexProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, ForceVertexProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "ForceVertexProperty"; }
-				// class name
-
+	
+	friend ostream &operator<<( ostream &s, const ForceVertexProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, ForceVertexProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "ForceVertexProperty"; }
+	// class name
+	
 };
 
 #endif // _ForceVertexProperty_H

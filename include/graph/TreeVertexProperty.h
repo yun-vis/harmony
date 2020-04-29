@@ -8,7 +8,7 @@
 //
 //******************************************************************************
 
-#ifndef	_TreeVertexProperty_H
+#ifndef _TreeVertexProperty_H
 #define _TreeVertexProperty_H
 
 //------------------------------------------------------------------------------
@@ -33,21 +33,21 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class TreeVertexProperty: public BaseVertexProperty {
+class TreeVertexProperty : public BaseVertexProperty {
 
-  protected:
+protected:
+	
+	void _init( void );
 
-      void		    _init( void );
-
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-    TreeVertexProperty();				// constructor (default)
-    TreeVertexProperty( const TreeVertexProperty & v ) {
-    }					// copy constructor
-    virtual ~TreeVertexProperty() {}		// destructor
+	TreeVertexProperty();                // constructor (default)
+	TreeVertexProperty( const TreeVertexProperty &v ) {
+	}                    // copy constructor
+	virtual ~TreeVertexProperty() {}        // destructor
 
 //------------------------------------------------------------------------------
 //	Assignment operators
@@ -56,19 +56,19 @@ class TreeVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	Reference to elements
 //------------------------------------------------------------------------------
-    int                         leafID;
-    unsigned int                level;      // hierarchical level
-
-    Coord2                      meanCoord;
-
-    vector< ForceGraph::vertex_descriptor >  leafVec;
-    vector< unsigned int >      child;      // vid of children
+	int leafID;
+	unsigned int level;      // hierarchical level
+	
+	Coord2 meanCoord;
+	
+	vector< ForceGraph::vertex_descriptor > leafVec;
+	vector< unsigned int > child;      // vid of children
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
-
-    void		                init( void )		{ _init(); }
+	
+	void init( void ) { _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check
@@ -82,14 +82,16 @@ class TreeVertexProperty: public BaseVertexProperty {
 //------------------------------------------------------------------------------
 //	I/O functions
 //------------------------------------------------------------------------------
-
-    friend ostream &	operator << ( ostream & s, const TreeVertexProperty & v );
-				// Output
-    friend istream &	operator >> ( istream & s, TreeVertexProperty & v );
-				// Input
-    virtual const char * className( void ) const { return "TreeVertexProperty"; }
-				// class name
-
+	
+	friend ostream &operator<<( ostream &s, const TreeVertexProperty &v );
+	
+	// Output
+	friend istream &operator>>( istream &s, TreeVertexProperty &v );
+	
+	// Input
+	virtual const char *className( void ) const { return "TreeVertexProperty"; }
+	// class name
+	
 };
 
 #endif // _TreeVertexProperty_H

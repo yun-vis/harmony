@@ -17,6 +17,7 @@
 #include <cctype>
 #include <cmath>
 #include <algorithm>
+
 using namespace std;
 
 #include "base/Common.h"
@@ -42,9 +43,8 @@ using namespace std;
 //  返り値
 //	なし
 //
-void Coord2::_init( void )
-{
-    _element[ 0 ] = _element[ 1 ] = 0.0;
+void Coord2::_init( void ) {
+	_element[ 0 ] = _element[ 1 ] = 0.0;
 }
 
 //------------------------------------------------------------------------------
@@ -64,9 +64,8 @@ void Coord2::_init( void )
 //  返り値
 //	なし
 //
-Coord2::Coord2()
-{
-    _init();
+Coord2::Coord2() {
+	_init();
 }
 
 
@@ -79,10 +78,9 @@ Coord2::Coord2()
 //  返り値
 //	なし
 //
-Coord2::Coord2( const double x, const double y )
-{
-    _element[ 0 ]	= x;
-    _element[ 1 ]	= y;
+Coord2::Coord2( const double x, const double y ) {
+	_element[ 0 ] = x;
+	_element[ 1 ] = y;
 }
 
 //
@@ -94,11 +92,10 @@ Coord2::Coord2( const double x, const double y )
 //  返り値
 //	なし
 //
-Coord2::Coord2( const Coord2 & v )
-{
-    _element[ 0 ]	= v._element[ 0 ];
-    _element[ 1 ]	= v._element[ 1 ];
- }
+Coord2::Coord2( const Coord2 &v ) {
+	_element[ 0 ] = v._element[ 0 ];
+	_element[ 1 ] = v._element[ 1 ];
+}
 
 
 //------------------------------------------------------------------------------
@@ -114,13 +111,12 @@ Coord2::Coord2( const Coord2 & v )
 //  Outputs
 //	reference to this object
 //
-Coord2 & Coord2::operator = ( const Coord2 & v )
-{
-    if ( this != &v ) {
-	_element[ 0 ]	= v._element[ 0 ];
-	_element[ 1 ]	= v._element[ 1 ];
-    } 
-    return *this;
+Coord2 &Coord2::operator=( const Coord2 &v ) {
+	if( this != &v ) {
+		_element[ 0 ] = v._element[ 0 ];
+		_element[ 1 ] = v._element[ 1 ];
+	}
+	return *this;
 }
 
 
@@ -133,11 +129,10 @@ Coord2 & Coord2::operator = ( const Coord2 & v )
 //  Outputs
 //	reference to this object
 //
-Coord2 & Coord2::operator += ( const Coord2 & v )
-{
-    _element[ 0 ]	+= v._element[ 0 ];
-    _element[ 1 ]	+= v._element[ 1 ];
-    return *this;
+Coord2 &Coord2::operator+=( const Coord2 &v ) {
+	_element[ 0 ] += v._element[ 0 ];
+	_element[ 1 ] += v._element[ 1 ];
+	return *this;
 }
 
 
@@ -150,11 +145,10 @@ Coord2 & Coord2::operator += ( const Coord2 & v )
 //  Outputs
 //	reference to this object
 //
-Coord2 & Coord2::operator -= ( const Coord2 & v )
-{
-    _element[ 0 ]	-= v._element[ 0 ];
-    _element[ 1 ]	-= v._element[ 1 ];
-    return *this;
+Coord2 &Coord2::operator-=( const Coord2 &v ) {
+	_element[ 0 ] -= v._element[ 0 ];
+	_element[ 1 ] -= v._element[ 1 ];
+	return *this;
 }
 
 
@@ -167,11 +161,10 @@ Coord2 & Coord2::operator -= ( const Coord2 & v )
 //  Outputs
 //	reference to this object
 //
-Coord2 & Coord2::operator *= ( const double d )
-{
-    _element[ 0 ]	*= d;
-    _element[ 1 ]	*= d;
-    return *this;
+Coord2 &Coord2::operator*=( const double d ) {
+	_element[ 0 ] *= d;
+	_element[ 1 ] *= d;
+	return *this;
 }
 
 
@@ -184,12 +177,11 @@ Coord2 & Coord2::operator *= ( const double d )
 //  Outputs
 //	reference to this object
 //
-Coord2 & Coord2::operator /= ( const double d )
-{
-    double d_inv = 1./d;
-    _element[ 0 ]		*= d_inv;
-    _element[ 1 ]		*= d_inv;
-    return *this;
+Coord2 &Coord2::operator/=( const double d ) {
+	double d_inv = 1. / d;
+	_element[ 0 ] *= d_inv;
+	_element[ 1 ] *= d_inv;
+	return *this;
 }
 
 
@@ -202,16 +194,15 @@ Coord2 & Coord2::operator /= ( const double d )
 //  Outputs
 //	the corresponding coordinate
 //
-const double & Coord2::operator [] ( int i ) const
-{
+const double &Coord2::operator[]( int i ) const {
 #ifdef VEC2_INDEX_CHECK
-    const char theName[] = "Coord2::operator [] : ";
-    if ( ( i < 0 ) || ( i > 1 ) ) {
+	const char theName[] = "Coord2::operator [] : ";
+	if ( ( i < 0 ) || ( i > 1 ) ) {
 	cerr << theName << " index = " << i << endl;
 	assert( ( 0 <= i ) && ( i <= 1 ) );
-    }
-#endif	// VEC2_INDEX_CHECK
-    return _element[ i ];
+	}
+#endif    // VEC2_INDEX_CHECK
+	return _element[ i ];
 }
 
 
@@ -224,16 +215,15 @@ const double & Coord2::operator [] ( int i ) const
 //  Outputs
 //	the corresponding coordinate
 //
-double & Coord2::operator [] ( int i )
-{
+double &Coord2::operator[]( int i ) {
 #ifdef VEC2_INDEX_CHECK
-    const char theName[] = "Coord2::operator [] : ";
-    if ( ( i < 0 ) || ( i > 1 ) ) {
+	const char theName[] = "Coord2::operator [] : ";
+	if ( ( i < 0 ) || ( i > 1 ) ) {
 	cerr << theName << " index = " << i << endl;
 	assert( ( 0 <= i ) && ( i <= 1 ) );
-    }
-#endif	// VEC2_INDEX_CHECK
-    return _element[ i ];
+	}
+#endif    // VEC2_INDEX_CHECK
+	return _element[ i ];
 }
 
 
@@ -246,10 +236,9 @@ double & Coord2::operator [] ( int i )
 //  Returns
 //	none
 //
-void Coord2::set( const double x, const double y )
-{
-    _element[ 0 ]	= x;
-    _element[ 1 ]	= y;
+void Coord2::set( const double x, const double y ) {
+	_element[ 0 ] = x;
+	_element[ 1 ] = y;
 }
 
 
@@ -267,9 +256,8 @@ void Coord2::set( const double x, const double y )
 //  Outputs
 //	norm of this vector
 //
-double Coord2::norm( void ) const
-{
-    return sqrt( squaredNorm() );
+double Coord2::norm( void ) const {
+	return sqrt( squaredNorm() );
 }
 
 
@@ -282,9 +270,8 @@ double Coord2::norm( void ) const
 //  Outputs
 //	squared norm of this vector
 //
-double Coord2::squaredNorm( void ) const
-{
-    return ( _element[ 0 ]*_element[ 0 ] + _element[ 1 ]*_element[ 1 ] );
+double Coord2::squaredNorm( void ) const {
+	return ( _element[ 0 ] * _element[ 0 ] + _element[ 1 ] * _element[ 1 ] );
 }
 
 
@@ -297,12 +284,12 @@ double Coord2::squaredNorm( void ) const
 //  Returns
 //	reference to this object (after normalization)
 //
-Coord2 & Coord2::normalize( void )
-    // division-by-zero should be cared by the caller side
+Coord2 &Coord2::normalize( void )
+// division-by-zero should be cared by the caller side
 {
-    double l = norm();
-    *this /= l;
-    return *this;
+	double l = norm();
+	*this /= l;
+	return *this;
 }
 
 
@@ -316,14 +303,12 @@ Coord2 & Coord2::normalize( void )
 //	return the unit vector
 //
 Coord2 Coord2::unit( void ) const
-    // division-by-zero should be cared by the caller side
+// division-by-zero should be cared by the caller side
 {
-    Coord2 ret( *this );
-    ret.normalize();
-    return ret;
+	Coord2 ret( *this );
+	ret.normalize();
+	return ret;
 }
-
-
 
 
 //
@@ -335,9 +320,8 @@ Coord2 Coord2::unit( void ) const
 //  Outputs
 //	Manhattan norm
 //
-double Coord2::manhattan( void ) const
-{
-    return ( fabs( _element[ 0 ] ) + fabs( _element[ 1 ] ) );
+double Coord2::manhattan( void ) const {
+	return ( fabs( _element[ 0 ] ) + fabs( _element[ 1 ] ) );
 }
 
 //------------------------------------------------------------------------------
@@ -353,9 +337,8 @@ double Coord2::manhattan( void ) const
 //  Outputs
 //	cross product
 //
-double crossProd( const Coord2 & a, const Coord2 & b )
-{
-    return ( a.x() * b.y() - b.x() * a.y() );
+double crossProd( const Coord2 &a, const Coord2 &b ) {
+	return ( a.x() * b.y() - b.x() * a.y() );
 }
 
 
@@ -368,9 +351,8 @@ double crossProd( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	twice of the area
 //
-double doubleArea( const Coord2 & a, const Coord2 & b, const Coord2 & c )
-{
-    return crossProd( ( a - b ), ( a - c ) );
+double doubleArea( const Coord2 &a, const Coord2 &b, const Coord2 &c ) {
+	return crossProd( ( a - b ), ( a - c ) );
 }
 
 
@@ -384,44 +366,39 @@ double doubleArea( const Coord2 & a, const Coord2 & b, const Coord2 & c )
 //  Outputs
 //	boolean value
 //
-bool isSeparate( const Coord2 & a, const Coord2 & b, const Coord2 & c, const Coord2 & d )
-{
-    double xminAB = min( a.x(), b.x() );
-    double xmaxAB = max( a.x(), b.x() );
-    double yminAB = min( a.y(), b.y() );
-    double ymaxAB = max( a.y(), b.y() );
-    double xminCD = min( c.x(), d.x() );
-    double xmaxCD = max( c.x(), d.x() );
-    double yminCD = min( c.y(), d.y() );
-    double ymaxCD = max( c.y(), d.y() );
-
-    if ( xmaxCD < xminAB ) return true;
-    if ( xmaxAB < xminCD ) return true;
-    if ( ymaxCD < yminAB ) return true;
-    if ( ymaxAB < yminCD ) return true;
-
-    return false;
+bool isSeparate( const Coord2 &a, const Coord2 &b, const Coord2 &c, const Coord2 &d ) {
+	double xminAB = min( a.x(), b.x() );
+	double xmaxAB = max( a.x(), b.x() );
+	double yminAB = min( a.y(), b.y() );
+	double ymaxAB = max( a.y(), b.y() );
+	double xminCD = min( c.x(), d.x() );
+	double xmaxCD = max( c.x(), d.x() );
+	double yminCD = min( c.y(), d.y() );
+	double ymaxCD = max( c.y(), d.y() );
+	
+	if( xmaxCD < xminAB ) return true;
+	if( xmaxAB < xminCD ) return true;
+	if( ymaxCD < yminAB ) return true;
+	if( ymaxAB < yminCD ) return true;
+	
+	return false;
 }
 
 
-bool isCollinear ( const Coord2 & a, const Coord2 & b, const Coord2 & c )
-{
-    return ( fabs( doubleArea( a, b, c ) ) < 1.0e-8 );
+bool isCollinear( const Coord2 &a, const Coord2 &b, const Coord2 &c ) {
+	return ( fabs( doubleArea( a, b, c ) ) < 1.0e-8 );
 }
 
-bool isLeft( const Coord2 & a, const Coord2 & b, const Coord2 & c )
-{
-    return ( doubleArea( a, b, c ) > 1.0e-8 );
+bool isLeft( const Coord2 &a, const Coord2 &b, const Coord2 &c ) {
+	return ( doubleArea( a, b, c ) > 1.0e-8 );
 }
 
-bool isCCW( const Coord2 & a, const Coord2 & b, const Coord2 & c )
-{
-    return isLeft( a, b, c );
+bool isCCW( const Coord2 &a, const Coord2 &b, const Coord2 &c ) {
+	return isLeft( a, b, c );
 }
 
-bool isLeftOn( const Coord2 & a, const Coord2 & b, const Coord2 & c )
-{
-    return ( doubleArea( a, b, c ) > -USER_EPS );
+bool isLeftOn( const Coord2 &a, const Coord2 &b, const Coord2 &c ) {
+	return ( doubleArea( a, b, c ) > -USER_EPS );
 }
 
 
@@ -438,17 +415,17 @@ bool isLeftOn( const Coord2 & a, const Coord2 & b, const Coord2 & c )
 //  Outputs
 //	boolean value acoording to the intersection between two line segments
 //
-bool isIntersected( const Coord2 & a, const Coord2 & b, const Coord2 & c, const Coord2 & d ) 
-{
-    if ( isSeparate( a, b, c, d ) ) return false;
-
-    if ( isCollinear( a, b, c ) ||
-	 isCollinear( a, b, d ) ||
-	 isCollinear( c, d, a ) ||
-	 isCollinear( c, d, a ) ) return false;
-
-    return ( ( doubleArea( a, b, c ) * doubleArea( a, b, d ) < 0.0 ) &&
-	     ( doubleArea( c, d, a ) * doubleArea( c, d, b ) < 0.0 ) ); 
+bool isIntersected( const Coord2 &a, const Coord2 &b, const Coord2 &c, const Coord2 &d ) {
+	if( isSeparate( a, b, c, d ) ) return false;
+	
+	if( isCollinear( a, b, c ) ||
+	    isCollinear( a, b, d ) ||
+	    isCollinear( c, d, a ) ||
+	    isCollinear( c, d, a ) )
+		return false;
+	
+	return ( ( doubleArea( a, b, c ) * doubleArea( a, b, d ) < 0.0 ) &&
+	         ( doubleArea( c, d, a ) * doubleArea( c, d, b ) < 0.0 ) );
 }
 
 
@@ -465,61 +442,60 @@ bool isIntersected( const Coord2 & a, const Coord2 & b, const Coord2 & c, const 
 //  Outputs
 //	boolean value acoording to the intersection between two line segments
 //
-bool isIntersected( const Coord2 & a, const Coord2 & b, const Coord2 & c, const Coord2 & d,
-		    Coord2 & intersection ) 
-{
+bool isIntersected( const Coord2 &a, const Coord2 &b, const Coord2 &c, const Coord2 &d,
+                    Coord2 &intersection ) {
 #ifdef DEBUG
-    cerr << " a = " << a.x << " , " << a.y << endl;
-    cerr << " b = " << b.x << " , " << b.y << endl;
-    cerr << " c = " << c.x << " , " << c.y << endl;
-    cerr << " d = " << d.x << " , " << d.y << endl;
-#endif	// DEBUG
-
-    double denominator =
-        ( double )a.x() * ( double )( d.y() - c.y() ) +
-        ( double )b.x() * ( double )( c.y() - d.y() ) +
-        ( double )d.x() * ( double )( b.y() - a.y() ) +
-        ( double )c.x() * ( double )( a.y() - b.y() );
-
-    // If denominator vanishes, the two segments are parallel to each other
-    // In that case, return false
-    if ( fabs( denominator ) < USER_EPS ) return false;
-
-    double s =  (
-		 ( double )a.x() * ( double )( d.y() - c.y() ) +
-		 ( double )c.x() * ( double )( a.y() - d.y() ) +
-		 ( double )d.x() * ( double )( c.y() - a.y() )
-		 ) / denominator;
-    double t = -( 
-		 ( double )a.x() * ( double )( c.y() - b.y() ) +
-		 ( double )b.x() * ( double )( a.y() - c.y() ) +
-		 ( double )c.x() * ( double )( b.y() - a.y() )
-		  ) / denominator;
+	cerr << " a = " << a.x << " , " << a.y << endl;
+	cerr << " b = " << b.x << " , " << b.y << endl;
+	cerr << " c = " << c.x << " , " << c.y << endl;
+	cerr << " d = " << d.x << " , " << d.y << endl;
+#endif    // DEBUG
+	
+	double denominator =
+			( double ) a.x() * ( double ) ( d.y() - c.y() ) +
+			( double ) b.x() * ( double ) ( c.y() - d.y() ) +
+			( double ) d.x() * ( double ) ( b.y() - a.y() ) +
+			( double ) c.x() * ( double ) ( a.y() - b.y() );
+	
+	// If denominator vanishes, the two segments are parallel to each other
+	// In that case, return false
+	if( fabs( denominator ) < USER_EPS ) return false;
+	
+	double s = (
+			           ( double ) a.x() * ( double ) ( d.y() - c.y() ) +
+			           ( double ) c.x() * ( double ) ( a.y() - d.y() ) +
+			           ( double ) d.x() * ( double ) ( c.y() - a.y() )
+	           ) / denominator;
+	double t = -(
+			( double ) a.x() * ( double ) ( c.y() - b.y() ) +
+			( double ) b.x() * ( double ) ( a.y() - c.y() ) +
+			( double ) c.x() * ( double ) ( b.y() - a.y() )
+	) / denominator;
 
 #ifdef DEBUG
-    cerr << " deno = " << denominator << " s = " << s << " t = " << t << endl;
+	cerr << " deno = " << denominator << " s = " << s << " t = " << t << endl;
 #endif  // DEBUG
-
-    // If the intersecting point exists within the segments, return true
-    if ( ( -USER_EPS <= s ) && ( s <= 1.0 + USER_EPS ) &&
-         ( -USER_EPS <= t ) && ( t <= 1.0 + USER_EPS ) ) {
+	
+	// If the intersecting point exists within the segments, return true
+	if( ( -USER_EPS <= s ) && ( s <= 1.0 + USER_EPS ) &&
+	    ( -USER_EPS <= t ) && ( t <= 1.0 + USER_EPS ) ) {
 #ifdef NONEED
-        s = MIN2( 1.0, MAX2( 0.0, s ) );
-        t = MIN2( 1.0, MAX2( 0.0, t ) );
-#endif	// NONEED
+		s = MIN2( 1.0, MAX2( 0.0, s ) );
+		t = MIN2( 1.0, MAX2( 0.0, t ) );
+#endif    // NONEED
 #ifdef DEBUG
-	cerr << " True" << endl;
-#endif	// DEBUG
-	intersection.setX( ( double )a.x() + s * ( double )( b.x() - a.x() ) );
-	intersection.setY( ( double )a.y() + s * ( double )( b.y() - a.y() ) );
-        return true;
-    }
-    else {
+		cerr << " True" << endl;
+#endif    // DEBUG
+		intersection.setX( ( double ) a.x() + s * ( double ) ( b.x() - a.x() ) );
+		intersection.setY( ( double ) a.y() + s * ( double ) ( b.y() - a.y() ) );
+		return true;
+	}
+	else {
 #ifdef DEBUG
-	cerr << " False" << endl;
-#endif	// DEBUG
-        return false;
-    }
+		cerr << " False" << endl;
+#endif    // DEBUG
+		return false;
+	}
 }
 
 
@@ -536,21 +512,21 @@ bool isIntersected( const Coord2 & a, const Coord2 & b, const Coord2 & c, const 
 //  Outputs
 //	boolean value acoording to the intersection between two line segments
 //
-bool doConflict( const Coord2 & a, const Coord2 & b, const Coord2 & c, const Coord2 & d ) 
-{
-    const double gap = 0.01;
-    Coord2 cc =   (1.0+gap) * c - gap * d;
-    Coord2 dd =  -gap * c + (1.0+gap) * d;
-
-    if ( isSeparate( a, b, cc, dd ) ) return false;
-
-    if ( isCollinear( a, b, cc ) ||
-	 isCollinear( a, b, dd ) ||
-	 isCollinear( cc, dd, a ) ||
-	 isCollinear( cc, dd, a ) ) return false;
-
-    return ( ( doubleArea( a, b, cc ) * doubleArea( a, b, dd ) < 0.0 ) &&
-	     ( doubleArea( cc, dd, a ) * doubleArea( cc, dd, b ) < 0.0 ) ); 
+bool doConflict( const Coord2 &a, const Coord2 &b, const Coord2 &c, const Coord2 &d ) {
+	const double gap = 0.01;
+	Coord2 cc = ( 1.0 + gap ) * c - gap * d;
+	Coord2 dd = -gap * c + ( 1.0 + gap ) * d;
+	
+	if( isSeparate( a, b, cc, dd ) ) return false;
+	
+	if( isCollinear( a, b, cc ) ||
+	    isCollinear( a, b, dd ) ||
+	    isCollinear( cc, dd, a ) ||
+	    isCollinear( cc, dd, a ) )
+		return false;
+	
+	return ( ( doubleArea( a, b, cc ) * doubleArea( a, b, dd ) < 0.0 ) &&
+	         ( doubleArea( cc, dd, a ) * doubleArea( cc, dd, b ) < 0.0 ) );
 }
 
 
@@ -567,9 +543,8 @@ bool doConflict( const Coord2 & a, const Coord2 & b, const Coord2 & c, const Coo
 //  Outputs
 //	2D coordinates in the opposite direction
 //
-Coord2 operator - ( const Coord2 & a )
-{
-    return Coord2( -a._element[ 0 ], -a._element[ 1 ] );
+Coord2 operator-( const Coord2 &a ) {
+	return Coord2( -a._element[ 0 ], -a._element[ 1 ] );
 }
 
 
@@ -582,10 +557,9 @@ Coord2 operator - ( const Coord2 & a )
 //  Outputs
 //	addition of the two 2D coordinates
 //
-Coord2 operator + ( const Coord2 & a, const Coord2 & b )
-{
-    return Coord2( a._element[ 0 ] + b._element[ 0 ],
-		   a._element[ 1 ] + b._element[ 1 ] );
+Coord2 operator+( const Coord2 &a, const Coord2 &b ) {
+	return Coord2( a._element[ 0 ] + b._element[ 0 ],
+	               a._element[ 1 ] + b._element[ 1 ] );
 }
 
 
@@ -598,10 +572,9 @@ Coord2 operator + ( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	difference of the two 2D coordinates
 //
-Coord2 operator - ( const Coord2 & a, const Coord2 & b )
-{
-    return Coord2( a._element[ 0 ] - b._element[ 0 ],
-		   a._element[ 1 ] - b._element[ 1 ] );
+Coord2 operator-( const Coord2 &a, const Coord2 &b ) {
+	return Coord2( a._element[ 0 ] - b._element[ 0 ],
+	               a._element[ 1 ] - b._element[ 1 ] );
 }
 
 
@@ -615,9 +588,8 @@ Coord2 operator - ( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	scalar product 
 //
-Coord2 operator * ( const double d, const Coord2 & a )
-{
-    return Coord2( d * a._element[ 0 ], d * a._element[ 1 ] );
+Coord2 operator*( const double d, const Coord2 &a ) {
+	return Coord2( d * a._element[ 0 ], d * a._element[ 1 ] );
 }
 
 
@@ -630,10 +602,9 @@ Coord2 operator * ( const double d, const Coord2 & a )
 //  Outputs
 //	inner product
 //
-double operator * ( const Coord2 & a, const Coord2 & b )
-{
-    return ( a._element[ 0 ] * b._element[ 0 ] +
-	     a._element[ 1 ] * b._element[ 1 ] );
+double operator*( const Coord2 &a, const Coord2 &b ) {
+	return ( a._element[ 0 ] * b._element[ 0 ] +
+	         a._element[ 1 ] * b._element[ 1 ] );
 }
 
 
@@ -647,10 +618,9 @@ double operator * ( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	scalar division
 //
-Coord2 operator / ( const Coord2 & a, const double d )
-{
-    double d_inv = 1./d;
-    return Coord2( a._element[ 0 ] * d_inv, a._element[ 1 ] * d_inv );
+Coord2 operator/( const Coord2 &a, const double d ) {
+	double d_inv = 1. / d;
+	return Coord2( a._element[ 0 ] * d_inv, a._element[ 1 ] * d_inv );
 }
 
 
@@ -663,10 +633,9 @@ Coord2 operator / ( const Coord2 & a, const double d )
 //  Outputs
 //	boolean value
 //
-int operator == ( const Coord2 & a, const Coord2 & b )
-{
-    return ( ( a._element[ 0 ] == b._element[ 0 ] ) &&
-	     ( a._element[ 1 ] == b._element[ 1 ] ) );
+int operator==( const Coord2 &a, const Coord2 &b ) {
+	return ( ( a._element[ 0 ] == b._element[ 0 ] ) &&
+	         ( a._element[ 1 ] == b._element[ 1 ] ) );
 }
 
 
@@ -679,15 +648,14 @@ int operator == ( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	boolean value
 //
-int operator < ( const Coord2 & a, const Coord2 & b )
-{
-    if ( a._element[ 0 ] < b._element[ 0 ] ) return true;
-    else if ( a._element[ 0 ] > b._element[ 0 ] ) return false;
-    else {
-	if ( a._element[ 1 ] < b._element[ 1 ] ) return true;
-	else if ( a._element[ 1 ] > b._element[ 1 ] ) return false;
-	else return false;
-    }
+int operator<( const Coord2 &a, const Coord2 &b ) {
+	if( a._element[ 0 ] < b._element[ 0 ] ) return true;
+	else if( a._element[ 0 ] > b._element[ 0 ] ) return false;
+	else {
+		if( a._element[ 1 ] < b._element[ 1 ] ) return true;
+		else if( a._element[ 1 ] > b._element[ 1 ] ) return false;
+		else return false;
+	}
 }
 
 
@@ -700,15 +668,14 @@ int operator < ( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	boolean value
 //
-int operator > ( const Coord2 & a, const Coord2 & b )
-{
-    if ( a._element[ 0 ] > b._element[ 0 ] ) return true;
-    else if ( a._element[ 0 ] < b._element[ 0 ] ) return false;
-    else {
-	if ( a._element[ 1 ] > b._element[ 1 ] ) return true;
-	else if ( a._element[ 1 ] < b._element[ 1 ] ) return false;
-	else return false;
-    }
+int operator>( const Coord2 &a, const Coord2 &b ) {
+	if( a._element[ 0 ] > b._element[ 0 ] ) return true;
+	else if( a._element[ 0 ] < b._element[ 0 ] ) return false;
+	else {
+		if( a._element[ 1 ] > b._element[ 1 ] ) return true;
+		else if( a._element[ 1 ] < b._element[ 1 ] ) return false;
+		else return false;
+	}
 }
 
 
@@ -726,22 +693,21 @@ int operator > ( const Coord2 & a, const Coord2 & b )
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const Coord2 & obj )
-{
-    int i;		// loop counter
-    // set the output formatting
-    //stream << setiosflags( ios::showpoint );
-    //stream << setprecision( 8 );
-    //int width = 16;
-    // print out the elements
-    for ( i = 0; i < 2; i++ ) {
-	//stream << setw( width ) << obj._element[ i ];
-	stream << setw( 4 ) << obj._element[ i ];
-	if ( i != 1 ) stream << "\t";
-    }
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const Coord2 &obj ) {
+	int i;        // loop counter
+	// set the output formatting
+	//stream << setiosflags( ios::showpoint );
+	//stream << setprecision( 8 );
+	//int width = 16;
+	// print out the elements
+	for( i = 0; i < 2; i++ ) {
+		//stream << setw( width ) << obj._element[ i ];
+		stream << setw( 4 ) << obj._element[ i ];
+		if( i != 1 ) stream << "\t";
+	}
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -755,13 +721,12 @@ ostream & operator << ( ostream & stream, const Coord2 & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, Coord2 & obj )
-{
-    int i;		// loop counter
-    // reading the elements
-    for ( i = 0; i < 2; i++ )
-	stream >> obj._element[ i ];
-    return stream;
+istream &operator>>( istream &stream, Coord2 &obj ) {
+	int i;        // loop counter
+	// reading the elements
+	for( i = 0; i < 2; i++ )
+		stream >> obj._element[ i ];
+	return stream;
 }
 
 

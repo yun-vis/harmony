@@ -50,8 +50,7 @@ using namespace std;
 //  Outputs
 //  none
 //
-MetaboliteEdgeProperty::MetaboliteEdgeProperty()
-{
+MetaboliteEdgeProperty::MetaboliteEdgeProperty() {
 }
 
 
@@ -75,14 +74,13 @@ MetaboliteEdgeProperty::MetaboliteEdgeProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const MetaboliteEdgeProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const MetaboliteEdgeProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -96,7 +94,6 @@ ostream & operator << ( ostream & stream, const MetaboliteEdgeProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, MetaboliteEdgeProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, MetaboliteEdgeProperty &obj ) {
+	return stream;
 }

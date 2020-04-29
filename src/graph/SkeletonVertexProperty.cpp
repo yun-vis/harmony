@@ -41,12 +41,11 @@ using namespace std;
 //  Outputs
 //  none
 //
-void SkeletonVertexProperty::_init( void )
-{
-    id          = 0;
-    coordPtr    = NULL;
-    widthPtr    = NULL;
-    heightPtr   = NULL;
+void SkeletonVertexProperty::_init( void ) {
+	id = 0;
+	coordPtr = NULL;
+	widthPtr = NULL;
+	heightPtr = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -66,9 +65,8 @@ void SkeletonVertexProperty::_init( void )
 //  Outputs
 //  none
 //
-SkeletonVertexProperty::SkeletonVertexProperty()
-{
-    _init();
+SkeletonVertexProperty::SkeletonVertexProperty() {
+	_init();
 }
 
 
@@ -92,14 +90,13 @@ SkeletonVertexProperty::SkeletonVertexProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const SkeletonVertexProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const SkeletonVertexProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -113,7 +110,6 @@ ostream & operator << ( ostream & stream, const SkeletonVertexProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, SkeletonVertexProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, SkeletonVertexProperty &obj ) {
+	return stream;
 }

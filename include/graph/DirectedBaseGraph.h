@@ -35,27 +35,30 @@ using namespace boost;
 
 
 typedef adjacency_list< listS, listS, bidirectionalS,
-		BaseVertexProperty, BaseEdgeProperty, BaseGraphProperty >  DirectedBaseGraph;
+		BaseVertexProperty, BaseEdgeProperty, BaseGraphProperty > DirectedBaseGraph;
 
 // point map
 typedef boost::rectangle_topology<> topologyType;
 typedef topologyType::point_type pointType;
 typedef vector< pointType > PositionVec;
 typedef iterator_property_map< PositionVec::iterator,
-        property_map< DirectedBaseGraph, unsigned int BaseVertexProperty::* >::type > PositionMap;
+		property_map< DirectedBaseGraph, unsigned int BaseVertexProperty::* >::type > PositionMap;
 
 typedef boost::convex_topology< 2 >::point_difference PointDifference;
 typedef vector< PointDifference > DifferenceVec;
 typedef iterator_property_map< DifferenceVec::iterator,
-        property_map< DirectedBaseGraph, unsigned int BaseVertexProperty::* >::type > DifferenceMap;
+		property_map< DirectedBaseGraph, unsigned int BaseVertexProperty::* >::type > DifferenceMap;
 typedef vector< PointDifference > DifferenceVec;
 
 //------------------------------------------------------------------------------
 //	Customized BaseGraph Functions
 //------------------------------------------------------------------------------
-void randomGraphLayout( DirectedBaseGraph & graph, double width, double height );
-void fruchtermanGraphLayout( DirectedBaseGraph & graph, double width, double height );
-void printGraph( const  DirectedBaseGraph & g );
-void clearGraph( DirectedBaseGraph & g );
+void randomGraphLayout( DirectedBaseGraph &graph, double width, double height );
+
+void fruchtermanGraphLayout( DirectedBaseGraph &graph, double width, double height );
+
+void printGraph( const DirectedBaseGraph &g );
+
+void clearGraph( DirectedBaseGraph &g );
 
 #endif  // _DirectedBaseGraph_H

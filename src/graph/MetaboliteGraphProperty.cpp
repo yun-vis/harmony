@@ -49,9 +49,8 @@ using namespace std;
 //  Outputs
 //  none
 //
-void MetaboliteGraphProperty::_init( double &width, double &height )
-{
-    BaseGraphProperty::_init( width, height );
+void MetaboliteGraphProperty::_init( double &width, double &height ) {
+	BaseGraphProperty::_init( width, height );
 }
 
 //
@@ -63,9 +62,8 @@ void MetaboliteGraphProperty::_init( double &width, double &height )
 //  Outputs
 //  none
 //
-MetaboliteGraphProperty::MetaboliteGraphProperty()
-{
-    //BaseGraphProperty::init();
+MetaboliteGraphProperty::MetaboliteGraphProperty() {
+	//BaseGraphProperty::init();
 }
 
 
@@ -89,14 +87,13 @@ MetaboliteGraphProperty::MetaboliteGraphProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const MetaboliteGraphProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const MetaboliteGraphProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -110,7 +107,6 @@ ostream & operator << ( ostream & stream, const MetaboliteGraphProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, MetaboliteGraphProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, MetaboliteGraphProperty &obj ) {
+	return stream;
 }

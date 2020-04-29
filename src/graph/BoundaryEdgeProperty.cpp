@@ -41,8 +41,7 @@ using namespace std;
 //  Outputs
 //  none
 //
-void BoundaryEdgeProperty::_init( void )
-{
+void BoundaryEdgeProperty::_init( void ) {
 	id = 0;
 	weight = 1.0;
 	visitedTimes = -1;
@@ -65,9 +64,8 @@ void BoundaryEdgeProperty::_init( void )
 //  Outputs
 //  none
 //
-BoundaryEdgeProperty::BoundaryEdgeProperty()
-{
-    _init();
+BoundaryEdgeProperty::BoundaryEdgeProperty() {
+	_init();
 }
 
 
@@ -91,14 +89,13 @@ BoundaryEdgeProperty::BoundaryEdgeProperty()
 //  Outputs
 //	reference to output stream
 //
-ostream & operator << ( ostream & stream, const BoundaryEdgeProperty & obj )
-{
-    // set the output formatting
-    stream << setiosflags( ios::showpoint );
-    stream << setprecision( 8 );
-    stream << endl;
-
-    return stream;
+ostream &operator<<( ostream &stream, const BoundaryEdgeProperty &obj ) {
+	// set the output formatting
+	stream << setiosflags( ios::showpoint );
+	stream << setprecision( 8 );
+	stream << endl;
+	
+	return stream;
 }
 
 
@@ -112,7 +109,6 @@ ostream & operator << ( ostream & stream, const BoundaryEdgeProperty & obj )
 //  Outputs
 //	reference to input stream
 //
-istream & operator >> ( istream & stream, BoundaryEdgeProperty & obj )
-{
-    return stream;
+istream &operator>>( istream &stream, BoundaryEdgeProperty &obj ) {
+	return stream;
 }
