@@ -20,8 +20,10 @@
 using namespace std;
 
 #include "base/Coord2.h"
+#include "base/Polygon2.h"
 #include "base/Common.h"
 #include "graph/BoundaryVertexProperty.h"
+#include "ui/GraphicsVertexItem.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -64,6 +66,9 @@ class ForceVertexProperty: public BoundaryVertexProperty {
     Coord2 *                    forcePtr;       // spring force
     Coord2 *                    placePtr;       // voronoi force
     Coord2 *                    shiftPtr;       // displacement
+
+    Polygon2                    polygon;        // territory of each vertex
+    GraphicsVertexItem *        itemPtr;        // pointer to graphic objects
 
 //------------------------------------------------------------------------------
 //	Special functions

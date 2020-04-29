@@ -470,7 +470,6 @@ Layout & Layout::operator = ( const Layout & obj )
 ostream & operator << ( ostream & stream, const Layout & obj )
 {
     stream << obj;
-
     return stream;
 }
 

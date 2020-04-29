@@ -14,7 +14,7 @@ ThreadOctilinearBoundary::ThreadOctilinearBoundary( void )
     _boundaryVecPtr = NULL;
 
     // levelhigh
-    _levelhighPtr = NULL;
+    _levelBorderPtr = NULL;
 
     // cells of subgraphs
     _cellPtr = NULL;
@@ -38,7 +38,7 @@ ThreadOctilinearBoundary::ThreadOctilinearBoundary( const ThreadOctilinearBounda
     _boundaryVecPtr = t._boundaryVecPtr;
 
     // levelhigh
-    _levelhighPtr = t._levelhighPtr;
+    _levelBorderPtr = t._levelBorderPtr;
 
     // cells of subgraphs
     _cellPtr = t._cellPtr;

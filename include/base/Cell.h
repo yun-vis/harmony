@@ -26,11 +26,11 @@ using namespace std;
 #include "base/PathwayData.h"
 #include "base/Grid2.h"
 #include "base/Contour2.h"
-#include "base/Package.h"
+#include "base/RegionBase.h"
 #include "optimization/Force.h"
 #include "optimization/Similarity.h"
-#include "optimization/Smooth.h"
-#include "optimization/Octilinear.h"
+//#include "optimization/Smooth.h"
+//#include "optimization/Octilinear.h"
 #include "gv/GraphVizAPI.h"
 
 //------------------------------------------------------------------------------
@@ -53,8 +53,8 @@ public:
     vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
     vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
 
-    // Bone                                    mcl;
-    Bone                                    detail;
+    // RegionBase                                    mcl;
+    RegionBase                                    detail;
 
     vector< ForceGraph::vertex_descriptor > polygonComplexVD; // vd of contour in the BoundaryGraph
     vector< vector< ForceGraph::vertex_descriptor > > metaboliteVec;   // mcl cluster vertex id
@@ -66,8 +66,8 @@ private:
 
     double                                         *_veCoveragePtr;
     double                                         *_veRatioPtr;
-    vector< Bone >                                  _centerVec;
-    vector< Bone >                                  _cellVec;
+    vector< RegionBase >                                  _centerVec;
+    vector< RegionBase >                                  _cellVec;
 
     vector< multimap< int, CellComponent > >        _cellComponentVec;              // int: number of nodes in lsubg
     vector< vector< vector< double > > >            _cellComponentSimilarityVec;    // cell component similarity
@@ -102,10 +102,6 @@ public:
     Cell( const Cell & obj );       // Copy constructor
     virtual ~Cell();                // Destructor
 
-    //vector< Coord2 > center;
-    //vector< double > radius;
-    //vector< Polygon2 > con;
-
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
@@ -113,10 +109,10 @@ public:
     unsigned int &              nComponent( void )          { return _nComponent; }
     const unsigned int &        nComponent( void ) const    { return _nComponent; }
 
-    vector< Bone > &            centerVec( void )           { return _centerVec; }
-    const vector< Bone > &      centerVec( void ) const     { return _centerVec; }
-    vector< Bone > &            cellVec( void )             { return _cellVec; }
-    const vector< Bone > &      cellVec( void ) const       { return _cellVec; }
+    vector< RegionBase > &            centerVec(void )           { return _centerVec; }
+    const vector< RegionBase > &      centerVec(void ) const     { return _centerVec; }
+    vector< RegionBase > &            cellVec(void )             { return _cellVec; }
+    const vector< RegionBase > &      cellVec(void ) const       { return _cellVec; }
 
     vector< multimap< int, CellComponent > > &  cellComponentVec( void )                { return _cellComponentVec; }
     const vector< multimap< int, CellComponent > > &  cellComponentVec( void ) const    { return _cellComponentVec; }
@@ -159,7 +155,6 @@ public:
                                 // Output
     friend istream & operator >> ( istream & stream, Cell & obj );
                                 // Input
-
     virtual const char * className( void ) const { return "Cell"; }
                                 // Class name
 };

@@ -6,7 +6,7 @@
 
 #include "base/ThreadBase.h"
 
-class ThreadLevelMiddle : public ThreadBase
+class ThreadLevelCellComponent : public ThreadBase
 {
 private:
 
@@ -15,10 +15,10 @@ protected:
 
 public:
 
-    explicit ThreadLevelMiddle( void );
-    virtual ~ThreadLevelMiddle();
+    explicit ThreadLevelCellComponent(void );
+    virtual ~ThreadLevelCellComponent();
 
-    virtual const char * className( void ) const { return "ThreadLevelMiddle"; }
+    virtual const char * className( void ) const { return "ThreadLevelCellComponent"; }
 
     void force( void );
     void stress( void );

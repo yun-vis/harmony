@@ -16,6 +16,8 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/foreach.hpp>
 
+#include <QtWidgets/QApplication>
+
 #include "base/Cell.h"
 
 typedef std::vector< std::string > Tokens;
@@ -41,10 +43,10 @@ void Cell::_init( double *veCoveragePtr, double *veRatioPtr, map< unsigned int, 
 {
     _veCoveragePtr = veCoveragePtr;
     _veRatioPtr = veRatioPtr;
-    vector< ForceGraph > &lsubg     = _pathway->lsubG();
+    vector< ForceGraph > &lsubg     = _pathwayPtr->lsubG();
 
     //read config file
-    string configFilePath = "../configs/addition.conf";
+    string configFilePath = "config/addition.conf";
     Base::Config conf( configFilePath );
 
     if ( conf.has( "ka" ) ){
@@ -69,8 +71,8 @@ void Cell::_init( double *veCoveragePtr, double *veRatioPtr, map< unsigned int, 
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
         map< unsigned int, Polygon2 >::iterator itP = polygonComplexPtr->begin();
         advance( itP, i );
-        _centerVec[i].forceBone().init( &_centerVec[i].bone(), &itP->second, LEVEL_MIDDLE, "../configs/center.conf" );
-        _centerVec[i].forceBone().id() = i;
+        _centerVec[i].force().init( &_centerVec[i].forceGraph(), &itP->second, LEVEL_MIDDLE, "config/center.conf" );
+        _centerVec[i].force().id() = i;
     }
 
     // initalize parameters of cells
@@ -80,9 +82,9 @@ void Cell::_init( double *veCoveragePtr, double *veRatioPtr, map< unsigned int, 
         // cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
         map< unsigned int, Polygon2 >::iterator itP = polygonComplexPtr->begin();
         advance( itP, i );
-        _cellVec[i].forceBone().init( &_cellVec[i].bone(), &itP->second, LEVEL_MIDDLE, "../configs/cell.conf" );
-        _cellVec[i].forceBone().id() = i;
-        // _cellVec[i].forceBone().contour() = itP->second;
+        _cellVec[i].force().init( &_cellVec[i].forceGraph(), &itP->second, LEVEL_MIDDLE, "config/cell.conf" );
+        _cellVec[i].force().id() = i;
+        // _cellVec[i].force().contour() = itP->second;
     }
 
     _buildConnectedComponent();
@@ -113,7 +115,7 @@ void Cell::_clear( void )
     for( unsigned int i = 0; i < _cellVec.size(); i++ ){
         _cellVec.clear();
     }
-    //_cellVec.forceBone().clear();
+    //_cellVec.force().clear();
     _cellComponentVec.clear();
 }
 
@@ -129,11 +131,11 @@ void Cell::_clear( void )
 //
 void Cell::_buildConnectedComponent( void )
 {
-    MetaboliteGraph             &g      = _pathway->g();
-    ForceGraph                  &lg     = _pathway->lg();
-    vector< ForceGraph >        &lsubg  = _pathway->lsubG();
-    vector< MetaboliteGraph >   &subg   = _pathway->subG();
-    map< string, Subdomain * >  &sub    = _pathway->subsys();
+    MetaboliteGraph             &g      = _pathwayPtr->g();
+    ForceGraph                  &lg     = _pathwayPtr->lg();
+    vector< ForceGraph >        &lsubg  = _pathwayPtr->lsubG();
+    vector< MetaboliteGraph >   &subg   = _pathwayPtr->subG();
+    map< string, Subdomain * >  &sub    = _pathwayPtr->subsys();
 
     // initialization
     _nComponent = 0;
@@ -217,32 +219,32 @@ void Cell::_buildConnectedComponent( void )
             // cerr << "totalArea = " << totalArea << " cc[j].multiple = " << cc[j].multiple << endl;
             multimap< int, CellComponent >::iterator itC = cellComponent.insert( pair< int, CellComponent >( cc[j].lsubgVec.size(), cc[j] ) );
 
-            ForceGraph &fg = itC->second.detail.bone();
+            //ForceGraph &fg = itC->second.detail.forceGraph();
 
             // add vertices
             for( unsigned int k = 0; k < cc[j].lsubgVec.size(); k++ ){
 
-                ForceGraph::vertex_descriptor vdNew = add_vertex( fg );
+                ForceGraph::vertex_descriptor vdNew = add_vertex( itC->second.detail.forceGraph() );
 
-                fg[ vdNew ].id          = k;
-                fg[ vdNew ].groupID     = i;
-                //fg[ vdNew ].componentID = lsubg[i][ cc[j].lsubgVec[k] ].id;
-                fg[ vdNew ].initID      = lsubg[i][ cc[j].lsubgVec[k] ].id;
+                itC->second.detail.forceGraph()[ vdNew ].id          = k;
+                itC->second.detail.forceGraph()[ vdNew ].groupID     = i;
+                //itC->second.detail.forceGraph()[ vdNew ].componentID = lsubg[i][ cc[j].lsubgVec[k] ].id;
+                itC->second.detail.forceGraph()[ vdNew ].initID      = lsubg[i][ cc[j].lsubgVec[k] ].id;
 
-                fg[ vdNew ].namePtr         = lsubg[i][ cc[j].lsubgVec[k] ].namePtr;
-                fg[ vdNew ].namePixelWidthPtr   = lsubg[i][ cc[j].lsubgVec[k] ].namePixelWidthPtr;
-                fg[ vdNew ].namePixelHeightPtr  = lsubg[i][ cc[j].lsubgVec[k] ].namePixelHeightPtr;
-                fg[ vdNew ].coordPtr     = lsubg[i][ cc[j].lsubgVec[k] ].coordPtr;
-                fg[ vdNew ].prevCoordPtr = new Coord2( lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->x(),
+                itC->second.detail.forceGraph()[ vdNew ].namePtr         = lsubg[i][ cc[j].lsubgVec[k] ].namePtr;
+                itC->second.detail.forceGraph()[ vdNew ].namePixelWidthPtr   = lsubg[i][ cc[j].lsubgVec[k] ].namePixelWidthPtr;
+                itC->second.detail.forceGraph()[ vdNew ].namePixelHeightPtr  = lsubg[i][ cc[j].lsubgVec[k] ].namePixelHeightPtr;
+                itC->second.detail.forceGraph()[ vdNew ].coordPtr     = lsubg[i][ cc[j].lsubgVec[k] ].coordPtr;
+                itC->second.detail.forceGraph()[ vdNew ].prevCoordPtr = new Coord2( lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->x(),
                                                        lsubg[i][ cc[j].lsubgVec[k] ].coordPtr->y() );
-                fg[ vdNew ].forcePtr    = new Coord2( 0, 0 );
-                fg[ vdNew ].placePtr    = new Coord2( 0, 0 );
-                fg[ vdNew ].shiftPtr    = new Coord2( 0, 0 );
-                fg[ vdNew ].weight      = 0.0;
+                itC->second.detail.forceGraph()[ vdNew ].forcePtr    = new Coord2( 0, 0 );
+                itC->second.detail.forceGraph()[ vdNew ].placePtr    = new Coord2( 0, 0 );
+                itC->second.detail.forceGraph()[ vdNew ].shiftPtr    = new Coord2( 0, 0 );
+                itC->second.detail.forceGraph()[ vdNew ].weight      = 0.0;
 
-                fg[ vdNew ].widthPtr    = new double( 10.0 );
-                fg[ vdNew ].heightPtr   = new double( 10.0 );
-                fg[ vdNew ].areaPtr     = new double( 100.0 );
+                itC->second.detail.forceGraph()[ vdNew ].widthPtr    = new double( 10.0 );
+                itC->second.detail.forceGraph()[ vdNew ].heightPtr   = new double( 10.0 );
+                itC->second.detail.forceGraph()[ vdNew ].areaPtr     = new double( 100.0 );
             }
 
             // add edges
@@ -250,8 +252,8 @@ void Cell::_buildConnectedComponent( void )
             for( unsigned int k = 1; k < cc[j].lsubgVec.size(); k++ ){
                 for( unsigned int l = 0; l < k; l++ ){
 
-                    ForceGraph::vertex_descriptor vdS = vertex( k, fg );
-                    ForceGraph::vertex_descriptor vdT = vertex( l, fg );
+                    ForceGraph::vertex_descriptor vdS = vertex( k, itC->second.detail.forceGraph() );
+                    ForceGraph::vertex_descriptor vdT = vertex( l, itC->second.detail.forceGraph() );
                     ForceGraph::vertex_descriptor vdLS = cc[j].lsubgVec[k];
                     ForceGraph::vertex_descriptor vdLT = cc[j].lsubgVec[l];
 
@@ -261,9 +263,9 @@ void Cell::_buildConnectedComponent( void )
                     if( isFound == true ){
                     // if( false ){
 
-                        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, fg );
+                        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, itC->second.detail.forceGraph() );
                         ForceGraph::edge_descriptor foreED = foreE.first;
-                        fg[ foreED ].id = idE;
+                        itC->second.detail.forceGraph()[ foreED ].id = idE;
 
                         idE++;
                     }
@@ -334,16 +336,16 @@ void Cell::_buildConnectedComponent( void )
 //
 void Cell::_buildCenterGraphs( void )
 {
-    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+    vector< ForceGraph >            &lsubg  = _pathwayPtr->lsubG();
 
     // _centerVec.resize( lsubg.size() );    // subsystem size
     for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
-        Polygon2 &contour = _cellVec[i].forceBone().contour();
+        Polygon2 &contour = _cellVec[i].force().contour();
 
         // cerr << "contour = " << contour.centroid() << endl;
-        // cerr << "init nV = " << num_vertices( _centerVec[i].bone() ) << endl;
+        // cerr << "init nV = " << num_vertices( _centerVec[i].forceGraph() ) << endl;
 
         unsigned int idV = 0;
         for (; itC != _cellComponentVec[i].end(); itC++) {
@@ -358,29 +360,29 @@ void Cell::_buildCenterGraphs( void )
             // int length = 50;
             double radius = 50;
             // double radius = 100;
-            ForceGraph::vertex_descriptor vdNew = add_vertex( _centerVec[i].bone() );
+            ForceGraph::vertex_descriptor vdNew = add_vertex( _centerVec[i].forceGraph() );
             double x = radius/2.0 - radius*(double)(rand()%2) + contour.centroid().x() + rand()%(int)length - 0.5*length;
             double y = radius/2.0 - radius*(double)(rand()%2) + contour.centroid().y() + rand()%(int)length - 0.5*length;
 
-            _centerVec[i].bone()[vdNew].id = idV;
-            _centerVec[i].bone()[vdNew].groupID = i;
-            _centerVec[i].bone()[vdNew].componentID = itC->second.id;
-            _centerVec[i].bone()[vdNew].initID = idV;
+            _centerVec[i].forceGraph()[vdNew].id = idV;
+            _centerVec[i].forceGraph()[vdNew].groupID = i;
+            _centerVec[i].forceGraph()[vdNew].componentID = itC->second.id;
+            _centerVec[i].forceGraph()[vdNew].initID = idV;
 
-            _centerVec[i].bone()[vdNew].coordPtr = new Coord2(x, y);
-            _centerVec[i].bone()[vdNew].prevCoordPtr = new Coord2(x, y);
-            _centerVec[i].bone()[vdNew].forcePtr = new Coord2(0.0, 0.0);
-            _centerVec[i].bone()[vdNew].placePtr = new Coord2(0.0, 0.0);
-            _centerVec[i].bone()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
-            _centerVec[i].bone()[vdNew].weight = (double) itC->second.lsubgVec.size();
+            _centerVec[i].forceGraph()[vdNew].coordPtr = new Coord2(x, y);
+            _centerVec[i].forceGraph()[vdNew].prevCoordPtr = new Coord2(x, y);
+            _centerVec[i].forceGraph()[vdNew].forcePtr = new Coord2(0.0, 0.0);
+            _centerVec[i].forceGraph()[vdNew].placePtr = new Coord2(0.0, 0.0);
+            _centerVec[i].forceGraph()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
+            _centerVec[i].forceGraph()[vdNew].weight = (double) itC->second.lsubgVec.size();
 
-            _centerVec[i].bone()[vdNew].widthPtr = new double( sqrt(_paramUnit) );
-            _centerVec[i].bone()[vdNew].heightPtr = new double( sqrt(_paramUnit) );
-            _centerVec[i].bone()[vdNew].areaPtr = new double( _paramUnit );
+            _centerVec[i].forceGraph()[vdNew].widthPtr = new double( sqrt(_paramUnit) );
+            _centerVec[i].forceGraph()[vdNew].heightPtr = new double( sqrt(_paramUnit) );
+            _centerVec[i].forceGraph()[vdNew].areaPtr = new double( _paramUnit );
 
             idV++;
         }
-        //cerr << "after nV = " << num_vertices( _centerVec[i].bone() ) << endl;
+        //cerr << "after nV = " << num_vertices( _cellVec[i].forceGraph() ) << endl;
     }
 
     // add similarity edges
@@ -424,17 +426,17 @@ void Cell::_buildCenterGraphs( void )
             // for( unsigned int m = 0; m < idVec.size()-1; m++ ){  // chain
             for( unsigned int m = 0; m < idVec.size(); m++ ){       // circle
 
-                ForceGraph::vertex_descriptor vdS = vertex( idVec[m], _centerVec[i].bone() );
-                ForceGraph::vertex_descriptor vdT = vertex( idVec[(m+1)%(int)idVec.size()], _centerVec[i].bone() );
+                ForceGraph::vertex_descriptor vdS = vertex( idVec[m], _centerVec[i].forceGraph() );
+                ForceGraph::vertex_descriptor vdT = vertex( idVec[(m+1)%(int)idVec.size()], _centerVec[i].forceGraph() );
 
                 bool isFound = false;
                 ForceGraph::edge_descriptor oldED;
-                tie( oldED, isFound ) = edge( vdS, vdT, _centerVec[i].bone() );
+                tie( oldED, isFound ) = edge( vdS, vdT, _centerVec[i].forceGraph() );
                 cerr << "idVec[m] = " << idVec[m] << " idVec[(m+1)%(int)idVec.size() = " << idVec[(m+1)%(int)idVec.size()] << endl;
                 if( isFound == false ){
-                    pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _centerVec[i].bone() );
+                    pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _centerVec[i].forceGraph() );
                     ForceGraph::edge_descriptor foreED = foreE.first;
-                    _centerVec[i].bone()[ foreED ].id = idE;
+                    _centerVec[i].forceGraph()[ foreED ].id = idE;
 
                     idE++;
                 }
@@ -449,20 +451,20 @@ void Cell::_buildCenterGraphs( void )
                     unsigned int idT = idVec.size() - step;
 
                     // cerr << "idS = " << idS << " idT = " << idT << endl;
-                    ForceGraph::vertex_descriptor vdS = vertex( idVec[ idS ], _centerVec[i].bone() );
-                    ForceGraph::vertex_descriptor vdT = vertex( idVec[ idT ], _centerVec[i].bone() );
+                    ForceGraph::vertex_descriptor vdS = vertex( idVec[ idS ], _centerVec[i].forceGraph() );
+                    ForceGraph::vertex_descriptor vdT = vertex( idVec[ idT ], _centerVec[i].forceGraph() );
 
                     if( (idT-idS) < 3 ) break;
 
                     bool isFound = false;
                     ForceGraph::edge_descriptor oldED;
-                    tie( oldED, isFound ) = edge( vdS, vdT, _centerVec[i].bone() );
+                    tie( oldED, isFound ) = edge( vdS, vdT, _centerVec[i].forceGraph() );
 
                     if( isFound == false ){
 
-                        pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge(vdS, vdT, _centerVec[i].bone());
+                        pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge(vdS, vdT, _centerVec[i].forceGraph());
                         ForceGraph::edge_descriptor foreED = foreE.first;
-                        _centerVec[i].bone()[foreED].id = idE;
+                        fg[foreED].id = idE;
 
                         idE++;
                     }
@@ -485,15 +487,15 @@ void Cell::_buildCenterGraphs( void )
 //
 void Cell::_buildCellGraphs( void )
 {
-    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+    vector< ForceGraph >            &lsubg  = _pathwayPtr->lsubG();
 
     // _cellVec.resize( lsubg.size() );    // subsystem size
     for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
-        Polygon2 &contour = _cellVec[i].forceBone().contour();
+        Polygon2 &contour = _cellVec[i].force().contour();
 
-        cerr << "init nV = " << num_vertices( _cellVec[i].bone() ) << " nE = " << num_edges( _cellVec[i].bone() ) << endl;
+        cerr << "init nV = " << num_vertices( _cellVec[i].forceGraph() ) << " nE = " << num_edges( _cellVec[i].forceGraph() ) << endl;
         // cerr << "contour = " << contour.centroid() << endl;
         unsigned int idV = 0, idE = 0;
         for (; itC != _cellComponentVec[i].end(); itC++) {
@@ -506,7 +508,7 @@ void Cell::_buildCellGraphs( void )
 
             // add vertices
             vector <ForceGraph::vertex_descriptor> vdVec;
-            ForceGraph &dg = itC->second.detail.bone();
+            ForceGraph &dg = itC->second.detail.forceGraph();
 
             int multiple = itC->second.metaboliteVec.size();
             // int multiple = itC->second.multiple;
@@ -515,27 +517,27 @@ void Cell::_buildCellGraphs( void )
 
                 // add vertex
                 int length = 50;
-                ForceGraph::vertex_descriptor vdNew = add_vertex( _cellVec[i].bone() );
+                ForceGraph::vertex_descriptor vdNew = add_vertex( _cellVec[i].forceGraph() );
                 double x = -100.0 + 200.0*(double)k/(double)multiple + contour.centroid().x() + rand()%(int)length - 0.5*length;
                 double y = -50.0 + 100.0*(double)(rand()%2) + contour.centroid().y() + rand()%(int)length - 0.5*length;
 
-                _cellVec[i].bone()[vdNew].id = idV;
-                _cellVec[i].bone()[vdNew].groupID = i;
-                _cellVec[i].bone()[vdNew].componentID = itC->second.id;
-                _cellVec[i].bone()[vdNew].initID = idV;
+                _cellVec[i].forceGraph()[vdNew].id = idV;
+                _cellVec[i].forceGraph()[vdNew].groupID = i;
+                _cellVec[i].forceGraph()[vdNew].componentID = itC->second.id;
+                _cellVec[i].forceGraph()[vdNew].initID = idV;
 
-                _cellVec[i].bone()[vdNew].coordPtr = new Coord2(x, y);
-                _cellVec[i].bone()[vdNew].prevCoordPtr = new Coord2(x, y);
-                //_cellVec[i].bone()[ vdNew ].coordPtr     = new Coord2( 0.0, 0.0 );
-                //_cellVec[i].bone()[ vdNew ].prevCoordPtr = new Coord2( 0.0, 0.0 );
-                _cellVec[i].bone()[vdNew].forcePtr = new Coord2(0.0, 0.0);
-                _cellVec[i].bone()[vdNew].placePtr = new Coord2(0.0, 0.0);
-                _cellVec[i].bone()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
-                _cellVec[i].bone()[vdNew].weight = (double) itC->second.lsubgVec.size() / (double) multiple;
+                _cellVec[i].forceGraph()[vdNew].coordPtr = new Coord2(x, y);
+                _cellVec[i].forceGraph()[vdNew].prevCoordPtr = new Coord2(x, y);
+                //_cellVec[i].forceGraph()[ vdNew ].coordPtr     = new Coord2( 0.0, 0.0 );
+                //_cellVec[i].forceGraph()[ vdNew ].prevCoordPtr = new Coord2( 0.0, 0.0 );
+                _cellVec[i].forceGraph()[vdNew].forcePtr = new Coord2(0.0, 0.0);
+                _cellVec[i].forceGraph()[vdNew].placePtr = new Coord2(0.0, 0.0);
+                _cellVec[i].forceGraph()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
+                _cellVec[i].forceGraph()[vdNew].weight = (double) itC->second.lsubgVec.size() / (double) multiple;
 
-                _cellVec[i].bone()[vdNew].widthPtr = new double( sqrt(_paramUnit) );
-                _cellVec[i].bone()[vdNew].heightPtr = new double( sqrt(_paramUnit) );
-                _cellVec[i].bone()[vdNew].areaPtr = new double( _paramUnit );
+                _cellVec[i].forceGraph()[vdNew].widthPtr = new double( sqrt(_paramUnit) );
+                _cellVec[i].forceGraph()[vdNew].heightPtr = new double( sqrt(_paramUnit) );
+                _cellVec[i].forceGraph()[vdNew].areaPtr = new double( _paramUnit );
 
                 idV++;
                 vdVec.push_back(vdNew);
@@ -570,18 +572,18 @@ void Cell::_buildCellGraphs( void )
 
                         ForceGraph::vertex_descriptor vdS = vdVec[ labelS ];
                         ForceGraph::vertex_descriptor vdT = vdVec[ labelT ];
-                        //ForceGraph::vertex_descriptor vdS = vertex( labelS, _cellVec[i].bone() );
-                        //ForceGraph::vertex_descriptor vdT = vertex( labelT, _cellVec[i].bone() );
+                        //ForceGraph::vertex_descriptor vdS = vertex( labelS, _cellVec[i].forceGraph() );
+                        //ForceGraph::vertex_descriptor vdT = vertex( labelT, _cellVec[i].forceGraph() );
 
                         bool isFound = false;
                         ForceGraph::edge_descriptor oldED;
-                        tie( oldED, isFound ) = edge( vdS, vdT, _cellVec[i].bone() );
+                        tie( oldED, isFound ) = edge( vdS, vdT, _cellVec[i].forceGraph() );
                         // cerr << "degreeS = " << degreeS << " degreeT = " << degreeT << endl;
                         if( isFound == false ){
 
-                            pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _cellVec[i].bone() );
+                            pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _cellVec[i].forceGraph() );
                             ForceGraph::edge_descriptor foreED = foreE.first;
-                            _cellVec[i].bone()[foreED].id = idE;
+                            _cellVec[i].forceGraph()[foreED].id = idE;
 
                             idE++;
                         }
@@ -589,7 +591,7 @@ void Cell::_buildCellGraphs( void )
                 }
 
                 cerr << "subID = " << i << " vdVec.size() = " << vdVec.size() << endl;
-                cerr << "nV = " << num_vertices( _cellVec[i].bone() ) << " nE = " << num_edges( _cellVec[i].bone() ) << endl;
+                cerr << "nV = " << num_vertices( _cellVec[i].forceGraph() ) << " nE = " << num_edges( _cellVec[i].forceGraph() ) << endl;
             }
         }
     }
@@ -606,8 +608,8 @@ void Cell::createPolygonComplexFromDetailGraph( void )
         // cerr << "id = " << itC->second.id << endl;
         for( ; itC != componentMap.end(); itC++ ){
 
-            Force       &f = itC->second.detail.forceBone();
-            ForceGraph &fg = itC->second.detail.bone();
+            Force       &f = itC->second.detail.force();
+            ForceGraph &fg = itC->second.detail.forceGraph();
 
             CellComponent &c = itC->second;
             c.contour.clear();
@@ -645,8 +647,8 @@ void Cell::updatePolygonComplexFromDetailGraph( void )
 
         for( ; itC != componentMap.end(); itC++ ){
 
-            Force       &f = itC->second.detail.forceBone();
-            ForceGraph &fg = itC->second.detail.bone();
+            Force       &f = itC->second.detail.force();
+            ForceGraph &fg = itC->second.detail.forceGraph();
 
             CellComponent &c = itC->second;
             c.contour.contour().cleanPolygon();
@@ -662,8 +664,8 @@ void Cell::createPolygonComplex( void )
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent > &componentMap = _cellComponentVec[i];
-        Force       &f = _cellVec[i].forceBone();
-        ForceGraph &fg = _cellVec[i].bone();
+        Force       &f = _cellVec[i].force();
+        ForceGraph &fg = _cellVec[i].forceGraph();
         multimap< int, CellComponent >::iterator itC = componentMap.begin();
 
         for( ; itC != componentMap.end(); itC++ ){
@@ -716,8 +718,8 @@ void Cell::cleanPolygonComplex( void )
 
 int Cell::_computeMCLClusters( ForceGraph &dg )
 {
-    string inputfilename = "../micans/input.txt";
-    string outputfilename = "../micans/output.txt";
+    string inputfilename = "third_party/micans/input.txt";
+    string outputfilename = "third_party/micans/output.txt";
 
     // write the graph
     ofstream ofs( inputfilename.c_str() );
@@ -740,7 +742,7 @@ int Cell::_computeMCLClusters( ForceGraph &dg )
     cerr << "cm = " << cm << endl;
 #endif	// __linux__
 #ifdef __APPLE__
-    cm = string( "/Users/yun/Desktop/gitroot/tools/qtborder/micans/bin/./mcl " ) + inputfilename + string( " --abc -o " ) + outputfilename;
+    cm = (qApp->applicationDirPath() + QString( "/third_party/micans/bin/./mcl ") ).toStdString() + inputfilename + string( " --abc -o " ) + outputfilename;
     cerr << "cm = " << cm << endl;
 #endif	// __MAC__
 
@@ -819,7 +821,7 @@ void Cell::_computeClusters( void )
 #endif // SKIP
 
             // vector< MetaboliteGraph::vertex_descriptor > cluster;
-            ForceGraph &dg = itC->second.detail.bone();
+            ForceGraph &dg = itC->second.detail.forceGraph();
             int nClusters = _computeMCLClusters( dg );
 
             itC->second.metaboliteVec.resize( nClusters );
@@ -839,14 +841,14 @@ void Cell::_computeClusters( void )
 /*
 void Cell::updateMCLCoords( void )
 {
-    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+    vector< ForceGraph >            &lsubg  = _pathwayPtr->lsubG();
 
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
         for( ; itC != _cellComponentVec[i].end(); itC++ ){
 
-            // ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].bone() );
+            // ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].forceGraph() );
             Coord2 &avg = itC->second.contour.centroid();
 
 #ifdef SKIP
@@ -865,7 +867,7 @@ void Cell::updateMCLCoords( void )
             int nClusters = cluster.size();
 
             // cerr << "nClusters = " << nClusters << endl;
-            // int nClusters = _computeClusters( itC->second.detail.bone(), cluster );
+            // int nClusters = _computeClusters( itC->second.detail.forceGraph(), cluster );
             assert( nClusters != -1 );
 
             itC->second.nMCL = nClusters;
@@ -873,8 +875,8 @@ void Cell::updateMCLCoords( void )
             // build mcl graph
             if( nClusters > 1 ){
 
-                ForceGraph &fg = itC->second.detail.bone();
-                ForceGraph &mclg = itC->second.mcl.bone();
+                ForceGraph &fg = itC->second.detail.forceGraph();
+                ForceGraph &mclg = itC->second.mcl.forceGraph();
 
                 unsigned int nVertices = 0, nEdges = 0;
                 // add vertices
@@ -884,24 +886,24 @@ void Cell::updateMCLCoords( void )
                     double x = avg.x() + rand() % 20 - 10;
                     double y = avg.y() + rand() % 20 - 10;
 
-                    _cellVec[i].bone()[vdNew].id = nVertices;
-                    _cellVec[i].bone()[vdNew].groupID = nVertices;
-                    _cellVec[i].bone()[vdNew].componentID = itC->second.id;
-                    _cellVec[i].bone()[vdNew].initID = nVertices;
+                    _cellVec[i].forceGraph()[vdNew].id = nVertices;
+                    _cellVec[i].forceGraph()[vdNew].groupID = nVertices;
+                    _cellVec[i].forceGraph()[vdNew].componentID = itC->second.id;
+                    _cellVec[i].forceGraph()[vdNew].initID = nVertices;
 
-                    _cellVec[i].bone()[vdNew].namePtr = new string( "mcl" );
-                    _cellVec[i].bone()[vdNew].coordPtr = new Coord2(x, y);
-                    _cellVec[i].bone()[vdNew].prevCoordPtr = new Coord2(x, y);
-                    //_cellVec[i].bone()[ vdNew ].coordPtr     = new Coord2( 0.0, 0.0 );
-                    //_cellVec[i].bone()[ vdNew ].prevCoordPtr = new Coord2( 0.0, 0.0 );
-                    _cellVec[i].bone()[vdNew].forcePtr = new Coord2(0.0, 0.0);
-                    _cellVec[i].bone()[vdNew].placePtr = new Coord2(0.0, 0.0);
-                    _cellVec[i].bone()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
-                    _cellVec[i].bone()[vdNew].weight = 1.0;
+                    _cellVec[i].forceGraph()[vdNew].namePtr = new string( "mcl" );
+                    _cellVec[i].forceGraph()[vdNew].coordPtr = new Coord2(x, y);
+                    _cellVec[i].forceGraph()[vdNew].prevCoordPtr = new Coord2(x, y);
+                    //_cellVec[i].forceGraph()[ vdNew ].coordPtr     = new Coord2( 0.0, 0.0 );
+                    //_cellVec[i].forceGraph()[ vdNew ].prevCoordPtr = new Coord2( 0.0, 0.0 );
+                    _cellVec[i].forceGraph()[vdNew].forcePtr = new Coord2(0.0, 0.0);
+                    _cellVec[i].forceGraph()[vdNew].placePtr = new Coord2(0.0, 0.0);
+                    _cellVec[i].forceGraph()[vdNew].shiftPtr = new Coord2(0.0, 0.0);
+                    _cellVec[i].forceGraph()[vdNew].weight = 1.0;
 
-                    _cellVec[i].bone()[vdNew].widthPtr = new double(sqrt(_paramUnit));
-                    _cellVec[i].bone()[vdNew].heightPtr = new double(sqrt(_paramUnit));
-                    _cellVec[i].bone()[vdNew].areaPtr = new double(_paramUnit);
+                    _cellVec[i].forceGraph()[vdNew].widthPtr = new double(sqrt(_paramUnit));
+                    _cellVec[i].forceGraph()[vdNew].heightPtr = new double(sqrt(_paramUnit));
+                    _cellVec[i].forceGraph()[vdNew].areaPtr = new double(_paramUnit);
 
                     nVertices++;
                 }
@@ -947,24 +949,24 @@ void Cell::updateCenterCoords( void )
     // double radius = 60.0;    // VHM
     // double radius = 100.0;       // KEGG
 
-    double w = *_pathway->width();
-    double h = *_pathway->height();
+    double w = *_pathwayPtr->width();
+    double h = *_pathwayPtr->height();
     for( unsigned int i = 0; i < _cellVec.size(); i++ ){
 
-        ForceGraph &g = _cellVec[i].bone();
+        ForceGraph &g = _cellVec[i].forceGraph();
         GraphVizAPI graphvizapi;
         graphvizapi.initGraph< ForceGraph >( &g, NULL, w, h );
         //graphvizapi.initGraph( & (BaseGraph &) g, NULL );
         graphvizapi.layoutGraph< ForceGraph >( &g, NULL );
         graphvizapi.normalization< ForceGraph >( &g, NULL, Coord2( 0.0, 0.0 ), radius*w/h, radius );
-        //graphvizapi.normalization< ForceGraph >( &g, NULL, Coord2( 0.0, 0.0 ), _pathway->width(), _pathway->height() );
+        //graphvizapi.normalization< ForceGraph >( &g, NULL, Coord2( 0.0, 0.0 ), _pathwayPtr->width(), _pathwayPtr->height() );
     }
 
     for( unsigned int i = 0; i < nSystems; i++ ) {
 
         // draw vertices
-        ForceGraph &centerG = _centerVec[i].bone();
-        ForceGraph &cellG = _cellVec[i].bone();
+        ForceGraph &centerG = _centerVec[i].forceGraph();
+        ForceGraph &cellG = _cellVec[i].forceGraph();
         // cerr << i << " centerG.size() = " << num_vertices( centerG ) << endl;
         BGL_FORALL_VERTICES( vd, cellG, ForceGraph ) {
 
@@ -979,22 +981,22 @@ void Cell::updateCenterCoords( void )
 
 void Cell::updatePathwayCoords( void )
 {
-    vector< ForceGraph >            &lsubg  = _pathway->lsubG();
+    vector< ForceGraph >            &lsubg  = _pathwayPtr->lsubG();
     double radius = 30.0;
     // double radius = 50.0;
     for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ){
 
         multimap< int, CellComponent >::iterator itC = _cellComponentVec[i].begin();
-        ForceGraph &cg = _cellVec[i].bone();
+        ForceGraph &cg = _cellVec[i].forceGraph();
         for( ; itC != _cellComponentVec[i].end(); itC++ ){
 
-            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].bone() );
+            ForceGraph::vertex_descriptor vd = vertex( itC->second.id, _cellVec[i].forceGraph() );
             Coord2 &avg = itC->second.contour.contour().centroid();
             vector< Coord2 > coordVec;
             if( itC->second.metaboliteVec.size() > 1 ){
 
-                ForceGraph &dg = itC->second.detail.bone();
-                // ForceGraph &mcl = itC->second.mcl.bone();
+                ForceGraph &dg = itC->second.detail.forceGraph();
+                // ForceGraph &mcl = itC->second.mcl.forceGraph();
                 BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
                     //Coord2 coord( rand()%(int)range-0.5*range, rand()%(int)range-0.5*range );
@@ -1013,7 +1015,7 @@ void Cell::updatePathwayCoords( void )
             }
             else{
 
-                ForceGraph &dg = itC->second.detail.bone();
+                ForceGraph &dg = itC->second.detail.forceGraph();
                 BGL_FORALL_VERTICES( vd, dg, ForceGraph ) {
 
                     // Coord2 coord( rand()%(int)range-0.5*range, rand()%(int)range-0.5*range );
@@ -1088,7 +1090,7 @@ void Cell::_computeCellComponentSimilarity( void )
 #endif // DEBUG
 
                 Similarity s;
-                s.init( &itM->second.detail.bone(), &itN->second.detail.bone() );
+                s.init( &itM->second.detail.forceGraph(), &itN->second.detail.forceGraph() );
                 bool val = s.isSimilar(); // isomorphism
                 //cerr << "val = " << val << endl;
                 cellComponentSimilarity[idM][idN] = cellComponentSimilarity[idN][idM] = val;
@@ -1123,9 +1125,9 @@ void Cell::_computeCellComponentSimilarity( void )
 //
 void Cell::_buildInterCellComponents( void )
 {
-    MetaboliteGraph             &g      = _pathway->g();
-    ForceGraph                  &lg     = _pathway->lg();
-    SkeletonGraph               &s      = _pathway->skeletonG();
+    MetaboliteGraph             &g      = _pathwayPtr->g();
+    ForceGraph                  &lg     = _pathwayPtr->lg();
+    SkeletonGraph               &s      = _pathwayPtr->skeletonG();
 
     // initialization
     _interCellComponentMap.clear();
@@ -1342,15 +1344,15 @@ void Cell::additionalForcesCenter( void )
         CellComponent &ccS = *itA->second.first;
         CellComponent &ccT = *itA->second.second;
 
-        ForceGraph &fgS = _centerVec[ idS ].bone();
-        ForceGraph &fgT = _centerVec[ idT ].bone();
-        ForceGraph::vertex_descriptor vdS = vertex( ccS.id, _centerVec[idS].bone() );
-        ForceGraph::vertex_descriptor vdT = vertex( ccT.id, _centerVec[idT].bone() );
+        ForceGraph &fgS = _centerVec[ idS ].forceGraph();
+        ForceGraph &fgT = _centerVec[ idT ].forceGraph();
+        ForceGraph::vertex_descriptor vdS = vertex( ccS.id, _centerVec[idS].forceGraph() );
+        ForceGraph::vertex_descriptor vdT = vertex( ccT.id, _centerVec[idT].forceGraph() );
 
-        //double side = 0.25*( *_centerVec[idS].bone().width() + *_centerVec[idS].bone().width() +
-        //                     *_centerVec[idT].bone().width() + *_centerVec[idT].bone().width() );
-        double side = 0.25*( _cellVec[ idS ].forceBone().width() + _cellVec[ idS ].forceBone().width() +
-                             _cellVec[ idT ].forceBone().width() + _cellVec[ idT ].forceBone().width() );
+        //double side = 0.25*( *_centerVec[idS].forceGraph().width() + *_centerVec[idS].forceGraph().width() +
+        //                     *_centerVec[idT].forceGraph().width() + *_centerVec[idT].forceGraph().width() );
+        double side = 0.25*( _cellVec[ idS ].force().width() + _cellVec[ idS ].force().width() +
+                             _cellVec[ idT ].force().width() + _cellVec[ idT ].force().width() );
         double LA = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgS ) ) );
         double LB = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgT ) ) );
         double L = 0.5*( LA+LB );
@@ -1397,13 +1399,13 @@ void Cell::additionalForcesMiddle( void )
         CellComponent &ccS = *itA->second.first;
         CellComponent &ccT = *itA->second.second;
 
-        ForceGraph &fgS = _cellVec[ idS ].bone();
-        ForceGraph &fgT = _cellVec[ idT ].bone();
+        ForceGraph &fgS = _cellVec[ idS ].forceGraph();
+        ForceGraph &fgT = _cellVec[ idT ].forceGraph();
         ForceGraph::vertex_descriptor vdS = ccS.cellgVec[0];
         ForceGraph::vertex_descriptor vdT = ccT.cellgVec[0];
 
-        double side = 0.25*( _cellVec[ idS ].forceBone().width() + _cellVec[ idS ].forceBone().width() +
-                             _cellVec[ idT ].forceBone().width() + _cellVec[ idT ].forceBone().width() );
+        double side = 0.25*( _cellVec[ idS ].force().width() + _cellVec[ idS ].force().width() +
+                             _cellVec[ idT ].force().width() + _cellVec[ idT ].force().width() );
         double LA = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgS ) ) );
         double LB = sqrt( side / ( double )max( 1.0, ( double )num_vertices( fgT ) ) );
         double L = 0.5*( LA+LB );

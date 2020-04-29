@@ -1,5 +1,5 @@
 //==============================================================================
-// LevelHigh.cc
+// LevelBorder.cc
 //  : program file for the metro network
 //
 //------------------------------------------------------------------------------
@@ -21,13 +21,13 @@
 
 using namespace std;
 
-#include "base/LevelHigh.h"
+#include "base/LevelBorder.h"
 #include "graph/UndirectedPropertyGraph.h"
 
 //------------------------------------------------------------------------------
 //	Private functions
 //------------------------------------------------------------------------------
-//  LevelHigh::_init -- initialization
+//  LevelBorder::_init -- initialization
 //
 //  Inputs
 //      string
@@ -36,48 +36,72 @@ using namespace std;
 //  double
 //
 //
-void LevelHigh::_init( double *widthPtr, double *heightPtr, double *veCoveragePtr,
-                       SkeletonGraph & skeletonGraph, Polygon2 *contourPtr )
+void LevelBorder::_init(double *widthPtr, double *heightPtr,
+                        double *veCoveragePtr, Polygon2 *contourPtr,
+                        SkeletonGraph & skeletonGraph )
 {
+    // initialize variables
     _content_widthPtr = widthPtr;
     _content_heightPtr = heightPtr;
-    _forceBone.init( &_bone, contourPtr, LEVEL_HIGH, "../configs/boundary.conf" );
     _veCoveragePtr = veCoveragePtr;
 
-    clearGraph( _skeleton );
+    RegionBase::init();
+    clearGraph( _skeletonForceGraph );
 
-    // copy skeleton to composite
+    // initialize force
+    _force.init( &_forceGraph, contourPtr, LEVEL_HIGH, "config/boundary.conf" );
+
+    // copy skeletonForceGraph to skeletionGraph
     BGL_FORALL_VERTICES( vd, skeletonGraph, SkeletonGraph )
     {
-        ForceGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
-        _skeleton[ vdNew ].id          = skeletonGraph[vd].id;
-        _skeleton[ vdNew ].groupID     = skeletonGraph[vd].id;
-        _skeleton[ vdNew ].initID      = skeletonGraph[vd].id;
+        ForceGraph::vertex_descriptor vdNew = add_vertex(_skeletonForceGraph );
+        _skeletonForceGraph[ vdNew ].id          = skeletonGraph[vd].id;
+        _skeletonForceGraph[ vdNew ].groupID     = skeletonGraph[vd].id;
+        _skeletonForceGraph[ vdNew ].initID      = skeletonGraph[vd].id;
 
-        _skeleton[ vdNew ].coordPtr     = new Coord2( skeletonGraph[vd].coordPtr->x(), skeletonGraph[vd].coordPtr->y() );
-        _skeleton[ vdNew ].prevCoordPtr = new Coord2( skeletonGraph[vd].coordPtr->x(), skeletonGraph[vd].coordPtr->y() );
-        _skeleton[ vdNew ].forcePtr     = new Coord2( 0, 0 );
-        _skeleton[ vdNew ].placePtr     = new Coord2( 0, 0 );
-        _skeleton[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
-        _skeleton[ vdNew ].weight       = 0.0;
+        _skeletonForceGraph[ vdNew ].coordPtr     = new Coord2(skeletonGraph[vd].coordPtr->x(), skeletonGraph[vd].coordPtr->y() );
+        _skeletonForceGraph[ vdNew ].prevCoordPtr = new Coord2(skeletonGraph[vd].coordPtr->x(), skeletonGraph[vd].coordPtr->y() );
+        _skeletonForceGraph[ vdNew ].forcePtr     = new Coord2(0, 0 );
+        _skeletonForceGraph[ vdNew ].placePtr     = new Coord2(0, 0 );
+        _skeletonForceGraph[ vdNew ].shiftPtr     = new Coord2(0, 0 );
+        _skeletonForceGraph[ vdNew ].weight       = 0.0;
 
-        _skeleton[ vdNew ].widthPtr    = new double( *skeletonGraph[vd].widthPtr );
-        _skeleton[ vdNew ].heightPtr   = new double( *skeletonGraph[vd].heightPtr );
-        _skeleton[ vdNew ].areaPtr     = new double( *skeletonGraph[vd].areaPtr );
+        _skeletonForceGraph[ vdNew ].widthPtr    = new double(*skeletonGraph[vd].widthPtr );
+        _skeletonForceGraph[ vdNew ].heightPtr   = new double(*skeletonGraph[vd].heightPtr );
+        _skeletonForceGraph[ vdNew ].areaPtr     = new double(*skeletonGraph[vd].areaPtr );
     }
 
     BGL_FORALL_EDGES( ed, skeletonGraph, SkeletonGraph )
     {
         SkeletonGraph::vertex_descriptor vdS = source( ed, skeletonGraph );
         SkeletonGraph::vertex_descriptor vdT = target( ed, skeletonGraph );
-        ForceGraph::vertex_descriptor vdCompoS = vertex( skeletonGraph[vdS].id, _skeleton );
-        ForceGraph::vertex_descriptor vdCompoT = vertex( skeletonGraph[vdT].id, _skeleton );
+        ForceGraph::vertex_descriptor vdCompoS = vertex(skeletonGraph[vdS].id, _skeletonForceGraph );
+        ForceGraph::vertex_descriptor vdCompoT = vertex(skeletonGraph[vdT].id, _skeletonForceGraph );
 
         // add edge
-        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, _skeleton );
+        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge(vdCompoS, vdCompoT, _skeletonForceGraph );
         BoundaryGraph::edge_descriptor foreED = foreE.first;
-        _skeleton[ foreED ].id = _skeleton[ed].id;
+        _skeletonForceGraph[ foreED ].id = _skeletonForceGraph[ed].id;
     }
+
+    // normalization
+    normalizeSkeleton();
+    decomposeSkeleton();
+    normalizeBone();
+}
+
+
+//
+//  LevelBorder::_clear --    clear the current LevelBorder information
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void LevelBorder::_clear(void )
+{
 }
 
 //------------------------------------------------------------------------------
@@ -89,7 +113,7 @@ void LevelHigh::_init( double *widthPtr, double *heightPtr, double *veCoveragePt
 //	Public functions
 //------------------------------------------------------------------------------
 //
-//  LevelHigh::LevelHigh -- default constructor
+//  LevelBorder::LevelBorder -- default constructor
 //
 //  Inputs
 //  none
@@ -97,17 +121,13 @@ void LevelHigh::_init( double *widthPtr, double *heightPtr, double *veCoveragePt
 //  Outputs
 //  none
 //
-LevelHigh::LevelHigh( void )
+LevelBorder::LevelBorder(void )
 {
-    clearGraph( _skeleton );
-
-    //_shortestPathM.clear();
-
-
+    clearGraph(_skeletonForceGraph );
 }
 
 //
-//  LevelHigh::LevelHigh -- copy constructor
+//  LevelBorder::LevelBorder -- copy constructor
 //
 //  Inputs
 //  obj : object of this class
@@ -115,7 +135,7 @@ LevelHigh::LevelHigh( void )
 //  Outputs
 //  none
 //
-LevelHigh::LevelHigh( const LevelHigh & obj )
+LevelBorder::LevelBorder(const LevelBorder & obj )
 {
 }
 
@@ -125,7 +145,7 @@ LevelHigh::LevelHigh( const LevelHigh & obj )
 //------------------------------------------------------------------------------
 
 //
-//  LevelHigh::~LevelHigh --    destructor
+//  LevelBorder::LevelBorder --    destructor
 //
 //  Inputs
 //  none
@@ -133,12 +153,12 @@ LevelHigh::LevelHigh( const LevelHigh & obj )
 //  Outputs
 //  none
 //
-LevelHigh::~LevelHigh( void )
+LevelBorder::~LevelBorder(void )
 {
 }
 
 //
-//  LevelHigh::clear --    clear the current LevelHigh information
+//  LevelBorder::decomposeSkeleton --    decompose the skeletonForceGraph
 //
 //  Inputs
 //  none
@@ -146,150 +166,43 @@ LevelHigh::~LevelHigh( void )
 //  Outputs
 //  none
 //
-void LevelHigh::clear( void )
-{
-}
-
-
-#ifdef SKIP
-
-//
-//  LevelHigh::buildSkeleton --    build the skeleton
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void LevelHigh::buildSkeleton( void )
-{
-    clearGraph( _skeleton );
-
-    // create a xml document
-    TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-A.xml" );
-    //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-major.xml" );
-    //TiXmlDocument *xmlPtr = new TiXmlDocument( "../data/skeleton-full.xml" );
-    xmlPtr->LoadFile();
-
-    TiXmlElement *elemPtr = xmlPtr->FirstChildElement()->FirstChildElement()->FirstChildElement();
-
-    // should always have a valid root but handle gracefully if it does
-    if ( !elemPtr ) return;
-
-    for( ; elemPtr; elemPtr = elemPtr->NextSiblingElement() ) {
-
-        const string key = elemPtr->Value();
-
-        if( key == "node" ){
-            string id = elemPtr->Attribute( "id" );
-            id.erase( 0, 1 );
-            int vid = std::stoi( id );
-            const string sx = elemPtr->Attribute( "x" );
-            double x = stod( sx );
-            const string sy = elemPtr->Attribute( "y" );
-            double y = stod( sy );
-            const string sw = elemPtr->Attribute( "width" );
-            double w = stod( sw );
-            const string sh = elemPtr->Attribute( "height" );
-            double h = stod( sh );
-            const string sa = elemPtr->Attribute( "area" );
-            double a = stod( sa );
-#ifdef DEBUG
-            cerr << "key = " << key << " id = " << i << " x = " << x << " y = " << y
-                 << " w = " << w << " h = " << h << " a = " << a << endl;
-#endif // DEBUG
-            ForceGraph::vertex_descriptor vdNew = add_vertex( _skeleton );
-            _skeleton[ vdNew ].id = vid;
-            _skeleton[ vdNew ].initID = vid;
-            _skeleton[ vdNew ].coordPtr = new Coord2( x, y );
-            _skeleton[ vdNew ].widthPtr = new double( w );
-            _skeleton[ vdNew ].heightPtr = new double( h );
-            _skeleton[ vdNew ].areaPtr = new double( a );
-            // cerr << "area = " << a << endl;
-        }
-        else if ( key == "edge" ){
-            string id = elemPtr->Attribute( "id" );
-            id.erase( 0, 1 );
-            int eid = stoi( id );
-            string source = elemPtr->Attribute( "source" );
-            source.erase( 0, 1 );
-            int s = stoi( source );
-            string target = elemPtr->Attribute( "target" );
-            target.erase( 0, 1 );
-            int t = stoi( target );
-#ifdef DEBUG
-            cerr << "key = " << key << " id = " << i << " s = " << s << " t = " << t << endl;
-#endif // DEBUG
-            ForceGraph::vertex_descriptor vdS = vertex( s, _skeleton );
-            ForceGraph::vertex_descriptor vdT = vertex( t, _skeleton );
-
-            bool found = false;
-            ForceGraph::edge_descriptor oldED;
-            tie( oldED, found ) = edge( vdS, vdT, _skeleton );
-
-            if( found == false ){
-
-                // handle fore edge
-                pair<ForceGraph::edge_descriptor, unsigned int> foreE = add_edge( vdS, vdT, _skeleton );
-                ForceGraph::edge_descriptor foreED = foreE.first;
-                _skeleton[ foreED ].id = eid;
-            }
-        }
-        else {
-            cerr << "wrong key at " << __LINE__ << " in " << __FILE__ << endl;
-        }
-    }
-    //cerr << "nV = " << num_vertices( _skeleton ) << " nE = " << num_edges( _skeleton ) << endl;
-}
-#endif // SKIP
-
-//
-//  LevelHigh::decomposeSkeleton --    decompose the skeleton
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void LevelHigh::decomposeSkeleton( void )
+void LevelBorder::decomposeSkeleton(void )
 {
     double labelArea = 0.0;
-    unsigned int index = num_vertices( _skeleton );
+    unsigned int index = num_vertices(_skeletonForceGraph );
 
-    // copy skeleton to composite
-    BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
+    // copy skeletonForceGraph to composite
+    BGL_FORALL_VERTICES(vd, _skeletonForceGraph, ForceGraph )
     {
-        ForceGraph::vertex_descriptor vdNew = add_vertex( _bone );
-        _bone[ vdNew ].id           = _skeleton[vd].id;
-        _bone[ vdNew ].initID       = _skeleton[vd].initID;
+        ForceGraph::vertex_descriptor vdNew = add_vertex( _forceGraph );
+        _forceGraph[ vdNew ].id           = _skeletonForceGraph[vd].id;
+        _forceGraph[ vdNew ].initID       = _skeletonForceGraph[vd].initID;
 
-        _bone[ vdNew ].coordPtr     = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
-        _bone[ vdNew ].prevCoordPtr = new Coord2( _skeleton[vd].coordPtr->x(), _skeleton[vd].coordPtr->y() );
-        _bone[ vdNew ].forcePtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].placePtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
-        _bone[ vdNew ].weight       = 0.0;
+        _forceGraph[ vdNew ].coordPtr     = new Coord2(_skeletonForceGraph[vd].coordPtr->x(), _skeletonForceGraph[vd].coordPtr->y() );
+        _forceGraph[ vdNew ].prevCoordPtr = new Coord2(_skeletonForceGraph[vd].coordPtr->x(), _skeletonForceGraph[vd].coordPtr->y() );
+        _forceGraph[ vdNew ].forcePtr     = new Coord2( 0, 0 );
+        _forceGraph[ vdNew ].placePtr     = new Coord2( 0, 0 );
+        _forceGraph[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
+        _forceGraph[ vdNew ].weight       = 0.0;
 
-        _bone[ vdNew ].widthPtr = new double( *_skeleton[vd].widthPtr );
-        _bone[ vdNew ].heightPtr = new double( *_skeleton[vd].heightPtr );
-        _bone[ vdNew ].areaPtr = new double( *_skeleton[vd].areaPtr );
+        _forceGraph[ vdNew ].widthPtr = new double( *_skeletonForceGraph[vd].widthPtr );
+        _forceGraph[ vdNew ].heightPtr = new double( *_skeletonForceGraph[vd].heightPtr );
+        _forceGraph[ vdNew ].areaPtr = new double( *_skeletonForceGraph[vd].areaPtr );
 
-        // cerr << "bonearea = " << *_bone[ vdNew ].areaPtr << endl;
-        labelArea += *_bone[ vdNew ].areaPtr;
+        // cerr << "bonearea = " << *_forceGraph[ vdNew ].areaPtr << endl;
+        labelArea += *_forceGraph[ vdNew ].areaPtr;
     }
-    BGL_FORALL_EDGES( ed, _skeleton, ForceGraph )
+    BGL_FORALL_EDGES(ed, _skeletonForceGraph, ForceGraph )
     {
-        ForceGraph::vertex_descriptor vdS = source( ed, _skeleton );
-        ForceGraph::vertex_descriptor vdT = target( ed, _skeleton );
-        ForceGraph::vertex_descriptor vdCompoS = vertex( _skeleton[vdS].id, _bone );
-        ForceGraph::vertex_descriptor vdCompoT = vertex( _skeleton[vdT].id, _bone );
+        ForceGraph::vertex_descriptor vdS = source(ed, _skeletonForceGraph );
+        ForceGraph::vertex_descriptor vdT = target(ed, _skeletonForceGraph );
+        ForceGraph::vertex_descriptor vdCompoS = vertex(_skeletonForceGraph[vdS].id, _forceGraph );
+        ForceGraph::vertex_descriptor vdCompoT = vertex(_skeletonForceGraph[vdT].id, _forceGraph );
 
         // add edge
-        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, _bone );
+        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, _forceGraph );
         BoundaryGraph::edge_descriptor foreED = foreE.first;
-        _bone[ foreED ].id = _skeleton[ed].id;
+        _forceGraph[ foreED ].id = _skeletonForceGraph[ed].id;
     }
 
     // split large vertices
@@ -299,19 +212,19 @@ void LevelHigh::decomposeSkeleton( void )
 #ifdef DEBUG
     cerr << "labelArea = " << labelArea
          << " veCoverage = " << *_veCoveragePtr << " unit = " << unit << endl;
-    cerr << "nV = " << num_vertices( _bone ) << " nE = " << num_edges( _bone ) << endl;
+    cerr << "nV = " << num_vertices( _forceGraph ) << " nE = " << num_edges( _forceGraph ) << endl;
 #endif // DEBUG
 
-    BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
+    BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph )
     {
-        int mag = round( *_bone[ vd ].areaPtr/unit );
-        // int mag = round((*_bone[ vd ].widthPtr) * (*_bone[ vd ].heightPtr)/unit);
+        int mag = round( *_forceGraph[ vd ].areaPtr/unit );
+        // int mag = round((*_forceGraph[ vd ].widthPtr) * (*_forceGraph[ vd ].heightPtr)/unit);
 
-        // avoid from looping over the size of _skeleton
-        if( _bone[ vd ].id >= num_vertices( _skeleton ) ) break;
+        // avoid from looping over the size of _skeletonForceGraph
+        if( _forceGraph[ vd ].id >= num_vertices(_skeletonForceGraph ) ) break;
 
 #ifdef DEBUG
-            cerr << "area = " << *_bone[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
+            cerr << "area = " << *_forceGraph[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
 #endif // DEBUG
 
         vector< ForceGraph::edge_descriptor > removeEVec;
@@ -322,18 +235,18 @@ void LevelHigh::decomposeSkeleton( void )
 
             ForceGraph::vertex_descriptor vdC = vd;
             ForceGraph::out_edge_iterator eo, eo_end;
-            Coord2 origin = *_bone[ vd ].coordPtr;
+            Coord2 origin = *_forceGraph[ vd ].coordPtr;
             vector< ForceGraph::vertex_descriptor > extendVD;
 
             // record the adjacent vertices for edge connection
             map< unsigned int, ForceGraph::vertex_descriptor > vdAdjacent;
-            // cerr << "degree = " << out_degree( vd, _bone ) << endl;
-            for( tie( eo, eo_end ) = out_edges( vd, _bone ); eo != eo_end; eo++ ){
+            // cerr << "degree = " << out_degree( vd, _forceGraph ) << endl;
+            for( tie( eo, eo_end ) = out_edges( vd, _forceGraph ); eo != eo_end; eo++ ){
 
                 ForceGraph::edge_descriptor ed = *eo;
-                ForceGraph::vertex_descriptor vdT = target( ed, _bone );
-                vdAdjacent.insert( pair< unsigned int, ForceGraph::vertex_descriptor >( _bone[ed].id, vdT ) );
-                //remove_edge( *eo, _bone );
+                ForceGraph::vertex_descriptor vdT = target( ed, _forceGraph );
+                vdAdjacent.insert( pair< unsigned int, ForceGraph::vertex_descriptor >( _forceGraph[ed].id, vdT ) );
+                //remove_edge( *eo, _forceGraph );
                 removeEVec .push_back( ed );
             }
 
@@ -347,45 +260,45 @@ void LevelHigh::decomposeSkeleton( void )
 
                 if( i == 0 ){
 
-                    _bone[ vd ].coordPtr->x() = x;
-                    _bone[ vd ].coordPtr->y() = y;
-                    _bone[ vd ].weight          = *_bone[ vd ].areaPtr;
+                    _forceGraph[ vd ].coordPtr->x() = x;
+                    _forceGraph[ vd ].coordPtr->y() = y;
+                    _forceGraph[ vd ].weight          = *_forceGraph[ vd ].areaPtr;
 
                     // post processing
                     extendVD.push_back( vdC );
                 }
                 else{
 
-                    // cerr << "index = " << index << " area = " << *_bone[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
+                    // cerr << "index = " << index << " area = " << *_forceGraph[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
 
                     // add vertex
-                    ForceGraph::vertex_descriptor vdNew = add_vertex( _bone );
-                    _bone[ vdNew ].id           = index;
-                    _bone[ vdNew ].initID       = _bone[vd].initID;
+                    ForceGraph::vertex_descriptor vdNew = add_vertex( _forceGraph );
+                    _forceGraph[ vdNew ].id           = index;
+                    _forceGraph[ vdNew ].initID       = _forceGraph[vd].initID;
 
-                    _bone[ vdNew ].coordPtr     = new Coord2( x, y );
-                    _bone[ vdNew ].prevCoordPtr = new Coord2( x, y);
-                    _bone[ vdNew ].forcePtr     = new Coord2( 0, 0 );
-                    _bone[ vdNew ].placePtr     = new Coord2( 0, 0 );
-                    _bone[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
-                    _bone[ vdNew ].weight       = *_bone[ vd ].areaPtr;
+                    _forceGraph[ vdNew ].coordPtr     = new Coord2( x, y );
+                    _forceGraph[ vdNew ].prevCoordPtr = new Coord2( x, y);
+                    _forceGraph[ vdNew ].forcePtr     = new Coord2( 0, 0 );
+                    _forceGraph[ vdNew ].placePtr     = new Coord2( 0, 0 );
+                    _forceGraph[ vdNew ].shiftPtr     = new Coord2( 0, 0 );
+                    _forceGraph[ vdNew ].weight       = *_forceGraph[ vd ].areaPtr;
 
-                    _bone[ vdNew ].widthPtr    = new double( sqrt( unit ) );
-                    _bone[ vdNew ].heightPtr   = new double( sqrt( unit ) );
-                    _bone[ vdNew ].areaPtr     = new double( unit );
+                    _forceGraph[ vdNew ].widthPtr    = new double( sqrt( unit ) );
+                    _forceGraph[ vdNew ].heightPtr   = new double( sqrt( unit ) );
+                    _forceGraph[ vdNew ].areaPtr     = new double( unit );
 
                     // add edge
-                    pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _bone );
+                    pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _forceGraph );
                     BoundaryGraph::edge_descriptor foreED = foreE.first;
-                    _bone[ foreED ].id = num_edges( _bone );
-                    _bone[ foreED ].weight = 2.0 * (*_bone[ vd ].areaPtr);
+                    _forceGraph[ foreED ].id = num_edges( _forceGraph );
+                    _forceGraph[ foreED ].weight = 2.0 * (*_forceGraph[ vd ].areaPtr);
 
                     // add last edge to form a circle
                     if( i == mag-1 ){
-                        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew, _bone );
+                        pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew, _forceGraph );
                         BoundaryGraph::edge_descriptor foreED = foreE.first;
-                        _bone[ foreED ].id = num_edges( _bone );
-                        _bone[ foreED ].weight = 2.0 * (*_bone[ vd ].areaPtr);
+                        _forceGraph[ foreED ].id = num_edges( _forceGraph );
+                        _forceGraph[ foreED ].weight = 2.0 * (*_forceGraph[ vd ].areaPtr);
                     }
 
                     // post processing
@@ -402,11 +315,11 @@ void LevelHigh::decomposeSkeleton( void )
 
                 ForceGraph::vertex_descriptor cloestVD = extendVD[0];
                 ForceGraph::vertex_descriptor vdT = itA->second;
-                double minDist = (*_bone[ cloestVD ].coordPtr - *_bone[ vdT ].coordPtr).norm();
+                double minDist = (*_forceGraph[ cloestVD ].coordPtr - *_forceGraph[ vdT ].coordPtr).norm();
                 for( unsigned int i = 1; i < extendVD.size(); i++ ){
 
                     ForceGraph::vertex_descriptor vdS = extendVD[ i ];
-                    double dist = (*_bone[ vdS ].coordPtr - *_bone[ vdT ].coordPtr).norm();
+                    double dist = (*_forceGraph[ vdS ].coordPtr - *_forceGraph[ vdT ].coordPtr).norm();
 
                     if( dist < minDist ){
                         cloestVD = extendVD[i];
@@ -414,41 +327,41 @@ void LevelHigh::decomposeSkeleton( void )
                     }
                 }
 
-                pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, _bone );
+                pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, _forceGraph );
                 ForceGraph::edge_descriptor foreED = foreE.first;
-                _bone[ foreED ].id = itA->first;
-                _bone[ foreED ].weight = _bone[ vdT ].weight + _bone[ cloestVD ].weight;
+                _forceGraph[ foreED ].id = itA->first;
+                _forceGraph[ foreED ].weight = _forceGraph[ vdT ].weight + _forceGraph[ cloestVD ].weight;
             }
 
             // remove edges
             // cerr << "eSize = " << removeEVec.size() << endl;
             for( unsigned int i = 0; i < removeEVec.size(); i++ ){
-                // cerr << "eID = " << _bone[removeEVec[i]].id << endl;
-                remove_edge( removeEVec[i], _bone );
+                // cerr << "eID = " << _forceGraph[removeEVec[i]].id << endl;
+                remove_edge( removeEVec[i], _forceGraph );
             }
         }
         else{
-            _bone[ vd ].weight = *_bone[ vd ].areaPtr;
+            _forceGraph[ vd ].weight = *_forceGraph[ vd ].areaPtr;
         }
     }
 
 #ifdef DEBUG
-    BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
+    BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph )
     {
-        cerr << "vID = " << _bone[vd].id << endl;
-        cerr << "weight = " << _bone[vd].weight << endl;
+        cerr << "vID = " << _forceGraph[vd].id << endl;
+        cerr << "weight = " << _forceGraph[vd].weight << endl;
     }
     cerr << endl;
-    BGL_FORALL_EDGES( ed, _bone, ForceGraph )
+    BGL_FORALL_EDGES( ed, _forceGraph, ForceGraph )
     {
-        cerr << "eID = " << _bone[ed].id << endl;
-        cerr << "weight = " << _bone[ed].weight << endl;
+        cerr << "eID = " << _forceGraph[ed].id << endl;
+        cerr << "weight = " << _forceGraph[ed].weight << endl;
     }
 #endif // DEBUG
 }
 
 //
-//  LevelHigh::normalizeSkeleton --    normalize the skeleton
+//  LevelBorder::normalizeSkeleton --    normalize the skeletonForceGraph
 //
 //  Inputs
 //  none
@@ -456,7 +369,7 @@ void LevelHigh::decomposeSkeleton( void )
 //  Outputs
 //  none
 //
-void LevelHigh::normalizeSkeleton( const int & width, const int & height )
+void LevelBorder::normalizeSkeleton( void )
 {
     // initialization
     double xMin =  INFINITY;
@@ -464,10 +377,13 @@ void LevelHigh::normalizeSkeleton( const int & width, const int & height )
     double yMin =  INFINITY;
     double yMax = -INFINITY;
 
+    double width = *_content_widthPtr;
+    double height = *_content_heightPtr;
+
     // Scan all the vertex coordinates first
-    BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
+    BGL_FORALL_VERTICES(vd, _skeletonForceGraph, ForceGraph )
     {
-        Coord2 coord = *_skeleton[ vd ].coordPtr;
+        Coord2 coord = *_skeletonForceGraph[ vd ].coordPtr;
         if ( coord.x() < xMin ) xMin = coord.x();
         if ( coord.x() > xMax ) xMax = coord.x();
         if ( coord.y() < yMin ) yMin = coord.y();
@@ -475,19 +391,19 @@ void LevelHigh::normalizeSkeleton( const int & width, const int & height )
     }
 
     // Normalize the coordinates
-    BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
+    BGL_FORALL_VERTICES(vd, _skeletonForceGraph, ForceGraph )
     {
         Coord2 coord;
-        coord.x() = (double)width * ( _skeleton[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.5*(double)width;
-        coord.y() = (double)height * ( _skeleton[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.5*(double)height;
-        _skeleton[ vd ].coordPtr->x() = coord.x();
-        _skeleton[ vd ].coordPtr->y() = coord.y();
+        coord.x() = width * (_skeletonForceGraph[ vd ].coordPtr->x() - xMin ) / (xMax - xMin ) - 0.5 * width;
+        coord.y() = height * (_skeletonForceGraph[ vd ].coordPtr->y() - yMin ) / (yMax - yMin ) - 0.5 * height;
+        _skeletonForceGraph[ vd ].coordPtr->x() = coord.x();
+        _skeletonForceGraph[ vd ].coordPtr->y() = coord.y();
         // cerr << coord;
     }
 }
 
 //
-//  Package::normalizeBone --    normalize the bone
+//  Package::normalizeBone --    normalize the forceGraph
 //
 //  Inputs
 //  none
@@ -495,7 +411,7 @@ void LevelHigh::normalizeSkeleton( const int & width, const int & height )
 //  Outputs
 //  none
 //
-void LevelHigh::normalizeBone( const int & width, const int & height )
+void LevelBorder::normalizeBone( void )
 {
     // initialization
     double xMin =  INFINITY;
@@ -505,11 +421,13 @@ void LevelHigh::normalizeBone( const int & width, const int & height )
     double ratio = 1.0;
     // double ratio = 0.8;
     //cerr << "w = " << width << " h = " << height << endl;
+    double width = *_content_widthPtr;
+    double height = *_content_heightPtr;
 
     // Scan all the vertex coordinates first
-    BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
+    BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph )
     {
-        Coord2 coord = *_bone[ vd ].coordPtr;
+        Coord2 coord = *_forceGraph[ vd ].coordPtr;
         if ( coord.x() < xMin ) xMin = coord.x();
         if ( coord.x() > xMax ) xMax = coord.x();
         if ( coord.y() < yMin ) yMin = coord.y();
@@ -517,23 +435,23 @@ void LevelHigh::normalizeBone( const int & width, const int & height )
     }
 
     // Normalize the coordinates
-    BGL_FORALL_VERTICES( vd, _skeleton, ForceGraph )
+    BGL_FORALL_VERTICES(vd, _skeletonForceGraph, ForceGraph )
     {
         Coord2 coord;
-        coord.x() = ratio* (double)width * ( _skeleton[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.5*(double)width;
-        coord.y() = ratio* (double)height * ( _skeleton[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.5*(double)height;
-        _skeleton[ vd ].coordPtr->x() = coord.x();
-        _skeleton[ vd ].coordPtr->y() = coord.y();
+        coord.x() = ratio * width * (_skeletonForceGraph[ vd ].coordPtr->x() - xMin ) / (xMax - xMin ) - 0.5 * width;
+        coord.y() = ratio * height * (_skeletonForceGraph[ vd ].coordPtr->y() - yMin ) / (yMax - yMin ) - 0.5 * height;
+        _skeletonForceGraph[ vd ].coordPtr->x() = coord.x();
+        _skeletonForceGraph[ vd ].coordPtr->y() = coord.y();
         // cerr << coord;
     }
 
-    BGL_FORALL_VERTICES( vd, _bone, ForceGraph )
+    BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph )
     {
         Coord2 coord;
-        coord.x() = (double)width * ( _bone[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.5*(double)width;
-        coord.y() = (double)height * ( _bone[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.5*(double)height;
-        _bone[ vd ].coordPtr->x() = coord.x();
-        _bone[ vd ].coordPtr->y() = coord.y();
+        coord.x() = width * ( _forceGraph[ vd ].coordPtr->x() - xMin )/( xMax - xMin ) - 0.5*width;
+        coord.y() = height * ( _forceGraph[ vd ].coordPtr->y() - yMin )/( yMax - yMin ) - 0.5*height;
+        _forceGraph[ vd ].coordPtr->x() = coord.x();
+        _forceGraph[ vd ].coordPtr->y() = coord.y();
         // cerr << coord;
     }
 }
@@ -541,7 +459,7 @@ void LevelHigh::normalizeBone( const int & width, const int & height )
 
 #ifdef SKIP
 //
-//  LevelHigh::writePolygonComplex --    export the ploygon complex
+//  LevelBorder::writePolygonComplex --    export the ploygon complex
 //
 //  Inputs
 //  none
@@ -549,10 +467,10 @@ void LevelHigh::normalizeBone( const int & width, const int & height )
 //  Outputs
 //  none
 //
-void LevelHigh::writePolygonComplex( void )
+void LevelBorder::writePolygonComplex( void )
 {
     // graphml
-    string filename = "../data/LevelHigh.graphml";
+    string filename = "data/LevelBorder.graphml";
 
     ofstream ofs( filename.c_str() );
     if ( !ofs ) {
@@ -563,7 +481,7 @@ void LevelHigh::writePolygonComplex( void )
     UndirectedPropertyGraph pg;
 
 #ifdef DEBUG
-    cerr << "LevelHigh::writePolygonComplex: "
+    cerr << "LevelBorder::writePolygonComplex: "
          << "nV = " << num_vertices( _boundary )
          << " nE = " << num_edges( _boundary ) << endl;
 #endif // DEBUG
@@ -600,7 +518,7 @@ void LevelHigh::writePolygonComplex( void )
     write_graphml( ofs, pg, dp, true );
 
     // polygon contour
-    string polygon_filename = "../data/LevelHigh.txt";
+    string polygon_filename = "data/LevelBorder.txt";
 
     ofstream pfs( polygon_filename.c_str() );
     if ( !pfs ) {
@@ -619,7 +537,7 @@ void LevelHigh::writePolygonComplex( void )
 }
 
 //
-//  LevelHigh::readPolygonComplex --    read the ploygon complex
+//  LevelBorder::readPolygonComplex --    read the ploygon complex
 //
 //  Inputs
 //  none
@@ -627,9 +545,9 @@ void LevelHigh::writePolygonComplex( void )
 //  Outputs
 //  none
 //
-void LevelHigh::readPolygonComplex( void )
+void LevelBorder::readPolygonComplex( void )
 {
-    string filename = "../data/LevelHigh.graphml";
+    string filename = "data/LevelBorder.graphml";
 
     // initialization
     clearGraph( _boundary );
@@ -765,7 +683,7 @@ void LevelHigh::readPolygonComplex( void )
     // read polygon contour
     _polygonComplexVD.clear();
     _polygonComplex.clear();
-    string polygon_filename = "../data/LevelHigh.txt";
+    string polygon_filename = "data/LevelBorder.txt";
 
     ifstream pfs( polygon_filename.c_str() );
     if ( !pfs ) {
@@ -820,7 +738,7 @@ void LevelHigh::readPolygonComplex( void )
     _nLines = _polygonComplexVD.size();
 
 #ifdef DEBUG
-    cerr << "LevelHigh::readPolygonComplex:"
+    cerr << "LevelBorder::readPolygonComplex:"
          << "nV = " << _nVertices << " nE = " << _nEdges
          << " nL = " << _nLines << endl;
 

@@ -22,6 +22,7 @@ using namespace std;
 #include "base/Coord2.h"
 #include "base/Common.h"
 #include "graph/BaseVertexProperty.h"
+#include "ui/GraphicsVertexItem.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -64,6 +65,7 @@ class BoundaryVertexProperty: public BaseVertexProperty {
     Coord2 *                    centroidPtr;
     // Coord2 *                    stressPtr;
     // Coord2 *                    octilinearPtr;
+    GraphicsVertexItem *        itemPtr;
 
 //------------------------------------------------------------------------------
 //	Special functions

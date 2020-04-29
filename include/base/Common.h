@@ -175,20 +175,55 @@ enum FORCETYPE{ TYPE_FORCE, TYPE_BARNES_HUT, TYPE_CENTROID, TYPE_HYBRID };
 enum COLORTYPE{ COLOR_PREDEFINED, COLOR_MONOTONE, COLOR_PASTEL, COLOR_BREWER };
 //enum WORKERTYPE{ WORKER_BOUNDARY, WORKER_CELL, WORKER_BONE, WORKER_PATHWAY };
 enum THREADTYPE{ THREAD_BOUNDARY, THREAD_CENTER, THREAD_CELL,THREAD_PATHWAY };
-enum VERTEXTYPE{ TYPE_ONE, TYPE_TWO };
+enum VERTEXTYPE{ TYPE_DEFAULT, TYPE_ONE, TYPE_TWO };
 enum LEVELTYPE{ LEVEL_HIGH, LEVEL_MIDDLE, LEVEL_LOW, LEVEL_DETAIL };
 
 // extern int font_size;
 
-double stringToDouble( string str );
-
 class Common{
+
+private:
 
 protected:
 
-    typedef pair< unsigned int, unsigned int >	    VVIDPair;
+public:
 
-    double stringToDouble( string str );
+    typedef pair< int, int >	                    IDPair;
+    typedef pair< unsigned int, unsigned int >	    UIDPair;
+
+    //------------------------------------------------------------------------------
+    //	Constructors & Destructors
+    //------------------------------------------------------------------------------
+    // default constructor
+    Common( void ) {}
+    // copy constructor
+    Common( const Common & c ) {}
+    // destructor
+    ~Common( void ){}
+
+    //------------------------------------------------------------------------------
+    //	Assignment operators
+    //------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------
+    //	Reference to elements
+    //------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------
+    //	Special functions
+    //------------------------------------------------------------------------------
+
+    static double stringToDouble( string str );
+
+    //------------------------------------------------------------------------------
+    //	I/O functions
+    //------------------------------------------------------------------------------
+    // output
+    friend ostream &	operator << ( ostream & s, const Common & v );
+    // input
+    friend istream &	operator >> ( istream & s, Common & v );
+    // class name
+    virtual const char * className( void ) const { return "Common"; }
 };
 
 #endif // _Common_H

@@ -14,14 +14,13 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "ui/GraphicsView.h"
-#include "base/TimeComplexity.h"
 #include "base/ThreadOctilinearBoundary.h"
-#include "base/ThreadLevelHigh.h"
-#include "base/ThreadLevelCenter.h"
-#include "base/ThreadLevelMiddle.h"
-#include "base/ThreadLevelDetailed.h"
+#include "base/ThreadLevelBorder.h"
+#include "base/ThreadLevelCellCenter.h"
+#include "base/ThreadLevelCellComponent.h"
+#include "base/ThreadLevelDetail.h"
 #include "base/RegionData.h"
-#include "../lib/CTPL/ctpl.h"
+#include "../third_party/CTPL/ctpl.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
@@ -37,7 +36,7 @@ using namespace std;
 #define REMOVEBACKNUM   (15)
 //#define RECORD_VIDEO
 
-class Window : public QMainWindow, public PathwayData, public RegionData, public Package
+class Window : public QMainWindow, public PathwayData, public RegionData
 {
     Q_OBJECT
 private:
@@ -48,8 +47,9 @@ private:
 #endif // RECORD_VIDEO
 
     // rendering
-    GraphicsView    *_gv;
-    LEVELTYPE       _levelType;
+    GraphicsView                *_gv;
+    LEVELTYPE                   _levelType;
+
 
     // display
     double             _content_width;
@@ -123,6 +123,7 @@ public Q_SLOTS:
 
     // display
     void redrawAllScene( void );
+    void updateAllScene( void );
 
 public:
     explicit Window( QWidget *parent = 0 );

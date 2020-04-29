@@ -330,7 +330,7 @@ void Pathway::generate( void )
 void Pathway::exportEdges( void )
 {
     // graph
-	ofstream ofs( "../data/biological_yun.txt" );
+	ofstream ofs( "data/biological_yun.txt" );
 	ForceGraph g;
 
 	// copy graphs
@@ -380,7 +380,7 @@ void Pathway::exportEdges( void )
 	ofs.close();
 
 	// distance matrix
-	ofstream ofsm( "../data/matrix_biological_yun.txt" );
+	ofstream ofsm( "data/matrix_biological_yun.txt" );
 
 	index = 0;
     BGL_FORALL_VERTICES( vdO, g, ForceGraph ) {
@@ -401,7 +401,7 @@ void Pathway::exportEdges( void )
 	ofsm.close();
 
     // distance matrix
-    ofstream ofsc( "../data/biological_yun_communities.txt" );
+    ofstream ofsc( "data/biological_yun_communities.txt" );
 
     BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
 
@@ -424,20 +424,19 @@ void Pathway::pickColor( COLORTYPE colorType, unsigned int id, vector< double > 
 
             QColor color;
             color.setNamedColor( QString::fromStdString( it->second->defaultColor ) );
-            rgb[ 0 ] = color.redF();
-            rgb[ 1 ] = color.greenF();
-            rgb[ 2 ] = color.blueF();
-
+            rgb[ 0 ] = color.red();
+            rgb[ 1 ] = color.green();
+            rgb[ 2 ] = color.blue();
         }
             break;
         case COLOR_MONOTONE:
-            pickMonotoneColor( id, rgb );
+            Color::pickMonotoneColor( rgb );
             break;
         case COLOR_PASTEL:
-            pickPastelColor( id, rgb );
+            Color::pickPastelColor( id, rgb );
             break;
         case COLOR_BREWER:
-            pickBrewerColor( id, rgb );
+            Color::pickBrewerColor( id, rgb );
             break;
         default:
             cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
@@ -514,7 +513,7 @@ void Pathway::loadDot( UndirectedPropertyGraph &graph, string filename )
 void Pathway::exportDot( void )
 {
 	// graph
-	ofstream ofs( "../dot/pathway.txt" );
+	ofstream ofs( "dot/pathway.txt" );
 	ofs << "graph {" << endl;
 
 	unsigned int index = 0;
@@ -523,7 +522,7 @@ void Pathway::exportDot( void )
         vector< double > rgb;
         unsigned int id = i;
 
-        pickBrewerColor( ( id )%_subGraph.size(), rgb );
+        Color::pickBrewerColor( ( id )%_subGraph.size(), rgb );
         QColor color( rgb[0]*255, rgb[1]*255, rgb[2]*255, 100 );
         // cerr << "nV = " << num_vertices( _subGraph[i] ) << endl;
 		BGL_FORALL_VERTICES( vd, _subGraph[i], MetaboliteGraph ) {
@@ -1275,7 +1274,7 @@ void Pathway::loadPathway( void )
 	cerr << "_fileType = " << _fileType << endl;
 #endif // DEBUG
 
-	//loadMetaFreq( (QDir::currentPath()+QString( "/../xml/" ) + QString( "ecoli_metabolite_frequency.txt" )).toStdString() );
+	//loadMetaFreq( (QDir::currentPath()+QString( "xml/" ) + QString( "ecoli_metabolite_frequency.txt" )).toStdString() );
 	loadMetaFreq( _fileFreq );
 	loadMetaType( _fileType );
 

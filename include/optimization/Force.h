@@ -22,7 +22,7 @@ using namespace std;
 #include "base/Polygon2.h"
 #include "base/QuardTree.h"
 #include "base/Config.h"
-#include "optimization/Stress.h"
+#include "optimization/EnergyBase.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -32,7 +32,7 @@ using namespace std;
 //	Defining Classes
 //------------------------------------------------------------------------------
 
-class Force : public Stress
+class Force : public EnergyBase
 {
 
   private:
@@ -44,9 +44,6 @@ class Force : public Stress
     double			_width, _height;        // bounding box of the contour
     ForceGraph     *_forceGraphPtr;
 
-    //vector< Seed >  _seedVec;             // seeds of the voronoi diagram
-    //Voronoi         _voronoi;             // geometric voronoi diagram
-    //Polygon2        _contour;             // outer boundary
     QImage *		_diagram;               // image for computing GPU base voronoi diagram
     QuardTree       _quardTree;
     unsigned int    _iteration;             // iteration of the simulation
@@ -55,7 +52,7 @@ class Force : public Stress
     // configuration parameter
     double          _paramKa;               // attractive force
     double          _paramKr;               // repulsive force
-    double          _paramKv;               // voronoie force
+    double          _paramKv;               // voronoi force
     double          _paramKc;               // k1 force
     double          _paramKd;               // k2 force
     double          _paramKe;               // k3 force
@@ -85,7 +82,7 @@ class Force : public Stress
     void		    _force		        ( void );
     void		    _BarnesHut  		( void );
 
-    void            _initForceSeed      ( void );
+    void            _updateForceSeed    ( void );
     void		    _centroidGeometry   ( void );
 
     double		    _gap		        ( void );
@@ -147,6 +144,8 @@ public:
                LEVELTYPE __leveltype, string __configFilePath ) {
         _init( __forceGraphPtr, __contourPtr, __leveltype, __configFilePath );
     }
+    void _initSeed           ( void );
+
     void clear( void )				{ _clear(); }
     void random( void )				{ _random(); }
 

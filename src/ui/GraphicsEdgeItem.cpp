@@ -59,11 +59,6 @@ GraphicsEdgeItem::GraphicsEdgeItem( QGraphicsItem *parent )
 
     //pen().setJoinStyle( Qt::MiterJoin );
     pen().setJoinStyle( Qt::RoundJoin );
-
-    _id = 0;
-    _weight = 0;
-    _name = "";
-    _textOn = false;
 }
 
 GraphicsEdgeItem::GraphicsEdgeItem( const QPainterPath &path, QGraphicsItem *parent )

@@ -1,39 +1,40 @@
 
-#include "base/ThreadLevelMiddle.h"
+#include "base/ThreadLevelCellComponent.h"
 
 //----------------------------------------------------------
 // Worker
 //----------------------------------------------------------
-ThreadLevelMiddle::ThreadLevelMiddle( void )
+ThreadLevelCellComponent::ThreadLevelCellComponent(void )
 {
     // ThreadBase::ThreadBase();
-    cerr << "construct ThreadLevelMiddle..." << endl;
+    cerr << "construct ThreadLevelCellComponent..." << endl;
 }
 
-ThreadLevelMiddle::~ThreadLevelMiddle()
+ThreadLevelCellComponent::~ThreadLevelCellComponent()
 {
     //ThreadBase::~ThreadBase();
-    cerr << "destroy ThreadLevelMiddle..." << endl;
+    cerr << "destroy ThreadLevelCellComponent..." << endl;
 }
 
-void ThreadLevelMiddle::force( void )
+void ThreadLevelCellComponent::force(void )
 {
     double err = INFINITY;
     cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
+    _cellPtr->cellVec()[_cellIndex].force()._initSeed();
 
-    while( ( err > _cellPtr->cellVec()[_cellIndex].forceBone().finalEpsilon() ) && ( _count < _maxLoop ) ) {
+    while(( err > _cellPtr->cellVec()[_cellIndex].force().finalEpsilon() ) && (_count < _maxLoop ) ) {
 
         cerr << "err = " << err << " _count = " << _count << endl;
-        switch (_cellPtr->cellVec()[_cellIndex].forceBone().mode()) {
+        switch (_cellPtr->cellVec()[_cellIndex].force().mode()) {
             case TYPE_FORCE:
             case TYPE_BARNES_HUT: {
-                _pathway->pathwayMutex().lock();
-                _cellPtr->cellVec()[_cellIndex].forceBone();
+                _pathwayPtr->pathwayMutex().lock();
+                _cellPtr->cellVec()[_cellIndex].force();
                 _cellPtr->additionalForcesMiddle();
-                err = _cellPtr->cellVec()[_cellIndex].forceBone().verletIntegreation();
-                _pathway->pathwayMutex().unlock();
-                cerr << "ThreadLevelMiddle::err (force) = " << err << endl;
-                if (err < _cellPtr->cellVec()[_cellIndex].forceBone().finalEpsilon()) {
+                err = _cellPtr->cellVec()[_cellIndex].force().verletIntegreation();
+                _pathwayPtr->pathwayMutex().unlock();
+                cerr << "ThreadLevelCellComponent::err (force) = " << err << endl;
+                if (err < _cellPtr->cellVec()[_cellIndex].force().finalEpsilon()) {
                     //stop();
                     //cerr << "[Force-Directed] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     //cerr << "[Force-Directed] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
@@ -41,13 +42,13 @@ void ThreadLevelMiddle::force( void )
                 break;
             }
             case TYPE_CENTROID: {
-                _pathway->pathwayMutex().lock();
-                _cellPtr->cellVec()[_cellIndex].forceBone().centroidGeometry();
+                _pathwayPtr->pathwayMutex().lock();
+                _cellPtr->cellVec()[_cellIndex].force().centroidGeometry();
                 _cellPtr->additionalForcesMiddle();
-                err = _cellPtr->cellVec()[_cellIndex].forceBone().gap();
-                _pathway->pathwayMutex().unlock();
+                err = _cellPtr->cellVec()[_cellIndex].force().gap();
+                _pathwayPtr->pathwayMutex().unlock();
                 //cerr << "WorkerLevelMiddle::err (centroid) = " << err << endl;
-                if (err < _cellPtr->cellVec()[_cellIndex].forceBone().finalEpsilon()) {
+                if (err < _cellPtr->cellVec()[_cellIndex].force().finalEpsilon()) {
                     //stop();
                     //cerr << "[Centroidal] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     //cerr << "[Centroidal] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
@@ -55,16 +56,16 @@ void ThreadLevelMiddle::force( void )
                 break;
             }
             case TYPE_HYBRID: {
-                _pathway->pathwayMutex().lock();
-                _cellPtr->cellVec()[_cellIndex].forceBone().force();
+                _pathwayPtr->pathwayMutex().lock();
+                _cellPtr->cellVec()[_cellIndex].force().force();
                 _cellPtr->additionalForcesMiddle();
                 int freq = VORONOI_FREQUENCE - MIN2(_count / 20, VORONOI_FREQUENCE - 1);
                 if (_count % freq == 0 )
-                    _cellPtr->cellVec()[_cellIndex].forceBone().centroidGeometry();
-                err = _cellPtr->cellVec()[_cellIndex].forceBone().verletIntegreation();
-                _pathway->pathwayMutex().unlock();
+                    _cellPtr->cellVec()[_cellIndex].force().centroidGeometry();
+                err = _cellPtr->cellVec()[_cellIndex].force().verletIntegreation();
+                _pathwayPtr->pathwayMutex().unlock();
                 cerr << "id = " << _id << " WorkerLevelMiddle::err (hybrid) = " << err << endl;
-                if (err < _cellPtr->cellVec()[_cellIndex].forceBone().finalEpsilon()) {
+                if (err < _cellPtr->cellVec()[_cellIndex].force().finalEpsilon()) {
                     //stop();
                     //cerr << "[Hybrid] Finished Execution Time [" << i << "] = " << checkOutETime() << endl;
                     //cerr << "[Hybrid] Finished CPU Time [" << i << "] = " << checkOutCPUTime() << endl;
@@ -78,15 +79,15 @@ void ThreadLevelMiddle::force( void )
     }
 }
 
-void ThreadLevelMiddle::stress( void )
+void ThreadLevelCellComponent::stress(void )
 {
     cerr << "stress-based approach..." << endl;
 }
 
-void ThreadLevelMiddle::run( int id )
+void ThreadLevelCellComponent::run(int id )
 {
     //std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
-    cerr << "run ThreadLevelMiddle..." << endl;
+    cerr << "run ThreadLevelCellComponent..." << endl;
     cerr << "tid = " << id << endl;
     _id = id;
 

@@ -85,7 +85,7 @@ void Boundary::_clear( void )
 }
 
 //
-//  Boundary::adjustsize --  adjust size of the layout of the LevelHigh network
+//  Boundary::adjustsize --  adjust size of the layout of the LevelBorder network
 //
 //  Inputs
 //      width: window width

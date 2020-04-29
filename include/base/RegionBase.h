@@ -1,11 +1,11 @@
 //==============================================================================
-// Bone.h
-//  : header file for the Bone network
+// RegionBase.h
+//  : header file for the RegionBase network
 //
 //==============================================================================
 
-#ifndef _Bone_H        // beginning of header file
-#define _Bone_H        // notifying that this file is included
+#ifndef _RegionBase_H        // beginning of header file
+#define _RegionBase_H        // notifying that this file is included
 
 //----------------------------------------------------------------------
 //  Including header files
@@ -22,6 +22,7 @@ using namespace std;
 
 #include "base/Grid2.h"
 #include "base/Contour2.h"
+#include "base/Boundary.h"
 #include "graph/ForceGraph.h"
 #include "graph/BoundaryGraph.h"
 #include "optimization/Force.h"
@@ -35,20 +36,25 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Defining macros
 //------------------------------------------------------------------------------
-class Bone
+class RegionBase
 {
 protected:
 
-    // skeleton
-    ForceGraph                  _bone;
-    bool                        _isForce;       // force or stress
+    // composite graph
+    ForceGraph                  _forceGraph;
+    // boundary of the composite graph
+    Boundary                    _boundary;
+
+    // force or stress
+    ENERGYTYPE                  _energyType;
 
     // optimization
-    Force                       _forceBone;     // force layout
-    //Stress                      _stressBone;    // stress layout
+    Force                       _force;             // force layout
+    Stress                      _stress;            // stress layout
 
-    map< unsigned int, Polygon2 >           _polygonComplex;    // for composite graph
-    map< unsigned int, vector< BoundaryGraph::vertex_descriptor > > _polygonComplexVD;  // for graph bound
+    map< unsigned int, Polygon2 >                       _polygonComplex;    // for composite polygon
+    map< unsigned int,
+         vector< BoundaryGraph::vertex_descriptor > >   _polygonComplexVD;  // map to the boundary graph
 
 //------------------------------------------------------------------------------
 //  Specific functions
@@ -57,23 +63,26 @@ protected:
     void _clear( void );
 
 public:
-    
-    Bone();                         // default constructor
-    Bone( const Bone & obj );       // Copy constructor
-    virtual ~Bone();                // Destructor
+
+    RegionBase();                               // default constructor
+    RegionBase( const RegionBase & obj );       // Copy constructor
+    virtual ~RegionBase();                      // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    const ForceGraph &	        bone( void ) const          { return _bone; }
-    ForceGraph &			    bone( void )	            { return _bone; }
-    const bool &	            isForce( void ) const       { return _isForce; }
-    bool &			            isForce( void )	            { return _isForce; }
+    const ForceGraph &	        forceGraph( void ) const    { return _forceGraph; }
+    ForceGraph &			    forceGraph( void )	        { return _forceGraph; }
+    const ENERGYTYPE &	        energyType( void ) const    { return _energyType; }
+    ENERGYTYPE &			    energyType( void )	        { return _energyType; }
 
-    const Force &		        forceBone( void ) const     { return _forceBone; }
-    Force &			            forceBone( void )	        { return _forceBone; }
-    //const Stress &		        stressBone( void ) const    { return _stressBone; }
-    //Stress &			        stressBone( void )	        { return _stressBone; }
+    const Boundary &		    boundary( void ) const      { return _boundary; }
+    Boundary &			        boundary( void )	        { return _boundary; }
+
+    const Force &		        force( void ) const         { return _force; }
+    Force &			            force( void )	            { return _force; }
+    const Stress &		        stress( void ) const        { return _stress; }
+    Stress &			        stress( void )	            { return _stress; }
 
     const map < unsigned int, Polygon2 > &	polygonComplex( void ) const    { return _polygonComplex; }
     map< unsigned int, Polygon2 > &			polygonComplex( void )	        { return _polygonComplex; }
@@ -101,16 +110,16 @@ public:
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const Bone & obj );
+    friend ostream & operator << ( ostream & stream, const RegionBase & obj );
                                 // Output
-    friend istream & operator >> ( istream & stream, Bone & obj );
+    friend istream & operator >> ( istream & stream, RegionBase & obj );
                                 // Input
 
-    virtual const char * className( void ) const { return "Bone"; }
+    virtual const char * className( void ) const { return "RegionBase"; }
                                 // Class name
 };
 
-#endif // _Bone_H
+#endif // _RegionBase_H
 
 // end of header file
 // Do not add any stuff under this line.

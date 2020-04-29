@@ -20,24 +20,25 @@ using namespace std;
 #ifndef Q_MOC_RUN
 #include "optimization/Force.h"
 #include "optimization/Stress.h"
+#include "optimization/Octilinear.h"
 #include "base/Road.h"
-#include "base/LevelHigh.h"
+#include "base/LevelBorder.h"
 #endif // Q_MOC_RUN
 
 class RegionData
 {
 protected:
 
-    // boundary
-    vector< Boundary >    *_boundaryVecPtr;
-
     // levelhigh
-    LevelHigh       *_levelhighPtr;
+    vector< Boundary >      *_boundaryVecPtr;
+    vector< Octilinear * >  *_octilinearVecPtr;
+
+    LevelBorder             *_levelBorderPtr;
 
     // cells of subgraphs
-    Cell            *_cellPtr;
-    vector< Road >  *_roadPtr;
-    vector< Road >  *_lanePtr;
+    Cell                    *_cellPtr;
+    vector< Road >          *_roadPtr;
+    vector< Road >          *_lanePtr;
 
 public:
 
@@ -49,12 +50,12 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
 
-    void setRegionData( LevelHigh * __levelhigh,
-                        vector< Boundary > *__boundaryVecPtr,
-                        Cell * __cellPtr,
-                        vector< Road > * __roadPtr,
-                        vector< Road > * __lanePtr ){
-        _levelhighPtr = __levelhigh;
+    void setRegionData(LevelBorder * __levelhigh,
+                       vector< Boundary > *__boundaryVecPtr,
+                       Cell * __cellPtr,
+                       vector< Road > * __roadPtr,
+                       vector< Road > * __lanePtr ){
+        _levelBorderPtr = __levelhigh;
         _boundaryVecPtr = __boundaryVecPtr;
         _cellPtr = __cellPtr;
         _roadPtr = __roadPtr;

@@ -63,18 +63,6 @@ RegionData::~RegionData( void )
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-//
-//  RegionData::init --    initialization
-//
-//  Inputs
-//  pathname: name of the main path
-//
-//  Outputs
-//  node
-//
-//void RegionData::setRegionData( Pathway *pathway )
-//{
-//}
 
 //------------------------------------------------------------------------------
 //      I/O

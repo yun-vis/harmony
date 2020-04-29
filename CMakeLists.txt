@@ -1,246 +1,194 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.10)
 PROJECT (QTBORDER)
+set(Target_Name qtborder)
 
-# using Qt meta-system (precompiler)
-# Tell CMake to run moc when necessary:
-# As moc files are generated in the binary dir, tell CMake
-# to always look for includes there:
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-#set(CMAKE_AUTORCC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+#----------------------------------------------------------------------
+# cmake setting
+#----------------------------------------------------------------------
+# set output folder
+# set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_BUILD_TYPE RELEASE)
 
-#set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
-
+#----------------------------------------------------------------------
 # compiler setting
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
-else()
-    set(CMAKE_CXX_STANDARD 11)
+#----------------------------------------------------------------------
+set(CMAKE_C_COMPILER /usr/bin)
+if( APPLE )
+  set( CMAKE_CXX_STANDARD 11)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework Accelerate -DEIGEN_USE_BLAS -ltinyxml -lcgraph -lgvc -lboost_thread-mt -lboost_system-mt -lboost_graph-mt -lcgal -lgmp -lmpfr -ldl" )
+elseif( UNIX )
+  message( "Ubuntu" )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -lboost_graph" )
+endif()
+#set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD -O3 -DNDEBUG" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -DIL_STD -O3 -DNDEBUG -Wa" )
+#set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD -O3 -DNDEBUG -openmp -omp" )
+#set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD" )
+
+#----------------------------------------------------------------------
+# sources
+#----------------------------------------------------------------------
+file( GLOB_RECURSE SOURCES
+        include/*.h
+        src/*.cpp
+        resources/*.qrc
+        )
+add_executable(${Target_Name} ${SOURCES})
+
+
+#----------------------------------------------------------------------
+# path setting
+#----------------------------------------------------------------------
+if( APPLE )
+
+  #set(THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/third_party/mylib/include/pcl-1.9/ )
+  #set(THIRD_PARTY_LIB ${THIRD_PARTY_LIB} ${CMAKE_SOURCE_DIR}/third_party/mylib/lib/ )
+
+  target_include_directories(${Target_Name}
+          PUBLIC
+          /opt/local/include/
+          ${CMAKE_SOURCE_DIR}/include/
+          #${CMAKE_SOURCE_DIR}/third_party/libSBGN2/src/
+          #${CMAKE_SOURCE_DIR}/third_party/libSBGN2/build/src/
+          ${THIRD_PARTY_INCLUDE}
+          )
+
+  target_link_directories(${Target_Name}
+          PUBLIC
+          /opt/local/lib/
+          ${CMAKE_SOURCE_DIR}/src/
+          ${THIRD_PARTY_LIB}
+          )
+
+elseif( UNIX )
+
+  #set(THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/third_party/mylib/include/pcl-1.9/ )
+  #set(THIRD_PARTY_LIB ${THIRD_PARTY_LIB} ${CMAKE_SOURCE_DIR}/third_party/mylib/lib/ )
+  #set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
+  #set( GRAPHVIZ_PATH_DIR "/home/$ENV{USER}/MyLib/release/graphviz")
+
+  target_include_directories(${Target_Name}
+          PUBLIC
+          /opt/local/include/
+          /usr/include/
+          /usr/include/x86_64-linux-gnu/
+          ${CMAKE_SOURCE_DIR}/include/
+          ${QT5_PATH_DIR}/include/
+          ${THIRD_PARTY_INCLUDE}
+          )
+
+  target_link_directories( ${Target_Name}
+          PUBLIC
+          /opt/local/lib/
+          /usr/lib/
+          /usr/lib/x86_64-linux-gnu/
+          ${CMAKE_SOURCE_DIR}/src/
+          ${THIRD_PARTY_LIB}
+          )
+elseif( WIN32 )
 endif()
 
+# strip the trailing space
+string(STRIP ${CMAKE_CXX_FLAGS} CMAKE_CXX_FLAGS)
+SET_PROPERTY(TARGET ${Target_Name} PROPERTY DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+
+if( APPLE )
+  target_link_libraries(${Target_Name} PUBLIC ${CMAKE_CXX_FLAGS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}
+          )
+  set_target_properties(${Target_Name} PROPERTIES
+          OUTPUT_NAME ${Target_Name}
+          )
+elseif( UNIX )
+  target_link_libraries(${Target_Name} PUBLIC ${CMAKE_CXX_FLAGS} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} )
+  set_target_properties(${Target_Name} PROPERTIES
+          OUTPUT_NAME ${Target_Name}
+          )
+elseif( WIN32 )
+endif()
+
+#----------------------------------------------------------------------
+# QT
+#----------------------------------------------------------------------
+message(STATUS "-- Linking qt")
+set(QT_REQUIRED_COMPONENTS Core Gui Svg Widgets OpenGL)
+find_package(Qt5 COMPONENTS ${QT_REQUIRED_COMPONENTS} REQUIRED)
 ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 
-message( QT5_PATH_DIR ${QT5_PATH_DIR})
+# Add components to the target
+foreach(component ${QT_REQUIRED_COMPONENTS})
+  target_link_libraries(${Target_Name}
+          PUBLIC
+          Qt5::${component}
+          )
+endforeach()
 
-if (UNIX AND NOT APPLE)
+# Enable automoc/uic/rcc
+set_target_properties(${Target_Name}
+        PROPERTIES
+        AUTOMOC ON
+        AUTOUIC ON
+        AUTORCC ON
+        )
 
-  message(status "Setting G++ flags")
-  #set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
-  set( GRAPHVIZ_PATH_DIR "/home/$ENV{USER}/MyLib/release/graphviz")
+#----------------------------------------------------------------------
+# EIGEN
+#----------------------------------------------------------------------
+message(STATUS "-- Linking eigen")
 
-  # add the libraries you need below
-  find_package(OpenGL REQUIRED)
-  find_package(GLUT REQUIRED)
-  find_package(CGAL QUIET COMPONENTS Core REQUIRED)
+find_package(Eigen3 3.3 REQUIRED)
+target_link_libraries(${Target_Name}
+        PUBLIC
+        Eigen3::Eigen
+        )
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD")
+#----------------------------------------------------------------------
+# Boost
+#----------------------------------------------------------------------
+message(STATUS "-- Linking boost")
 
-elseif(APPLE)
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost)
 
-  message(status "Setting CLANG flags")
-
-  # add the libraries you need below
-  find_package(GLUT REQUIRED)
-  find_package(OpenGL REQUIRED)
-  find_package(CGAL QUIET COMPONENTS Core REQUIRED)
-
-  set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} -g -Wall -Wno-deprecated -frounding-math -DIL_STD -framework OpenGL -framework GLUT")
-
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS})
+  target_link_libraries(${Target_Name} ${Boost_LIBRARIES})
 endif()
 
-# mandatory for CGAL, or will get a undefined reference to CGAL::assertion_fail
-include(${CGAL_USE_FILE})
+#----------------------------------------------------------------------
+# CGAL
+#----------------------------------------------------------------------
+message(STATUS "-- Linking CGAL")
 
-include_directories(
-        /opt/local/include
-        /usr/include
-        /usr/include/x86_64-linux-gnu
-        ${CMAKE_SOURCE_DIR}/include
-        ${QT5_PATH_DIR}/include
-        ${GRAPHVIZ_PATH_DIR}/include
-)
-link_directories(
-        /opt/local/lib
-        /usr/lib/x86_64-linux-gnu/
-        ${CMAKE_SOURCE_DIR}/src
-        ${QT5_PATH_DIR}/lib
-        ${GRAPHVIZ_PATH_DIR}/lib
-)
+find_package(CGAL QUIET COMPONENTS Core REQUIRED)
 
-
-# automatically grab all the source files
-#file(GLOB SOURCES src/*.cpp)
-#file(GLOB HEADERS include/*.h)
-#set(UI_FILES include/ui/Window.ui)
-#set(RESOURCES *.qrc)
-
-set(HEADERS
-        include/base/LevelHigh.h
-        include/base/Common.h
-        include/base/CommonClass.h
-        include/base/Config.h
-        include/base/Coord2.h
-        include/base/Polygon2.h
-        include/base/Contour2.h
-        include/base/Grid2.h
-        include/base/QuardTree.h
-        include/base/TimeComplexity.h
-        include/base/ThreadBase.h
-        include/base/ThreadOctilinearBoundary.h
-        include/base/ThreadLevelHigh.h
-        include/base/ThreadLevelCenter.h
-        include/base/ThreadLevelMiddle.h
-        include/base/ThreadLevelDetailed.h
-        include/base/Color.h
-        include/base/Cell.h
-        include/base/Road.h
-        include/base/Boundary.h
-        include/base/Bone.h
-        include/base/Pathway.h
-        include/base/PathwayData.h
-        include/base/RegionData.h
-        include/base/Package.h
-        include/base/CurvyTree.h
-        include/graph/TreeEdgeProperty.h
-        include/graph/TreeGraph.h
-        include/graph/TreeGraphProperty.h
-        include/graph/TreeVertexProperty.h
-        include/graph/ForceEdgeProperty.h
-        include/graph/ForceGraph.h
-        include/graph/ForceGraphProperty.h
-        include/graph/ForceVertexProperty.h
-        include/graph/MetaboliteEdgeProperty.h
-        include/graph/MetaboliteGraph.h
-        include/graph/MetaboliteGraphProperty.h
-        include/graph/MetaboliteVertexProperty.h
-        include/graph/BoundaryEdgeProperty.h
-        include/graph/BoundaryGraph.h
-        include/graph/BoundaryGraphProperty.h
-        include/graph/BoundaryVertexProperty.h
-        include/graph/SkeletonEdgeProperty.h
-        include/graph/SkeletonGraph.h
-        include/graph/SkeletonGraphProperty.h
-        include/graph/SkeletonVertexProperty.h
-        include/graph/BaseEdgeProperty.h
-        include/graph/BaseGraphProperty.h
-        include/graph/BaseVertexProperty.h
-        include/graph/DirectedBaseGraph.h
-        include/graph/UndirectedBaseGraph.h
-        include/graph/UndirectedPropertyGraph.h
-        include/optimization/Force.h
-        include/optimization/Voronoi.h
-        include/optimization/Octilinear.h
-        include/optimization/Smooth.h
-        include/optimization/Stress.h
-        include/optimization/Similarity.h
-        include/optimization/Layout.h
-        inlcude/steinertree/include.h
-        include/ui/GraphicsBallItem.h
-        include/ui/GraphicsVertexItem.h
-        include/ui/GraphicsEdgeItem.h
-        include/ui/GraphicsPolygonItem.h
-        include/ui/GraphicsView.h
-        include/ui/Window.h
-        include/ui/Window.ui
-        include/gv/GraphVizAPI.h
-        include/boost/create_dual_graph.hpp
-    )
-set(SOURCES
-        src/base/Common.cpp
-        src/base/Config.cpp
-        src/base/Coord2.cpp
-        src/base/Polygon2.cpp
-        src/base/Contour2.cpp
-        src/base/Grid2.cpp
-        src/base/Line2.cpp
-        src/base/QuardTree.cpp
-        src/base/TimeComplexity.cpp
-        src/base/ThreadBase.cpp
-        src/base/ThreadOctilinearBoundary.cpp
-        src/base/ThreadLevelHigh.cpp
-        src/base/ThreadLevelCenter.cpp
-        src/base/ThreadLevelMiddle.cpp
-        src/base/ThreadLevelDetailed.cpp
-        src/base/Color.cpp
-        src/base/LevelHigh.cpp
-        src/base/Cell.cpp
-        src/base/Road.cpp
-        src/base/Boundary.cpp
-        src/base/Bone.cpp
-        src/base/Pathway.cpp
-        src/base/PathwayData.cpp
-        src/base/RegionData.cpp
-        src/base/Package.cpp
-        src/base/CurvyTree.cpp
-        src/graph/TreeEdgeProperty.cpp
-        src/graph/TreeGraph.cpp
-        src/graph/TreeGraphProperty.cpp
-        src/graph/TreeVertexProperty.cpp
-        src/graph/ForceEdgeProperty.cpp
-        src/graph/ForceGraph.cpp
-        src/graph/ForceGraphProperty.cpp
-        src/graph/ForceVertexProperty.cpp
-        src/graph/MetaboliteEdgeProperty.cpp
-        src/graph/MetaboliteGraph.cpp
-        src/graph/MetaboliteGraphProperty.cpp
-        src/graph/MetaboliteVertexProperty.cpp
-        src/graph/BoundaryEdgeProperty.cpp
-        src/graph/BoundaryGraph.cpp
-        src/graph/BoundaryGraphProperty.cpp
-        src/graph/BoundaryVertexProperty.cpp
-        src/graph/SkeletonEdgeProperty.cpp
-        src/graph/SkeletonGraph.cpp
-        src/graph/SkeletonGraphProperty.cpp
-        src/graph/SkeletonVertexProperty.cpp
-        src/graph/DirectedBaseGraph.cpp
-        src/graph/UndirectedBaseGraph.cpp
-        src/graph/UndirectedPropertyGraph.cpp
-        src/graph/BaseEdgeProperty.cpp
-        src/graph/BaseGraphProperty.cpp
-        src/graph/BaseVertexProperty.cpp
-        src/optimization/Force.cpp
-        src/optimization/Voronoi.cpp
-        src/optimization/Octilinear.cpp
-        src/optimization/Smooth.cpp
-        src/optimization/Stress.cpp
-        src/optimization/Similarity.cpp
-        src/optimization/Layout.cpp
-        src/steinertree/dijkstra.cpp
-        src/steinertree/spanningtree.cpp
-        src/ui/GraphicsBallItem.cpp
-        src/ui/GraphicsVertexItem.cpp
-        src/ui/GraphicsEdgeItem.cpp
-        src/ui/GraphicsPolygonItem.cpp
-        src/ui/GraphicsView.cpp
-        src/ui/Window.cpp
-        src/gv/GraphVizAPI.cpp
-        src/main.cpp
-    )
-
-set( DEFINEQT5 ON )
-find_package(Qt5 COMPONENTS Core Gui Svg Widgets OpenGL REQUIRED)
-
-# using Qt meta-system (precompiler)
-QT5_ADD_RESOURCES( RES_SOURCES ${RESOURCES} )
-QT5_WRAP_UI( UI_HEADERS ${UI_FILES} )
-QT5_WRAP_CPP( MOC_SRCS ${UI_HEADERS})
-QT5_WRAP_CPP( MOC_SRCS ${MOC_HEADERS} )
-#QT5_WRAP_CPP( MOC_WINDOWUI ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.ui )
-QT5_WRAP_CPP( MOC_WINDOW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Window.h )
-QT5_WRAP_CPP( MOC_GRAPHICSVIEW ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GraphicsView.h )
-#set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_ui_Window.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_Window.cpp PROPERTY SKIP_AUTOGEN ON )
-set_property( SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cmake-build-debug/include/ui/moc_GraphicsView.cpp PROPERTY SKIP_AUTOGEN ON )
-
-add_executable(qtborder ${SOURCES} ${MOC_SRCS} ${MOC_WINDOW} ${MOC_GRAPHICSVIEW})
-message("CMAKE_CXX_FLAGS" ${CMAKE_CXX_FLAGS})
-if (UNIX AND NOT APPLE)
-  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml cgraph gvc CGAL gmp boost_thread boost_system boost_graph dl pthread GL GLU glut)
-elseif(APPLE)
-  target_link_libraries (qtborder ${CMAKE_CXX_FLAGS} tinyxml cgraph gvc boost_thread-mt boost_system-mt boost_graph-mt CGAL gmp dl)
+if(CGAL_FOUND)
+  include_directories(${CGAL_USE_FILE})
+  target_link_libraries(${Target_Name} ${CGAL_LIBRARIES})
 endif()
 
-# qt stuff
-qt5_use_modules(qtborder Core Gui Svg Widgets OpenGL)
+
+#----------------------------------------------------------------------
+# COPY CONFIG AND DATA FOLDER
+#----------------------------------------------------------------------
+
+# Create directories
+execute_process( COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "${CMAKE_BINARY_DIR}/bin/third_party/" )
+add_custom_command(TARGET ${Target_Name}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/config/"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/data/"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/xml/"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/svg/"
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "${CMAKE_BINARY_DIR}/bin/third_party/micans"
+        )
+
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/data/"  ${CMAKE_BINARY_DIR}/bin/data )
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/config/"  ${CMAKE_BINARY_DIR}/bin/config )
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/xml/"  ${CMAKE_BINARY_DIR}/bin/xml )
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/svg/"  ${CMAKE_BINARY_DIR}/bin/svg )
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/third_party/micans"  ${CMAKE_BINARY_DIR}/bin/third_party/micans )

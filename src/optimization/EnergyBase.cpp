@@ -1,10 +1,9 @@
-//==============================================================================
-// Package.cc
-//  : program file for the region data
+// EnergyBase.cpp
+//  : program file for the boundary network
 //
 //------------------------------------------------------------------------------
 //
-//              Date: Thu Feb 21 04:28:26 2019
+//              Date: Mon Dec 10 04:28:26 2012
 //
 //==============================================================================
 
@@ -12,19 +11,39 @@
 //	Including Header Files
 //------------------------------------------------------------------------------
 
-#include "base/Package.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cassert>
+#include <cstring>
+#include <cmath>
 
+using namespace std;
+
+#include "optimization/EnergyBase.h"
 
 //------------------------------------------------------------------------------
 //	Protected functions
 //------------------------------------------------------------------------------
-
+//
+//  EnergyBase::clear --        memory management
+//
+//  Inputs
+//      none
+//
+//  Outputs
+//      none
+//
+void EnergyBase::_clear( void )
+{
+}
 
 //------------------------------------------------------------------------------
 //	Public functions
 //------------------------------------------------------------------------------
+
 //
-//  Package::init -- initialize
+//  EnergyBase::EnergyBase -- default constructor
 //
 //  Inputs
 //  none
@@ -32,42 +51,13 @@
 //  Outputs
 //  none
 //
-void Package::_init( void )
+EnergyBase::EnergyBase( void )
 {
+    _boundary                   = new Boundary;
 }
 
 //
-//  Package::clear --    clear the current Package information
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void Package::_clear( void )
-{
-    // Bone::_clear();
-}
-
-
-//
-//  Package::Package -- default constructor
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-Package::Package( void )
-{
-    _smoothPtr = new Smooth;
-    _octilinearVecPtr = new vector< Octilinear *>;
-}
-
-//
-//  Package::Package -- copy constructor
+//  EnergyBase::EnergyBase -- copy constructor
 //
 //  Inputs
 //  obj : object of this class
@@ -75,7 +65,7 @@ Package::Package( void )
 //  Outputs
 //  none
 //
-Package::Package( const Package & obj )
+EnergyBase::EnergyBase( const EnergyBase & obj )
 {
 }
 
@@ -83,8 +73,9 @@ Package::Package( const Package & obj )
 //------------------------------------------------------------------------------
 //	Destructor
 //------------------------------------------------------------------------------
+
 //
-//  Package::~Package --    destructor
+//  EnergyBase::~EnergyBase --    destructor
 //
 //  Inputs
 //  none
@@ -92,10 +83,10 @@ Package::Package( const Package & obj )
 //  Outputs
 //  none
 //
-Package::~Package( void )
+EnergyBase::~EnergyBase( void )
 {
 }
 
-
 // end of header file
 // Do not add any stuff under this line.
+

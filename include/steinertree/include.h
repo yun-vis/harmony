@@ -30,8 +30,9 @@ public:
 };
 
 struct terminal
-{  int v;
-   int parent;
+{
+    int v;
+    int parent;
 };
 
 class link

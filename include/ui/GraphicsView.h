@@ -15,20 +15,17 @@
 
 using namespace std;
 
-
 #ifndef Q_MOC_RUN
-#include "ui/GraphicsBallItem.h"
-#include "ui/GraphicsVertexItem.h"
-#include "ui/GraphicsEdgeItem.h"
-#include "ui/GraphicsPolygonItem.h"
-#include "optimization/Force.h"
 #include "base/Color.h"
-#include "base/LevelHigh.h"
 #include "base/Cell.h"
 #include "base/Road.h"
 #include "base/Pathway.h"
 #include "base/PathwayData.h"
 #include "base/RegionData.h"
+#include "ui/GraphicsVertexItem.h"
+#include "ui/GraphicsEdgeItem.h"
+#include "ui/GraphicsPolygonItem.h"
+#include "optimization/Force.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -49,7 +46,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsView : public QGraphicsView, public PathwayData, public RegionData, public Common
+class GraphicsView : public QGraphicsView, public PathwayData, public RegionData
 {
     Q_OBJECT
 
@@ -81,23 +78,37 @@ private:
 protected:
 
     void _item_boundary( void );
+    void _update_item_boundary( void );
     void _item_skeleton( void );
+    void _update_item_skeleton( void );
     void _item_composite( void );
+    void _update_item_composite( void );
 
     void _item_pathways( void );
     void _item_subpathways( void );
+    void _update_item_subpathways( void );
 
     void _item_centers( void );
+    void _update_item_centers( void );
     void _item_centerPolygons( void );
+    void _update_item_centerPolygons( void );
     void _item_cells( void );
+    void _update_item_cells( void );
     void _item_seeds( void );
     void _item_polygonComplex( void );
+    void _update_item_polygonComplex( void );
     void _item_polygons( void );
+    void _update_item_polygons( void );
+
     void _item_cellPolygons( void );
+    void _update_item_cellPolygons( void );
     void _item_cellPolygonComplex( bool fineFlag );
+    void _update_item_cellPolygonComplex( bool fineFlag );
     void _item_interCellComponents( void );
+    void _update_item_interCellComponents( void );
     // void _item_mclPolygons( void );
     void _item_pathwayPolygons( void );
+    void _update_item_pathwayPolygons( void );
     void _item_road( void );
     void _item_lane( void );
 
@@ -174,6 +185,7 @@ public:
     void    init ( void ) {;}
     void    initPolygonItems    ( void );
     void    initSceneItems      ( void );
+    void    updateSceneItems      ( void );
 
     void exportPNG ( double x, double y, double w, double h );
     void exportSVG ( double x, double y, double w, double h );

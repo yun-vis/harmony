@@ -31,6 +31,7 @@ using CGAL::ORIGIN;
 
 #include "base/Coord2.h"
 #include "base/Line2.h"
+#include "ui/GraphicsPolygonItem.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -54,10 +55,14 @@ class Polygon2 {
     Coord2              _boundingBox;   // width and height of the bounding box
     Coord2              _boxCenter;     // center of the bounding box
     CGAL::Polygon_2< K > _polygon;
+
+    // graphics item pointer
+    GraphicsPolygonItem * _itemPtr;
+
     virtual void	    _init( unsigned int __id, vector< Coord2 > __elements );	// initialize all coordinates to zero
     void                _clear( void );
 
-  public:
+public:
 
 //------------------------------------------------------------------------------
 //	Constuructors
@@ -110,6 +115,10 @@ class Polygon2 {
     // center of the bounding box
     Coord2 &	                boxCenter( void )	        { return _boxCenter; }
     const Coord2 &	            boxCenter( void ) const	    { return _boxCenter; }
+
+    // graphics item
+    void setItemPtr( GraphicsPolygonItem * ptr )            { _itemPtr = ptr; }
+    GraphicsPolygonItem * getItemPtr( void )                { return _itemPtr; }
 
 //------------------------------------------------------------------------------
 //	Special functions

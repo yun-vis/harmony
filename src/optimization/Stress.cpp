@@ -125,7 +125,7 @@ void Stress::_initStress( ForceGraph *forceGraphPtr,
     //_w_crossing         = sqrt( 60.0  ); // <- 15.0
     //_w_labelangle       = sqrt( 20.0  ); // <- 1.0
 
-    string configFilePath = "../configs/stress.conf";
+    string configFilePath = "config/stress.conf";
 
     //read config file
     Base::Config conf( configFilePath );
@@ -1159,8 +1159,10 @@ void Stress::retrieve( void )
         g[ edge ].angle = angle;
     }
 
+#ifdef  STRESS_CONFLICT
     // check possible conflict
     _boundary->checkVEConflicts();
+#endif  // STRESS_CONFLICT
 
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;

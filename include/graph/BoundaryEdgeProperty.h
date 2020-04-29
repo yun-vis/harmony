@@ -22,6 +22,7 @@ using namespace std;
 #include "base/Coord2.h"
 #include "base/Line2.h"
 #include "graph/BaseEdgeProperty.h"
+#include "ui/GraphicsEdgeItem.h"
 
 
 //------------------------------------------------------------------------------
@@ -66,11 +67,13 @@ class BoundaryEdgeProperty: public BaseEdgeProperty {
     double                      smoothAngle;
     double                      targetAngle;
 
-    void		                init( void )		      { _init(); }
+    GraphicsEdgeItem *          itemPtr;        // pointer to graphic objects
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
+
+    void		                init( void )		      { _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check

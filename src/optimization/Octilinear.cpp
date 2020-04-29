@@ -48,7 +48,7 @@ void Octilinear::_init( Boundary * __boundary, double __half_width, double __hal
     _half_width = __half_width;
     _half_height = __half_height;
 
-    string configFilePath = "../configs/octilinear.conf";
+    string configFilePath = "config/octilinear.conf";
 
     //read config file
     Base::Config conf( configFilePath );
@@ -1024,8 +1024,10 @@ void Octilinear::retrieve( void )
         nRows++;
     }
 
+#ifdef  OCTILINEAR_CONFLICT
     // check possible conflict
     _boundary->checkVEConflicts();
+#endif  // OCTILINEAR_CONFLICT
 
 #ifdef  DEBUG
     cerr << "retrieve:" << endl;

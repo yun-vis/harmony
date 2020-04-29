@@ -1,5 +1,5 @@
 //==============================================================================
-// Bone.cc
+// RegionBase.cc
 //  : program file for the region data
 //
 //------------------------------------------------------------------------------
@@ -12,7 +12,7 @@
 //	Including Header Files
 //------------------------------------------------------------------------------
 
-#include "base/Bone.h"
+#include "base/RegionBase.h"
 
 
 //------------------------------------------------------------------------------
@@ -24,7 +24,7 @@
 //	Public functions
 //------------------------------------------------------------------------------
 //
-//  Bone::init -- initialize
+//  RegionBase::init -- initialize
 //
 //  Inputs
 //  none
@@ -32,12 +32,13 @@
 //  Outputs
 //  none
 //
-void Bone::_init( void )
+void RegionBase::_init( void )
 {
+    clearGraph( _forceGraph );
 }
 
 //
-//  Bone::createPolygonComplex --    create the ploygon complex
+//  RegionBase::clear --    clear the current RegionBase information
 //
 //  Inputs
 //  none
@@ -45,24 +46,40 @@ void Bone::_init( void )
 //  Outputs
 //  none
 //
-void Bone::createPolygonComplex( unsigned int nV )
+void RegionBase::_clear( void )
+{
+    _force.clear();
+    _stress.clear();
+}
+
+
+//
+//  RegionBase::createPolygonComplex --    create the ploygon complex
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void RegionBase::createPolygonComplex( unsigned int nV )
 {
     vector< vector< Polygon2 > > _polygonMat;
-    vector< Seed > &seedVec = *_forceBone.voronoi().seedVec();
+    vector< Seed > &seedVec = *_force.voronoi().seedVec();
 
     // initialization
     _polygonComplex.clear();
 
     // find the sets of the polygons of the same group
-    // int nV = num_vertices( _skeleton );
+    // int nV = num_vertices( _skeletonForceGraph );
     _polygonMat.resize( nV );
 
     cerr << "seedVec.size() = " << seedVec.size()
-         << " num_vertices( _bone ) = " << num_vertices( _bone ) << endl;
-    assert( seedVec.size() == num_vertices( _bone ) );
+         << " num_vertices( _forceGraph ) = " << num_vertices( _forceGraph ) << endl;
+    assert( seedVec.size() == num_vertices( _forceGraph ) );
     for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
-        int gid = _bone[ vertex( i, _bone ) ].initID;
+        int gid = _forceGraph[ vertex( i, _forceGraph ) ].initID;
         _polygonMat[ gid ].push_back( seedVec[i].cellPolygon );
     }
 
@@ -100,10 +117,8 @@ void Bone::createPolygonComplex( unsigned int nV )
 #endif // DEBUG
 }
 
-
-
 //
-//  Bone::findVertexInComplex --    detect vertex-edge pair that is close to each other
+//  RegionBase::findVertexInComplex --    detect vertex-edge pair that is close to each other
 //
 //  Inputs
 //  coord: coordinates of a point
@@ -113,26 +128,25 @@ void Bone::createPolygonComplex( unsigned int nV )
 //  Outputs
 //  isFound: binary
 //
-bool Bone::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
-                                ForceGraph::vertex_descriptor &target )
+bool RegionBase::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
+                                      ForceGraph::vertex_descriptor &target )
 {
     bool isFound = false;
 
-    BGL_FORALL_VERTICES( vd, complex, ForceGraph )
-        {
-            //cerr << " vd " << *complex[vd].coordPtr << endl;
-            if( ( coord - *complex[vd].coordPtr ).norm() < 1e-2 ){
-                target = vd;
-                isFound = true;
-            }
+    BGL_FORALL_VERTICES( vd, complex, ForceGraph ) {
+        //cerr << " vd " << *complex[vd].coordPtr << endl;
+        if( ( coord - *complex[vd].coordPtr ).norm() < 1e-2 ){
+            target = vd;
+            isFound = true;
         }
+    }
 
     //cerr << "isFound = " << isFound << endl;
     return isFound;
 }
 
 //
-//  Bone::clear --    clear the current Bone information
+//  RegionBase::RegionBase -- default constructor
 //
 //  Inputs
 //  none
@@ -140,29 +154,14 @@ bool Bone::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
 //  Outputs
 //  none
 //
-void Bone::_clear( void )
+RegionBase::RegionBase( void )
 {
-    _forceBone.clear();
-    //_stressBone.clear();
-}
-
-
-//
-//  Bone::Bone -- default constructor
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-Bone::Bone( void )
-{
-    _isForce = true;
+    clearGraph( _forceGraph );
+    _energyType = ENERGY_FORCE;
 }
 
 //
-//  Bone::Bone -- copy constructor
+//  RegionBase::RegionBase -- copy constructor
 //
 //  Inputs
 //  obj : object of this class
@@ -170,7 +169,7 @@ Bone::Bone( void )
 //  Outputs
 //  none
 //
-Bone::Bone( const Bone & obj )
+RegionBase::RegionBase( const RegionBase & obj )
 {
 }
 
@@ -179,7 +178,7 @@ Bone::Bone( const Bone & obj )
 //	Destructor
 //------------------------------------------------------------------------------
 //
-//  Bone::~Bone --    destructor
+//  RegionBase::~RegionBase --    destructor
 //
 //  Inputs
 //  none
@@ -187,7 +186,7 @@ Bone::Bone( const Bone & obj )
 //  Outputs
 //  none
 //
-Bone::~Bone( void )
+RegionBase::~RegionBase( void )
 {
 }
 

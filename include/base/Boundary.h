@@ -32,11 +32,11 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Defining macros
 //------------------------------------------------------------------------------
-class Boundary : public Common
+class Boundary
 {
 protected:
 
-    // skeleton
+    // skeletonForceGraph
     BoundaryGraph               _boundary;          // inner + outer boundary
     Polygon2                    *_contour;          // boundary of the graph
     double                      *_content_width;    // content width
@@ -56,7 +56,7 @@ protected:
 
     // for recording the information if nodes or edged are deleted.
     vector< unsigned int >                      _removedVertices;   // ID of removed vertices
-    vector< VVIDPair >                          _removedEdges;      // VID pair of removed edges
+    vector< Common::UIDPair >                   _removedEdges;      // VID pair of removed edges
     vector< double >                            _removedWeights;    // weight removed edges
 
     // detecting close vertex-edge pairs which have high possibility to overlap
@@ -105,7 +105,7 @@ public:
     vector< vector< BoundaryGraph::vertex_descriptor > > &          lineSta( void )         { return _lineSta; }
 
     const vector< unsigned int > &              removedVertices( void ) const   { return _removedVertices; }
-    const vector< VVIDPair > &                  removedEdges( void ) const      { return _removedEdges; }
+    const vector< Common::UIDPair > &           removedEdges( void ) const      { return _removedEdges; }
     const vector< double > &                    removedWeights( void ) const    { return _removedWeights; }
 
     const VEMap &                               VEconflict( void ) const    { return _VEconflict; }
@@ -125,7 +125,7 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void adjustsize( const int & width, const int & height );   // normalize the LevelHigh size
+    void adjustsize( const int & width, const int & height );   // normalize the LevelBorder size
 
 //------------------------------------------------------------------------------
 //  File I/O

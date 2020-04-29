@@ -1,25 +1,25 @@
 
-#include "base/ThreadLevelDetailed.h"
+#include "base/ThreadLevelDetail.h"
 
 //----------------------------------------------------------
 // Worker
 //----------------------------------------------------------
-ThreadLevelDetailed::ThreadLevelDetailed( void )
+ThreadLevelDetail::ThreadLevelDetail(void )
 {
     //ThreadBase::ThreadBase();
-    cerr << "construct ThreadLevelDetailed..." << endl;
+    cerr << "construct ThreadLevelDetail..." << endl;
 }
 
-ThreadLevelDetailed::~ThreadLevelDetailed()
+ThreadLevelDetail::~ThreadLevelDetail()
 {
     //ThreadBase::~ThreadBase();
-    cerr << "destroy ThreadLevelDetailed..." << endl;
+    cerr << "destroy ThreadLevelDetail..." << endl;
 }
 
-void ThreadLevelDetailed::force( void )
+void ThreadLevelDetail::force(void )
 {
     cerr << "force-based approach..." << endl;
-    //cerr << "epsilon = " << _LevelDetailedPtr->forceBone().finalEpsilon() << endl;
+    //cerr << "epsilon = " << _LevelDetailedPtr->force().finalEpsilon() << endl;
 
     double err = INFINITY;
 
@@ -28,18 +28,19 @@ void ThreadLevelDetailed::force( void )
     multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
     advance( itC, _groupIndex );
 
-    while( ( err > itC->second.detail.forceBone().finalEpsilon() ) && ( _count < _maxLoop ) ) {
+    itC->second.detail.force()._initSeed();
+    while(( err > itC->second.detail.force().finalEpsilon() ) && (_count < _maxLoop ) ) {
 
-        switch ( itC->second.detail.forceBone().mode() ) {
+        switch (itC->second.detail.force().mode() ) {
             case TYPE_FORCE:
             case TYPE_BARNES_HUT:
             {
-                _pathway->pathwayMutex().lock();
-                itC->second.detail.forceBone().force();
-                err = itC->second.detail.forceBone().verletIntegreation();
+                _pathwayPtr->pathwayMutex().lock();
+                itC->second.detail.force().force();
+                err = itC->second.detail.force().verletIntegreation();
                 //cerr << "WorkerLevelDetailed:: err (pathway force) = " << err << endl;
-                _pathway->pathwayMutex().unlock();
-                if (err < itC->second.detail.forceBone().finalEpsilon()) {
+                _pathwayPtr->pathwayMutex().unlock();
+                if (err < itC->second.detail.force().finalEpsilon()) {
                     //stop();
                     //cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
                     //cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
@@ -48,12 +49,12 @@ void ThreadLevelDetailed::force( void )
             }
             case TYPE_CENTROID:
             {
-                _pathway->pathwayMutex().lock();
-                itC->second.detail.forceBone().centroidGeometry();
-                err = itC->second.detail.forceBone().gap();
+                _pathwayPtr->pathwayMutex().lock();
+                itC->second.detail.force().centroidGeometry();
+                err = itC->second.detail.force().gap();
                 //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
-                _pathway->pathwayMutex().unlock();
-                if (err < itC->second.detail.forceBone().finalEpsilon()) {
+                _pathwayPtr->pathwayMutex().unlock();
+                if (err < itC->second.detail.force().finalEpsilon()) {
                     //stop();
                     //cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
                     //cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
@@ -62,16 +63,16 @@ void ThreadLevelDetailed::force( void )
             }
             case TYPE_HYBRID:
             {
-                _pathway->pathwayMutex().lock();
-                itC->second.detail.forceBone().force();
+                _pathwayPtr->pathwayMutex().lock();
+                itC->second.detail.force().force();
                 int freq = VORONOI_FREQUENCE - MIN2( _count/20, VORONOI_FREQUENCE-1 );
                 if( _count % freq == 0 && _count > 30 )
-                    itC->second.detail.forceBone().centroidGeometry();
-                err = itC->second.detail.forceBone().verletIntegreation();
-                _pathway->pathwayMutex().unlock();
+                    itC->second.detail.force().centroidGeometry();
+                err = itC->second.detail.force().verletIntegreation();
+                _pathwayPtr->pathwayMutex().unlock();
                 //cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
                 //cerr << "_idI = " << _idI << ", idJ = " << _idJ << ": err (pathway force) = " << err << endl;
-                if ( err < itC->second.detail.forceBone().finalEpsilon() ) {
+                if ( err < itC->second.detail.force().finalEpsilon() ) {
                     //stop();
                     //cerr << "[Force-Directed] Finished Execution Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutETime() << endl;
                     //cerr << "[Force-Directed] Finished CPU Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutCPUTime() << endl;
@@ -93,14 +94,14 @@ void ThreadLevelDetailed::force( void )
     }
 }
 
-void ThreadLevelDetailed::stress( void )
+void ThreadLevelDetail::stress(void )
 {
     cerr << "stress-based approach..." << endl;
 }
 
-void ThreadLevelDetailed::run( int id )
+void ThreadLevelDetail::run(int id )
 {
-    cerr << "run ThreadLevelDetailed..." << endl;
+    cerr << "run ThreadLevelDetail..." << endl;
     cerr << "tid = " << id << endl;
 
     if( _energyType == ENERGY_FORCE )

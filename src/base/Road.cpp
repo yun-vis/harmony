@@ -109,7 +109,7 @@ bool Road::_findClosestVertexInRoad( Coord2 &coord, UndirectedBaseGraph::vertex_
 
 void Road::_findShortestPaths( void )
 {
-    vector< MetaboliteGraph >   &subg   = _pathway->subG();
+    vector< MetaboliteGraph >   &subg   = _pathwayPtr->subG();
     unsigned int nSystems = subg.size();
 
     for( unsigned int i = 0; i < nSystems; i++ ) {
@@ -192,8 +192,8 @@ void Road::_initLane( unsigned int gid, int selectedID,
                       multimap< int, CellComponent > & cellComponent,
                       vector < Highway > *highwayRoadPtr )
 {
-    vector< MetaboliteGraph >   &subg       = _pathway->subG();
-    vector< ForceGraph >        &lsubg      = _pathway->lsubG();
+    vector< MetaboliteGraph >   &subg       = _pathwayPtr->subG();
+    vector< ForceGraph >        &lsubg      = _pathwayPtr->lsubG();
     map < unsigned int , vector < UndirectedBaseGraph::vertex_descriptor > > polygonVD;
 
     _gid = gid;
@@ -255,7 +255,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
                 UndirectedBaseGraph::vertex_descriptor >::iterator it;
         for( it = _terminalVec[i].common.begin();
              it != _terminalVec[i].common.end(); it++ ){
-            cerr << *_pathway->g()[ it->first ].namePtr << ", ";
+            cerr << *_pathwayPtr->g()[ it->first ].namePtr << ", ";
         }
         cerr << endl;
 #endif // DEBUG
@@ -294,7 +294,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
     // add vertices
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-        vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
+        vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -322,7 +322,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
                     polygons.push_back( vd );
                 }
             }
-            ForceGraph &fg = itC->second.detail.bone();
+            ForceGraph &fg = itC->second.detail.forceGraph();
             ForceGraph::vertex_descriptor vd = vertex( i, fg );
             // cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
             polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
@@ -375,7 +375,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
     // add edges
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-        vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
+        vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -456,7 +456,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
                 }
             }
 
-            ForceGraph &fg = itC->second.detail.bone();
+            ForceGraph &fg = itC->second.detail.forceGraph();
             ForceGraph::vertex_descriptor vd = vertex( i, fg );
             // cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
             polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
@@ -614,8 +614,8 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
                             int selectedID )
 {
     _selectedID = selectedID;
-    vector< MetaboliteGraph >   &subG    = _pathway->subG();
-    vector< ForceGraph >        &lsubg   = _pathway->lsubG();
+    vector< MetaboliteGraph >   &subG    = _pathwayPtr->subG();
+    vector< ForceGraph >        &lsubg   = _pathwayPtr->lsubG();
     unsigned int nVertices = 0, nEdges = 0;
     _citeVec.clear();
 
@@ -637,7 +637,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
         multimap< int, CellComponent >::iterator itC;
         for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-            vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
+            vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
 
             for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -683,7 +683,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
         // add vertices
         for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-            vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
+            vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
 
             for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -711,7 +711,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
                         polygons.push_back( vd );
                     }
                 }
-                ForceGraph &fg = itC->second.detail.bone();
+                ForceGraph &fg = itC->second.detail.forceGraph();
                 ForceGraph::vertex_descriptor vd = vertex( i, fg );
                 //cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
 #ifdef DEBUG
@@ -792,7 +792,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
         // add edges
         for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-            vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
+            vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
 
             for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
@@ -904,7 +904,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > & cellCompo
                     }
                 }
 
-                //ForceGraph &fg = itC->second.detail.bone();
+                //ForceGraph &fg = itC->second.detail.forceGraph();
                 //ForceGraph::vertex_descriptor vd = vertex( i, fg );
                 // cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
                 //polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
@@ -1201,7 +1201,7 @@ void Road::_runLaneChaikinCurve( int num )
 //
 void Road::buildRoad( void )
 {
-    vector< MetaboliteGraph >   &subg   = _pathway->subG();
+    vector< MetaboliteGraph >   &subg   = _pathwayPtr->subG();
     unsigned int nSystems = subg.size();
 
     // initialization

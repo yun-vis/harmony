@@ -6,7 +6,7 @@
 
 #include "base/ThreadBase.h"
 
-class ThreadLevelDetailed : public ThreadBase
+class ThreadLevelDetail : public ThreadBase
 {
 private:
 
@@ -15,10 +15,10 @@ protected:
 
 public:
 
-    explicit ThreadLevelDetailed( void );
-    virtual ~ThreadLevelDetailed();
+    explicit ThreadLevelDetail(void );
+    virtual ~ThreadLevelDetail();
 
-    virtual const char * className( void ) const { return "ThreadLevelDetailed"; }
+    virtual const char * className( void ) const { return "ThreadLevelDetail"; }
 
     void force( void );
     void stress( void );

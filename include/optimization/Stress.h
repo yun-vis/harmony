@@ -21,7 +21,7 @@ using namespace std;
 #include "base/Boundary.h"
 #include "base/Config.h"
 #include "graph/SkeletonGraph.h"
-#include "optimization/Voronoi.h"
+#include "optimization/EnergyBase.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -33,7 +33,7 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class Stress : public Common
+class Stress : public EnergyBase
 {
 private:
 
@@ -66,12 +66,6 @@ private:
 
 protected:
 
-    Boundary        *_boundary;
-
-    vector< Seed >  _seedVec;               // seeds of the voronoi diagram
-    Voronoi         _voronoi;               // geometric voronoi diagram
-    Polygon2        _contour;               // boundary of voronoi diagram
-
     void            _setVars        ( unsigned int & nRows );
     void            _setConstraints ( unsigned int & nRows );
     void            _initVars       ( void );
@@ -83,11 +77,12 @@ protected:
     void            _updateOutputs  ( void );
     void            _initStress     ( ForceGraph *__forceGraphPtr,
                                       Polygon2 *__contourPtr );
-    void            _clear( void );
+    void            _clear          ( void );
+    void            _initSeed       ( void ) { ; }
 
 public:
 
-    Stress();                     // default constructor
+    Stress( void );               // default constructor
     Stress( const Stress & obj ); // Copy constructor
     virtual ~Stress();            // Destructor
 
@@ -96,22 +91,6 @@ public:
 //------------------------------------------------------------------------------
     const OPTTYPE &		    opttype( void ) const   { return _paramOptType; }
     OPTTYPE &			    opttype( void )	        { return _paramOptType; }
-
-    const unsigned int &	nVertices( void ) const { return _boundary->nVertices(); }
-    const unsigned int &	nEdges( void ) const    { return _boundary->nEdges(); }
-
-    const Boundary &		boundary( void ) const  { return *_boundary; }
-    Boundary &			    boundary( void )	    { return *_boundary; }
-
-    const Polygon2 &	    contour ( void )const	{ return _contour; }
-    Polygon2 &	    	    contour ( void )	    { return _contour; }
-    //void                    setContour( Polygon2* p ) { _contourPtr = p; }
-
-    const Voronoi &         voronoi( void )         const   { return _voronoi; }
-    Voronoi &               voronoi( void )                 { return _voronoi; }
-
-    const string &          workerName( void )      const   { return _workerName; }
-    string &                workerName( void )              { return _workerName; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
@@ -127,6 +106,9 @@ public:
     void prepare( ForceGraph *__forceGraphPtr, Polygon2 *__contourPtr ) {
         _clear();
         _initStress( __forceGraphPtr, __contourPtr );
+    }
+    void clear( void ) {
+        _clear();
     }
 
 //------------------------------------------------------------------------------

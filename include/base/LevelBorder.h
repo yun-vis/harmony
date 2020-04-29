@@ -1,6 +1,6 @@
 //==============================================================================
-// LevelHigh.h
-//  : header file for the LevelHigh network
+// LevelBorder.h
+//  : header file for the LevelBorder network
 //
 //==============================================================================
 
@@ -19,11 +19,11 @@
 using namespace std;
 
 #include "base/Grid2.h"
-#include "base/Package.h"
+#include "base/RegionBase.h"
 #include "graph/SkeletonGraph.h"
 #include "optimization/Force.h"
-#include "optimization/Smooth.h"
-#include "optimization/Octilinear.h"
+//#include "optimization/Smooth.h"
+//#include "optimization/Octilinear.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -34,63 +34,62 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class LevelHigh : public Bone
+class LevelBorder : public RegionBase
 {
 private:
 
-    ForceGraph                  _skeleton;
+    ForceGraph                  _skeletonForceGraph;
     double                     *_content_widthPtr;
     double                     *_content_heightPtr;
     double                     *_veCoveragePtr;
 
 protected:
     
-    void                        _init( double *widthPtr, double *heightPtr, double *veCoveragePtr,
-                                       SkeletonGraph & skeletonGraph, Polygon2 *contourPtr );
+    void                        _init( double *widthPtr, double *heightPtr,
+                                       double *veCoveragePtr, Polygon2 *contourPtr,
+                                       SkeletonGraph & skeletonGraph );
+    void                        _clear( void );
 
 public:
     
-    LevelHigh();                        // default constructor
-    LevelHigh( const LevelHigh & obj );     // Copy constructor
-    virtual ~LevelHigh();               // Destructor
+    LevelBorder();                              // default constructor
+    LevelBorder(const LevelBorder & obj );      // Copy constructor
+    virtual ~LevelBorder();                     // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-    const ForceGraph &		    skeleton( void ) const  { return _skeleton; }
-    ForceGraph &			    skeleton( void )	    { return _skeleton; }
+    const ForceGraph &		    skeletonForceGraph(void ) const  { return _skeletonForceGraph; }
+    ForceGraph &			    skeletonForceGraph(void )	    { return _skeletonForceGraph; }
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-    void normalizeSkeleton( const int & width, const int & height );   // normalize the LevelHigh size
-    void normalizeBone( const int & width, const int & height );   // normalize the LevelHigh size
+    void normalizeSkeleton( void );
+    void normalizeBone( void );
     void decomposeSkeleton( void );
-
-#ifdef SKIP
-    void readPolygonComplex( void );
-    void writePolygonComplex( void );
-#endif // SKIP
 
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-    void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr,
-               SkeletonGraph &__skeletonGraph, Polygon2 *__contourPtr ) {
-        _init( __widthPtr, __heightPtr, __veCoveragePtr,
-               __skeletonGraph, __contourPtr );
+    void init( double *__widthPtr, double *__heightPtr,
+               double *__veCoveragePtr, Polygon2 *__contourPtr,
+               SkeletonGraph &__skeletonGraph ) {
+        _init( __widthPtr, __heightPtr,
+               __veCoveragePtr, __contourPtr,
+               __skeletonGraph );
     }
-    void clear( void );
+    void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-    friend ostream & operator << ( ostream & stream, const LevelHigh & obj );
+    friend ostream & operator << ( ostream & stream, const LevelBorder & obj );
                                 // Output
-    friend istream & operator >> ( istream & stream, LevelHigh & obj );
+    friend istream & operator >> (istream & stream, LevelBorder & obj );
                                 // Input
 
-    virtual const char * className( void ) const { return "LevelHigh"; }
+    virtual const char * className( void ) const { return "LevelBorder"; }
                                 // Class name
 };
 

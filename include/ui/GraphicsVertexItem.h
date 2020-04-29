@@ -18,6 +18,7 @@ using namespace std;
 #ifndef Q_MOC_RUN
 #include "base/Coord2.h"
 #include "base/Common.h"
+#include "ui/GraphicsBase.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -34,19 +35,11 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsVertexItem : public  QGraphicsRectItem
+class GraphicsVertexItem : public  QGraphicsRectItem, public GraphicsBase
 {
 private:
 
-    unsigned int _id;
-    QString _name;
-    bool    _textOn;
     VERTEXTYPE _vtype;
-
-    int     _font_size;
-    QFont   _font;
-    QPen    _textpen;
-    double  _radius;
 
 protected:
 
@@ -79,28 +72,15 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
-    unsigned int &	        id( void ) 	        { return _id; }
-    const unsigned int &	id( void ) const	{ return _id; }
-
-    QString &	            name( void )        { return _name; }
-    const QString &	        name( void ) const	{ return _name; }
-
-    int &	                fontSize( void ) 	    { return _font_size; }
-    const int &	            fontSize( void ) const	{ return _font_size; }
-
-    bool &	                textOn( void ) 	    { return _textOn; }
-    const bool &	        textOn( void ) const{ return _textOn; }
 
     VERTEXTYPE &	        vtype( void ) 	    { return _vtype; }
-    const VERTEXTYPE &	    vtype( void ) const  { return _vtype; }
+    const VERTEXTYPE &	    vtype( void ) const { return _vtype; }
 
 
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
     void    init      ( void );
-
-private:
 
 };
 

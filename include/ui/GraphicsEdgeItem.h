@@ -17,6 +17,7 @@ using namespace std;
 
 #ifndef Q_MOC_RUN
 #include "base/Common.h"
+#include "ui/GraphicsBase.h"
 #endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
@@ -33,14 +34,9 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsEdgeItem : public  QGraphicsPathItem
+class GraphicsEdgeItem : public  QGraphicsPathItem, public GraphicsBase
 {
 private:
-
-    unsigned int    _id;
-    double          _weight;
-    QString         _name;
-    bool            _textOn;
 
 protected:
 
@@ -71,18 +67,6 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
-
-    unsigned int &	        id( void ) 	        { return _id; }
-    const unsigned int &	id( void ) const	{ return _id; }
-
-    double &	            weight( void ) 	    { return _weight; }
-    const double &	        weight( void ) const{ return _weight; }
-
-    QString &	            name( void )        { return _name; }
-    const QString &	        name( void ) const	{ return _name; }
-
-    bool &	                textOn( void ) 	    { return _textOn; }
-    const bool &	        textOn( void ) const{ return _textOn; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

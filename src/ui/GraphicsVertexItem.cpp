@@ -45,6 +45,9 @@ void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsIte
     else if( _vtype == TYPE_TWO ) {
         painter->drawRoundedRect( fineRect, 5, 5, Qt::AbsoluteSize );
     }
+    else if( _vtype == TYPE_DEFAULT ) {
+        painter->drawRoundedRect( fineRect, 5, 5, Qt::AbsoluteSize );
+    }
     else {
         cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
         assert( false );
@@ -76,7 +79,7 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent )
 	//setFlag( QGraphicsItem::ItemSendsGeometryChanges );
 	//setAcceptDrops( true );
 
-    _radius = 10;
+    //_radius = 10;
     _vtype = TYPE_ONE;
 }
 

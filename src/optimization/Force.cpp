@@ -61,6 +61,7 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour,
     _iteration = 1;
     _temperatureDecay = 1.0;
 
+    _initSeed();
     _voronoi.init( _seedVec, _contour );
 
     //read config file
@@ -102,7 +103,7 @@ void Force::_init( ForceGraph * __forceGraphPtr, Polygon2 *__contour,
         _paramKo = stringToDouble( paramKo );
     }
 
-    if ( conf.has( "force_loop" ) ){
+    if ( conf.has( "degreeOneMagnitude" ) ){
         string paramDegreeOneMagnitude = conf.gets( "degreeOneMagnitude" );
         _paramDegreeOneMagnitude = (unsigned int)stringToDouble( paramDegreeOneMagnitude );
     }
@@ -250,7 +251,7 @@ void Force::_normalizeWeight( void )
 //
 void Force::_clear( void )
 {
-    Stress::_clear();
+    EnergyBase::_clear();
     _quardTree.clear();
 }
 
@@ -513,7 +514,7 @@ void Force::_force( void )
 }
 
 //
-//  Force::_initForceSeed --	compute the displacements exerted by the force-directed model
+//  Force::_initSeed --	initialize seeds
 //
 //  Inputs
 //	none
@@ -521,15 +522,50 @@ void Force::_force( void )
 //  Outputs
 //	none
 //
-void Force::_initForceSeed( void )
+void Force::_initSeed( void )
 {
-    _seedVec.clear();
-    BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
-        Seed seed;
-        seed.id = (*_forceGraphPtr)[vd].id;
-        seed.weight = (*_forceGraphPtr)[vd].weight;
-        seed.coord = *(*_forceGraphPtr)[vd].coordPtr;
-        _seedVec.push_back( seed );
+    if( _seedVec.size() != 0 ){
+        cerr << "sth is wrong here at " << __LINE__ << " in " << __FILE__ << endl;
+        assert( false );
+    }
+    else {
+
+        BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
+            Seed seed;
+            seed.id = (*_forceGraphPtr)[vd].id;
+            seed.weight = (*_forceGraphPtr)[vd].weight;
+            seed.coord = *(*_forceGraphPtr)[vd].coordPtr;
+            _seedVec.push_back( seed );
+        }
+    }
+}
+
+//
+//  Force::_updateForceSeed --	compute the displacements exerted by the force-directed model
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Force::_updateForceSeed( void )
+{
+    if( _seedVec.size() == num_vertices( *_forceGraphPtr ) ){
+
+        BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
+            Seed &seed = _seedVec[ (*_forceGraphPtr)[vd].id ];
+            // seed.id = (*_forceGraphPtr)[vd].id;
+            // seed.weight = (*_forceGraphPtr)[vd].weight;
+            seed.coord = *(*_forceGraphPtr)[vd].coordPtr;
+            // _seedVec.push_back( seed );
+        }
+    }
+    else{
+
+        cerr << "_seedVec.size() = " << _seedVec.size() << " ?= " << num_vertices( *_forceGraphPtr ) << endl;
+        cerr << "sth is wrong here at " << __LINE__ << " in " << __FILE__ << endl;
+        assert( false );
     }
 }
 
@@ -547,7 +583,7 @@ void Force::_centroidGeometry( void )
     ForceGraph & g = *_forceGraphPtr;
     // const char theName[] = "Net::centroid : ";
 
-    _initForceSeed();
+    _updateForceSeed();
     if( num_vertices( g ) == 1 ){
 
         BGL_FORALL_VERTICES( vd, g, ForceGraph ) {

@@ -2,7 +2,7 @@
 #include "base/Common.h"
 
 
-//  Common::_stringToDouble -- convert string to double
+//  Common::stringToDouble -- convert string to double
 //
 //  Inputs
 //      string

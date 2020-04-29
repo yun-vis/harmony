@@ -15,9 +15,10 @@
 
 using namespace std;
 
-//#ifndef Q_MOC_RUN
+#ifndef Q_MOC_RUN
 #include "base/Common.h"
-//#endif // Q_MOC_RUN
+#include "ui/GraphicsBase.h"
+#endif // Q_MOC_RUN
 
 #include <QtWidgets/QGraphicsScene>
 #include <QtWidgets/QGraphicsItem>
@@ -33,15 +34,11 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Class definition
 //------------------------------------------------------------------------------
-class GraphicsPolygonItem : public QGraphicsPolygonItem
+class GraphicsPolygonItem : public QGraphicsPolygonItem, public GraphicsBase
 {
 private:
 
-    unsigned int    _id;
-    bool            _textOn;
-
 protected:
-
 
 public:
     explicit GraphicsPolygonItem( QGraphicsItem *parent = Q_NULLPTR );
@@ -70,18 +67,9 @@ public:
 //      Reference to members
 //------------------------------------------------------------------------------
 
-    unsigned int &	        id( void ) 	        { return _id; }
-    const unsigned int &	id( void ) const	{ return _id; }
-
-    bool &	                textOn( void ) 	    { return _textOn; }
-    const bool &	        textOn( void ) const{ return _textOn; }
-
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
-
-
-private:
 
 };
 

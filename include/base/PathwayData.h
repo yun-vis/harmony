@@ -10,23 +10,13 @@
 //----------------------------------------------------------------------
 //  Including header files
 //----------------------------------------------------------------------
-#include <QtGui/QPainter>
-#include <QtCore/QString>
-
 #include "base/Pathway.h"
-#include "optimization/Stress.h"
 
 class PathwayData
 {
 protected:
 
-	Pathway             		*_pathway;
-
-    void _pickColor( COLORTYPE colorScheme, unsigned int id, vector< double > &rgb );
-	void _pickPredefinedColor( unsigned int id, vector< double > &rgb );
-	void _pickMonotoneColor( unsigned int id, vector< double > &rgb );
-	void _pickPastelColor( unsigned int id, vector< double > &rgb );
-	void _pickBrewerColor( unsigned int id, vector< double > &rgb );
+	Pathway             		*_pathwayPtr;
 
 public:
 

@@ -24,7 +24,7 @@ int main( int argc, char **argv )
     window.show();
 
 
-    cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x" << endl;
+    cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x -> r" << endl;
 
     //cerr << "cos( 15.0/180.0*PI ) = " <<  cos( 15.0/180.0*M_PI ) << endl;
 

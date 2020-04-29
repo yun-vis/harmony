@@ -12,6 +12,8 @@ Window::Window( QWidget *parent )
     setGeometry( 0, 0, _gv->width(), _gv->height() );
     _levelType = LEVEL_HIGH;
 
+    _octilinearVecPtr = new vector< Octilinear *>;
+
 #ifdef SKIP
     createActions();
     createMenus();
@@ -29,7 +31,7 @@ Window::~Window()
 Window::Window( const Window & obj )
 {
     _gv = obj._gv;
-    _levelhighPtr = obj._levelhighPtr;
+    _levelBorderPtr = obj._levelBorderPtr;
     _boundaryVecPtr = obj._boundaryVecPtr;
 
     // cells of subgraphs
@@ -48,7 +50,7 @@ void Window::_init( void )
     _content_height = height() - TOPBOTTOM_MARGIN;
 
     // initialization of boundary
-    _levelhighPtr = new LevelHigh;
+    _levelBorderPtr = new LevelBorder;
 
     // initialization of region data
     _boundaryVecPtr = new vector< Boundary >;
@@ -57,11 +59,11 @@ void Window::_init( void )
     _roadPtr = new vector< Road >;
     _lanePtr = new vector< Road >;
 
-    _cellPtr->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+    _cellPtr->setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
 
-    _gv->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    _gv->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                        _cellPtr, _roadPtr, _lanePtr );
+    _gv->setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+    _gv->setRegionData(_levelBorderPtr, _boundaryVecPtr,
+                       _cellPtr, _roadPtr, _lanePtr );
 }
 
 
@@ -73,24 +75,19 @@ void Window::simulateKey( Qt::Key key )
     QApplication::sendEvent( this, &eventR );
 }
 
+
 void Window::postLoad( void )
 {
-    vector< Boundary > &boundaryVec = *_boundaryVecPtr;
-
-    for( unsigned int i = 0; i < boundaryVec.size(); i++ ){
-
-        boundaryVec[i].adjustsize( _content_width/2, _content_height/2 );
-        boundaryVec[i].clearConflicts();
-    }
 
     redrawAllScene();
 }
 
+
 void Window::redrawAllScene( void )
 {
-    _pathway->pathwayMutex().lock();
+    _pathwayPtr->pathwayMutex().lock();
     _gv->initSceneItems();
-    _pathway->pathwayMutex().unlock();
+    _pathwayPtr->pathwayMutex().unlock();
 
     _gv->update();
     _gv->scene()->update();
@@ -101,6 +98,20 @@ void Window::redrawAllScene( void )
     cerr << "_is_polygonFlag = " << _gv->isPolygonFlag() << endl;
     cerr << "_is_polygonComplexFlag = " << _gv->isPolygonComplexFlag() << endl;
 #endif // DEBUG
+
+    QCoreApplication::processEvents();
+}
+
+void Window::updateAllScene( void )
+{
+    _pathwayPtr->pathwayMutex().lock();
+    _gv->updateSceneItems();
+    _pathwayPtr->pathwayMutex().unlock();
+
+    // _gv->update();
+    _gv->scene()->update();
+    // update();
+    // repaint();
 
     QCoreApplication::processEvents();
 }
@@ -143,21 +154,22 @@ void Window::threadBoundaryForce( void )
     _gv->isPolygonFlag() = true;
 
     // initialization
-    _levelhighPtr->forceBone().init( &_levelhighPtr->bone(), &_contour, LEVEL_HIGH, "../configs/boundary.conf" );
+    _levelBorderPtr->force().init(&_levelBorderPtr->forceGraph(), &_contour, LEVEL_HIGH, "config/boundary.conf" );
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 
     // create a new thread
-    ThreadLevelHigh tlh;
+    ThreadLevelBorder tlh;
     //vector < unsigned int > indexVec;
 
-    tlh.setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-    tlh.setRegionData( _levelhighPtr, _boundaryVecPtr,
-                       _cellPtr, _roadPtr, _lanePtr );
-    tlh.init( THREAD_BOUNDARY, _gv->energyType(), 0, 0,  _levelhighPtr->forceBone().paramForceLoop() );
+    tlh.setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+    tlh.setRegionData(_levelBorderPtr, _boundaryVecPtr,
+                      _cellPtr, _roadPtr, _lanePtr );
+    tlh.init(THREAD_BOUNDARY, _gv->energyType(), 0, 0, _levelBorderPtr->force().paramForceLoop() );
 
-    pool.push([]( int id, ThreadLevelHigh* tlh ){ tlh->run( id ); }, &tlh );
+    tlh.run( 0 );
+    //pool.push([](int id, ThreadLevelBorder* tlh ){ tlh->run(id ); }, &tlh );
     //string name = "w";
-    //pool.push([&]( int id, ThreadLevelHigh* tlh ){ tlh->run( id, name ); }, &tlh );
+    //pool.push([&]( int id, ThreadLevelBorder* tlh ){ tlh->run( id, name ); }, &tlh );
     //cerr << "pool.size() = " << pool.size() << endl;
 
 
@@ -167,53 +179,50 @@ void Window::threadBoundaryForce( void )
     // cv.wait_until( p.n_idle() != _gv->maxThread() );
 
     // rendering
+    redrawAllScene();
     while( pool.n_idle() != _gv->maxThread() ){
 
-        cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+        cerr << "pool.n_idle() = " << pool.n_idle() << " _gv->maxThread() = " << _gv->maxThread() << endl;
         this_thread::sleep_for( chrono::milliseconds( 500 ) );
-        redrawAllScene();
+        updateAllScene();
     }
 
-    // examples from CTPL
-    // pool.push(first); // function
-    // pool.push(third, "additional_param");
-    // pool.push( [] (int id){ std::cout << "hello from " << id << '\n'; }); // lambda
-    // pool.push(std::ref(second)); // functor, reference
-    // pool.push(const_cast<const Second &>(second)); // functor, copy ctor
-    // pool.push(std::move(second)); // functor, move ctor
-
+    //cerr << "HERE" << endl;
     //simulateKey( Qt::Key_2 );
 }
 
 void Window::threadCenterForce( void )
 {
-// initialization
+    // initialization
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 
     // cerr << "size = " << _cellPtr->cellVec().size() << endl;
-    vector< ThreadLevelCenter * > tlc;
+    vector< ThreadLevelCellCenter * > tlc;
     tlc.resize( _cellPtr->centerVec().size() );
 
     //for( unsigned int i = 0; i < 2; i++ ){
     for( unsigned int i = 0; i < tlc.size(); i++ ){
 
         // create a new thread
-        tlc[i] = new ThreadLevelCenter;
+        tlc[i] = new ThreadLevelCellCenter;
 
-        tlc[i]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-        tlc[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                               _cellPtr, _roadPtr, _lanePtr );
+        tlc[i]->setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+        tlc[i]->setRegionData(_levelBorderPtr, _boundaryVecPtr,
+                              _cellPtr, _roadPtr, _lanePtr );
 
-        tlc[i]->init( THREAD_CENTER, _gv->energyType(), i, 0, _cellPtr->centerVec()[i].forceBone().paramForceLoop() );
-        pool.push([]( int id, ThreadLevelCenter* t ){ t->run( id ); }, tlc[i] );
+        tlc[i]->init( THREAD_CENTER, _gv->energyType(), i, 0,
+                      _cellPtr->centerVec()[i].force().paramForceLoop() );
+        tlc[i]->run( 0 );
+        //pool.push([]( int id, ThreadLevelCellCenter* t ){ t->run( id ); }, tlc[i] );
     }
 
     // rendering
+    redrawAllScene();
     while( pool.n_idle() != _gv->maxThread() ){
 
         //cerr << "pool.n_idle() = " << pool.n_idle() << endl;
-        this_thread::sleep_for( chrono::milliseconds( 500 ) );
-        redrawAllScene();
+        this_thread::sleep_for( chrono::milliseconds( 200 ) );
+        updateAllScene();
     }
     // cerr << "pool.n_idle() = " << pool.n_idle() << endl;
 
@@ -230,31 +239,33 @@ void Window::threadCellForce( void )
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 
     // cerr << "size = " << _cellPtr->cellVec().size() << endl;
-    vector< ThreadLevelMiddle * > tlm;
+    vector< ThreadLevelCellComponent * > tlm;
     tlm.resize( _cellPtr->cellVec().size() );
 
     //for( unsigned int i = 0; i < 2; i++ ){
     for( unsigned int i = 0; i < tlm.size(); i++ ){
 
         // create a new thread
-        tlm[i] = new ThreadLevelMiddle;
+        tlm[i] = new ThreadLevelCellComponent;
         //vector < unsigned int > indexVec;
         //indexVec.push_back( i );
 
-        tlm[i]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-        tlm[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                           _cellPtr, _roadPtr, _lanePtr );
+        tlm[i]->setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+        tlm[i]->setRegionData(_levelBorderPtr, _boundaryVecPtr,
+                              _cellPtr, _roadPtr, _lanePtr );
 
-        tlm[i]->init( THREAD_CELL, _gv->energyType(), i, 0, _cellPtr->cellVec()[i].forceBone().paramForceLoop() );
-        pool.push([]( int id, ThreadLevelMiddle* t ){ t->run( id ); }, tlm[i] );
+        tlm[i]->init( THREAD_CELL, _gv->energyType(), i, 0, _cellPtr->cellVec()[i].force().paramForceLoop() );
+        tlm[i]->run( 0 );
+        // pool.push([]( int id, ThreadLevelCellComponent* t ){ t->run( id ); }, tlm[i] );
     }
 
     // rendering
+    redrawAllScene();
     while( pool.n_idle() != _gv->maxThread() ){
 
          //cerr << "pool.n_idle() = " << pool.n_idle() << endl;
         this_thread::sleep_for( chrono::milliseconds( 500 ) );
-        redrawAllScene();
+        updateAllScene();
     }
     // cerr << "pool.n_idle() = " << pool.n_idle() << endl;
 
@@ -299,12 +310,12 @@ void Window::threadBoneForce( void )
             CellComponent &c = itC->second;
 
             // create mcl force
-            c.mcl.forceBone().init( &itC->second.mcl.bone(), &itC->second.contour, LEVEL_LOW, "../configs/mcl.conf" );
-            c.mcl.forceBone().id() = 0;
+            c.mcl.force().init( &itC->second.mcl.forceGraph(), &itC->second.contour, LEVEL_LOW, "config/mcl.conf" );
+            c.mcl.force().id() = 0;
 
             tll[i][j] = new ThreadLevelLow;
-            tll[i][j]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            tll[i][j]->setRegionData( _levelhighPtr, _boundaryVecPtr,
+            tll[i][j]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+            tll[i][j]->setRegionData( _levelBorderPtr, _boundaryVecPtr,
                                       _cellPtr, _roadPtr, _lanePtr );
 
             //vector < unsigned int > indexVec;
@@ -343,7 +354,7 @@ void Window::threadPathwayForce( void )
     // initialization
     vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
     ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
-    vector< vector< ThreadLevelDetailed * > > tld;
+    vector< vector< ThreadLevelDetail * > > tld;
 
     vector< vector< unsigned int > > idMat;
     idMat.resize( cellComponentVec.size() );
@@ -380,35 +391,37 @@ void Window::threadPathwayForce( void )
             advance( itC, j );
             CellComponent &c = itC->second;
 
-            c.detail.forceBone().init( &c.detail.bone(), &c.contour.contour(), LEVEL_DETAIL, "../configs/pathway.conf" );
-            c.detail.forceBone().id() = idC;
+            c.detail.force().init(&c.detail.forceGraph(), &c.contour.contour(), LEVEL_DETAIL, "config/pathway.conf" );
+            c.detail.force().id() = idC;
 
             cerr << endl << endl << "enable a thread... i = " << i << " j = " << j << endl;
 
-            tld[i][j] = new ThreadLevelDetailed;
-            tld[i][j]->setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
-            tld[i][j]->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                                   _cellPtr, _roadPtr, _lanePtr );
-            tld[i][j]->init( THREAD_PATHWAY, _gv->energyType(), i, j, c.detail.forceBone().paramForceLoop() );
-            pool.push([]( int id, ThreadLevelDetailed* t ){ t->run( id ); }, tld[i][j] );
+            tld[i][j] = new ThreadLevelDetail;
+            tld[i][j]->setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+            tld[i][j]->setRegionData(_levelBorderPtr, _boundaryVecPtr,
+                                     _cellPtr, _roadPtr, _lanePtr );
+            tld[i][j]->init( THREAD_PATHWAY, _gv->energyType(), i, j, c.detail.force().paramForceLoop() );
+            tld[i][j]->run( 0 );
+            // pool.push([]( int id, ThreadLevelDetail* t ){ t->run( id ); }, tld[i][j] );
 
             idC++;
         }
     }
 
     // rendering
+    redrawAllScene();
     while( pool.n_idle() != _gv->maxThread() ){
 
         cerr << "pool.n_idle() = " << pool.n_idle() << endl;
         this_thread::sleep_for( chrono::milliseconds( 500 ) );
-        redrawAllScene();
+        updateAllScene();
     }
 }
 
 void Window::steinertree( void )
 {
     // select a target metabolite
-    MetaboliteGraph             &g         = _pathway->g();
+    MetaboliteGraph             &g         = _pathwayPtr->g();
     unsigned int                treeSize   = 1;
 
     // highlight
@@ -416,9 +429,9 @@ void Window::steinertree( void )
 
         if( g[ vd ].type == "metabolite" ){
             //if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
-            //if( *g[ vd ].namePtr == "coke[r]" ){            // tiny
+            if( *g[ vd ].namePtr == "coke[r]" ){            // tiny
             //if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
-            if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
+            //if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
             //if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
             //if( *g[ vd ].namePtr == "Beans" ){        // food
             //if( *g[ vd ].namePtr == "Prawns" ){        // food
@@ -453,12 +466,12 @@ void Window::steinertree( void )
     for( int i = 0; i < treeSize; i++ ){
 
         // compute steiner tree
-        (*_roadPtr)[i].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_roadPtr)[i].setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
         (*_roadPtr)[i].initRoad( _cellPtr, i );
         (*_roadPtr)[i].buildRoad();
         // cerr << "road built..." << endl;
 
-        (*_lanePtr)[i].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_lanePtr)[i].setPathwayData(_pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
         (*_lanePtr)[i].initSteinerNet( _cellPtr->cellComponentVec(), i );
         (*_lanePtr)[i].steinerTree();
     }
@@ -476,7 +489,7 @@ void Window::steinertree( void )
     _lanePtr->resize( 1 );
     for( unsigned int i = 0; i < _lanePtr->size(); i++ ){
         vector < Highway > &highwayVec = _roadPtr->highwayMat()[i];
-        (*_lanePtr)[0].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_lanePtr)[0].setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
         (*_lanePtr)[0].initLane( 0, _cellPtr->cellComponentVec()[0], &highwayVec );
         (*_lanePtr)[0].steinerTree();
     }
@@ -509,7 +522,7 @@ void Window::steinertree( void )
             map< MetaboliteGraph::vertex_descriptor,
                     MetaboliteGraph::vertex_descriptor >::iterator it;
             for( it = common.begin(); it != common.end(); it++ ){
-                    cerr << _pathway->subG()[i][ it->first ].id << endl;
+                    cerr << _pathwayPtr->subG()[i][ it->first ].id << endl;
                 }
                 cerr << endl;
         }
@@ -517,10 +530,10 @@ void Window::steinertree( void )
 #endif // DEBUG
 
     _lanePtr->clear();
-    _lanePtr->resize( _pathway->nSubsys() );
+    _lanePtr->resize( _pathwayPtr->nSubsys() );
     for( unsigned int i = 0; i < _lanePtr->size(); i++ ){
         vector < Highway > &highwayVec = _roadPtr->highwayMat()[i];
-        (*_lanePtr)[i].setPathwayData( _pathway, *_pathway->width(), *_pathway->height() );
+        (*_lanePtr)[i].setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
         (*_lanePtr)[i].initLane( i, _cellPtr->cellComponentVec()[i], &highwayVec );
         (*_lanePtr)[i].steinerTree();
     }
@@ -543,7 +556,7 @@ void Window::threadOctilinearBoundary( void )
     _octilinearVecPtr->clear();
     _octilinearVecPtr->resize( boundaryVec.size() );
 
-    // cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
+    cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
     for( unsigned int i = 0; i < boundaryVec.size(); i++ ) {
 
         cerr << "select octilinear ..."
@@ -557,11 +570,12 @@ void Window::threadOctilinearBoundary( void )
 
         // create a new thread
         tob[i] = new ThreadOctilinearBoundary;
-        tob[i]->setRegionData( _levelhighPtr, _boundaryVecPtr,
-                               _cellPtr, _roadPtr, _lanePtr );
+        tob[i]->setRegionData(_levelBorderPtr, _boundaryVecPtr,
+                              _cellPtr, _roadPtr, _lanePtr );
         tob[i]->init( (*_octilinearVecPtr)[i], iter, (*_octilinearVecPtr)[i]->opttype(), 10 );
 
-        pool.push([]( int id, ThreadOctilinearBoundary *t ){ t->run( id ); }, tob[i] );
+        tob[i]->run(0);
+        //pool.push([]( int id, ThreadOctilinearBoundary *t ){ t->run( id ); }, tob[i] );
     }
 
     // rendering
@@ -593,7 +607,7 @@ void Window::threadOctilinearBoundary( void )
 void Window::buildLevelHighBoundaryGraph( void )
 {
     // initialization
-    _levelhighPtr->polygonComplexVD().clear();
+    _levelBorderPtr->polygonComplexVD().clear();
     _boundaryVecPtr->clear();
     _boundaryVecPtr->resize(1);
 
@@ -675,9 +689,9 @@ void Window::buildLevelHighBoundaryGraph( void )
 #endif // EXAMPLE
 
     // create boundary graph
-    for( unsigned int i = 0; i < _levelhighPtr->polygonComplex().size(); i++ ){
+    for(unsigned int i = 0; i < _levelBorderPtr->polygonComplex().size(); i++ ){
 
-        Polygon2 &polygon = _levelhighPtr->polygonComplex()[i];
+        Polygon2 &polygon = _levelBorderPtr->polygonComplex()[i];
         vector< ForceGraph::vertex_descriptor > vdVec;
 
         unsigned int size = polygon.elements().size();
@@ -803,7 +817,7 @@ void Window::buildLevelHighBoundaryGraph( void )
                 nEdges++;
             }
         }
-        _levelhighPtr->polygonComplexVD().insert( pair< unsigned int, vector< ForceGraph::vertex_descriptor > >( i, vdVec ) );
+        _levelBorderPtr->polygonComplexVD().insert(pair< unsigned int, vector< ForceGraph::vertex_descriptor > >(i, vdVec ) );
     }
 
     // update the fixed flag
@@ -825,11 +839,11 @@ void Window::buildLevelHighBoundaryGraph( void )
     // _line.resize( _polygonComplexVD.size() );
     map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
     // map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
-    for( itS = _levelhighPtr->polygonComplexVD().begin(); itS != _levelhighPtr->polygonComplexVD().end(); itS++ ){
+    for( itS = _levelBorderPtr->polygonComplexVD().begin(); itS != _levelBorderPtr->polygonComplexVD().end(); itS++ ){
         vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
         bVec[0].lineSta().push_back( vdVec );
     }
-    nLines = _levelhighPtr->polygonComplexVD().size();
+    nLines = _levelBorderPtr->polygonComplexVD().size();
 
 #ifdef DEBUG
     cerr << "nV = " << nVertices << " nE = " << nEdges
@@ -1034,7 +1048,7 @@ void Window::buildLevelMiddleBoundaryGraph( void )
     // _line.resize( _polygonComplexVD.size() );
     map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
     // map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
-    for( itS = _levelhighPtr->polygonComplexVD().begin(); itS != cellVec[ m ].polygonComplexVD().end(); itS++ ){
+    for( itS = _levelBorderPtr->polygonComplexVD().begin(); itS != cellVec[ m ].polygonComplexVD().end(); itS++ ){
         vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
         _boundaryPtr->lineSta().push_back( vdVec );
     }
@@ -1082,7 +1096,7 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
     vector< multimap <int, CellComponent> > &cellCVec = _cellPtr->cellComponentVec();
 
     // initialization
-    _levelhighPtr->polygonComplexVD().clear();
+    _levelBorderPtr->polygonComplexVD().clear();
     _boundaryVecPtr->clear();
     //_boundaryVecPtr->resize(cellCVec.size());
     //vector<Boundary> &bVec = *_boundaryVecPtr;
@@ -1121,7 +1135,7 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
             bg.clear();
             nVertices = nEdges = nLines = 0;
             resetVisitedTimes( bg );
-            Force &f = itC->second.detail.forceBone();
+            Force &f = itC->second.detail.force();
 
             // draw polygons
             vector< Seed > &seedVec = *f.voronoi().seedVec();
@@ -1301,8 +1315,8 @@ void Window::updateLevelHighPolygonComplex( void )
     vector< Boundary > &bVec = *_boundaryVecPtr;
     BoundaryGraph &bg = bVec[0].boundary();
     map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
-    map< unsigned int, Polygon2 >::iterator itC = _levelhighPtr->polygonComplex().begin();
-    for( itP = _levelhighPtr->polygonComplexVD().begin(); itP != _levelhighPtr->polygonComplexVD().end(); itP++ ){
+    map< unsigned int, Polygon2 >::iterator itC = _levelBorderPtr->polygonComplex().begin();
+    for( itP = _levelBorderPtr->polygonComplexVD().begin(); itP != _levelBorderPtr->polygonComplexVD().end(); itP++ ){
 
         vector< ForceGraph::vertex_descriptor > &p = itP->second;
         for( unsigned int i = 0; i < p.size(); i++ ){
@@ -1396,8 +1410,8 @@ void Window::updateLevelDetailPolygonComplex( void )
             // printGraph( bg );
             // cerr << endl << endl << endl;
 
-            Bone &detail = itC->second.detail;
-            Force &force = detail.forceBone();
+            RegionBase &detail = itC->second.detail;
+            Force &force = detail.force();
             vector< Seed > &seedVec = *force.voronoi().seedVec();
             for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 
@@ -1415,9 +1429,9 @@ void Window::updateLevelDetailPolygonComplex( void )
                     polygon.elements()[j].y() = bg[ itP->second[j] ].coordPtr->y();
                 }
                 polygon.updateCentroid();
-                ForceGraph::vertex_descriptor vd = vertex( i, detail.bone() );
-                detail.bone()[vd].coordPtr->x() = polygon.centroid().x();
-                detail.bone()[vd].coordPtr->y() = polygon.centroid().y();
+                ForceGraph::vertex_descriptor vd = vertex( i, detail.forceGraph() );
+                detail.forceGraph()[vd].coordPtr->x() = polygon.centroid().x();
+                detail.forceGraph()[vd].coordPtr->y() = polygon.centroid().y();
             }
             index++;
         }
@@ -1469,15 +1483,15 @@ void Window::spaceCoverage( void )
 {
     cerr << "HERE" << endl;
     UndirectedPropertyGraph g;
-    //_pathway->loadDot( g, "../dot/small-gmap.dot" );
-    //_pathway->loadDot( g, "../dot/small-bubblesets.dot" );
-    //_pathway->loadDot( g, "../dot/small-mapsets.dot" );
-    //_pathway->loadDot( g, "../dot/metabolic-gmap.dot" );
-    //_pathway->loadDot( g, "../dot/metabolic-bubblesets.dot" );
-    _pathway->loadDot( g, "../dot/metabolic-mapsets.dot" );
-    //_pathway->loadDot( g, "../dot/recipe-gmap.dot" );
-    //_pathway->loadDot( g, "../dot/recipe-bubblesets.dot" );
-    //_pathway->loadDot( g, "../dot/recipe-mapsets.dot" );
+    //_pathwayPtr->loadDot( g, "dot/small-gmap.dot" );
+    //_pathwayPtr->loadDot( g, "dot/small-bubblesets.dot" );
+    //_pathwayPtr->loadDot( g, "dot/small-mapsets.dot" );
+    //_pathwayPtr->loadDot( g, "dot/metabolic-gmap.dot" );
+    //_pathwayPtr->loadDot( g, "dot/metabolic-bubblesets.dot" );
+    _pathwayPtr->loadDot( g, "dot/metabolic-mapsets.dot" );
+    //_pathwayPtr->loadDot( g, "dot/recipe-gmap.dot" );
+    //_pathwayPtr->loadDot( g, "dot/recipe-bubblesets.dot" );
+    //_pathwayPtr->loadDot( g, "dot/recipe-mapsets.dot" );
 
     VertexIndexMap              vertexIndex     = get( vertex_index, g );
     VertexPosMap                vertexPos       = get( vertex_mypos, g );
@@ -1579,7 +1593,7 @@ void Window::spaceCoverage( void )
     int neighborNo = 5;
     vector< double > neighbor;
     vector< double > area;
-    vector< ForceGraph > &lsubg =  _pathway->lsubG();
+    vector< ForceGraph > &lsubg =  _pathwayPtr->lsubG();
     Polygon2 contour;
 
     contour.elements().push_back( Coord2( - 0.5*_content_width, - 0.5*_content_height ) );
@@ -1591,7 +1605,7 @@ void Window::spaceCoverage( void )
     // voronoi
     Voronoi v;
     vector< Seed > seedVec;
-    unsigned int index;
+    unsigned int index = 0;
     for( unsigned int i = 0; i < lsubg.size(); i++ ){
 
         BGL_FORALL_VERTICES( vd, lsubg[i], ForceGraph ) {
@@ -1667,10 +1681,10 @@ void Window::keyPressEvent( QKeyEvent *event )
 
         case Qt::Key_1:
         {
-            checkInETime();
-            cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
-            checkInCPUTime();
-            cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
+            //checkInETime();
+            //cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
+            //checkInCPUTime();
+            //cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
             //****************************************
             // initialization
@@ -1685,6 +1699,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             // rendering
             //****************************************
             redrawAllScene();
+            // updateAllScene();
 
             break;
         }
@@ -1705,23 +1720,24 @@ void Window::keyPressEvent( QKeyEvent *event )
             simulateKey( Qt::Key_O );
             simulateKey( Qt::Key_L );
 
+            cerr << "isCenter = " << _gv->isCenterFlag() << endl;
+
             //****************************************
             // rendering
             //****************************************
             redrawAllScene();
             simulateKey( Qt::Key_E );
 
-            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
-
+            //cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            //cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
             break;
         }
         case Qt::Key_Q:
         {
-            checkInETime();
-            cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
-            checkInCPUTime();
-            cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
+            //checkInETime();
+            //cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
+            //checkInCPUTime();
+            //cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
             //----------------------------------------
             // initialization
@@ -1769,17 +1785,17 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             simulateKey( Qt::Key_E );
 
-            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
+            //cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            //cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
 
             break;
         }
         case Qt::Key_A:
         {
-            checkInETime();
-            cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
-            checkInCPUTime();
-            cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
+            //checkInETime();
+            //cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
+            //checkInCPUTime();
+            //cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
             //----------------------------------------
             // initialization
@@ -1829,17 +1845,17 @@ void Window::keyPressEvent( QKeyEvent *event )
             redrawAllScene();
             simulateKey( Qt::Key_E );
 
-            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
+            //cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            //cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
 
             break;
         }
         case Qt::Key_Z:
         {
-            checkInETime();
-            cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
-            checkInCPUTime();
-            cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
+            //checkInETime();
+            //cerr << "*********** Starting Execution Time = " << checkOutETime() << endl;
+            //checkInCPUTime();
+            //cerr << "*********** Starting CPU Time = " << checkOutCPUTime() << endl;
 
             //----------------------------------------
             // initialization
@@ -1875,7 +1891,7 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             // optimization
             //----------------------------------------
-            //threadOctilinearBoundary();
+            threadOctilinearBoundary();
 
             simulateKey( Qt::Key_E );
             simulateKey( Qt::Key_O );
@@ -1885,8 +1901,8 @@ void Window::keyPressEvent( QKeyEvent *event )
             //----------------------------------------
             redrawAllScene();
 
-            cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-            cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
+            //cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
+            //cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
             break;
         }
         case Qt::Key_R:
@@ -1899,14 +1915,13 @@ void Window::keyPressEvent( QKeyEvent *event )
 
             // steiner tree
             steinertree();
-            cerr << "end" << endl;
             simulateKey( Qt::Key_E );
             break;
         }
         case Qt::Key_D:
         {
-            _pathway->exportDot();
-            _pathway->exportEdges();
+            _pathwayPtr->exportDot();
+            _pathwayPtr->exportEdges();
             break;
         }
         case Qt::Key_3:
@@ -1962,12 +1977,13 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
             _gv->isCenterFlag() = true;
 
+            cerr << "_levelBorderPtr->polygonComplex() = " << _levelBorderPtr->polygonComplex().size() << endl;
             // load setting
-            _pathway->initLayout( _levelhighPtr->polygonComplex() );
+            _pathwayPtr->initLayout(_levelBorderPtr->polygonComplex() );
 
             // initialize cell
             _cellPtr->clear();
-            _cellPtr->init( &_gv->veCoverage(), &_gv->veRatio(), &_levelhighPtr->polygonComplex() );
+            _cellPtr->init( &_gv->veCoverage(), &_gv->veRatio(), &_levelBorderPtr->polygonComplex() );
 
             break;
         }
@@ -2007,29 +2023,29 @@ void Window::keyPressEvent( QKeyEvent *event )
         {
 
             // create boundary
-            _levelhighPtr->createPolygonComplex( num_vertices( _levelhighPtr->skeleton() ) );
+            _levelBorderPtr->createPolygonComplex(num_vertices(_levelBorderPtr->skeletonForceGraph() ) );
             selectLevelHighBuildBoundary();
 
 #ifdef SKIP
-            _levelhighPtr->writePolygonComplex();
+            _levelBorderPtr->writePolygonComplex();
 #endif // SKIP
             break;
         }
         case Qt::Key_V:
         {
             // read and initialize the data
-            _pathway->init( _gv->inputPath(), _gv->tmpPath(),
-                            _gv->fileFreq(), _gv->fileType(),
-                            _gv->cloneThreshold() );
+            _pathwayPtr->init(_gv->inputPath(), _gv->tmpPath(),
+                              _gv->fileFreq(), _gv->fileType(),
+                              _gv->cloneThreshold() );
 
-            _pathway->generate();
-            _gv->veCoverage() = _pathway->nVertices() + _gv->veRatio() * _pathway->nEdges();
+            _pathwayPtr->generate();
+            _gv->veCoverage() = _pathwayPtr->nVertices() + _gv->veRatio() * _pathwayPtr->nEdges();
 
             // canvasArea: content width and height
             // labelArea: total area of text labels
             // double canvasArea = width() * height();
             double labelArea = 0.0;
-            map< string, Subdomain * > &sub = _pathway->subsys();
+            map< string, Subdomain * > &sub = _pathwayPtr->subsys();
             for( map< string, Subdomain * >::iterator it = sub.begin();
                  it != sub.end(); it++ ){
                 labelArea += it->second->idealArea;
@@ -2037,12 +2053,12 @@ void Window::keyPressEvent( QKeyEvent *event )
 
 #ifdef DEBUG
             cerr << "canvas = " << canvasArea << " labelArea = " << labelArea << endl;
-            cerr << "nV = " << _pathway->nVertices() << " nE = " << _pathway->nEdges()
+            cerr << "nV = " << _pathwayPtr->nVertices() << " nE = " << _pathwayPtr->nEdges()
                  << " veCoverage = " << _gv->veCoverage() << endl;
 #endif // DEBUG
 
             double ratio = (double)width()/(double)height();
-            double x = 0.25*sqrt( labelArea * _gv->veCoverage() / (double)_pathway->nVertices() / ratio );
+            double x = 0.25*sqrt(labelArea * _gv->veCoverage() / (double)_pathwayPtr->nVertices() / ratio );
             _content_width = ratio * x;
             _content_height = x;
             // _content_width = ratio * x;
@@ -2065,8 +2081,9 @@ void Window::keyPressEvent( QKeyEvent *event )
             _contour.boxCenter().x() = 0.0;
             _contour.boxCenter().y() = 0.0;
             _contour.area() = _content_width * _content_height;
-            _levelhighPtr->init( &_content_width, &_content_height, &_gv->veCoverage(),
-                                 _pathway->skeletonG(), &_contour );
+            _levelBorderPtr->init( &_content_width, &_content_height,
+                                   &_gv->veCoverage(), &_contour,
+                                   _pathwayPtr->skeletonG() );
 #ifdef DEBUG
             //cerr << "width x height = " << width() * height() << endl;
             //cerr << "label sum = " << sum << endl;
@@ -2076,10 +2093,6 @@ void Window::keyPressEvent( QKeyEvent *event )
 #endif // DEBUG
             _gv->setSceneRect( -( _content_width + LEFTRIGHT_MARGIN )/2.0, -( _content_height + TOPBOTTOM_MARGIN )/2.0,
                                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
-
-            _levelhighPtr->normalizeSkeleton( _content_width, _content_height );
-            _levelhighPtr->decomposeSkeleton();
-            _levelhighPtr->normalizeBone( _content_width, _content_height );
 
             // ui
             _gv->isCompositeFlag() = true;

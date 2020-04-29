@@ -21,6 +21,7 @@ using namespace std;
 
 #include "base/Coord2.h"
 #include "graph/BoundaryEdgeProperty.h"
+#include "ui/GraphicsEdgeItem.h"
 
 //------------------------------------------------------------------------------
 //	Defining Macros
@@ -57,11 +58,13 @@ class ForceEdgeProperty: public BoundaryEdgeProperty {
 //	Reference to elements
 //------------------------------------------------------------------------------
 
-    void		                init( void )		      { _init(); }
+    GraphicsEdgeItem *        itemPtr;        // pointer to graphic objects
 
 //------------------------------------------------------------------------------
 //	Special functions
 //------------------------------------------------------------------------------
+
+    void		                init( void )		      { _init(); }
 
 //------------------------------------------------------------------------------
 //	Intersection check

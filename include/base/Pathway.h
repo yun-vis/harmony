@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <tinyxml.h>
-//#include <tinystr.h>
 #include <mutex>
 
 using namespace std;
@@ -37,7 +36,6 @@ using namespace std;
 #include <boost/graph/make_maximal_planar.hpp>
 #include <boost/graph/planar_face_traversal.hpp>
 #include <boost/graph/graphviz.hpp>
-//#include <boost/graph/detail/read_graphviz_new.hpp>
 
 #include "boost/create_dual_graph.hpp"
 #include "base/Polygon2.h"
