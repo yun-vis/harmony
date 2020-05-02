@@ -37,21 +37,19 @@ using namespace std;
 //
 //
 void LevelBorder::_init( double *widthPtr, double *heightPtr,
-                         double *veCoveragePtr, Polygon2 *contourPtr,
-                         SkeletonGraph &skeletonGraph ) {
+                         double *veCoveragePtr, SkeletonGraph &skeletonGraph ) {
+	
 	// initialize variables
+	_levelType = LEVEL_BORDER;
 	_content_widthPtr = widthPtr;
 	_content_heightPtr = heightPtr;
 	_veCoveragePtr = veCoveragePtr;
 	
-	RegionBase::init();
 	clearGraph( _skeletonForceGraph );
-	
-	// initialize force
-	_force.init( &_forceGraph, contourPtr, LEVEL_HIGH, "config/boundary.conf" );
 	
 	// copy skeletonForceGraph to skeletionGraph
 	BGL_FORALL_VERTICES( vd, skeletonGraph, SkeletonGraph ) {
+		
 			ForceGraph::vertex_descriptor vdNew = add_vertex( _skeletonForceGraph );
 			_skeletonForceGraph[ vdNew ].id = skeletonGraph[ vd ].id;
 			_skeletonForceGraph[ vdNew ].groupID = skeletonGraph[ vd ].id;
@@ -84,10 +82,26 @@ void LevelBorder::_init( double *widthPtr, double *heightPtr,
 			_skeletonForceGraph[ foreED ].id = _skeletonForceGraph[ ed ].id;
 		}
 	
+	
 	// normalization
-	normalizeSkeleton();
-	decomposeSkeleton();
-	normalizeBone();
+	_normalizeSkeleton();
+	_decomposeSkeleton();
+	_normalizeRegionBase();
+	
+	// initialize regionBase
+	Polygon2 contour;
+	double &content_width = *_content_widthPtr;
+	double &content_height = *_content_heightPtr;
+	contour.elements().push_back( Coord2( -0.5 * content_width, -0.5 * content_height ) );
+	contour.elements().push_back( Coord2( +0.5 * content_width, -0.5 * content_height ) );
+	contour.elements().push_back( Coord2( +0.5 * content_width, +0.5 * content_height ) );
+	contour.elements().push_back( Coord2( -0.5 * content_width, +0.5 * content_height ) );
+	contour.boundingBox() = Coord2( content_width, content_height );
+	contour.boxCenter().x() = 0.0;
+	contour.boxCenter().y() = 0.0;
+	contour.area() = content_width * content_height;
+	
+	_regionBase.init( &_levelType, contour );
 }
 
 
@@ -162,42 +176,44 @@ LevelBorder::~LevelBorder( void ) {
 //  Outputs
 //  none
 //
-void LevelBorder::decomposeSkeleton( void ) {
+void LevelBorder::_decomposeSkeleton( void ) {
+	
 	double labelArea = 0.0;
 	unsigned int index = num_vertices( _skeletonForceGraph );
+	ForceGraph &forceGraph = _regionBase.forceGraph();
 	
 	// copy skeletonForceGraph to composite
 	BGL_FORALL_VERTICES( vd, _skeletonForceGraph, ForceGraph ) {
-			ForceGraph::vertex_descriptor vdNew = add_vertex( _forceGraph );
-			_forceGraph[ vdNew ].id = _skeletonForceGraph[ vd ].id;
-			_forceGraph[ vdNew ].initID = _skeletonForceGraph[ vd ].initID;
+			ForceGraph::vertex_descriptor vdNew = add_vertex( forceGraph );
+			forceGraph[ vdNew ].id = _skeletonForceGraph[ vd ].id;
+			forceGraph[ vdNew ].initID = _skeletonForceGraph[ vd ].initID;
 			
-			_forceGraph[ vdNew ].coordPtr = new Coord2( _skeletonForceGraph[ vd ].coordPtr->x(),
-			                                            _skeletonForceGraph[ vd ].coordPtr->y() );
-			_forceGraph[ vdNew ].prevCoordPtr = new Coord2( _skeletonForceGraph[ vd ].coordPtr->x(),
-			                                                _skeletonForceGraph[ vd ].coordPtr->y() );
-			_forceGraph[ vdNew ].forcePtr = new Coord2( 0, 0 );
-			_forceGraph[ vdNew ].placePtr = new Coord2( 0, 0 );
-			_forceGraph[ vdNew ].shiftPtr = new Coord2( 0, 0 );
-			_forceGraph[ vdNew ].weight = 0.0;
+			forceGraph[ vdNew ].coordPtr = new Coord2( _skeletonForceGraph[ vd ].coordPtr->x(),
+			                                           _skeletonForceGraph[ vd ].coordPtr->y() );
+			forceGraph[ vdNew ].prevCoordPtr = new Coord2( _skeletonForceGraph[ vd ].coordPtr->x(),
+			                                               _skeletonForceGraph[ vd ].coordPtr->y() );
+			forceGraph[ vdNew ].forcePtr = new Coord2( 0, 0 );
+			forceGraph[ vdNew ].placePtr = new Coord2( 0, 0 );
+			forceGraph[ vdNew ].shiftPtr = new Coord2( 0, 0 );
+			forceGraph[ vdNew ].weight = 0.0;
 			
-			_forceGraph[ vdNew ].widthPtr = new double( *_skeletonForceGraph[ vd ].widthPtr );
-			_forceGraph[ vdNew ].heightPtr = new double( *_skeletonForceGraph[ vd ].heightPtr );
-			_forceGraph[ vdNew ].areaPtr = new double( *_skeletonForceGraph[ vd ].areaPtr );
+			forceGraph[ vdNew ].widthPtr = new double( *_skeletonForceGraph[ vd ].widthPtr );
+			forceGraph[ vdNew ].heightPtr = new double( *_skeletonForceGraph[ vd ].heightPtr );
+			forceGraph[ vdNew ].areaPtr = new double( *_skeletonForceGraph[ vd ].areaPtr );
+			forceGraph[ vdNew ].cellPtr = new Polygon2;
 			
-			// cerr << "bonearea = " << *_forceGraph[ vdNew ].areaPtr << endl;
-			labelArea += *_forceGraph[ vdNew ].areaPtr;
+			labelArea += *forceGraph[ vdNew ].areaPtr;
 		}
 	BGL_FORALL_EDGES( ed, _skeletonForceGraph, ForceGraph ) {
 			ForceGraph::vertex_descriptor vdS = source( ed, _skeletonForceGraph );
 			ForceGraph::vertex_descriptor vdT = target( ed, _skeletonForceGraph );
-			ForceGraph::vertex_descriptor vdCompoS = vertex( _skeletonForceGraph[ vdS ].id, _forceGraph );
-			ForceGraph::vertex_descriptor vdCompoT = vertex( _skeletonForceGraph[ vdT ].id, _forceGraph );
+			ForceGraph::vertex_descriptor vdCompoS = vertex( _skeletonForceGraph[ vdS ].id, forceGraph );
+			ForceGraph::vertex_descriptor vdCompoT = vertex( _skeletonForceGraph[ vdT ].id, forceGraph );
 			
 			// add edge
-			pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, _forceGraph );
+			pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdCompoS, vdCompoT, forceGraph );
 			BoundaryGraph::edge_descriptor foreED = foreE.first;
-			_forceGraph[ foreED ].id = _skeletonForceGraph[ ed ].id;
+			forceGraph[ foreED ].id = _skeletonForceGraph[ ed ].id;
 		}
 	
 	// split large vertices
@@ -207,18 +223,19 @@ void LevelBorder::decomposeSkeleton( void ) {
 #ifdef DEBUG
 	cerr << "labelArea = " << labelArea
 		 << " veCoverage = " << *_veCoveragePtr << " unit = " << unit << endl;
-	cerr << "nV = " << num_vertices( _forceGraph ) << " nE = " << num_edges( _forceGraph ) << endl;
+	cerr << "nV = " << num_vertices( forceGraph ) << " nE = " << num_edges( forceGraph ) << endl;
 #endif // DEBUG
 	
-	BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph ) {
-			int mag = round( *_forceGraph[ vd ].areaPtr / unit );
-			// int mag = round((*_forceGraph[ vd ].widthPtr) * (*_forceGraph[ vd ].heightPtr)/unit);
+	BGL_FORALL_VERTICES( vd, forceGraph, ForceGraph ) {
+		
+			int mag = round( *forceGraph[ vd ].areaPtr / unit );
+			// int mag = round((*forceGraph[ vd ].widthPtr) * (*forceGraph[ vd ].heightPtr)/unit);
 			
 			// avoid from looping over the size of _skeletonForceGraph
-			if( _forceGraph[ vd ].id >= num_vertices( _skeletonForceGraph ) ) break;
+			if( forceGraph[ vd ].id >= num_vertices( _skeletonForceGraph ) ) break;
 
 #ifdef DEBUG
-			cerr << "area = " << *_forceGraph[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
+			cerr << "area = " << *forceGraph[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
 #endif // DEBUG
 			
 			vector< ForceGraph::edge_descriptor > removeEVec;
@@ -229,19 +246,19 @@ void LevelBorder::decomposeSkeleton( void ) {
 				
 				ForceGraph::vertex_descriptor vdC = vd;
 				ForceGraph::out_edge_iterator eo, eo_end;
-				Coord2 origin = *_forceGraph[ vd ].coordPtr;
+				Coord2 origin = *forceGraph[ vd ].coordPtr;
 				vector< ForceGraph::vertex_descriptor > extendVD;
 				
 				// record the adjacent vertices for edge connection
 				map< unsigned int, ForceGraph::vertex_descriptor > vdAdjacent;
-				// cerr << "degree = " << out_degree( vd, _forceGraph ) << endl;
-				for( tie( eo, eo_end ) = out_edges( vd, _forceGraph ); eo != eo_end; eo++ ) {
+				// cerr << "degree = " << out_degree( vd, forceGraph ) << endl;
+				for( tie( eo, eo_end ) = out_edges( vd, forceGraph ); eo != eo_end; eo++ ) {
 					
 					ForceGraph::edge_descriptor ed = *eo;
-					ForceGraph::vertex_descriptor vdT = target( ed, _forceGraph );
+					ForceGraph::vertex_descriptor vdT = target( ed, forceGraph );
 					vdAdjacent.insert(
-							pair< unsigned int, ForceGraph::vertex_descriptor >( _forceGraph[ ed ].id, vdT ) );
-					//remove_edge( *eo, _forceGraph );
+							pair< unsigned int, ForceGraph::vertex_descriptor >( forceGraph[ ed ].id, vdT ) );
+					//remove_edge( *eo, forceGraph );
 					removeEVec.push_back( ed );
 				}
 				
@@ -255,46 +272,47 @@ void LevelBorder::decomposeSkeleton( void ) {
 					
 					if( i == 0 ) {
 						
-						_forceGraph[ vd ].coordPtr->x() = x;
-						_forceGraph[ vd ].coordPtr->y() = y;
-						_forceGraph[ vd ].weight = *_forceGraph[ vd ].areaPtr;
+						forceGraph[ vd ].coordPtr->x() = x;
+						forceGraph[ vd ].coordPtr->y() = y;
+						forceGraph[ vd ].weight = *forceGraph[ vd ].areaPtr;
 						
 						// post processing
 						extendVD.push_back( vdC );
 					}
 					else {
 						
-						// cerr << "index = " << index << " area = " << *_forceGraph[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
+						// cerr << "index = " << index << " area = " << *forceGraph[ vd ].areaPtr << " mag = " << mag << " unit = " << unit << endl;
 						
 						// add vertex
-						ForceGraph::vertex_descriptor vdNew = add_vertex( _forceGraph );
-						_forceGraph[ vdNew ].id = index;
-						_forceGraph[ vdNew ].initID = _forceGraph[ vd ].initID;
+						ForceGraph::vertex_descriptor vdNew = add_vertex( forceGraph );
+						forceGraph[ vdNew ].id = index;
+						forceGraph[ vdNew ].initID = forceGraph[ vd ].initID;
 						
-						_forceGraph[ vdNew ].coordPtr = new Coord2( x, y );
-						_forceGraph[ vdNew ].prevCoordPtr = new Coord2( x, y );
-						_forceGraph[ vdNew ].forcePtr = new Coord2( 0, 0 );
-						_forceGraph[ vdNew ].placePtr = new Coord2( 0, 0 );
-						_forceGraph[ vdNew ].shiftPtr = new Coord2( 0, 0 );
-						_forceGraph[ vdNew ].weight = *_forceGraph[ vd ].areaPtr;
+						forceGraph[ vdNew ].coordPtr = new Coord2( x, y );
+						forceGraph[ vdNew ].prevCoordPtr = new Coord2( x, y );
+						forceGraph[ vdNew ].forcePtr = new Coord2( 0, 0 );
+						forceGraph[ vdNew ].placePtr = new Coord2( 0, 0 );
+						forceGraph[ vdNew ].shiftPtr = new Coord2( 0, 0 );
+						forceGraph[ vdNew ].weight = *forceGraph[ vd ].areaPtr;
 						
-						_forceGraph[ vdNew ].widthPtr = new double( sqrt( unit ) );
-						_forceGraph[ vdNew ].heightPtr = new double( sqrt( unit ) );
-						_forceGraph[ vdNew ].areaPtr = new double( unit );
+						forceGraph[ vdNew ].widthPtr = new double( sqrt( unit ) );
+						forceGraph[ vdNew ].heightPtr = new double( sqrt( unit ) );
+						forceGraph[ vdNew ].areaPtr = new double( unit );
+						forceGraph[ vdNew ].cellPtr = new Polygon2;
 						
 						// add edge
-						pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, _forceGraph );
+						pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdC, vdNew, forceGraph );
 						BoundaryGraph::edge_descriptor foreED = foreE.first;
-						_forceGraph[ foreED ].id = num_edges( _forceGraph );
-						_forceGraph[ foreED ].weight = 2.0 * ( *_forceGraph[ vd ].areaPtr );
+						forceGraph[ foreED ].id = num_edges( forceGraph );
+						forceGraph[ foreED ].weight = 2.0 * ( *forceGraph[ vd ].areaPtr );
 						
 						// add last edge to form a circle
 						if( i == mag - 1 ) {
 							pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew,
-							                                                                    _forceGraph );
+							                                                                    forceGraph );
 							BoundaryGraph::edge_descriptor foreED = foreE.first;
-							_forceGraph[ foreED ].id = num_edges( _forceGraph );
-							_forceGraph[ foreED ].weight = 2.0 * ( *_forceGraph[ vd ].areaPtr );
+							forceGraph[ foreED ].id = num_edges( forceGraph );
+							forceGraph[ foreED ].weight = 2.0 * ( *forceGraph[ vd ].areaPtr );
 						}
 						
 						// post processing
@@ -311,11 +329,11 @@ void LevelBorder::decomposeSkeleton( void ) {
 					
 					ForceGraph::vertex_descriptor cloestVD = extendVD[ 0 ];
 					ForceGraph::vertex_descriptor vdT = itA->second;
-					double minDist = ( *_forceGraph[ cloestVD ].coordPtr - *_forceGraph[ vdT ].coordPtr ).norm();
+					double minDist = ( *forceGraph[ cloestVD ].coordPtr - *forceGraph[ vdT ].coordPtr ).norm();
 					for( unsigned int i = 1; i < extendVD.size(); i++ ) {
 						
 						ForceGraph::vertex_descriptor vdS = extendVD[ i ];
-						double dist = ( *_forceGraph[ vdS ].coordPtr - *_forceGraph[ vdT ].coordPtr ).norm();
+						double dist = ( *forceGraph[ vdS ].coordPtr - *forceGraph[ vdT ].coordPtr ).norm();
 						
 						if( dist < minDist ) {
 							cloestVD = extendVD[ i ];
@@ -323,35 +341,36 @@ void LevelBorder::decomposeSkeleton( void ) {
 						}
 					}
 					
-					pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, _forceGraph );
+					pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, forceGraph );
 					ForceGraph::edge_descriptor foreED = foreE.first;
-					_forceGraph[ foreED ].id = itA->first;
-					_forceGraph[ foreED ].weight = _forceGraph[ vdT ].weight + _forceGraph[ cloestVD ].weight;
+					forceGraph[ foreED ].id = itA->first;
+					forceGraph[ foreED ].weight = forceGraph[ vdT ].weight + forceGraph[ cloestVD ].weight;
 				}
 				
 				// remove edges
 				// cerr << "eSize = " << removeEVec.size() << endl;
 				for( unsigned int i = 0; i < removeEVec.size(); i++ ) {
-					// cerr << "eID = " << _forceGraph[removeEVec[i]].id << endl;
-					remove_edge( removeEVec[ i ], _forceGraph );
+					// cerr << "eID = " << forceGraph[removeEVec[i]].id << endl;
+					remove_edge( removeEVec[ i ], forceGraph );
 				}
 			}
 			else {
-				_forceGraph[ vd ].weight = *_forceGraph[ vd ].areaPtr;
+				forceGraph[ vd ].weight = *forceGraph[ vd ].areaPtr;
 			}
 		}
 
 #ifdef DEBUG
-	BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph )
+	BGL_FORALL_VERTICES( vd, forceGraph, ForceGraph )
 	{
-		cerr << "vID = " << _forceGraph[vd].id << endl;
-		cerr << "weight = " << _forceGraph[vd].weight << endl;
+		cerr << "vID = " << forceGraph[vd].id << endl;
+		cerr << "weight = " << forceGraph[vd].weight << endl;
+		cerr << "cell size = " << forceGraph[vd].cellPtr->elements().size() << endl;
 	}
 	cerr << endl;
-	BGL_FORALL_EDGES( ed, _forceGraph, ForceGraph )
+	BGL_FORALL_EDGES( ed, forceGraph, ForceGraph )
 	{
-		cerr << "eID = " << _forceGraph[ed].id << endl;
-		cerr << "weight = " << _forceGraph[ed].weight << endl;
+		cerr << "eID = " << forceGraph[ed].id << endl;
+		cerr << "weight = " << forceGraph[ed].weight << endl;
 	}
 #endif // DEBUG
 }
@@ -365,7 +384,8 @@ void LevelBorder::decomposeSkeleton( void ) {
 //  Outputs
 //  none
 //
-void LevelBorder::normalizeSkeleton( void ) {
+void LevelBorder::_normalizeSkeleton( void ) {
+	
 	// initialization
 	double xMin = INFINITY;
 	double xMax = -INFINITY;
@@ -396,7 +416,7 @@ void LevelBorder::normalizeSkeleton( void ) {
 }
 
 //
-//  Package::normalizeBone --    normalize the forceGraph
+//  Package::normalizeRegionBase --    normalize the forceGraph
 //
 //  Inputs
 //  none
@@ -404,7 +424,8 @@ void LevelBorder::normalizeSkeleton( void ) {
 //  Outputs
 //  none
 //
-void LevelBorder::normalizeBone( void ) {
+void LevelBorder::_normalizeRegionBase( void ) {
+	
 	// initialization
 	double xMin = INFINITY;
 	double xMax = -INFINITY;
@@ -416,16 +437,18 @@ void LevelBorder::normalizeBone( void ) {
 	double width = *_content_widthPtr;
 	double height = *_content_heightPtr;
 	
+	ForceGraph &forceGraph = _regionBase.forceGraph();
+	
 	// Scan all the vertex coordinates first
-	BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph ) {
-			Coord2 coord = *_forceGraph[ vd ].coordPtr;
+	BGL_FORALL_VERTICES( vd, forceGraph, ForceGraph ) {
+			Coord2 coord = *forceGraph[ vd ].coordPtr;
 			if( coord.x() < xMin ) xMin = coord.x();
 			if( coord.x() > xMax ) xMax = coord.x();
 			if( coord.y() < yMin ) yMin = coord.y();
 			if( coord.y() > yMax ) yMax = coord.y();
 		}
 	
-	// Normalize the coordinates
+	// Normalize skeleton
 	BGL_FORALL_VERTICES( vd, _skeletonForceGraph, ForceGraph ) {
 			Coord2 coord;
 			coord.x() =
@@ -437,314 +460,201 @@ void LevelBorder::normalizeBone( void ) {
 			// cerr << coord;
 		}
 	
-	BGL_FORALL_VERTICES( vd, _forceGraph, ForceGraph ) {
+	// normalize forceGraph
+	BGL_FORALL_VERTICES( vd, forceGraph, ForceGraph ) {
 			Coord2 coord;
-			coord.x() = width * ( _forceGraph[ vd ].coordPtr->x() - xMin ) / ( xMax - xMin ) - 0.5 * width;
-			coord.y() = height * ( _forceGraph[ vd ].coordPtr->y() - yMin ) / ( yMax - yMin ) - 0.5 * height;
-			_forceGraph[ vd ].coordPtr->x() = coord.x();
-			_forceGraph[ vd ].coordPtr->y() = coord.y();
+			coord.x() = width * ( forceGraph[ vd ].coordPtr->x() - xMin ) / ( xMax - xMin ) - 0.5 * width;
+			coord.y() = height * ( forceGraph[ vd ].coordPtr->y() - yMin ) / ( yMax - yMin ) - 0.5 * height;
+			forceGraph[ vd ].coordPtr->x() = coord.x();
+			forceGraph[ vd ].coordPtr->y() = coord.y();
 			// cerr << coord;
 		}
 }
 
-
-#ifdef SKIP
-//
-//  LevelBorder::writePolygonComplex --    export the ploygon complex
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void LevelBorder::writePolygonComplex( void )
-{
-	// graphml
-	string filename = "data/LevelBorder.graphml";
-
-	ofstream ofs( filename.c_str() );
-	if ( !ofs ) {
-		cerr << "Cannot open the target file : " << filename << endl;
-		return;
-	}
-
-	UndirectedPropertyGraph pg;
-
-#ifdef DEBUG
-	cerr << "LevelBorder::writePolygonComplex: "
-		 << "nV = " << num_vertices( _boundary )
-		 << " nE = " << num_edges( _boundary ) << endl;
-#endif // DEBUG
-
-	BGL_FORALL_VERTICES( vd, _boundary, BoundaryGraph ) {
-
-		UndirectedPropertyGraph::vertex_descriptor pgVD = add_vertex( pg );
-		//put( vertex_index, pg, pgVD, _boundary[ vd ].id ); // vid is automatically assigned
-		put( vertex_myx, pg, pgVD, _boundary[ vd ].coordPtr->x() );
-		put( vertex_myy, pg, pgVD, _boundary[ vd ].coordPtr->y() );
-	}
-	BGL_FORALL_EDGES( ed, _boundary, BoundaryGraph ) {
-
-		BoundaryGraph::vertex_descriptor vdS = source( ed, _boundary );
-		BoundaryGraph::vertex_descriptor vdT = target( ed, _boundary );
-		unsigned int idS = _boundary[ vdS ].id;
-		unsigned int idT = _boundary[ vdT ].id;
-
-		UndirectedPropertyGraph::vertex_descriptor pgVDS = vertex( idS, pg );
-		UndirectedPropertyGraph::vertex_descriptor pgVDT = vertex( idT, pg );
-		pair< UndirectedPropertyGraph::edge_descriptor, unsigned int > foreE = add_edge( pgVDS, pgVDT, pg );
-		UndirectedPropertyGraph::edge_descriptor pgED = foreE.first;
-		put( edge_index, pg, pgED, _boundary[ ed ].id );
-		put( edge_weight, pg, pgED, _boundary[ ed ].weight );
-	}
-
-	dynamic_properties dp;
-	dp.property( "vid", get( vertex_index_t(), pg ) );
-	dp.property( "vx", get( vertex_myx_t(), pg ) );
-	dp.property( "vy", get( vertex_myy_t(), pg ) );
-	dp.property( "eid", get( edge_index_t(), pg ) );
-	dp.property( "weight", get( edge_weight_t(), pg ) );
-
-	write_graphml( ofs, pg, dp, true );
-
-	// polygon contour
-	string polygon_filename = "data/LevelBorder.txt";
-
-	ofstream pfs( polygon_filename.c_str() );
-	if ( !pfs ) {
-		cerr << "Cannot open the target file : " << polygon_filename << endl;
-		return;
-	}
-
-	map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
-	for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
-		vector< ForceGraph::vertex_descriptor > &p = itP->second;
-		for( unsigned int i = 0; i < p.size(); i++ ){
-			pfs << _boundary[p[i]].id << "\t";
-		}
-		pfs << endl;
-	}
-}
-
-//
-//  LevelBorder::readPolygonComplex --    read the ploygon complex
-//
-//  Inputs
-//  none
-//
-//  Outputs
-//  none
-//
-void LevelBorder::readPolygonComplex( void )
-{
-	string filename = "data/LevelBorder.graphml";
-
+void LevelBorder::buildBoundaryGraph( void ) {
+	
+	// create boundary graph after the composite graph is lay out
+	// build polygon complex information
+	_regionBase.createPolygonComplex( num_vertices( _skeletonForceGraph ) );
+	// build vd associted in the boundary graph
+	_regionBase.polygonComplexVD().clear();
+	
 	// initialization
-	clearGraph( _boundary );
+	_octilinearBoundaryVec.clear();
+	_octilinearBoundaryVec.resize( 1 );
+	
+	_octilinearBoundaryVec[ 0 ] = new Octilinear;
+	
+	BoundaryGraph &bg = _octilinearBoundaryVec[ 0 ]->boundary();
+	unsigned int nVertices = num_vertices( bg );
+	unsigned int nEdges = num_edges( bg );
+	
+	// create boundary graph
+	for( unsigned int i = 0; i < _regionBase.polygonComplex().size(); i++ ) {
+		
+		Polygon2 &polygon = _regionBase.polygonComplex()[ i ];
+		vector< ForceGraph::vertex_descriptor > vdVec;
+		
+		unsigned int size = polygon.elements().size();
+		for( unsigned int j = 1; j < size + 1; j++ ) {
+			
+			// Check if the station exists or not
+			BoundaryGraph::vertex_descriptor curVDS = NULL;
+			BoundaryGraph::vertex_descriptor curVDT = NULL;
+			
+			// add vertices
+			for( unsigned int k = 0; k < 2; k++ ) {
+				
+				BoundaryGraph::vertex_descriptor curVD = NULL;
+				
+				// Check if the station exists or not
+				BGL_FORALL_VERTICES( vd, bg, BoundaryGraph ) {
+						Coord2 &c = *bg[ vd ].coordPtr;
+						if( fabs( ( polygon.elements()[ ( j - 1 + k ) % ( int ) size ] - c ).norm() ) < 1e-2 ) {
 
-	// load GraphML file
-	TiXmlDocument xmlDoc( filename.c_str() );
-
-	xmlDoc.LoadFile();
-
-	if( xmlDoc.ErrorId() > 0 ) {
-		cerr << "ErrorId = " << xmlDoc.ErrorDesc() << " : " << filename << endl;
-		assert( false );
-		return;
-	}
-
-	TiXmlElement* root = xmlDoc.RootElement();
-	if( !root ) return;
-
-	// reading metabolites
-	for( TiXmlElement* rootTag = root->FirstChildElement(); rootTag; rootTag = rootTag->NextSiblingElement() ) {
-
-		string tagname = rootTag->Value();
-		if( tagname == "graph" ){
-
-			//cerr << "rootTag = " << rootTag->Value() << endl;
-			for( TiXmlElement* graphElement = rootTag->FirstChildElement(); graphElement; graphElement = graphElement->NextSiblingElement() ) {
-				string elementname = graphElement->Value();
-
-				if ( elementname == "node" ) {
-
-					TiXmlElement* node = graphElement->FirstChildElement();
 #ifdef DEBUG
-					cerr << "node = " << graphElement->Attribute( "id" ) << ", ";
-					cerr << "( x, y ) = ( " << geometry->Attribute( "X" ) << ", " << geometry->Attribute( "Y" ) << " )" << endl;
-#endif // DEBUG
-					string dataName = node->Value();
-					if( dataName == "data" ){
-
-						// cerr << "value = " << dataName << endl;
-						string keyAttribute = node->Attribute( "key" );
-
-						// key1:vid
-						string key1Text = node->GetText();
-
-						// key2:vx
-						node = node->NextSiblingElement();
-						string key2Text = node->GetText();
-						// cerr << "x = " << key2Text << endl;
-
-						// key3:vy
-						node = node->NextSiblingElement();
-						string key3Text = node->GetText();
-						// cerr << "y = " << key3Text << endl;
-
-						// cerr <<  node->GetText() << endl;
-						BoundaryGraph::vertex_descriptor vd = add_vertex( _boundary  );
-						double x = _stringToDouble( key2Text );
-						double y = _stringToDouble( key3Text );
-						_boundary[ vd ].geoPtr = new Coord2( x, y );
-						_boundary[ vd ].smoothPtr = new Coord2( x, y );
-						_boundary[ vd ].coordPtr = new Coord2( x, y );
-						_boundary[ vd ].id = _boundary[ vd ].initID = stoi( key1Text );
-						_boundary[ vd ].namePtr = new string( to_string( _boundary[ vd ].id ) );
-						_boundary[ vd ].weight = 1.0;
-						_boundary[ vd ].lineID.push_back( _nLines );
+							cerr << "The node has been in the database." << endl;
+#endif  // DEBUG
+							if( k == 0 ) curVD = curVDS = vd;
+							if( k == 1 ) curVD = curVDT = vd;
+							break;
+						}
 					}
+				
+				if( curVD == NULL ) {
+					
+					curVD = add_vertex( bg );
+					//vector< unsigned int > lineID = bg[ curVD ].lineID;
+					//lineID.push_back( nLines );
+					
+					double x = polygon.elements()[ j - 1 + k ].x();
+					double y = polygon.elements()[ j - 1 + k ].y();
+					bg[ curVD ].geoPtr = new Coord2( x, y );
+					bg[ curVD ].smoothPtr = new Coord2( x, y );
+					bg[ curVD ].coordPtr = new Coord2( x, y );
+					
+					bg[ curVD ].id = bg[ curVD ].initID = nVertices;
+					bg[ curVD ].namePtr = new string( to_string( bg[ curVD ].id ) );
+					bg[ curVD ].weight = 1.0;
+					//bg[ curVD ].lineID.push_back( nLines );
+					
+					if( k == 0 ) curVDS = curVD;
+					if( k == 1 ) curVDT = curVD;
+					nVertices++;
 				}
-				else if ( elementname == "edge" ) {
-
-					TiXmlElement* xmledge = graphElement->FirstChildElement();
-					TiXmlElement* dataElement = xmledge->FirstChildElement();
-
+				else {
+					//bg[ curVD ].lineID.push_back( nLines );
 #ifdef DEBUG
-					cerr << "edge = " << graphElement->Attribute( "id" ) << " "
-						 << graphElement->Attribute( "source" ) << " "
-						 << graphElement->Attribute( "target" ) << endl;
-					cerr << "tagname = " << tagname << endl;
-#endif // DEBUG
-
-					string nodenameS = graphElement->Attribute( "source" );
-					string nodeIDnameS = nodenameS.substr( 1, nodenameS.length()-1 );
-					string nodenameT = graphElement->Attribute( "target" );
-					string nodeIDnameT = nodenameT.substr( 1, nodenameT.length()-1 );
-
-					int sourceID = stoi( nodeIDnameS );
-					int targetID = stoi( nodeIDnameT );
-
-					//update edge information
-					BoundaryGraph::vertex_descriptor vdS = vertex( sourceID, _boundary );
-					BoundaryGraph::vertex_descriptor vdT = vertex( targetID, _boundary );
-
-					// read edge
-
-					// key0:eid
-					string key0Text = xmledge->GetText();
-					// cerr << "eid = " << key0Text << endl;
-
-					// key4:weight
-					xmledge = xmledge->NextSiblingElement();
-					string key4Text = xmledge->GetText();
-					// cerr << "w = " << key4Text << endl;
-
-					pair< BoundaryGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT, _boundary );
-					BoundaryGraph::edge_descriptor foreED = foreE.first;
-
-					// calculate geographical angle
-					Coord2 coordO;
-					Coord2 coordD;
-					if( _boundary[ vdS ].initID < _boundary[ vdT ].initID ){
-						coordO = *_boundary[ vdS ].coordPtr;
-						coordD = *_boundary[ vdT ].coordPtr;
-					}
-					else{
-						coordO = *_boundary[ vdT ].coordPtr;
-						coordD = *_boundary[ vdS ].coordPtr;
-					}
-					double diffX = coordD.x() - coordO.x();
-					double diffY = coordD.y() - coordO.y();
-					double angle = atan2( diffY, diffX );
-
-					_boundary[ foreED ].initID = _boundary[ foreED ].id = stoi( key0Text );
-					_boundary[ foreED ].weight = _stringToDouble( key4Text );
-					_boundary[ foreED ].geoAngle = angle;
-					_boundary[ foreED ].smoothAngle = angle;
-					_boundary[ foreED ].angle = angle;
-					_boundary[ foreED ].lineID.push_back( _nLines );
+					cerr << "[Existing] curV : lineID = " << endl;
+				for ( unsigned int k = 0; k < vertexLineID[ curVD ].size(); ++k )
+					cerr << "lineID[ " << setw( 3 ) << k << " ] = " << vertexLineID[ curVD ][ k ] << endl;
+#endif  // DEBUG
 				}
 			}
+			vdVec.push_back( curVDS );
+			// cerr << _octilinearBoundaryVec[ curVDS ].id << " ";
+			
+			//cerr << "( " << _octilinearBoundaryVec[ curVDS ].id << ", " << _octilinearBoundaryVec[ curVDT ].id << " )" << endl;
+			
+			// add edges
+			// search previous edge
+			bool found = false;
+			BoundaryGraph::edge_descriptor oldED;
+			//BoundaryGraph::vertex_descriptor oldVS = ptrSta[ origID ];
+			//BoundaryGraph::vertex_descriptor oldVT = ptrSta[ destID ];
+			//unsigned int indexS = _octilinearBoundaryVec[ curVDS ].initID;
+			//unsigned int indexT = _octilinearBoundaryVec[ curVDT ].initID;
+			tie( oldED, found ) = edge( curVDS, curVDT, bg );
+			
+			
+			if( found == true ) {
+				
+				//bg[ oldED ].lineID.push_back( nLines );
+				bg[ oldED ].visitedTimes += 1;
+				//eachline.push_back( oldED );
+				//bool test = false;
+				//tie( oldED, test ) = edge( oldVT, oldVS, _octilinearBoundaryVec );
+			}
+			else {
+				
+				//BoundaryGraph::vertex_descriptor src = vertex( indexS, _octilinearBoundaryVec );
+				//BoundaryGraph::vertex_descriptor tar = vertex( indexT, _octilinearBoundaryVec );
+				
+				// handle fore edge
+				pair< BoundaryGraph::edge_descriptor, unsigned int > foreE = add_edge( curVDS, curVDT, bg );
+				BoundaryGraph::edge_descriptor foreED = foreE.first;
+				
+				// calculate geographical angle
+				Coord2 coordO;
+				Coord2 coordD;
+				if( bg[ curVDS ].initID < bg[ curVDT ].initID ) {
+					coordO = *bg[ curVDS ].coordPtr;
+					coordD = *bg[ curVDT ].coordPtr;
+				}
+				else {
+					coordO = *bg[ curVDT ].coordPtr;
+					coordD = *bg[ curVDS ].coordPtr;
+				}
+				double diffX = coordD.x() - coordO.x();
+				double diffY = coordD.y() - coordO.y();
+				double angle = atan2( diffY, diffX );
+				
+				bg[ foreED ].initID = bg[ foreED ].id = nEdges;
+				bg[ foreED ].weight = 1.0;
+				bg[ foreED ].geoAngle = angle;
+				bg[ foreED ].smoothAngle = angle;
+				bg[ foreED ].angle = angle;
+				//bg[ foreED ].lineID.push_back( nLines );
+				bg[ foreED ].visitedTimes = 0;
+				
+				//eachline.push_back( foreED );
+#ifdef  DEBUG
+				cout << "nEdges = " << _nEdges << " angle = " << angle << endl;
+#endif  // DEBUG
+				nEdges++;
+			}
 		}
+		_regionBase.polygonComplexVD().insert(
+				pair< unsigned int, vector< ForceGraph::vertex_descriptor > >( i, vdVec ) );
 	}
-	// printGraph( _boundary );
-
-	// read polygon contour
-	_polygonComplexVD.clear();
-	_polygonComplex.clear();
-	string polygon_filename = "data/LevelBorder.txt";
-
-	ifstream pfs( polygon_filename.c_str() );
-	if ( !pfs ) {
-		cerr << "Cannot open the target file : " << polygon_filename << endl;
-		return;
-	}
-
-	unsigned int id = 0;
-	while( !pfs.eof() ){
-
-		string polyVDVec;
-		getline( pfs, polyVDVec );
-
-		string buf; // have a buffer string
-		stringstream ss( polyVDVec ); // insert the string into a stream
-
-		// a vector to hold our words
-		vector< string > tokens;
-		while (ss >> buf) tokens.push_back( buf );
-		vector< ForceGraph::vertex_descriptor > vdVec;
-		Polygon2 polygon;
-		for( unsigned int i = 0; i < tokens.size(); i++ ){
-
-			// cerr << tokens[i] << " ";
-			BoundaryGraph::vertex_descriptor vd = vertex( stoi( tokens[i] ), _boundary );
-			vdVec.push_back( vd );
-			polygon.elements().push_back( *_boundary[ vd ].coordPtr );
-			// cerr << _boundary[ vd ].id << " ";
+	
+	// update the fixed flag
+	BGL_FORALL_EDGES( ed, bg, BoundaryGraph ) {
+			if( bg[ ed ].visitedTimes == 0 ) {
+				
+				BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
+				BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
+				
+				bg[ vdS ].isFixed = true;
+				bg[ vdT ].isFixed = true;
+				
+				// cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
+			}
 		}
-		// cerr << endl;
-		_polygonComplex.insert( pair< unsigned int, Polygon2 > ( id, polygon ) );
-		_polygonComplexVD.insert( pair< unsigned int, vector< BoundaryGraph::vertex_descriptor > >( id, vdVec ) );
-		id++;
-		//_metaFreq.insert( pair< string, unsigned int >( tokens[0], stoi( tokens[1] ) ) );
-		//cerr << tokens[0] << " = " << tokens[1] << endl;
-	}
-	_polygonComplex.erase( std::prev( _polygonComplex.end() ) );
-	_polygonComplexVD.erase( std::prev( _polygonComplexVD.end() ) );
-
-	_nVertices = num_vertices( _boundary );
-	_nEdges = num_edges( _boundary );
-	// _nLines = _polygonComplex.size();
-
-	// create lines
-	// _line.resize( _polygonComplexVD.size() );
-	map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itS;
-	// map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::itereator itT;
-	for( itS = _polygonComplexVD.begin(); itS != _polygonComplexVD.end(); itS++ ){
-		vector< BoundaryGraph::vertex_descriptor > &vdVec = itS->second;
-		_lineSta.push_back( vdVec );
-	}
-	_nLines = _polygonComplexVD.size();
-
-#ifdef DEBUG
-	cerr << "LevelBorder::readPolygonComplex:"
-		 << "nV = " << _nVertices << " nE = " << _nEdges
-		 << " nL = " << _nLines << endl;
-
-	map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
-	for( itP = _polygonComplexVD.begin(); itP != _polygonComplexVD.end(); itP++ ){
-		vector< ForceGraph::vertex_descriptor > &p = itP->second;
-		cerr << "p[" << itP->first << "] = ";
-		for( unsigned int i = 0; i < p.size(); i++ ){
-			cerr << _boundary[p[i]].id << " ";
-		}
-		cerr << endl;
-	}
-#endif // DEBUG
+	
+	_octilinearBoundaryVec[ 0 ]->prepare( *_content_widthPtr / 2.0, *_content_heightPtr / 2.0 );
 }
-#endif // SKIP
+
+void LevelBorder::updatePolygonComplex( void ) {
+	
+	cerr << "updating high polygonComplex after optimization ..." << endl;
+	
+	BoundaryGraph &bg = _octilinearBoundaryVec[ 0 ]->boundary();
+	map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
+	map< unsigned int, Polygon2 >::iterator itC = _regionBase.polygonComplex().begin();
+	for( itP = _regionBase.polygonComplexVD().begin(); itP != _regionBase.polygonComplexVD().end(); itP++ ) {
+		
+		vector< ForceGraph::vertex_descriptor > &p = itP->second;
+		for( unsigned int i = 0; i < p.size(); i++ ) {
+			itC->second.elements()[ i ].x() = bg[ p[ i ] ].coordPtr->x();
+			itC->second.elements()[ i ].y() = bg[ p[ i ] ].coordPtr->y();
+			
+			// cerr << "i = " << i << " " << itC->second.elements()[i];
+		}
+		itC++;
+	}
+}
+
 
 // end of header file
 // Do not add any stuff under this line.

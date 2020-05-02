@@ -1,6 +1,6 @@
 //******************************************************************************
 // Contour2.cc
-//	: program file for 2D contour
+//	: program file for 2D simpleContour
 //
 //------------------------------------------------------------------------------
 //
@@ -278,7 +278,7 @@ void Contour2::createContour( void ) {
 			}
 		}
 	
-	// find the contour
+	// find the simpleContour
 	UndirectedBaseGraph::out_edge_iterator eo, eo_end;
 	UndirectedBaseGraph::vertex_descriptor vdC = vdS;
 	//cerr << "idC = " << complex[vdC].id << " ";
@@ -343,13 +343,13 @@ void Contour2::createContour( void ) {
 	_contour.cleanPolygon();
 	_contour.updateCentroid();
 	_contour.updateOrientation();
-	cerr << "contour = " << _contour << endl;
+	cerr << "simpleContour = " << _contour << endl;
 
 
 #ifdef DEBUG
 	cerr << "centroid = " << polygon.centroid() << endl;
 	cerr << "p[" << i << "] = " << polygon << endl;
-	cerr << "contour = " << _contour << endl;
+	cerr << "simpleContour = " << _contour << endl;
 #endif // DEBUG
 }
 
@@ -364,7 +364,7 @@ void Contour2::_initChaikinCurve( double unit = 100 ) {
 	// store initial the path
 	Polygon2 &contour = _contour;
 	
-	// cerr << "contour.elements().size() = " << contour.elements().size() << endl;
+	// cerr << "simpleContour.elements().size() = " << simpleContour.elements().size() << endl;
 	if( contour.elements().size() > 0 )
 		_fineContour.elements().push_back( contour.elements()[ 0 ] );
 	for( unsigned int j = 1; j <= contour.elements().size(); j++ ) {

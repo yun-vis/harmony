@@ -1,11 +1,11 @@
 //==============================================================================
-// LevelBorder.h
-//  : header file for the LevelBorder network
+// LevelBase.h
+//  : header file for the LevelBase network
 //
 //==============================================================================
 
-#ifndef _LevelBorder_H        // beginning of header file
-#define _LevelBorder_H        // notifying that this file is included
+#ifndef _LevelBase_H        // beginning of header file
+#define _LevelBase_H        // notifying that this file is included
 
 //----------------------------------------------------------------------
 //  Including header files
@@ -14,7 +14,6 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <tinyxml.h>
 #include <fstream>
 #include <sstream>
 #include <cassert>
@@ -24,15 +23,14 @@
 using namespace std;
 
 #include "base/Grid2.h"
-#include "base/Contour2.h"
 #include "base/RegionBase.h"
-#include "base/LevelBase.h"
 #include "graph/SkeletonGraph.h"
+#include "optimization/Force.h"
+#include "base/Contour2.h"
 #include "graph/ForceGraph.h"
 #include "graph/BoundaryGraph.h"
-#include "optimization/Force.h"
-#include "optimization/Stress.h"
 #include "optimization/Octilinear.h"
+#include "optimization/Stress.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -43,75 +41,70 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class LevelBorder : public LevelBase {
+class LevelBase {
 
 private:
-	
-	ForceGraph _skeletonForceGraph;
-	RegionBase _regionBase;
-	
+
 protected:
 	
-	void _init( double *__widthPtr, double *__heightPtr,
-	            double *__veCoveragePtr, SkeletonGraph &__skeletonGraph );
+	double *_content_widthPtr;
+	double *_content_heightPtr;
+	double *_veCoveragePtr;
+	double *_veRatioPtr;
+	LEVELTYPE _levelType;
+	
+	// boundary of the composite graph
+	vector< Octilinear * > _octilinearBoundaryVec;
+	
+	void _init( void );
 	
 	void _clear( void );
-	
-	void _normalizeSkeleton( void );
-	
-	void _normalizeRegionBase( void );
-	
-	void _decomposeSkeleton( void );
 
 public:
 	
-	LevelBorder();                              // default constructor
-	LevelBorder( const LevelBorder &obj );      // Copy constructor
-	virtual ~LevelBorder();                     // Destructor
+	LevelBase();                              // default constructor
+	LevelBase( const LevelBase &obj );      // Copy constructor
+	virtual ~LevelBase();                     // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-	const ForceGraph &skeletonForceGraph( void ) const { return _skeletonForceGraph; }
+	const vector< Octilinear * > &octilinearBoundaryVec( void ) const { return _octilinearBoundaryVec; }
 	
-	ForceGraph &skeletonForceGraph( void ) { return _skeletonForceGraph; }
-	
-	const RegionBase &regionBase( void ) const { return _regionBase; }
-	
-	RegionBase &regionBase( void ) { return _regionBase; }
-	
+	vector< Octilinear * > &octilinearBoundaryVec( void ) { return _octilinearBoundaryVec; }
+
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-	void buildBoundaryGraph( void ) override;
-
-	void updatePolygonComplex( void ) override;
+	virtual void buildBoundaryGraph( void ) = 0;
 	
+	virtual void updatePolygonComplex( void ) = 0;
+	
+	void prepare( void ){
+		buildBoundaryGraph();
+	}
+
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( double *__widthPtr, double *__heightPtr,
-	           double *__veCoveragePtr, SkeletonGraph &__skeletonGraph ) {
-		_init( __widthPtr, __heightPtr,
-		       __veCoveragePtr, __skeletonGraph );
-	}
+	void init( void ) { _init(); }
 	
 	void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-	friend ostream &operator<<( ostream &stream, const LevelBorder &obj );
+	friend ostream &operator<<( ostream &stream, const LevelBase &obj );
 	
 	// Output
-	friend istream &operator>>( istream &stream, LevelBorder &obj );
+	friend istream &operator>>( istream &stream, LevelBase &obj );
 	// Input
 	
-	virtual const char *className( void ) const { return "LevelBorder"; }
+	virtual const char *className( void ) const { return "LevelBase"; }
 	// Class name
 };
 
-#endif // _LevelBorder_H
+#endif // _LevelBase_H
 
 // end of header file
 // Do not add any stuff under this line.

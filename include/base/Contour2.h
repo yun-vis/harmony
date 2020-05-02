@@ -40,7 +40,7 @@ protected:
 	unsigned int _id;
 	Polygon2 _contour;       // centroid of the elements
 	vector< Polygon2 > _polygons;      // coordinates of end points
-	Polygon2 _fineContour;   // curvy contour
+	Polygon2 _fineContour;   // curvy simpleContour
 	
 	virtual void _init( unsigned int __id, vector< Polygon2 > __polygons );
 	
@@ -78,7 +78,7 @@ public:
 	
 	const unsigned int &id( void ) const { return _id; }
 	
-	// contour
+	// simpleContour
 	Polygon2 &contour( void ) { return _contour; }
 	
 	const Polygon2 &contour( void ) const { return _contour; }
@@ -88,7 +88,7 @@ public:
 	
 	const vector< Polygon2 > &polygons( void ) const { return _polygons; }
 	
-	// fine contour
+	// fine simpleContour
 	Polygon2 &fineContour( void ) { return _fineContour; }
 	
 	const Polygon2 &fineContour( void ) const { return _fineContour; }

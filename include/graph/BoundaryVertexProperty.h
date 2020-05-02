@@ -57,14 +57,11 @@ public:
 //	Reference to elements
 //------------------------------------------------------------------------------
 	unsigned int initID;
-	vector< unsigned int > lineID;
 	bool isFixed;
 	
 	Coord2 *geoPtr;         // initial position
 	Coord2 *smoothPtr;
 	Coord2 *centroidPtr;
-	// Coord2 *                    stressPtr;
-	// Coord2 *                    octilinearPtr;
 	GraphicsVertexItem *itemPtr;
 
 //------------------------------------------------------------------------------

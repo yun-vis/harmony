@@ -260,11 +260,11 @@ void Road::_initLane( unsigned int gid, int selectedID,
     multimap< int, CellComponent >::iterator itC;
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-        vector< Seed > &seedVec = *itC->second.detail.forceBone().voronoi().seedVec();
+        vector< Seed > &seedVec = *itC->second.componentRegion.forceBone().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
-            Polygon2 &p = seedVec[i].cellPolygon;
+            Polygon2 &p = seedVec[i].voronoiCellPtr;
             vector< Coord2 > coordVec;
             for( unsigned int j = 1; j <= p.elements().size(); j++ ) {
 
@@ -287,12 +287,12 @@ void Road::_initLane( unsigned int gid, int selectedID,
     // add vertices
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-        vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
+        vector< Seed > &seedVec = *itC->second.componentRegion.force().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
             vector < UndirectedBaseGraph::vertex_descriptor > polygons;
-            Polygon2 &p = seedVec[i].cellPolygon;
+            Polygon2 &p = seedVec[i].voronoiCellPtr;
             unsigned int size =  p.elements().size();
 
             for( unsigned int j = 0; j < size; j++ ){
@@ -315,7 +315,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
                     polygons.push_back( vd );
                 }
             }
-            ForceGraph &fg = itC->second.detail.forceGraph();
+            ForceGraph &fg = itC->second.componentRegion.forceGraph();
             ForceGraph::vertex_descriptor vd = vertex( i, fg );
             // cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
             polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
@@ -368,11 +368,11 @@ void Road::_initLane( unsigned int gid, int selectedID,
     // add edges
     for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ){
 
-        vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
+        vector< Seed > &seedVec = *itC->second.componentRegion.force().voronoi().seedVec();
 
         for( unsigned int i = 0; i < seedVec.size(); i++ ){
 
-            Polygon2 &p = seedVec[i].cellPolygon;
+            Polygon2 &p = seedVec[i].voronoiCellPtr;
             vector < UndirectedBaseGraph::vertex_descriptor > polygons;
             unsigned int size =  p.elements().size();
             for( unsigned int j = 0; j < size; j++ ){
@@ -449,7 +449,7 @@ void Road::_initLane( unsigned int gid, int selectedID,
                 }
             }
 
-            ForceGraph &fg = itC->second.detail.forceGraph();
+            ForceGraph &fg = itC->second.componentRegion.forceGraph();
             ForceGraph::vertex_descriptor vd = vertex( i, fg );
             // cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
             polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
@@ -629,11 +629,11 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 		multimap< int, CellComponent >::iterator itC;
 		for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ) {
 			
-			vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
+			vector< Seed > &seedVec = *itC->second.componentRegion.force().voronoi().seedVec();
 			
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
-				Polygon2 &p = seedVec[ i ].cellPolygon;
+				Polygon2 &p = *seedVec[ i ].voronoiCellPtr;
 				vector< Coord2 > coordVec;
 				for( unsigned int j = 1; j <= p.elements().size(); j++ ) {
 					
@@ -675,12 +675,12 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 		// add vertices
 		for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ) {
 			
-			vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
+			vector< Seed > &seedVec = *itC->second.componentRegion.force().voronoi().seedVec();
 			
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
 				vector< UndirectedBaseGraph::vertex_descriptor > polygons;
-				Polygon2 &p = seedVec[ i ].cellPolygon;
+				Polygon2 &p = *seedVec[ i ].voronoiCellPtr;
 				unsigned int size = p.elements().size();
 				
 				for( unsigned int j = 0; j < size; j++ ) {
@@ -703,7 +703,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 						polygons.push_back( vd );
 					}
 				}
-				ForceGraph &fg = itC->second.detail.forceGraph();
+				ForceGraph &fg = itC->second.componentRegion.forceGraph();
 				ForceGraph::vertex_descriptor vd = vertex( i, fg );
 				//cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
 #ifdef DEBUG
@@ -786,11 +786,11 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 		// add edges
 		for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ) {
 			
-			vector< Seed > &seedVec = *itC->second.detail.force().voronoi().seedVec();
+			vector< Seed > &seedVec = *itC->second.componentRegion.force().voronoi().seedVec();
 			
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
-				Polygon2 &p = seedVec[ i ].cellPolygon;
+				Polygon2 &p = *seedVec[ i ].voronoiCellPtr;
 				vector< UndirectedBaseGraph::vertex_descriptor > polygons;
 				unsigned int size = p.elements().size();
 				for( unsigned int j = 0; j < size; j++ ) {
@@ -903,7 +903,7 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 					}
 				}
 				
-				//ForceGraph &fg = itC->second.detail.forceGraph();
+				//ForceGraph &fg = itC->second.componentRegion.forceGraph();
 				//ForceGraph::vertex_descriptor vd = vertex( i, fg );
 				// cerr << "id = " << fg[ vd ].id << " initID = " << fg[ vd ].initID << endl;
 				//polygonVD.insert( pair< unsigned int, vector < UndirectedBaseGraph::vertex_descriptor > >( fg[ vd ].initID, polygons ) );
@@ -932,18 +932,18 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 //  Outputs
 //  none
 //
-void Road::_initRoad( Cell *cellPtr, int __selectedID ) {
+void Road::_initRoad( LevelCell *cellPtr, int __selectedID ) {
 	_clear();
 	
 	vector< multimap< int, CellComponent > > &cellComponentVec = cellPtr->cellComponentVec();
 	unsigned int nVertices = 0, nEdges = 0;
 	
-	// build subsystem contour
+	// build subsystem simpleContour
 	//vector< Contour2 > contourVec;
 	_contourVec.clear();
 	_contourVec.resize( cellPtr->cellVec().size() );     // subsystem size
 	
-	// collect cell boundary contour polygons
+	// collect cell boundary simpleContour polygons
 	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
 		
 		multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
@@ -954,14 +954,14 @@ void Road::_initRoad( Cell *cellPtr, int __selectedID ) {
 			
 			CellComponent &component = itC->second;
 			unsigned int subsysID = component.groupID;
-			Polygon2 &c = component.contour.contour();
+			Polygon2 &c = component.componentRegion.fineOutputContour().contour();
 			
 			// if( subsysID == 2 ) cerr << "myc = " << c << endl;
 			_contourVec[ subsysID ].polygons().push_back( c );
 		}
 	}
 	
-	// create subsystem contour
+	// create subsystem simpleContour
 	for( unsigned int i = 0; i < _contourVec.size(); i++ ) {
 		
 		_contourVec[ i ].id() = i;
@@ -976,7 +976,7 @@ void Road::_initRoad( Cell *cellPtr, int __selectedID ) {
 		
 		for( unsigned j = 0; j < contour.elements().size(); j++ ) {
 			
-			// Coord2 coord( contour.elements()[j].x(), contour.elements()[j].y() );
+			// Coord2 coord( simpleContour.elements()[j].x(), simpleContour.elements()[j].y() );
 			UndirectedBaseGraph::vertex_descriptor vd = NULL;
 			bool isFound = _findVertexInRoad( contour.elements()[ j ], vd );
 			

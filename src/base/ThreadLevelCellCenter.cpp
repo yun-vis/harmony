@@ -15,41 +15,41 @@ ThreadLevelCellCenter::~ThreadLevelCellCenter() {
 }
 
 void ThreadLevelCellCenter::force( void ) {
+
 	double err = INFINITY;
 	cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
-	_cellPtr->centerVec()[ _cellIndex ].force()._initSeed();
 	
-	while( ( err > _cellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
+	while( ( err > _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 		
 		// cerr << "err = " << err << " _count = " << _count << endl;
-		switch( _cellPtr->centerVec()[ _cellIndex ].force().mode() ) {
+		switch( _levelCellPtr->centerVec()[ _cellIndex ].force().mode() ) {
 		case TYPE_FORCE:
 		case TYPE_BARNES_HUT: {
 			_pathwayPtr->pathwayMutex().lock();
-			_cellPtr->centerVec()[ _cellIndex ].force();
-			_cellPtr->additionalForcesCenter();
-			err = _cellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
+			_levelCellPtr->centerVec()[ _cellIndex ].force();
+			_levelCellPtr->additionalForcesCenter();
+			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			cerr << "ThreadLevelCellCenter::err (force) = " << err << endl;
 			break;
 		}
 		case TYPE_CENTROID: {
 			_pathwayPtr->pathwayMutex().lock();
-			_cellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
-			_cellPtr->additionalForcesCenter();
-			err = _cellPtr->centerVec()[ _cellIndex ].force().gap();
+			_levelCellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
+			_levelCellPtr->additionalForcesCenter();
+			err = _levelCellPtr->centerVec()[ _cellIndex ].force().gap();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "WorkerLevelCenter::err (centroid) = " << err << endl;
 			break;
 		}
 		case TYPE_HYBRID: {
 			_pathwayPtr->pathwayMutex().lock();
-			_cellPtr->centerVec()[ _cellIndex ].force().force();
-			_cellPtr->additionalForcesCenter();
+			_levelCellPtr->centerVec()[ _cellIndex ].force().displacement();
+			_levelCellPtr->additionalForcesCenter();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
 			if( _count % freq == 0 )
-				_cellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
-			err = _cellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
+				_levelCellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
+			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			cerr << "id = " << _id << " WorkerLevelCenter::err (hybrid) = " << err << endl;
 			break;

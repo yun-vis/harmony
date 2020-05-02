@@ -82,6 +82,7 @@ Pathway::~Pathway( void ) {
 //
 void Pathway::init( string pathIn, string pathOut,
                     string fileFreq, string fileType, int clonedThreshold ) {
+	
 	_inputpath = pathIn;
 	_outputpath = pathOut;
 	_fileFreq = fileFreq;
@@ -95,6 +96,8 @@ void Pathway::init( string pathIn, string pathOut,
 		_threshold = clonedThreshold;
 	}
 	_nHyperEtoE = 0;
+
+	generate();
 }
 
 //
@@ -294,6 +297,7 @@ bool Pathway::isCloneMetaType( MetaboliteGraph::vertex_descriptor metaVD ) {
 //  none
 //
 void Pathway::generate( void ) {
+
 	loadPathway();
 	initSubdomain();
 	genGraph();

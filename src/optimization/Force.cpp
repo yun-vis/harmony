@@ -38,22 +38,23 @@
 //	none
 //
 void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
-                   LEVELTYPE __leveltype, string __configFilePath ) {
+                   LEVELTYPE *__levelTypePtr, string __configFilePath ) {
+	
 	// srand48( time( NULL ) );
 	srand48( 3 );
 	
 	_forceGraphPtr = __forceGraphPtr;
-	_contour = *__contour;
-	_level = __leveltype;
+	_contourPtr = __contour;
+	_levelTypePtr = __levelTypePtr;
 	
-	_contour.computeBoundingBox();
-	_boxCenter = _contour.boxCenter();
-	_width = _contour.boundingBox().x();
-	_height = _contour.boundingBox().y();
+	_contourPtr->computeBoundingBox();
+	_boxCenter = _contourPtr->boxCenter();
+	_width = _contourPtr->boundingBox().x();
+	_height = _contourPtr->boundingBox().y();
 	_normalizeWeight();
 
 #ifdef DEBUG
-	cerr << "contour: _width = " << _width << " _height = " << _height << endl;
+	cerr << "simpleContour: _width = " << _width << " _height = " << _height << endl;
 	cerr << "nV = " << num_vertices( *__forceGraphPtr ) << " nE = " << num_edges( *__forceGraphPtr ) << endl;
 #endif // DEBUG
 	
@@ -61,7 +62,7 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 	_temperatureDecay = 1.0;
 	
 	_initSeed();
-	_voronoi.init( _seedVec, _contour );
+	_voronoi.init( _seedVec, *_contourPtr );
 	
 	//read config file
 	_configFilePath = __configFilePath;
@@ -69,92 +70,92 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 	
 	if( conf.has( "ka" ) ) {
 		string paramKa = conf.gets( "ka" );
-		_paramKa = stringToDouble( paramKa );
+		_paramKa = Common::stringToDouble( paramKa );
 	}
 	
 	if( conf.has( "kr" ) ) {
 		string paramKr = conf.gets( "kr" );
-		_paramKr = stringToDouble( paramKr );
+		_paramKr = Common::stringToDouble( paramKr );
 	}
 	
 	if( conf.has( "kc" ) ) {
 		string paramKc = conf.gets( "kc" );
-		_paramKc = stringToDouble( paramKc );
+		_paramKc = Common::stringToDouble( paramKc );
 	}
 	
 	if( conf.has( "kv" ) ) {
 		string paramKv = conf.gets( "kv" );
-		_paramKv = stringToDouble( paramKv );
+		_paramKv = Common::stringToDouble( paramKv );
 	}
 	
 	if( conf.has( "kd" ) ) {
 		string paramKd = conf.gets( "kd" );
-		_paramKd = stringToDouble( paramKd );
+		_paramKd = Common::stringToDouble( paramKd );
 	}
 	
 	if( conf.has( "ke" ) ) {
 		string paramKe = conf.gets( "ke" );
-		_paramKe = stringToDouble( paramKe );
+		_paramKe = Common::stringToDouble( paramKe );
 	}
 	
 	if( conf.has( "ko" ) ) {
 		string paramKo = conf.gets( "ko" );
-		_paramKo = stringToDouble( paramKo );
+		_paramKo = Common::stringToDouble( paramKo );
 	}
 	
 	if( conf.has( "degreeOneMagnitude" ) ) {
 		string paramDegreeOneMagnitude = conf.gets( "degreeOneMagnitude" );
-		_paramDegreeOneMagnitude = ( unsigned int ) stringToDouble( paramDegreeOneMagnitude );
+		_paramDegreeOneMagnitude = ( unsigned int ) Common::stringToDouble( paramDegreeOneMagnitude );
 	}
 	
 	if( conf.has( "force_loop" ) ) {
 		string paramForceLoop = conf.gets( "force_loop" );
-		_paramForceLoop = ( unsigned int ) stringToDouble( paramForceLoop );
+		_paramForceLoop = ( unsigned int ) Common::stringToDouble( paramForceLoop );
 	}
 	
 	if( conf.has( "ratio_force" ) ) {
 		string paramRatioForce = conf.gets( "ratio_force" );
-		_paramRatioForce = stringToDouble( paramRatioForce );
+		_paramRatioForce = Common::stringToDouble( paramRatioForce );
 	}
 	
 	if( conf.has( "ratio_voronoi" ) ) {
 		string paramRatioVoronoi = conf.gets( "ratio_voronoi" );
-		_paramRatioVoronoi = stringToDouble( paramRatioVoronoi );
+		_paramRatioVoronoi = Common::stringToDouble( paramRatioVoronoi );
 	}
 	
 	if( conf.has( "transformation_step" ) ) {
 		string paramTransformationStep = conf.gets( "transformation_step" );
-		_paramTransformationStep = stringToDouble( paramTransformationStep );
+		_paramTransformationStep = Common::stringToDouble( paramTransformationStep );
 	}
 	
 	if( conf.has( "cell_ratio" ) ) {
 		string paramCellRatio = conf.gets( "cell_ratio" );
-		_paramCellRatio = stringToDouble( paramCellRatio );
+		_paramCellRatio = Common::stringToDouble( paramCellRatio );
 	}
 	
 	if( conf.has( "displacement_limit" ) ) {
 		string paramDisplacementLimit = conf.gets( "displacement_limit" );
-		_paramDisplacementLimit = stringToDouble( paramDisplacementLimit );
+		_paramDisplacementLimit = Common::stringToDouble( paramDisplacementLimit );
 	}
 	
 	if( conf.has( "final_epsilon" ) ) {
 		string paramFinalEpsilon = conf.gets( "final_epsilon" );
-		_paramFinalEpsilon = stringToDouble( paramFinalEpsilon );
+		_paramFinalEpsilon = Common::stringToDouble( paramFinalEpsilon );
 	}
 	
 	if( conf.has( "theta_threshold" ) ) {
 		string paramThetaThreshold = conf.gets( "theta_threshold" );
-		_paramThetaThreshold = stringToDouble( paramThetaThreshold );
+		_paramThetaThreshold = Common::stringToDouble( paramThetaThreshold );
 	}
 	
 	if( conf.has( "min_temperature" ) ) {
 		string paramMinTemperature = conf.gets( "min_temperature" );
-		_paramMinTemperature = stringToDouble( paramMinTemperature );
+		_paramMinTemperature = Common::stringToDouble( paramMinTemperature );
 	}
 	
 	if( conf.has( "alpha_temperature" ) ) {
 		string paramAlphaTemperature = conf.gets( "alpha_temperature" );
-		_paramAlphaTemperature = stringToDouble( paramAlphaTemperature );
+		_paramAlphaTemperature = Common::stringToDouble( paramAlphaTemperature );
 	}
 	
 	if( conf.has( "enable_temperature" ) ) {
@@ -177,7 +178,7 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 		}
 	}
 	
-	cerr << "level: " << _level << endl;
+	cerr << "levelType: " << *_levelTypePtr << endl;
 	cerr << "filepath: " << _configFilePath << endl;
 	cerr << "ka: " << _paramKa << endl;
 	cerr << "kr: " << _paramKr << endl;
@@ -253,7 +254,7 @@ void Force::_clear( void ) {
 }
 
 //
-//  Force::_inContour --	check if the vertex is in the contour
+//  Force::_inContour --	check if the vertex is in the simpleContour
 //
 //  Inputs
 //	none
@@ -262,8 +263,9 @@ void Force::_clear( void ) {
 //	none
 //
 bool Force::_inContour( Coord2 &coord ) {
+	
 	bool isIn = false;
-	vector< Coord2 > &coordVec = _contour.elements();
+	vector< Coord2 > &coordVec = _contourPtr->elements();
 
 #ifdef DEBUG
 	cerr << "nContour = " << coordVec.size() << endl;
@@ -276,7 +278,7 @@ bool Force::_inContour( Coord2 &coord ) {
 #endif // DEBUG
 	
 	// cerr << __LINE__ << ": coord = " << coord << endl;
-	// cerr << "_contour = " << _contour << endl;
+	// cerr << "_contourPtr = " << *_contourPtr << endl;
 	K::Point_2 pt( coord.x(), coord.y() );
 	K::Point_2 *points = new K::Point_2[coordVec.size()];
 	for( unsigned int n = 0; n < coordVec.size(); n++ ) {
@@ -308,7 +310,7 @@ bool Force::_inContour( Coord2 &coord ) {
 
 
 //
-//  Force::force --	compute the displacements exerted by the force-directed model
+//  Force::run --	compute the displacements exerted by the force-directed model
 //
 //  Inputs
 //	none
@@ -316,7 +318,8 @@ bool Force::_inContour( Coord2 &coord ) {
 //  Outputs
 //	none
 //
-void Force::_force( void ) {
+void Force::_displacement( void ) {
+	
 	ForceGraph &g = *_forceGraphPtr;
 	
 	// cerr << "force: _width = " << _width << " _height = " << _height << endl;
@@ -328,8 +331,8 @@ void Force::_force( void ) {
 	if( num_vertices( g ) == 1 ) {
 		
 		BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
-				g[ vd ].coordPtr->x() = _contour.centroid().x();
-				g[ vd ].coordPtr->y() = _contour.centroid().y();
+				g[ vd ].coordPtr->x() = _contourPtr->centroid().x();
+				g[ vd ].coordPtr->y() = _contourPtr->centroid().y();
 				g[ vd ].forcePtr->zero();
 			}
 		return;
@@ -364,7 +367,7 @@ void Force::_force( void ) {
 							// double l = L * g[ed].weight;
 							double l = L;
 							
-							if( ( _level == LEVEL_DETAIL ) && ( degrees == 1 ) )
+							if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degrees == 1 ) )
 								*g[ vdi ].forcePtr += _paramDegreeOneMagnitude * _paramKa * ( dist - l ) * unit;
 							else
 								*g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
@@ -475,7 +478,7 @@ void Force::_force( void ) {
 	
 	
 	// overlap forces
-	if( ( _level == LEVEL_DETAIL ) && ( _iteration > 25 ) ) {
+	if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( _iteration > 25 ) ) {
 		
 		// cerr << "_iteration = " << _iteration
 		//      << " _paramKo = " << _paramKo << endl;
@@ -526,49 +529,27 @@ void Force::_force( void ) {
 //	none
 //
 void Force::_initSeed( void ) {
-	if( _seedVec.size() != 0 ) {
-		cerr << "sth is wrong here at " << __LINE__ << " in " << __FILE__ << endl;
-		assert( false );
+	
+	if( _seedVec.size() == 0 ) {
+		BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
+				
+				Seed seed;
+				seed.id = ( *_forceGraphPtr )[ vd ].id;
+				seed.weight = ( *_forceGraphPtr )[ vd ].weight;
+				seed.coordPtr = ( *_forceGraphPtr )[ vd ].coordPtr;
+				seed.voronoiCellPtr = ( *_forceGraphPtr )[ vd ].cellPtr;
+				_seedVec.push_back( seed );
+			}
 	}
 	else {
 		
 		BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
-				Seed seed;
-				seed.id = ( *_forceGraphPtr )[ vd ].id;
-				seed.weight = ( *_forceGraphPtr )[ vd ].weight;
-				seed.coord = *( *_forceGraphPtr )[ vd ].coordPtr;
-				_seedVec.push_back( seed );
+				Seed &seed = _seedVec[ ( *_forceGraphPtr )[ vd ].id ];
+				seed.coordPtr = ( *_forceGraphPtr )[ vd ].coordPtr;
 			}
 	}
 }
 
-//
-//  Force::_updateForceSeed --	compute the displacements exerted by the force-directed model
-//
-//  Inputs
-//	none
-//
-//  Outputs
-//	none
-//
-void Force::_updateForceSeed( void ) {
-	if( _seedVec.size() == num_vertices( *_forceGraphPtr ) ) {
-		
-		BGL_FORALL_VERTICES( vd, *_forceGraphPtr, ForceGraph ) {
-				Seed &seed = _seedVec[ ( *_forceGraphPtr )[ vd ].id ];
-				// seed.id = (*_forceGraphPtr)[vd].id;
-				// seed.weight = (*_forceGraphPtr)[vd].weight;
-				seed.coord = *( *_forceGraphPtr )[ vd ].coordPtr;
-				// _seedVec.push_back( seed );
-			}
-	}
-	else {
-		
-		cerr << "_seedVec.size() = " << _seedVec.size() << " ?= " << num_vertices( *_forceGraphPtr ) << endl;
-		cerr << "sth is wrong here at " << __LINE__ << " in " << __FILE__ << endl;
-		assert( false );
-	}
-}
 
 //
 //  Force::_centroidGeometry --	compute the displacements exerted by the force-directed model
@@ -580,27 +561,36 @@ void Force::_updateForceSeed( void ) {
 //	none
 //
 void Force::_centroidGeometry( void ) {
+	
 	ForceGraph &g = *_forceGraphPtr;
 	// const char theName[] = "Net::centroid : ";
 	
-	_updateForceSeed();
+	_initSeed();
+	
+	// when only 1 seed
 	if( num_vertices( g ) == 1 ) {
 		
 		BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
-				g[ vd ].coordPtr->x() = _contour.centroid().x();
-				g[ vd ].coordPtr->y() = _contour.centroid().y();
+			
+				g[ vd ].coordPtr->x() = _contourPtr->centroid().x();
+				g[ vd ].coordPtr->y() = _contourPtr->centroid().y();
 				g[ vd ].placePtr->zero();
+				
+				Polygon2 &p = *g[ vd ].cellPtr;
+				p.elements() = _contourPtr->elements();
+				p.updateCentroid();
+				p.center() = p.centroid();
+				p.area() = p.area();
 			}
 		
-		( *_voronoi.seedVec() )[ 0 ].cellPolygon = _contour;
+		// ( *_voronoi.seedVec() )[ 0 ].voronoiCellPtr = _contourPtr;
 		return;
 	}
 	
-	//_voronoi.init( _seedVec, _contour );
+	//_voronoi.init( _seedVec, *_contourPtr );
 	//_voronoi.createWeightedVoronoiDiagram();
 	_voronoi.id() = _id;
 	_voronoi.createVoronoiDiagram( false );  // true: weighted, false: uniformed
-	
 	
 	// initialization
 	BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
@@ -611,14 +601,14 @@ void Force::_centroidGeometry( void ) {
 	BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
 			
 			// Find the average pixel coordinates of each vertex
-			if( _seedVec[ g[ vd ].id ].cellPolygon.area() != 0 ) {
+			if( _seedVec[ g[ vd ].id ].voronoiCellPtr->area() != 0 ) {
 #ifdef DEBUG
 				cerr << "vid = " << g[vd].id
-					 << " element = " << _seedVec[ g[vd].id ].cellPolygon.elements().size()
-					 << " area = " << _seedVec[ g[vd].id ].cellPolygon.area()
-					 << " center = " << _seedVec[ g[vd].id ].cellPolygon.center() << endl;
+					 << " element = " << _seedVec[ g[vd].id ].voronoiCellPtr.elements().size()
+					 << " area = " << _seedVec[ g[vd].id ].voronoiCellPtr.area()
+					 << " center = " << _seedVec[ g[vd].id ].voronoiCellPtr.center() << endl;
 #endif // DEBUG
-				Coord2 dest = _seedVec[ g[ vd ].id ].cellPolygon.center();
+				Coord2 dest = _seedVec[ g[ vd ].id ].voronoiCellPtr->center();
 				*g[ vd ].placePtr = _paramKv * ( dest - *g[ vd ].coordPtr );
 			}
 			else {
@@ -639,6 +629,7 @@ void Force::_centroidGeometry( void ) {
 //	none
 //
 void Force::_BarnesHut( void ) {
+	
 	ForceGraph &g = *_forceGraphPtr;
 	TreeGraph &tree = _quardTree.tree();
 	
@@ -650,8 +641,8 @@ void Force::_BarnesHut( void ) {
 	if( num_vertices( g ) == 1 ) {
 		
 		BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
-				g[ vd ].coordPtr->x() = _contour.centroid().x();
-				g[ vd ].coordPtr->y() = _contour.centroid().y();
+				g[ vd ].coordPtr->x() = _contourPtr->centroid().x();
+				g[ vd ].coordPtr->y() = _contourPtr->centroid().y();
 				g[ vd ].forcePtr->zero();
 			}
 		return;
@@ -685,12 +676,12 @@ void Force::_BarnesHut( void ) {
 			ForceGraph::degree_size_type degreeS = out_degree( vdS, g );
 			ForceGraph::degree_size_type degreeT = out_degree( vdT, g );
 			
-			if( ( _level == LEVEL_DETAIL ) && ( degreeS == 1 ) )
+			if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degreeS == 1 ) )
 				*g[ vdS ].forcePtr += _paramDegreeOneMagnitude * _paramKa * strength * ( dist - l ) * unit;
 			else
 				*g[ vdS ].forcePtr += _paramKa * strength * ( dist - l ) * unit;
 			
-			if( ( _level == LEVEL_DETAIL ) && ( degreeT == 1 ) )
+			if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degreeT == 1 ) )
 				*g[ vdT ].forcePtr -= _paramDegreeOneMagnitude * _paramKa * strength * ( dist - l ) * unit;
 			else
 				*g[ vdT ].forcePtr -= _paramKa * strength * ( dist - l ) * unit;
@@ -759,6 +750,7 @@ void Force::_BarnesHut( void ) {
 //	error value
 //
 double Force::_gap( void ) {
+	
 	ForceGraph &g = *_forceGraphPtr;
 	vector< Coord2 > displace;
 	double err = 0.0;
@@ -997,9 +989,10 @@ double Force::_verletIntegreation( void ) {
 //  Outputs
 //	none
 //
-Force::Force() {
+Force::Force( void ) {
+	
 	_id = 0;
-	_level = LEVEL_HIGH;
+	_levelTypePtr = NULL;
 	
 	_width = 0.0;
 	_height = 0.0;
@@ -1040,13 +1033,14 @@ Force::Force() {
 //	none
 //
 Force::Force( const Force &obj ) {
-	_id = obj._id;
 	
+	_id = obj._id;
+	_levelTypePtr = obj._levelTypePtr;
 	_width = obj._width;
 	_height = obj._height;
 	
 	_configFilePath = obj._configFilePath;
-	_contour = obj._contour;
+	_contourPtr = obj._contourPtr;
 	_boxCenter = obj._boxCenter;
 	
 	_forceGraphPtr = obj._forceGraphPtr;
@@ -1119,7 +1113,7 @@ Force &Force::operator=( const Force &obj ) {
 	_height = obj._height;
 	
 	_configFilePath = obj._configFilePath;
-	_contour = obj._contour;
+	_contourPtr = obj._contourPtr;
 	_boxCenter = obj._boxCenter;
 	
 	_forceGraphPtr = obj._forceGraphPtr;

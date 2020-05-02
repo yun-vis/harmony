@@ -22,9 +22,9 @@ using namespace std;
 
 #include "base/Grid2.h"
 #include "base/Contour2.h"
-#include "base/Boundary.h"
 #include "graph/ForceGraph.h"
 #include "graph/BoundaryGraph.h"
+#include "optimization/Octilinear.h"
 #include "optimization/Force.h"
 #include "optimization/Stress.h"
 
@@ -37,19 +37,25 @@ using namespace std;
 //	Defining macros
 //------------------------------------------------------------------------------
 class RegionBase {
+
 protected:
+	
+	LEVELTYPE *_levelTypePtr;
 	
 	// composite graph
 	ForceGraph _forceGraph;
-	// boundary of the composite graph
-	Boundary _boundary;
+	
+	// simple contour as input
+	Polygon2 _simpleInputContour;
+	// fine contour as output
+	Contour2 _fineOutputContour;
 	
 	// force or stress
 	ENERGYTYPE _energyType;
 	
 	// optimization
-	Force _force;             // force layout
-	Stress _stress;            // stress layout
+	Force _force;               // force layout
+	Stress _stress;             // stress layout
 	
 	map< unsigned int, Polygon2 > _polygonComplex;    // for composite polygon
 	map< unsigned int,
@@ -58,7 +64,7 @@ protected:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-	void _init( void );
+	void _init( LEVELTYPE *_levelTypePtr, Polygon2 &__contour );
 	
 	void _clear( void );
 
@@ -71,6 +77,14 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
+	const Polygon2 &simpleContour( void ) const { return _simpleInputContour; }
+	
+	Polygon2 &simpleContour( void ) { return _simpleInputContour; }
+	
+	const Contour2 &fineOutputContour( void ) const { return _fineOutputContour; }
+	
+	Contour2 &fineOutputContour( void ) { return _fineOutputContour; }
+	
 	const ForceGraph &forceGraph( void ) const { return _forceGraph; }
 	
 	ForceGraph &forceGraph( void ) { return _forceGraph; }
@@ -78,10 +92,6 @@ public:
 	const ENERGYTYPE &energyType( void ) const { return _energyType; }
 	
 	ENERGYTYPE &energyType( void ) { return _energyType; }
-	
-	const Boundary &boundary( void ) const { return _boundary; }
-	
-	Boundary &boundary( void ) { return _boundary; }
 	
 	const Force &force( void ) const { return _force; }
 	
@@ -102,21 +112,14 @@ public:
 	polygonComplexVD( void ) { return _polygonComplexVD; }
 
 //------------------------------------------------------------------------------
-//      Find conflicts
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
 	void createPolygonComplex( unsigned int nv );
 	
-	bool findVertexInComplex( Coord2 &coord, ForceGraph &complex,
-	                          ForceGraph::vertex_descriptor &target );
-
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( void ) { _init(); }
+	void init( LEVELTYPE *__levelTypePtr, Polygon2 &__contour ) { _init( __levelTypePtr, __contour ); }
 	
 	void clear( void ) { _clear(); }
 

@@ -65,16 +65,16 @@ void fill( Array *a, int x, int y, int num ) {
 		for( int i = 1; i <= y; i++ ) a->put( i, new int( num ) );
 }
 
-class Cell {
+class LevelCell {
 	friend class Queue;
 
 	friend class Stack;
 
 	void *item;
-	Cell *next;
+	LevelCell *next;
 
 public:
-	Cell( void *ptr, Cell *lst ) {
+	LevelCell( void *ptr, LevelCell *lst ) {
 		item = ptr;
 		next = lst;
 	}
@@ -82,7 +82,7 @@ public:
 
 
 class Queue {
-	Cell *tail;
+	LevelCell *tail;
 
 	void (*dispfn)( void * );
 
@@ -112,15 +112,15 @@ public:
 };
 
 void Queue::enqueue( void *t ) {
-	Cell *h;
+	LevelCell *h;
 	if( t == NULL ) return;
 
 	if( tail == NULL ) {
-		tail = new Cell( t, NULL );
+		tail = new LevelCell( t, NULL );
 		tail->next = tail;
 	}
 	else {
-		h = new Cell( t, tail->next );
+		h = new LevelCell( t, tail->next );
 		tail->next = h;
 		tail = h;
 	}
@@ -128,7 +128,7 @@ void Queue::enqueue( void *t ) {
 
 void *Queue::dequeue() {
 	if( tail == NULL ) return NULL;
-	Cell *ptr = tail->next;
+	LevelCell *ptr = tail->next;
 	void *t = ptr->item;
 	if( ptr != tail ) {
 		tail->next = ptr->next;
@@ -141,7 +141,7 @@ void *Queue::dequeue() {
 }
 
 void Queue::display() {
-	Cell *t;
+	LevelCell *t;
 	if( tail == NULL ) {
 		cout << "(empty)\n";
 		return;

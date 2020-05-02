@@ -70,7 +70,7 @@ void fruchtermanGraphLayout( DirectedBaseGraph &graph, double width, double heig
 	                                            difference );
 	
 	//kamada_kawai_spring_layout( graph, position, edgeWeight, topo, true, done );
-	//detail::graph::edge_or_side<EdgeOrSideLength, double> edge_or_side_length;
+	//componentRegion::graph::edge_or_side<EdgeOrSideLength, double> edge_or_side_length;
 	//kamada_kawai_spring_layout( graph, position, edgeWeight, topo, true );
 	//                            , edge_or_side_length,
 	//                            layout_tolerance< double >(),

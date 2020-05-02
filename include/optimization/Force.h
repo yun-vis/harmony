@@ -36,17 +36,12 @@ class Force : public EnergyBase {
 
 private:
 	
-	unsigned int _id;
-	LEVELTYPE _level;                 // force level
-	string _configFilePath;        // config file path
-	Coord2 _boxCenter;             // bounding box center of the contour
-	double _width, _height;        // bounding box of the contour
 	ForceGraph *_forceGraphPtr;
 	
 	QImage *_diagram;               // image for computing GPU base voronoi diagram
 	QuardTree _quardTree;
-	unsigned int _iteration;             // iteration of the simulation
-	double _temperatureDecay;      // decay of the temperature (simulated annealing)
+	unsigned int _iteration;        // iteration of the simulation
+	double _temperatureDecay;       // decay of the temperature (simulated annealing)
 	
 	// configuration parameter
 	double _paramKa;               // attractive force
@@ -74,17 +69,15 @@ private:
 protected:
 	
 	void _init( ForceGraph *__forceGraphPtr, Polygon2 *__contourPtr,
-	            LEVELTYPE __leveltype, string __configFilePath );
+	            LEVELTYPE *__levelTypePtr, string __configFilePath );
 	
 	void _clear( void );
 	
 	void _random( void );
 	
-	void _force( void );
+	void _displacement( void );
 	
 	void _BarnesHut( void );
-	
-	void _updateForceSeed( void );
 	
 	void _centroidGeometry( void );
 	
@@ -101,9 +94,10 @@ public:
 //------------------------------------------------------------------------------
 //	Constructors
 //------------------------------------------------------------------------------
-	Force();            // default constructor
-	Force( const Force &obj );
+	// default constructor
+	Force();
 	// copy constructor
+	Force( const Force &obj );
 
 //------------------------------------------------------------------------------
 //	Destructor
@@ -113,21 +107,7 @@ public:
 //------------------------------------------------------------------------------
 //	Referencing to members
 //------------------------------------------------------------------------------
-	const unsigned int &id( void ) const { return _id; }
-	
-	unsigned int &id( void ) { return _id; }
-	
-	// const LEVELTYPE &       level( void )   const   { return _level; }
-	// LEVELTYPE &             level( void )           { return _level; }
-	
-	const double &width( void ) const { return _width; }
-	
-	double &width( void ) { return _width; }
-	
-	const double &height( void ) const { return _height; }
-	
-	double &height( void ) { return _height; }
-	
+
 	const FORCETYPE &mode( void ) const { return _paramMode; }
 	
 	FORCETYPE &mode( void ) { return _paramMode; }
@@ -156,8 +136,8 @@ public:
 //	Fundamental functions
 //------------------------------------------------------------------------------
 	void init( ForceGraph *__forceGraphPtr, Polygon2 *__contourPtr,
-	           LEVELTYPE __leveltype, string __configFilePath ) {
-		_init( __forceGraphPtr, __contourPtr, __leveltype, __configFilePath );
+	           LEVELTYPE *__levelTypePtr, string __configFilePath ) {
+		_init( __forceGraphPtr, __contourPtr, __levelTypePtr, __configFilePath );
 	}
 	
 	void _initSeed( void );
@@ -169,7 +149,7 @@ public:
 //------------------------------------------------------------------------------
 //	Force functions
 //------------------------------------------------------------------------------
-	void force( void ) { _force(); }
+	void displacement( void ) { _displacement(); }
 	
 	void centroidGeometry( void ) { _centroidGeometry(); }
 	

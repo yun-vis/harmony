@@ -18,8 +18,8 @@
 
 using namespace std;
 
-#include "base/Boundary.h"
 #include "base/Config.h"
+#include "graph/BoundaryGraph.h"
 
 //------------------------------------------------------------------------------
 //	Defining data types
@@ -31,12 +31,13 @@ using namespace std;
 //	Defining macros
 //------------------------------------------------------------------------------
 
-class Octilinear : public Common {
+class Octilinear {
 private:
 	
 	OPTTYPE _opttype;
 	
-	Boundary *_boundary;
+	BoundaryGraph _boundary;        // inner + outer boundary
+	
 	Eigen::VectorXd _var;           // x
 	Eigen::VectorXd _output;        // b
 	Eigen::MatrixXd _coef;          // A
@@ -47,7 +48,7 @@ private:
 	unsigned int _nConstrs;
 	double _w_octilinear, _w_position, _w_fixposition;
 	double _w_boundary, _w_crossing;
-	double _d_Alpha;
+	//double _d_Alpha;
 	double _d_Beta;
 	vector< double > _theta;         // closest octilinear theta
 
@@ -67,7 +68,7 @@ protected:
 	
 	void _updateOutputs( void );
 	
-	virtual void _init( Boundary *__boundary, double __width, double __height );
+	virtual void _init( double __width, double __height );
 	
 	void _setTargetAngle( void );
 	
@@ -77,13 +78,17 @@ protected:
 
 public:
 	
-	Octilinear();                     // default constructor
+	Octilinear( void );                     // default constructor
 	Octilinear( const Octilinear &obj ); // Copy constructor
 	virtual ~Octilinear();            // Destructor
 
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
+	const BoundaryGraph &boundary( void ) const { return _boundary; }
+	
+	BoundaryGraph &boundary( void ) { return _boundary; }
+
 	const OPTTYPE &opttype( void ) const { return _opttype; }
 	
 	OPTTYPE &opttype( void ) { return _opttype; }
@@ -98,9 +103,9 @@ public:
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-	void prepare( Boundary *__boundary, double __half_width, double __half_height ) {
+	void prepare( double __half_width, double __half_height ) {
 		
-		_init( __boundary, __half_width, __half_height );
+		_init( __half_width, __half_height );
 	}
 
 //------------------------------------------------------------------------------

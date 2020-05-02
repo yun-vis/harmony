@@ -11,7 +11,7 @@
 #include <iostream>
 #include <sstream>
 
-using namespace ::std;
+using namespace std;
 
 #include <QtCore/QMutex>
 
@@ -19,7 +19,6 @@ using namespace ::std;
 //------------------------------------------------------------------------------
 //	Macro Switches
 //------------------------------------------------------------------------------
-//#define ENABLE_FACE_CONSTRAINTS
 
 //------------------------------------------------------------------------------
 //	Macro definitions
@@ -119,17 +118,6 @@ using namespace ::std;
 #define USE_VERTEX_HOME
 #define DILATION_SIZE   (64)
 
-/*
-#define SECTOR_0	(-150.0)
-#define SECTOR_1	(-105.0)
-#define SECTOR_2	( -75.0)
-#define SECTOR_3	( -30.0)
-#define SECTOR_4	(  30.0)
-#define SECTOR_5	(  75.0)
-#define SECTOR_6	( 105.0)
-#define SECTOR_7	( 150.0)
-*/
-
 #define SECTOR_0    (-157.5)
 #define SECTOR_1    (-112.5)
 #define SECTOR_2    ( -67.5)
@@ -168,9 +156,6 @@ using namespace ::std;
 #define TIMER_INTERVAL  (200)
 #define VORONOI_FREQUENCE (1)
 
-enum LAYOUTTYPE {
-	TYPE_GEOGRAPHY, TYPE_SMOOTH, TYPE_OCTILINEAR, TYPE_STRESS
-};
 enum OPTTYPE {
 	LEAST_SQUARE, CONJUGATE_GRADIENT
 };
@@ -183,7 +168,6 @@ enum FORCETYPE {
 enum COLORTYPE {
 	COLOR_PREDEFINED, COLOR_MONOTONE, COLOR_PASTEL, COLOR_BREWER
 };
-//enum WORKERTYPE{ WORKER_BOUNDARY, WORKER_CELL, WORKER_BONE, WORKER_PATHWAY };
 enum THREADTYPE {
 	THREAD_BOUNDARY, THREAD_CENTER, THREAD_CELL, THREAD_PATHWAY
 };
@@ -191,7 +175,7 @@ enum VERTEXTYPE {
 	TYPE_DEFAULT, TYPE_ONE, TYPE_TWO
 };
 enum LEVELTYPE {
-	LEVEL_HIGH, LEVEL_MIDDLE, LEVEL_LOW, LEVEL_DETAIL
+	LEVEL_BORDER, LEVEL_CELLCENTER, LEVEL_CELLCOMPONENT, LEVEL_DETAIL, LEVEL_ROUTE
 };
 
 // extern int font_size;

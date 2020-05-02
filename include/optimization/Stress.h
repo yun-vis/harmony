@@ -18,9 +18,8 @@
 
 using namespace std;
 
-#include "base/Boundary.h"
 #include "base/Config.h"
-#include "graph/SkeletonGraph.h"
+#include "graph/ForceGraph.h"
 #include "optimization/EnergyBase.h"
 
 //------------------------------------------------------------------------------
@@ -36,7 +35,7 @@ using namespace std;
 class Stress : public EnergyBase {
 private:
 	
-	string _workerName;    // name of the worker
+	BoundaryGraph _boundaryGraph;
 	
 	Eigen::VectorXd _var;           // x
 	Eigen::VectorXd _output;        // b
@@ -102,7 +101,11 @@ public:
 	const OPTTYPE &opttype( void ) const { return _paramOptType; }
 	
 	OPTTYPE &opttype( void ) { return _paramOptType; }
-
+	
+	const BoundaryGraph &boundaryGraph( void ) const { return _boundaryGraph; }
+	
+	BoundaryGraph &boundaryGraph( void ) { return _boundaryGraph; }
+	
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------

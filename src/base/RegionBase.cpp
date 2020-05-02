@@ -32,8 +32,12 @@
 //  Outputs
 //  none
 //
-void RegionBase::_init( void ) {
-	clearGraph( _forceGraph );
+void RegionBase::_init( LEVELTYPE *__levelTypePtr, Polygon2 &__contour ) {
+	
+	_simpleInputContour = __contour;
+	_levelTypePtr = __levelTypePtr;
+	_force.init( &_forceGraph, &_simpleInputContour,
+			_levelTypePtr, "config/boundary.conf" );
 }
 
 //
@@ -46,6 +50,8 @@ void RegionBase::_init( void ) {
 //  none
 //
 void RegionBase::_clear( void ) {
+	
+	_polygonComplex.clear();
 	_force.clear();
 	_stress.clear();
 }
@@ -60,24 +66,25 @@ void RegionBase::_clear( void ) {
 //  Outputs
 //  none
 //
-void RegionBase::createPolygonComplex( unsigned int nV ) {
+void RegionBase::createPolygonComplex( unsigned int nCluster ) {
+
 	vector< vector< Polygon2 > > _polygonMat;
 	vector< Seed > &seedVec = *_force.voronoi().seedVec();
 	
 	// initialization
-	_polygonComplex.clear();
+	// _polygonComplex.clear();
 	
 	// find the sets of the polygons of the same group
-	// int nV = num_vertices( _skeletonForceGraph );
-	_polygonMat.resize( nV );
+	_polygonMat.resize( nCluster );
 	
+	cerr << "nCluster = " << nCluster << endl;
 	cerr << "seedVec.size() = " << seedVec.size()
 	     << " num_vertices( _forceGraph ) = " << num_vertices( _forceGraph ) << endl;
 	assert( seedVec.size() == num_vertices( _forceGraph ) );
 	for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 		
 		int gid = _forceGraph[ vertex( i, _forceGraph ) ].initID;
-		_polygonMat[ gid ].push_back( seedVec[ i ].cellPolygon );
+		_polygonMat[ gid ].push_back( *seedVec[ i ].voronoiCellPtr );
 	}
 	
 	for( unsigned int i = 0; i < _polygonMat.size(); i++ ) {
@@ -114,32 +121,6 @@ void RegionBase::createPolygonComplex( unsigned int nV ) {
 #endif // DEBUG
 }
 
-//
-//  RegionBase::findVertexInComplex --    detect vertex-edge pair that is close to each other
-//
-//  Inputs
-//  coord: coordinates of a point
-//  complex: the graph
-//  vd: vertex descriptor
-//
-//  Outputs
-//  isFound: binary
-//
-bool RegionBase::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
-                                      ForceGraph::vertex_descriptor &target ) {
-	bool isFound = false;
-	
-	BGL_FORALL_VERTICES( vd, complex, ForceGraph ) {
-			//cerr << " vd " << *complex[vd].coordPtr << endl;
-			if( ( coord - *complex[ vd ].coordPtr ).norm() < 1e-2 ) {
-				target = vd;
-				isFound = true;
-			}
-		}
-	
-	//cerr << "isFound = " << isFound << endl;
-	return isFound;
-}
 
 //
 //  RegionBase::RegionBase -- default constructor
@@ -151,6 +132,7 @@ bool RegionBase::findVertexInComplex( Coord2 &coord, ForceGraph &complex,
 //  none
 //
 RegionBase::RegionBase( void ) {
+	
 	clearGraph( _forceGraph );
 	_energyType = ENERGY_FORCE;
 }

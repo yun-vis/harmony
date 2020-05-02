@@ -18,9 +18,9 @@
 
 using namespace std;
 
-#include "base/Boundary.h"
 #include "base/Config.h"
 #include "graph/SkeletonGraph.h"
+#include "optimization/Octilinear.h"
 #include "optimization/Voronoi.h"
 
 //------------------------------------------------------------------------------
@@ -31,10 +31,9 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 
-class EnergyBase : public Common {
+class EnergyBase {
+
 private:
-	
-	string _workerName;    // name of the worker
 	
 	unsigned int _paramVoronoiFreq;
 	double _paramRatioPosition;
@@ -42,42 +41,43 @@ private:
 
 protected:
 	
-	Boundary *_boundary;
+	unsigned int _id;
+	LEVELTYPE *_levelTypePtr;               // force level
+	string _configFilePath;                 // config file path
+	Coord2 _boxCenter;                      // bounding box center of the simpleContour
+	double _width, _height;                 // bounding box of the simpleContour
 	
-	vector< Seed > _seedVec;               // seeds of the voronoi diagram
-	Voronoi _voronoi;               // geometric voronoi diagram
-	Polygon2 _contour;               // boundary of voronoi diagram
+	vector< Seed > _seedVec;                // seeds of the voronoi diagram
+	Voronoi _voronoi;                       // geometric voronoi diagram
+	Polygon2 *_contourPtr;                  // boundary of voronoi diagram
 	
 	void _clear( void );
 
 public:
 	
 	EnergyBase( void );                     // default constructor
-	EnergyBase( const EnergyBase &obj );   // Copy constructor
+	EnergyBase( const EnergyBase &obj );    // Copy constructor
 	virtual ~EnergyBase();                  // Destructor
 
 //------------------------------------------------------------------------------
 //  Reference to members
 //------------------------------------------------------------------------------
-	const Boundary &boundary( void ) const { return *_boundary; }
+
+	const unsigned int &id( void ) const { return _id; }
 	
-	Boundary &boundary( void ) { return *_boundary; }
+	unsigned int &id( void ) { return _id; }
 	
-	const unsigned int &nVertices( void ) const { return _boundary->nVertices(); }
+	const double &width( void ) const { return _width; }
 	
-	const unsigned int &nEdges( void ) const { return _boundary->nEdges(); }
+	const double &height( void ) const { return _height; }
 	
-	const Polygon2 &contour( void ) const { return _contour; }
+	const Polygon2 *contourPtr( void ) const { return _contourPtr; }
 	
-	Polygon2 &contour( void ) { return _contour; }
+	Polygon2 *contourPtr( void ) { return _contourPtr; }
 	
 	const Voronoi &voronoi( void ) const { return _voronoi; }
 	
 	Voronoi &voronoi( void ) { return _voronoi; }
-	
-	const string &workerName( void ) const { return _workerName; }
-	
-	string &workerName( void ) { return _workerName; }
 
 //------------------------------------------------------------------------------
 //  Specific functions

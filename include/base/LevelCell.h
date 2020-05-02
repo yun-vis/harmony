@@ -1,6 +1,6 @@
 //==============================================================================
-// Cell.h
-//  : header file for the Cell network
+// LevelCell.h
+//  : header file for the LevelCell network
 //
 //==============================================================================
 
@@ -27,10 +27,9 @@ using namespace std;
 #include "base/Grid2.h"
 #include "base/Contour2.h"
 #include "base/RegionBase.h"
+#include "base/LevelBase.h"
 #include "optimization/Force.h"
 #include "optimization/Similarity.h"
-//#include "optimization/Smooth.h"
-//#include "optimization/Octilinear.h"
 #include "gv/GraphVizAPI.h"
 
 //------------------------------------------------------------------------------
@@ -41,34 +40,31 @@ using namespace std;
 //	Defining macros
 //----------------------------------------------------------------------
 class CellComponent {
+
 public:
-	unsigned int id;         // component id
-	// unsigned int                            componentID;// id in subg
-	unsigned int groupID;    // subsystem id
-	unsigned int nMCL;       // number of mcl clustering
 	
-	Contour2 contour;    // contour of the cell component
-	double multiple;   // multiple of cell unit
+	unsigned int id;            // component id
+	unsigned int groupID;       // subsystem id
+	
 	vector< ForceGraph::vertex_descriptor > lsubgVec;   // vd in lsubg
 	vector< ForceGraph::vertex_descriptor > cellgVec;   // vd in cell graph
 	
-	// RegionBase                                    mcl;
-	RegionBase detail;
+	RegionBase componentRegion;
 	
-	vector< ForceGraph::vertex_descriptor > polygonComplexVD; // vd of contour in the BoundaryGraph
+	vector< ForceGraph::vertex_descriptor > polygonComplexVD; // vd of simpleContour in the BoundaryGraph
 	vector< vector< ForceGraph::vertex_descriptor > > metaboliteVec;   // mcl cluster vertex id
+	
 };
 
-class Cell : public PathwayData, public Common {
+class LevelCell : public PathwayData, public LevelBase {
+
 private:
 	
-	double *_veCoveragePtr;
-	double *_veRatioPtr;
-	vector< RegionBase > _centerVec;
-	vector< RegionBase > _cellVec;
+	vector< RegionBase > _centerVec;    // region for center graphs
+	vector< RegionBase > _cellVec;      // region for cell graphs
 	
-	vector< multimap< int, CellComponent > > _cellComponentVec;              // int: number of nodes in lsubg
-	vector< vector< vector< double > > > _cellComponentSimilarityVec;    // cell component similarity
+	vector< multimap< int, CellComponent > > _cellComponentVec;         // int: number of nodes in lsubg
+	vector< vector< vector< double > > > _cellComponentSimilarityVec;   // cell component similarity
 	multimap< Grid2, pair< CellComponent *, CellComponent * > > _interCellComponentMap;            // pair of inter cell component
 	multimap< Grid2, pair< CellComponent *, CellComponent * > > _reducedInterCellComponentMap;     // pair of inter cell component
 	
@@ -96,7 +92,7 @@ private:
 	
 	void _computeClusters( void );
 	
-	void _init( double *veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > *polygonComplexPtr );
+	void _init( double *widthPtr, double *heightPtr, double *veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > *polygonComplexPtr );
 	
 	void _clear( void );
 
@@ -104,17 +100,17 @@ protected:
 
 public:
 	
-	Cell();                         // default constructor
-	Cell( const Cell &obj );       // Copy constructor
-	virtual ~Cell();                // Destructor
+	LevelCell();                         // default constructor
+	LevelCell( const LevelCell &obj );       // Copy constructor
+	virtual ~LevelCell();                // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
 	
-	unsigned int &nComponent( void ) { return _nComponent; }
+	//unsigned int &nComponent( void ) { return _nComponent; }
 	
-	const unsigned int &nComponent( void ) const { return _nComponent; }
+	//const unsigned int &nComponent( void ) const { return _nComponent; }
 	
 	vector< RegionBase > &centerVec( void ) { return _centerVec; }
 	
@@ -147,7 +143,7 @@ public:
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-	// void updateMCLCoords( void );
+
 	void updateCenterCoords( void );
 	
 	void updatePathwayCoords( void );
@@ -156,33 +152,31 @@ public:
 	
 	void cleanPolygonComplex( void );
 	
-	void createPolygonComplexFromDetailGraph( void );
-	
-	void updatePolygonComplexFromDetailGraph( void );
-	
 	void additionalForcesMiddle( void );
 	
 	void additionalForcesCenter( void );
-
+	
+	void buildBoundaryGraph( void ) override;
+	
+	void updatePolygonComplex( void ) override;
+	
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( double *__veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > *__polygonComplexPtr ) {
-		_init( __veCoveragePtr, __veRatioPtr, __polygonComplexPtr );
+	void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > *__polygonComplexPtr ) {
+		_init( __widthPtr, __heightPtr, __veCoveragePtr, __veRatioPtr, __polygonComplexPtr );
 	}
 	
-	void clear( void ) { _clear(); }
-
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-	friend ostream &operator<<( ostream &stream, const Cell &obj );
+	friend ostream &operator<<( ostream &stream, const LevelCell &obj );
 	
 	// Output
-	friend istream &operator>>( istream &stream, Cell &obj );
+	friend istream &operator>>( istream &stream, LevelCell &obj );
 	
 	// Input
-	virtual const char *className( void ) const { return "Cell"; }
+	virtual const char *className( void ) const { return "LevelCell"; }
 	// Class name
 };
 

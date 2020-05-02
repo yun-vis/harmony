@@ -10,13 +10,13 @@ ThreadOctilinearBoundary::ThreadOctilinearBoundary( void ) {
 	_optType = LEAST_SQUARE;
 	_iter = 0;
 	
-	_boundaryVecPtr = NULL;
+	_octilinearBoundaryVecPtr = NULL;
 	
 	// levelhigh
 	_levelBorderPtr = NULL;
 	
 	// cells of subgraphs
-	_cellPtr = NULL;
+	_levelCellPtr = NULL;
 	_roadPtr = NULL;
 	_lanePtr = NULL;
 }
@@ -33,13 +33,13 @@ ThreadOctilinearBoundary::ThreadOctilinearBoundary( const ThreadOctilinearBounda
 	// RegionData
 	//****************************************
 	// boundary
-	_boundaryVecPtr = t._boundaryVecPtr;
+	_octilinearBoundaryVecPtr = t._octilinearBoundaryVecPtr;
 	
 	// levelhigh
 	_levelBorderPtr = t._levelBorderPtr;
 	
 	// cells of subgraphs
-	_cellPtr = t._cellPtr;
+	_levelCellPtr = t._levelCellPtr;
 	_roadPtr = t._roadPtr;
 	_lanePtr = t._lanePtr;
 }

@@ -34,52 +34,48 @@ using namespace std;
 //  Outputs
 //      none
 //
-void Octilinear::_init( Boundary *__boundary, double __half_width, double __half_height ) {
-	_boundary = __boundary;
-	BoundaryGraph &g = _boundary->boundary();
-	unsigned int nVertices = _boundary->nVertices();
-	unsigned int nEdges = _boundary->nEdges();
-	_d_Alpha = _boundary->dAlpha();
-	_d_Beta = _boundary->dBeta();
+void Octilinear::_init( double __half_width, double __half_height ) {
+	
+	BoundaryGraph &g = _boundary;
+	unsigned int nVertices = num_vertices( g );
+	unsigned int nEdges = num_edges( g );
 	
 	// initialization
 	_nVars = _nConstrs = 0;
 	_half_width = __half_width;
 	_half_height = __half_height;
+
+	//_d_Alpha = _octilinearBoundaryVec->dAlpha();
+	_d_Beta = 1.0;
 	
+	// read config file
 	string configFilePath = "config/octilinear.conf";
 	
-	//read config file
 	Base::Config conf( configFilePath );
-	
-	//_w_octilinear = sqrt( 10.0 );
-	//_w_position = sqrt( 0.00001 );
-	//_w_boundary = sqrt( 20.0 );
-	//_w_crossing = sqrt( 20.0 );
 	
 	if( conf.has( "w_octilinear" ) ) {
 		string paramOctilinear = conf.gets( "w_octilinear" );
-		_w_octilinear = sqrt( stringToDouble( paramOctilinear ) );
+		_w_octilinear = sqrt( Common::stringToDouble( paramOctilinear ) );
 	}
 	
 	if( conf.has( "w_position" ) ) {
 		string paramPosition = conf.gets( "w_position" );
-		_w_position = sqrt( stringToDouble( paramPosition ) );
+		_w_position = sqrt( Common::stringToDouble( paramPosition ) );
 	}
 	
 	if( conf.has( "w_fixposition" ) ) {
 		string paramFixPosition = conf.gets( "w_fixposition" );
-		_w_fixposition = sqrt( stringToDouble( paramFixPosition ) );
+		_w_fixposition = sqrt( Common::stringToDouble( paramFixPosition ) );
 	}
 	
 	if( conf.has( "w_boundary" ) ) {
 		string paramBoundary = conf.gets( "w_boundary" );
-		_w_boundary = sqrt( stringToDouble( paramBoundary ) );
+		_w_boundary = sqrt( Common::stringToDouble( paramBoundary ) );
 	}
 	
 	if( conf.has( "w_crossing" ) ) {
 		string paramCrossing = conf.gets( "w_crossing" );
-		_w_crossing = sqrt( stringToDouble( paramCrossing ) );
+		_w_crossing = sqrt( Common::stringToDouble( paramCrossing ) );
 	}
 	
 	if( conf.has( "opttype" ) ) {
@@ -93,10 +89,11 @@ void Octilinear::_init( Boundary *__boundary, double __half_width, double __half
 		}
 	}
 
-#ifdef DEBUG
-	cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nVertices = " << nEdges << endl;
-	cerr << "_d_Alpha = " << _d_Alpha << " _d_Beta = " << _d_Beta << endl;
-#endif  // DEBUG
+//#ifdef DEBUG
+	//cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nVertices = " << nEdges << endl;
+	//cerr << "_d_Alpha = " << _d_Alpha << endl;
+	cerr << " _d_Beta = " << _d_Beta << endl;
+//#endif  // DEBUG
 
 //------------------------------------------------------------------------------
 //      Total number of linear variables
@@ -138,9 +135,10 @@ void Octilinear::_init( Boundary *__boundary, double __half_width, double __half
 //      none
 //
 void Octilinear::_initCoefs( void ) {
-	BoundaryGraph &g = _boundary->boundary();
-	unsigned int nVertices = _boundary->nVertices();
-	//unsigned int nEdges         = _boundary->nEdges();
+	
+	BoundaryGraph &g = _boundary;
+	unsigned int nVertices = num_vertices( g );
+	//unsigned int nEdges         = _octilinearBoundaryVec->nEdges();
 	
 	// initialization
 	unsigned int nRows = 0;
@@ -232,8 +230,9 @@ void Octilinear::_initCoefs( void ) {
 //      none
 //
 void Octilinear::_initVars( void ) {
-	BoundaryGraph &g = _boundary->boundary();
-	unsigned int nVertices = _boundary->nVertices();
+	
+	BoundaryGraph &g = _boundary;
+	unsigned int nVertices = num_vertices( g );
 	
 	// initialization
 	_var.resize( _nVars );
@@ -254,7 +253,8 @@ void Octilinear::_initVars( void ) {
 
 
 void Octilinear::_updateEdgeCurAngle( void ) {
-	BoundaryGraph &g = _boundary->boundary();
+	
+	BoundaryGraph &g = _boundary;
 	
 	// initialization
 	BGL_FORALL_EDGES( edge, g, BoundaryGraph ) {
@@ -285,7 +285,8 @@ void Octilinear::_updateEdgeCurAngle( void ) {
 }
 
 void Octilinear::_setTargetAngle( void ) {
-	BoundaryGraph &g = _boundary->boundary();
+	
+	BoundaryGraph &g = _boundary;
 	
 	double sector[9] = {-M_PI, -3.0 * M_PI / 4.0, -M_PI / 2.0, -M_PI / 4.0, 0.0,
 	                    M_PI / 4.0, M_PI / 2.0, 3.0 * M_PI / 4.0, M_PI};
@@ -309,7 +310,7 @@ void Octilinear::_setTargetAngle( void ) {
 #ifdef  SKIP
 void Octilinear::_setTargetAngle( void )
 {
-	BoundaryGraph        & g            = _boundary->boundary();
+	BoundaryGraph        & g            = _octilinearBoundaryVec->boundary();
 
 	double sector[ 9 ] = { -M_PI, -3.0*M_PI/4.0, -M_PI/2.0, -M_PI/4.0, 0.0,
 						   M_PI/4.0, M_PI/2.0, 3.0*M_PI/4.0, M_PI };
@@ -452,7 +453,8 @@ double Octilinear::_findRotateAngle( double input )
 //      none
 //
 void Octilinear::_initOutputs( void ) {
-	BoundaryGraph &g = _boundary->boundary();
+	
+	BoundaryGraph &g = _boundary;
 	
 	// initialization
 	unsigned int nRows = 0;
@@ -461,6 +463,7 @@ void Octilinear::_initOutputs( void ) {
 	
 	_updateEdgeCurAngle();
 	_setTargetAngle();
+	
 	// Regular edge octilinearty
 	BGL_FORALL_EDGES( edge, g, BoundaryGraph ) {
 			BoundaryGraph::vertex_descriptor vdS = source( edge, g );
@@ -487,9 +490,8 @@ void Octilinear::_initOutputs( void ) {
 			cerr << "eid = " << edgeID[ edge ] << " ";
 #endif  // DEBUG
 			double cosTheta = cos( theta ), sinTheta = sin( theta );
-			//double s = 1.0;
-			double s = _d_Beta * g[ edge ].weight / vji.norm();
-			//double s = edgeWeight[ edge ] / vji.norm();
+			// double s = _d_Beta * g[ edge ].weight / vji.norm();
+			double s = g[ edge ].weight;
 			
 			// x
 			_output( nRows, 0 ) = _w_octilinear * s * ( cosTheta * vji.x() - sinTheta * vji.y() );
@@ -559,17 +561,18 @@ void Octilinear::_initOutputs( void ) {
 //      none
 //
 void Octilinear::_updateCoefs( void ) {
-	BoundaryGraph &g = _boundary->boundary();
-	unsigned int nVertices = _boundary->nVertices();
+	
+	BoundaryGraph &g = _boundary;
+	unsigned int nVertices = num_vertices( g );
 	unsigned int nVE = 0;
 	unsigned int nB = 0;
-	vector< double > ratioR = _boundary->ratioR();
+	//vector< double > ratioR = _octilinearBoundaryVec->ratioR();
 	
 	Eigen::MatrixXd oldCoef;
 	oldCoef = _coef.block( 0, 0, _nConstrs, _nVars );
 
 #ifdef OCTILINEAR_CONFLICT
-	nVE = _boundary->VEconflict().size();
+	nVE = _octilinearBoundaryVec->VEconflict().size();
 #endif // OCTILINEAR_CONFLICT
 #ifdef OCTILINEAR_BOUNDARY
 	BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
@@ -623,8 +626,8 @@ void Octilinear::_updateCoefs( void ) {
 #ifdef  OCTILINEAR_CONFLICT
 	// copy conflict coefficient
 	unsigned int countVE = 0;
-	for ( VEMap::iterator it = _boundary->VEconflict().begin();
-		  it != _boundary->VEconflict().end(); ++it ) {
+	for ( VEMap::iterator it = _octilinearBoundaryVec->VEconflict().begin();
+		  it != _octilinearBoundaryVec->VEconflict().end(); ++it ) {
 		BoundaryGraph::vertex_descriptor vdV = it->second.first;
 		BoundaryGraph::edge_descriptor ed = it->second.second;
 		BoundaryGraph::vertex_descriptor vdS = source( ed, g );
@@ -668,16 +671,17 @@ void Octilinear::_updateCoefs( void ) {
 //      none
 //
 void Octilinear::_updateOutputs( void ) {
-	BoundaryGraph &g = _boundary->boundary();
+	
+	BoundaryGraph &g = _boundary;
 	unsigned int nVE = 0;
 	unsigned int nB = 0;
-	vector< double > ratioR = _boundary->ratioR();
+	//vector< double > ratioR = _octilinearBoundaryVec->ratioR();
 	
 	unsigned int nRows = 0;
 	Eigen::VectorXd oldOutput;
 	oldOutput = _output;
 #ifdef  OCTILINEAR_CONFLICT
-	nVE = _boundary->VEconflict().size();
+	nVE = _octilinearBoundaryVec->VEconflict().size();
 #endif  // OCTILINEAR_CONFLICT
 #ifdef  OCTILINEAR_BOUNDARY
 	BGL_FORALL_VERTICES( vd, g, BoundaryGraph )
@@ -696,8 +700,10 @@ void Octilinear::_updateOutputs( void ) {
 	
 	_updateEdgeCurAngle();
 	//_setTargetAngle();
-	// Regular edge length
+	
+	// Regular edge octilinearty
 	BGL_FORALL_EDGES( edge, g, BoundaryGraph ) {
+		
 			BoundaryGraph::vertex_descriptor vdS = source( edge, g );
 			BoundaryGraph::vertex_descriptor vdT = target( edge, g );
 			//Coord2 vi = vertexSmooth[ vdS ];
@@ -715,8 +721,8 @@ void Octilinear::_updateOutputs( void ) {
 			double angle = g[ edge ].angle;
 			double theta = g[ edge ].targetAngle - angle;
 			double cosTheta = cos( theta ), sinTheta = sin( theta );
-			double s = 1.0;
-			//double s = edgeWeight[ edge ] / vji.norm();
+			// double s = _d_Beta * g[ edge ].weight / vji.norm();
+			double s = g[ edge ].weight;
 
 #ifdef  DEBUG
 			cerr << "vji = " << vji;
@@ -775,8 +781,8 @@ void Octilinear::_updateOutputs( void ) {
 #ifdef  OCTILINEAR_CONFLICT
 	// copy conflict coefficient
 	unsigned int countVE = 0;
-	for ( VEMap::iterator it = _boundary->VEconflict().begin();
-		  it != _boundary->VEconflict().end(); ++it ) {
+	for ( VEMap::iterator it = _octilinearBoundaryVec->VEconflict().begin();
+		  it != _octilinearBoundaryVec->VEconflict().end(); ++it ) {
 		BoundaryGraph::vertex_descriptor vdV = it->second.first;
 		BoundaryGraph::edge_descriptor ed = it->second.second;
 		BoundaryGraph::vertex_descriptor vdS = source( ed, g );
@@ -886,6 +892,7 @@ double Octilinear::LeastSquare( unsigned int iter ) {
 //      err
 //
 double Octilinear::ConjugateGradient( unsigned int iter ) {
+	
 	// initialization, prepare the square matrix
 	Eigen::MatrixXd A;
 	Eigen::VectorXd b, Ap;
@@ -940,17 +947,20 @@ double Octilinear::ConjugateGradient( unsigned int iter ) {
 //      none
 //
 void Octilinear::retrieve( void ) {
-	BoundaryGraph &g = _boundary->boundary();
-	const unsigned int nVertices = _boundary->nVertices();
+	
+	BoundaryGraph &g = _boundary;
+	const unsigned int nVertices = num_vertices( g );
 	
 	// find the vertex that is too close to an edge
 	vector< BoundaryGraph::vertex_descriptor > vdVec;
-	for( VEMap::iterator it = _boundary->VEconflict().begin();
-	     it != _boundary->VEconflict().end(); ++it ) {
+#ifdef  OCTILINEAR_CONFLICT
+	for( VEMap::iterator it = _octilinearBoundaryVec->VEconflict().begin();
+	     it != _octilinearBoundaryVec->VEconflict().end(); ++it ) {
 		BoundaryGraph::vertex_descriptor vdV = it->second.first;
 		vdVec.push_back( vdV );
 	}
-	
+#endif  // OCTILINEAR_CONFLICT
+
 	unsigned int nRows = 0;
 	// update coordinates
 	// but freeze the vertex that is too close to an edge
@@ -964,7 +974,8 @@ void Octilinear::retrieve( void ) {
 			double x = _var( nRows, 0 );
 			double y = _var( nRows + nVertices, 0 );
 			if( !isnan( x ) && !isnan( y ) ) {
-				if( _boundary->VEconflict().size() > 0 ) {
+				if( false ) {
+				//if( _octilinearBoundaryVec->VEconflict().size() > 0 ) {
 					Coord2 downscale;
 					downscale.x() = ( x - g[ vertex ].coordPtr->x() ) / 2.0 + g[ vertex ].coordPtr->x();
 					downscale.y() = ( y - g[ vertex ].coordPtr->y() ) / 2.0 + g[ vertex ].coordPtr->y();
@@ -1012,7 +1023,7 @@ void Octilinear::retrieve( void ) {
 
 #ifdef  OCTILINEAR_CONFLICT
 	// check possible conflict
-	_boundary->checkVEConflicts();
+	_octilinearBoundaryVec->checkVEConflicts();
 #endif  // OCTILINEAR_CONFLICT
 
 #ifdef  DEBUG
@@ -1053,6 +1064,7 @@ void Octilinear::clear( void ) {
 //  none
 //
 Octilinear::Octilinear( void ) {
+	
 	_opttype = LEAST_SQUARE;
 	
 	_boundary = NULL;
@@ -1066,7 +1078,7 @@ Octilinear::Octilinear( void ) {
 	_w_fixposition = 0.0;
 	_w_boundary = 0.0;
 	_w_crossing = 0.0;
-	_d_Alpha = 0.0;
+	//_d_Alpha = 0.0;
 	_d_Beta = 0.0;
 	_theta.clear();
 }
@@ -1081,6 +1093,7 @@ Octilinear::Octilinear( void ) {
 //  none
 //
 Octilinear::Octilinear( const Octilinear &obj ) {
+	
 	_opttype = obj._opttype;
 	
 	_boundary = obj._boundary;
@@ -1094,7 +1107,7 @@ Octilinear::Octilinear( const Octilinear &obj ) {
 	_w_fixposition = obj._w_fixposition;
 	_w_boundary = obj._w_boundary;
 	_w_crossing = obj._w_crossing;
-	_d_Alpha = obj._d_Alpha;
+	//_d_Alpha = obj._d_Alpha;
 	_d_Beta = obj._d_Beta;
 	_theta = obj._theta;
 }

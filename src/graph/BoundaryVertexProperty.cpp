@@ -45,7 +45,6 @@ void BoundaryVertexProperty::_init( void ) {
 	BaseVertexProperty::init();
 	
 	initID = 0;
-	lineID.clear();
 	isFixed = false;
 	
 	geoPtr = NULL;

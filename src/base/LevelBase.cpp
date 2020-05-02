@@ -1,9 +1,6 @@
-// EnergyBase.cpp
-//  : program file for the boundary network
-//
-//------------------------------------------------------------------------------
-//
-//              Date: Mon Dec 10 04:28:26 2012
+//==============================================================================
+// LevelBase.cc
+//  : program file for the metro network
 //
 //==============================================================================
 
@@ -20,29 +17,50 @@
 
 using namespace std;
 
-#include "optimization/EnergyBase.h"
+#include "base/LevelBase.h"
+
+//------------------------------------------------------------------------------
+//	Private functions
+//------------------------------------------------------------------------------
+//  LevelBase::_init -- initialization
+//
+//  Inputs
+//      string
+//
+//  Outputs
+//  double
+//
+//
+void LevelBase::_init( void ) {
+	
+	_content_widthPtr   = NULL;
+	_content_heightPtr  = NULL;
+	_veCoveragePtr      = NULL;
+}
+
+
+//
+//  LevelBase::_clear --    clear the current LevelBase information
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+void LevelBase::_clear( void ) {
+}
 
 //------------------------------------------------------------------------------
 //	Protected functions
 //------------------------------------------------------------------------------
-//
-//  EnergyBase::clear --        memory management
-//
-//  Inputs
-//      none
-//
-//  Outputs
-//      none
-//
-void EnergyBase::_clear( void ) {
-}
+
 
 //------------------------------------------------------------------------------
 //	Public functions
 //------------------------------------------------------------------------------
-
 //
-//  EnergyBase::EnergyBase -- default constructor
+//  LevelBase::LevelBase -- default constructor
 //
 //  Inputs
 //  none
@@ -50,11 +68,11 @@ void EnergyBase::_clear( void ) {
 //  Outputs
 //  none
 //
-EnergyBase::EnergyBase( void ) {
+LevelBase::LevelBase( void ) {
 }
 
 //
-//  EnergyBase::EnergyBase -- copy constructor
+//  LevelBase::LevelBase -- copy constructor
 //
 //  Inputs
 //  obj : object of this class
@@ -62,16 +80,15 @@ EnergyBase::EnergyBase( void ) {
 //  Outputs
 //  none
 //
-EnergyBase::EnergyBase( const EnergyBase &obj ) {
+LevelBase::LevelBase( const LevelBase &obj ) {
 }
 
 
 //------------------------------------------------------------------------------
 //	Destructor
 //------------------------------------------------------------------------------
-
 //
-//  EnergyBase::~EnergyBase --    destructor
+//  LevelBase::LevelBase --    destructor
 //
 //  Inputs
 //  none
@@ -79,9 +96,8 @@ EnergyBase::EnergyBase( const EnergyBase &obj ) {
 //  Outputs
 //  none
 //
-EnergyBase::~EnergyBase( void ) {
+LevelBase::~LevelBase( void ) {
 }
 
 // end of header file
 // Do not add any stuff under this line.
-

@@ -18,26 +18,32 @@
 using namespace std;
 
 #ifndef Q_MOC_RUN
-
 #include "optimization/Force.h"
 #include "optimization/Stress.h"
 #include "optimization/Octilinear.h"
 #include "base/Road.h"
 #include "base/LevelBorder.h"
-
+#include "base/LevelCell.h"
+#include "base/LevelDetail.h"
 #endif // Q_MOC_RUN
 
 class RegionData {
+
 protected:
 	
-	// levelhigh
-	vector< Boundary > *_boundaryVecPtr;
-	vector< Octilinear * > *_octilinearVecPtr;
-	
+	vector< Octilinear * > *_octilinearBoundaryVecPtr;
+	LEVELTYPE *_levelTypePtr;
+
+	// level border
 	LevelBorder *_levelBorderPtr;
+
+	// level cell
+	LevelCell *_levelCellPtr;
+
+	// level componentRegion
+	LevelDetail *_levelDetailPtr;
 	
-	// cells of subgraphs
-	Cell *_cellPtr;
+	// level route
 	vector< Road > *_roadPtr;
 	vector< Road > *_lanePtr;
 
@@ -46,19 +52,17 @@ public:
 	RegionData();                // default constructor
 	RegionData( const RegionData &obj );     // Copy constructor
 	~RegionData();             // Destructor
-
+	
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
 	
-	void setRegionData( LevelBorder *__levelhigh,
-	                    vector< Boundary > *__boundaryVecPtr,
-	                    Cell *__cellPtr,
-	                    vector< Road > *__roadPtr,
-	                    vector< Road > *__lanePtr ) {
+	void setRegionData( LEVELTYPE *__levelTypePtr,
+	                    LevelBorder *__levelhigh, LevelCell *__cellPtr,
+	                    vector< Road > *__roadPtr, vector< Road > *__lanePtr ) {
+		_levelTypePtr = __levelTypePtr;
 		_levelBorderPtr = __levelhigh;
-		_boundaryVecPtr = __boundaryVecPtr;
-		_cellPtr = __cellPtr;
+		_levelCellPtr = __cellPtr;
 		_roadPtr = __roadPtr;
 		_lanePtr = __lanePtr;
 	}

@@ -39,6 +39,7 @@ using namespace std;
 //#define RECORD_VIDEO
 
 class Window : public QMainWindow, public PathwayData, public RegionData {
+
 Q_OBJECT
 private:
 
@@ -51,28 +52,11 @@ private:
 	GraphicsView *_gv;
 	LEVELTYPE _levelType;
 	
-	
 	// display
 	double _content_width;
 	double _content_height;
-	Polygon2 _contour;
 	
-	//*******************************************
-	// menu
-	//*******************************************
-	// load
-	QMenu *loadMenu;
-	QAction *selDataAct;
-	
-	// optimization
-	QMenu *optMenu;
-	
-	QAction *selOctilinearLSAct;
-	QAction *selOctilinearCGAct;
-	
-	void postLoad( void );
-	
-	void simulateKey( Qt::Key key );
+	void _simulateKey( Qt::Key key );
 	
 	void _init( void );
 
@@ -82,46 +66,22 @@ private:
 #endif //RECORD_VIDEO
 	
 	// thread
-	void threadBoundaryForce( void );
+	void _threadBoundaryForce( void );
 	
-	void threadCellForce( void );
+	void _threadCellCenterForce( void );
 	
-	// void threadBoneForce( void );
-	void threadCenterForce( void );
+	void _threadCellComponentForce( void );
 	
-	void threadPathwayForce( void );
+	void _threadPathwayForce( void );
 	
-	void threadOctilinearBoundary( void );
+	void _threadOctilinearBoundary( void );
 	
 	void steinertree( void );
 	
-	// octilinearity
-	void processOctilinearBoundary( void );
-	
 	void spaceCoverage( void );
-
-public Q_SLOTS:
-	
-	// optimization
-	//void selectSmooth( void );
-	//void selectOctilinear( void );
-	
-	// level high
-	void selectLevelHighBuildBoundary( void );
-	
-	void buildLevelHighBoundaryGraph( void );
-	
-	void updateLevelHighPolygonComplex( void );
-	
-	// level middle
-	void selectLevelMiddleBuildBoundary( void );
-	
-	void buildLevelMiddleBoundaryGraph( void );
-	
-	void updateLevelMiddlePolygonComplex( void );
 	
 	// level low
-	// level detail
+	// level componentRegion
 	void selectLevelDetailBuildBoundary( void );
 	
 	void buildLevelDetailBoundaryGraph( void );
@@ -138,7 +98,14 @@ public Q_SLOTS:
 	
 	void updateAllScene( void );
 
+protected:
+	
+	void keyPressEvent( QKeyEvent *event );
+	
+	void timerEvent( QTimerEvent *event );
+
 public:
+	
 	explicit Window( QWidget *parent = 0 );
 	
 	explicit Window( const Window &obj );
@@ -149,11 +116,6 @@ public:
 		_init();
 	}
 
-protected:
-	
-	void keyPressEvent( QKeyEvent *event );
-	
-	void timerEvent( QTimerEvent *event );
 };
 
 

@@ -36,6 +36,7 @@ using namespace std;
 
 #include <boost/lexical_cast.hpp>
 #include "base/Common.h"
+#include "base/Seed.h"
 #include "base/Polygon2.h"
 
 //------------------------------------------------------------------------------
@@ -69,25 +70,19 @@ using CGAL::ORIGIN;
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
-class Seed {
-public:
-	unsigned int id;             // id
-	Coord2 coord;          // position
-	double weight;         // weight
-	Polygon2 cellPolygon;    // cell polygon
-};
 
 class Voronoi {
 
 private:
 	
 	unsigned _id;
-	// contour
-	Polygon2 *_contourPtr;        // contour of the voronoi diagram
+	// outer simpleContour of the voronoi diagram
+	Polygon2 *_contourPtr;
 	
 	// seeds
 	vector< Seed > *_seedVecPtr;
-	vector< vector< K::Point_2 > > _polyVec2D;         // map seed points and cell polygon
+	// map seed points and cell polygon
+	vector< vector< K::Point_2 > > _polyVec2D;
 	
 	K::Segment_2 _convertToSeg( const CGAL::Object seg_obj, bool outgoing,
 	                            bool &isLine, double &slope );
@@ -101,7 +96,7 @@ protected:
 public:
 	
 	Voronoi();                      // default constructor
-	Voronoi( const Voronoi &obj ); // Copy constructor
+	Voronoi( const Voronoi &obj );  // Copy constructor
 	virtual ~Voronoi();             // Destructor
 
 //------------------------------------------------------------------------------

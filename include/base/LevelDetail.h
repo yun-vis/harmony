@@ -4,8 +4,8 @@
 //
 //==============================================================================
 
-#ifndef _LevelBorder_H        // beginning of header file
-#define _LevelBorder_H        // notifying that this file is included
+#ifndef _LevelDetail_H        // beginning of header file
+#define _LevelDetail_H        // notifying that this file is included
 
 //----------------------------------------------------------------------
 //  Including header files
@@ -38,47 +38,32 @@ using namespace std;
 //	Defining data types
 //------------------------------------------------------------------------------
 
-
 //----------------------------------------------------------------------
 //	Defining macros
 //----------------------------------------------------------------------
 
-class LevelBorder : public LevelBase {
+class LevelDetail : public LevelBase {
 
 private:
-	
-	ForceGraph _skeletonForceGraph;
-	RegionBase _regionBase;
-	
+
 protected:
 	
-	void _init( double *__widthPtr, double *__heightPtr,
-	            double *__veCoveragePtr, SkeletonGraph &__skeletonGraph );
+	void _init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr );
 	
 	void _clear( void );
 	
-	void _normalizeSkeleton( void );
-	
-	void _normalizeRegionBase( void );
-	
-	void _decomposeSkeleton( void );
-
 public:
 	
-	LevelBorder();                              // default constructor
-	LevelBorder( const LevelBorder &obj );      // Copy constructor
-	virtual ~LevelBorder();                     // Destructor
+	LevelDetail();                              // default constructor
+	LevelDetail( const LevelDetail &obj );      // Copy constructor
+	virtual ~LevelDetail();                     // Destructor
 
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-	const ForceGraph &skeletonForceGraph( void ) const { return _skeletonForceGraph; }
+	//const RegionBase &regionBase( void ) const { return _regionBase; }
 	
-	ForceGraph &skeletonForceGraph( void ) { return _skeletonForceGraph; }
-	
-	const RegionBase &regionBase( void ) const { return _regionBase; }
-	
-	RegionBase &regionBase( void ) { return _regionBase; }
+	//RegionBase &regionBase( void ) { return _regionBase; }
 	
 //------------------------------------------------------------------------------
 //  Specific functions
@@ -87,13 +72,13 @@ public:
 
 	void updatePolygonComplex( void ) override;
 	
+	void prepare( void );
+	
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( double *__widthPtr, double *__heightPtr,
-	           double *__veCoveragePtr, SkeletonGraph &__skeletonGraph ) {
-		_init( __widthPtr, __heightPtr,
-		       __veCoveragePtr, __skeletonGraph );
+	void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr ) {
+		_init( __widthPtr, __heightPtr, __veCoveragePtr );
 	}
 	
 	void clear( void ) { _clear(); }
@@ -101,17 +86,17 @@ public:
 //------------------------------------------------------------------------------
 //      I/O
 //------------------------------------------------------------------------------
-	friend ostream &operator<<( ostream &stream, const LevelBorder &obj );
+	friend ostream &operator<<( ostream &stream, const LevelDetail &obj );
 	
 	// Output
-	friend istream &operator>>( istream &stream, LevelBorder &obj );
+	friend istream &operator>>( istream &stream, LevelDetail &obj );
 	// Input
 	
-	virtual const char *className( void ) const { return "LevelBorder"; }
+	virtual const char *className( void ) const { return "LevelDetail"; }
 	// Class name
 };
 
-#endif // _LevelBorder_H
+#endif // _LevelDetail_H
 
 // end of header file
 // Do not add any stuff under this line.

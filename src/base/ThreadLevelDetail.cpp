@@ -20,23 +20,22 @@ void ThreadLevelDetail::force( void ) {
 	
 	double err = INFINITY;
 	
-	vector< multimap< int, CellComponent > > &cellComponentVec = _cellPtr->cellComponentVec();
+	vector< multimap< int, CellComponent > > &cellComponentVec = _levelCellPtr->cellComponentVec();
 	multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ _cellIndex ];
 	multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
 	advance( itC, _groupIndex );
 	
-	itC->second.detail.force()._initSeed();
-	while( ( err > itC->second.detail.force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
+	while( ( err > itC->second.componentRegion.force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 		
-		switch( itC->second.detail.force().mode() ) {
+		switch( itC->second.componentRegion.force().mode() ) {
 		case TYPE_FORCE:
 		case TYPE_BARNES_HUT: {
 			_pathwayPtr->pathwayMutex().lock();
-			itC->second.detail.force().force();
-			err = itC->second.detail.force().verletIntegreation();
+			itC->second.componentRegion.force().displacement();
+			err = itC->second.componentRegion.force().verletIntegreation();
 			//cerr << "WorkerLevelDetailed:: err (pathway force) = " << err << endl;
 			_pathwayPtr->pathwayMutex().unlock();
-			if( err < itC->second.detail.force().finalEpsilon() ) {
+			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
 				//stop();
 				//cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
 				//cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
@@ -45,11 +44,11 @@ void ThreadLevelDetail::force( void ) {
 		}
 		case TYPE_CENTROID: {
 			_pathwayPtr->pathwayMutex().lock();
-			itC->second.detail.force().centroidGeometry();
-			err = itC->second.detail.force().gap();
+			itC->second.componentRegion.force().centroidGeometry();
+			err = itC->second.componentRegion.force().gap();
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
 			_pathwayPtr->pathwayMutex().unlock();
-			if( err < itC->second.detail.force().finalEpsilon() ) {
+			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
 				//stop();
 				//cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
 				//cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
@@ -58,15 +57,15 @@ void ThreadLevelDetail::force( void ) {
 		}
 		case TYPE_HYBRID: {
 			_pathwayPtr->pathwayMutex().lock();
-			itC->second.detail.force().force();
+			itC->second.componentRegion.force().displacement();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
 			if( _count % freq == 0 && _count > 30 )
-				itC->second.detail.force().centroidGeometry();
-			err = itC->second.detail.force().verletIntegreation();
+				itC->second.componentRegion.force().centroidGeometry();
+			err = itC->second.componentRegion.force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
 			//cerr << "_idI = " << _idI << ", idJ = " << _idJ << ": err (pathway force) = " << err << endl;
-			if( err < itC->second.detail.force().finalEpsilon() ) {
+			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
 				//stop();
 				//cerr << "[Force-Directed] Finished Execution Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutETime() << endl;
 				//cerr << "[Force-Directed] Finished CPU Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutCPUTime() << endl;

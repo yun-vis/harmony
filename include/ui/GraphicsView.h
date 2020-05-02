@@ -18,7 +18,7 @@ using namespace std;
 #ifndef Q_MOC_RUN
 
 #include "base/Color.h"
-#include "base/Cell.h"
+#include "base/LevelCell.h"
 #include "base/Road.h"
 #include "base/Pathway.h"
 #include "base/PathwayData.h"
@@ -72,10 +72,11 @@ private:
 			_is_boundaryFlag, _is_subPathwayFlag,
 			_is_cellFlag, _is_cellPolygonFlag, _is_cellPolygonComplexFlag,
 			_is_roadFlag, _is_laneFlag,
-	// _is_mclPolygonFlag,
-	_is_centerFlag, _is_centerPolygonFlag,
+			_is_centerFlag, _is_centerPolygonFlag,
 			_is_pathwayPolygonFlag, _is_pathwayPolygonContourFlag;
-
+	
+	void _init( void );
+	
 protected:
 	
 	void _item_boundary( void );
@@ -130,7 +131,6 @@ protected:
 	
 	void _update_item_interCellComponents( void );
 	
-	// void _item_mclPolygons( void );
 	void _item_pathwayPolygons( void );
 	
 	void _update_item_pathwayPolygons( void );
@@ -219,8 +219,6 @@ public:
 	
 	const bool &isCenterFlag( void ) const { return _is_centerFlag; }
 	
-	//bool &          isMCLPolygonFlag( void )        { return _is_mclPolygonFlag; }
-	//const bool &    isMCLPolygonFlag( void ) const  { return _is_mclPolygonFlag; }
 	bool &isPathwayPolygonFlag( void ) { return _is_pathwayPolygonFlag; }
 	
 	const bool &isPathwayPolygonFlag( void ) const { return _is_pathwayPolygonFlag; }
@@ -256,7 +254,7 @@ public:
 //------------------------------------------------------------------------------
 //      Specific methods
 //------------------------------------------------------------------------------
-	void init( void ) { ; }
+	void init( void ) { _init(); }
 	
 	void initPolygonItems( void );
 	

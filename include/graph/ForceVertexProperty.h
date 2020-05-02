@@ -59,16 +59,17 @@ public:
 //	Reference to elements
 //------------------------------------------------------------------------------
 	
-	unsigned int leafID;         // quadtree id
-	unsigned int label;          // mcl clustering id
+	unsigned int leafID;            // quadtree id
+	unsigned int label;             // mcl clustering id
 	
-	Coord2 *prevCoordPtr;   // previous position
-	Coord2 *forcePtr;       // spring force
-	Coord2 *placePtr;       // voronoi force
-	Coord2 *shiftPtr;       // displacement
+	Coord2 *prevCoordPtr;           // previous position
+	Coord2 *forcePtr;               // spring force
+	Coord2 *placePtr;               // voronoi force
+	Coord2 *shiftPtr;               // displacement
 	
-	Polygon2 polygon;        // territory of each vertex
-	GraphicsVertexItem *itemPtr;        // pointer to graphic objects
+	Polygon2 *cellPtr;              // pointer to the voronoi cell
+
+	GraphicsVertexItem *itemPtr;    // pointer to graphic objects
 
 //------------------------------------------------------------------------------
 //	Special functions

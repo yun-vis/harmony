@@ -18,7 +18,7 @@
 using namespace std;
 
 #include "base/PathwayData.h"
-#include "base/Cell.h"
+#include "base/LevelCell.h"
 #include "base/CurvyTree.h"
 #include "optimization/Force.h"
 #include "graph/UndirectedBaseGraph.h"
@@ -95,7 +95,7 @@ private:
 	
 	bool _findVertexOnLine( Coord2 &coord, UndirectedBaseGraph::edge_descriptor &edT );
 	
-	void _initRoad( Cell *cellPtr, int __selectedID );
+	void _initRoad( LevelCell *cellPtr, int __selectedID );
 
 /*
     void _initLane( unsigned int __gid, int __selectedID,
@@ -176,7 +176,7 @@ public:
 		_initSteinerNet( __cellComponentVec, __selectedID );
 	}
 	
-	void initRoad( Cell *__cellPtr, int __selectedID ) {
+	void initRoad( LevelCell *__cellPtr, int __selectedID ) {
 		_initRoad( __cellPtr, __selectedID );
 	}
 

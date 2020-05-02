@@ -39,7 +39,7 @@ void Voronoi::_init( vector< Seed > &__seedVec, Polygon2 &__contour ) {
 //      none
 //
 void Voronoi::_clear( void ) {
-	_contourPtr = NULL;        // contour of the voronoi diagram
+	_contourPtr = NULL;        // simpleContour of the voronoi diagram
 	
 	// seeds
 	_seedVecPtr = NULL;
@@ -131,6 +131,7 @@ K::Segment_2 Voronoi::_convertToSeg( const CGAL::Object seg_obj, bool outgoing,
 //      none
 //
 void Voronoi::createVoronoiDiagram( bool isWeighted ) {
+	
 	vector< RT2::Weighted_point > wpoints;
 	
 	// initialization
@@ -145,13 +146,13 @@ void Voronoi::createVoronoiDiagram( bool isWeighted ) {
 		// cerr << "w(" << i << ") = " << (*_seedVecPtr)[i].weight << endl;
 		if( isWeighted ) {
 			//if ( _seedVecPtr->size() == 2 ) cerr << "w = " << ((*_seedVecPtr)[i].weight ) << endl;
-			wpoints.push_back( RT2::Weighted_point( K::Point_2( ( *_seedVecPtr )[ i ].coord.x(),
-			                                                    ( *_seedVecPtr )[ i ].coord.y() ),
+			wpoints.push_back( RT2::Weighted_point( K::Point_2( ( *_seedVecPtr )[ i ].coordPtr->x(),
+			                                                    ( *_seedVecPtr )[ i ].coordPtr->y() ),
 			                                        10.0 * ( ( *_seedVecPtr )[ i ].weight ) ) );
 		}
 		else {
-			wpoints.push_back( RT2::Weighted_point( K::Point_2( ( *_seedVecPtr )[ i ].coord.x(),
-			                                                    ( *_seedVecPtr )[ i ].coord.y() ),
+			wpoints.push_back( RT2::Weighted_point( K::Point_2( ( *_seedVecPtr )[ i ].coordPtr->x(),
+			                                                    ( *_seedVecPtr )[ i ].coordPtr->y()  ),
 			                                        0 ) );
 		}
 		//cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
@@ -360,9 +361,10 @@ void Voronoi::createVoronoiDiagram( bool isWeighted ) {
 //  none
 //
 void Voronoi::mapSeedsandPolygons( void ) {
+	
 	for( unsigned int i = 0; i < _seedVecPtr->size(); i++ ) {
 		
-		K::Point_2 pt( ( *_seedVecPtr )[ i ].coord.x(), ( *_seedVecPtr )[ i ].coord.y() );
+		K::Point_2 pt( ( *_seedVecPtr )[ i ].coordPtr->x(), ( *_seedVecPtr )[ i ].coordPtr->y() );
 		
 		// find appropriate polygon boundary
 		for( unsigned int m = 0; m < _polyVec2D.size(); m++ ) {
@@ -382,16 +384,16 @@ void Voronoi::mapSeedsandPolygons( void ) {
 			if( bside == CGAL::ON_BOUNDED_SIDE ) {
 				
 				// copy polygon
-				Polygon2 poly( coords );
-				poly.updateCentroid();
-				poly.center() = poly.centroid();
-				poly.area() = poly.area();
-				( *_seedVecPtr )[ i ].cellPolygon = poly;
+				Polygon2 &p = *( *_seedVecPtr )[ i ].voronoiCellPtr;
+				p.elements() = coords;
+				p.updateCentroid();
+				p.center() = p.centroid();
+				p.area() = p.area();
 				
-				//cerr << "poly.coords = " << poly.elements()[0];
-				//cerr << "test = " << (*_seedVecPtr)[i].cellPolygon.elements()[0];
-				//cerr << "area = " << (*_seedVecPtr)[i].cellPolygon.area() << " c = " << (*_seedVecPtr)[i].cellPolygon.center();
 #ifdef  DEBUG
+				cerr << "poly.coords = " << poly.elements()[0];
+				cerr << "test = " << (*_seedVecPtr)[i].voronoiCellPtr.elements()[0];
+				cerr << "area = " << (*_seedVecPtr)[i].voronoiCellPtr->area() << " c = " << (*_seedVecPtr)[i].voronoiCellPtr->center();
 				cerr << "area = " << itP->second.area() << endl;
 				cerr << "pgon_area = " << poly.area() << endl;
 #endif  // DEBUG
