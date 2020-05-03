@@ -57,12 +57,12 @@ private:
 	
 	// data structure
 	bool _is_simplifiedFlag;
-	int _clonedThreshold;           // if == 0, cloned by type, else by threshold value
-	string _inputpath, _tmppath,       // input output files
-	_fileFreq, _fileType;       // metabolite frequency
+	int _clonedThreshold;               // if == 0, cloned by type, else by threshold value
+	string _inputpath, _tmppath,        // input output files
+	_fileFreq, _fileType;               // metabolite frequency
 	ENERGYTYPE _energyType;
 	COLORTYPE _colorType;
-	unsigned int _maxThread;                 // maximum thread number
+	unsigned int _maxThread;            // maximum thread number
 	
 	// ui
 	int _font_size;
@@ -76,8 +76,16 @@ private:
 			_is_pathwayPolygonFlag, _is_pathwayPolygonContourFlag;
 	
 	void _init( void );
-	
+
 protected:
+	
+	void _item_force_graph( ForceGraph &g );
+	
+	void _update_item_force_graph( ForceGraph &g );
+	
+	void _item_polygon( Polygon2 &p );
+	
+	void _update_item_polygon( Polygon2 &p );
 	
 	void _item_boundary( void );
 	
@@ -90,8 +98,6 @@ protected:
 	void _item_composite( void );
 	
 	void _update_item_composite( void );
-	
-	void _item_pathways( void );
 	
 	void _item_subpathways( void );
 	
@@ -109,15 +115,13 @@ protected:
 	
 	void _update_item_cells( void );
 	
-	void _item_seeds( void );
-	
 	void _item_polygonComplex( void );
 	
 	void _update_item_polygonComplex( void );
 	
-	void _item_polygons( void );
+	void _item_composite_polygons( void );
 	
-	void _update_item_polygons( void );
+	void _update_item_composite_polygons( void );
 	
 	void _item_cellPolygons( void );
 	
@@ -128,8 +132,6 @@ protected:
 	void _update_item_cellPolygonComplex( bool fineFlag );
 	
 	void _item_interCellComponents( void );
-	
-	void _update_item_interCellComponents( void );
 	
 	void _item_pathwayPolygons( void );
 	

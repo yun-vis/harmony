@@ -5,6 +5,7 @@
 // ThreadOctilinearBoundary
 //----------------------------------------------------------
 ThreadOctilinearBoundary::ThreadOctilinearBoundary( void ) {
+	
 	// constructor
 	_octilinearPtr = NULL;
 	_optType = LEAST_SQUARE;
@@ -22,6 +23,7 @@ ThreadOctilinearBoundary::ThreadOctilinearBoundary( void ) {
 }
 
 ThreadOctilinearBoundary::ThreadOctilinearBoundary( const ThreadOctilinearBoundary &t ) {
+
 	//****************************************
 	// ThreadOCtilinearBoundary
 	//****************************************

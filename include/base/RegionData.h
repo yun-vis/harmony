@@ -57,10 +57,11 @@ public:
 //  Specific functions
 //------------------------------------------------------------------------------
 	
-	void setRegionData( LEVELTYPE *__levelTypePtr,
+	void setRegionData( LEVELTYPE *__levelTypePtr, vector< Octilinear * > *__octilinearBoundaryVecPtr,
 	                    LevelBorder *__levelhigh, LevelCell *__cellPtr,
 	                    vector< Road > *__roadPtr, vector< Road > *__lanePtr ) {
 		_levelTypePtr = __levelTypePtr;
+		_octilinearBoundaryVecPtr = __octilinearBoundaryVecPtr;
 		_levelBorderPtr = __levelhigh;
 		_levelCellPtr = __cellPtr;
 		_roadPtr = __roadPtr;
