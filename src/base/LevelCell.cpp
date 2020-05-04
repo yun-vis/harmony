@@ -631,16 +631,10 @@ int LevelCell::_computeMCLClusters( ForceGraph &fg ) {
 			ofs << fg[ vdS ].id << "\t" << fg[ vdT ].id << "\t" << fg[ ed ].weight << endl;
 		}
 
-#ifdef __linux__
-	cm = string( "/home/yun/Desktop/gitroot/tools/qtborder/micans/bin/mcl " ) + inputfilename + string( " --abc -o " ) + outputfilename;
-	cerr << "cm = " << cm << endl;
-#endif    // __linux__
-#ifdef __APPLE__
 	cm = ( qApp->applicationDirPath() + QString( "/third_party/micans/bin/./mcl " ) ).toStdString() + inputfilename +
 	     string( " --abc -o " ) + outputfilename;
 	cerr << "cm = " << cm << endl;
-#endif    // __MAC__
-	
+
 	system( cm.c_str() );
 	
 	// read the clustering info

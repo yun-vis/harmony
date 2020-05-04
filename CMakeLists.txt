@@ -18,13 +18,13 @@ set(CMAKE_BUILD_TYPE RELEASE)
 set(CMAKE_C_COMPILER /usr/bin)
 if( APPLE )
   set( CMAKE_CXX_STANDARD 11)
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework Accelerate -DEIGEN_USE_BLAS -ltinyxml -lcgraph -lgvc -lboost_thread-mt -lboost_system-mt -lboost_graph-mt -lcgal -lgmp -lmpfr -ldl" )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework Accelerate -DEIGEN_USE_BLAS -ltinyxml -lcgraph -lgvc -lboost_thread-mt -lboost_system-mt -lboost_graph-mt -lcgal -lgmp -lmpfr -ldl -Wa" )
 elseif( UNIX )
   message( "Ubuntu" )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -lboost_graph" )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -DEIGEN_USE_ACML -ltinyxml -lcgraph -lgvc -lboost_thread -lboost_system -lboost_graph -lCGAL -lgmp -lmpfr -ldl -lpthread" )
 endif()
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD -O3 -DNDEBUG" )
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -DIL_STD -O3 -DNDEBUG -Wa" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -DIL_STD -O3 -DNDEBUG" )
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD -O3 -DNDEBUG -openmp -omp" )
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD" )
 
@@ -67,8 +67,9 @@ elseif( UNIX )
 
   #set(THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} ${CMAKE_SOURCE_DIR}/third_party/mylib/include/pcl-1.9/ )
   #set(THIRD_PARTY_LIB ${THIRD_PARTY_LIB} ${CMAKE_SOURCE_DIR}/third_party/mylib/lib/ )
+  set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
   #set( QT5_PATH_DIR "/home/$ENV{USER}/MyLib/release/qt5-package/5.8/gcc_64")
-  #set( GRAPHVIZ_PATH_DIR "/home/$ENV{USER}/MyLib/release/graphviz")
+  set( GRAPHVIZ_PATH_DIR "/home/$ENV{USER}/MyLib/release/graphviz")
 
   target_include_directories(${Target_Name}
           PUBLIC
@@ -76,7 +77,8 @@ elseif( UNIX )
           /usr/include/
           /usr/include/x86_64-linux-gnu/
           ${CMAKE_SOURCE_DIR}/include/
-          ${QT5_PATH_DIR}/include/
+          #${QT5_PATH_DIR}/include/
+          ${GRAPHVIZ_PATH_DIR}/include/
           ${THIRD_PARTY_INCLUDE}
           )
 
@@ -87,6 +89,8 @@ elseif( UNIX )
           /usr/lib/x86_64-linux-gnu/
           ${CMAKE_SOURCE_DIR}/src/
           ${THIRD_PARTY_LIB}
+          #${QT5_PATH_DIR}/lib/
+          ${GRAPHVIZ_PATH_DIR}/lib/
           )
 elseif( WIN32 )
 endif()
