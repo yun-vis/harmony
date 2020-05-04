@@ -6,19 +6,19 @@
 //----------------------------------------------------------
 ThreadLevelCellCenter::ThreadLevelCellCenter( void ) {
 	// ThreadBase::ThreadBase();
-	cerr << "construct ThreadLevelCellCenter..." << endl;
+	// cerr << "construct ThreadLevelCellCenter..." << endl;
 }
 
 ThreadLevelCellCenter::~ThreadLevelCellCenter() {
 	//ThreadBase::~ThreadBase();
-	cerr << "destroy ThreadLevelCellCenter..." << endl;
+	// cerr << "destroy ThreadLevelCellCenter..." << endl;
 }
 
 void ThreadLevelCellCenter::force( void ) {
 
 	double err = INFINITY;
-	cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
 	
+	// cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
 	while( ( err > _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 		
 		// cerr << "err = " << err << " _count = " << _count << endl;
@@ -30,7 +30,10 @@ void ThreadLevelCellCenter::force( void ) {
 			_levelCellPtr->additionalForcesCenter();
 			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
-			cerr << "ThreadLevelCellCenter::err (force) = " << err << endl;
+			//cerr << "ThreadLevelCellCenter::err (force) = " << err << endl;
+			if( err < _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) {
+				return;
+			}
 			break;
 		}
 		case TYPE_CENTROID: {
@@ -40,6 +43,9 @@ void ThreadLevelCellCenter::force( void ) {
 			err = _levelCellPtr->centerVec()[ _cellIndex ].force().gap();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "WorkerLevelCenter::err (centroid) = " << err << endl;
+			if( err < _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) {
+				return;
+			}
 			break;
 		}
 		case TYPE_HYBRID: {
@@ -51,7 +57,10 @@ void ThreadLevelCellCenter::force( void ) {
 				_levelCellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
 			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
-			cerr << "id = " << _id << " WorkerLevelCenter::err (hybrid) = " << err << endl;
+			//cerr << " WorkerLevelCenter::err (hybrid) = " << err << endl;
+			if( err < _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) {
+				return;
+			}
 			break;
 		}
 		default:
@@ -62,15 +71,15 @@ void ThreadLevelCellCenter::force( void ) {
 }
 
 void ThreadLevelCellCenter::stress( void ) {
-	cerr << "stress-based approach..." << endl;
+	//cerr << "stress-based approach..." << endl;
 }
 
 void ThreadLevelCellCenter::run( int id ) {
+
 	//std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
-	cerr << "run ThreadLevelCellCenter..." << endl;
-	cerr << "tid = " << id << endl;
+	//cerr << "run ThreadLevelCellCenter..." << endl;
+	//cerr << "tid = " << id << endl;
 	_id = id;
-	
 	if( _energyType == ENERGY_FORCE ) {
 		force();
 	}

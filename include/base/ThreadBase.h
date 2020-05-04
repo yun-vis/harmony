@@ -48,7 +48,6 @@ public:
 		_cellIndex = cellIndex;
 		_groupIndex = groupIndex;
 		_maxLoop = maxLoop;
-		// _indexVec = indexVec;
 	}
 	
 	const ENERGYTYPE &energyType( void ) const { return _energyType; }

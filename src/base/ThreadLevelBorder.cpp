@@ -7,19 +7,21 @@
 ThreadLevelBorder::ThreadLevelBorder( void ) {
 	
 	// ThreadBase::ThreadBase();
-	cerr << "construct ThreadLevelBorder..." << endl;
+	// cerr << "construct ThreadLevelBorder..." << endl;
 }
 
 ThreadLevelBorder::~ThreadLevelBorder() {
 	
 	// ThreadBase::~ThreadBase();
-	cerr << "destroy ThreadLevelBorder..." << endl;
+	// cerr << "destroy ThreadLevelBorder..." << endl;
 }
 
 void ThreadLevelBorder::force( void ) {
-	
+
+#ifdef DEBUG
 	cerr << "run force-based approach..." << endl;
 	cerr << "epsilon = " << _levelBorderPtr->regionBase().force().finalEpsilon() << endl;
+#endif // DEBUG
 	
 	double err = INFINITY;
 	while( ( err > _levelBorderPtr->regionBase().force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
@@ -34,9 +36,7 @@ void ThreadLevelBorder::force( void ) {
 			_pathwayPtr->pathwayMutex().unlock();
 			// cerr << "WorkerLevelHigh::err (force) = " << err << endl;
 			if( err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
-				//Worker::stop();
-				//cerr << "[Force-Directed] Finished Execution Time = " << checkOutETime() << endl;
-				//cerr << "[Force-Directed] Finished CPU Time = " << checkOutCPUTime() << endl;
+				return;
 			}
 			break;
 		}
@@ -47,9 +47,7 @@ void ThreadLevelBorder::force( void ) {
 			_pathwayPtr->pathwayMutex().unlock();
 			// cerr << "WorkerLevelHigh::err (centroid) = " << err << endl;
 			if( err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
-				//Worker::stop();
-				//cerr << "[Centroidal] Finished Execution Time = " << checkOutETime() << endl;
-				//cerr << "[Centroidal] Finished CPU Time = " << checkOutCPUTime() << endl;
+				return;
 			}
 			break;
 		}
@@ -63,11 +61,9 @@ void ThreadLevelBorder::force( void ) {
 			}
 			err = _levelBorderPtr->regionBase().force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
-			cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
+			// cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
 			if( err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
-				//Worker::stop();
-				//cerr << "[Hybrid] Finished Execution Time = " << checkOutETime() << endl;
-				//cerr << "[Hybrid] Finished CPU Time = " << checkOutCPUTime() << endl;
+				return;
 			}
 			break;
 		}
@@ -75,18 +71,17 @@ void ThreadLevelBorder::force( void ) {
 			break;
 		}
 		
-		// cerr << "in..." << endl;
 		_count++;
 	}
 }
 
 void ThreadLevelBorder::stress( void ) {
-	cerr << "stress-based approach..." << endl;
+	// cerr << "stress-based approach..." << endl;
 }
 
 void ThreadLevelBorder::run( int id ) {
 	
-	cerr << "run ThreadLevelBorder..." << endl;
+	// cerr << "run ThreadLevelBorder..." << endl;
 	
 	if( _energyType == ENERGY_FORCE ) {
 		force();

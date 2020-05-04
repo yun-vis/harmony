@@ -178,6 +178,7 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 		}
 	}
 	
+#ifdef DEBUG
 	cerr << "levelType: " << *_levelTypePtr << endl;
 	cerr << "filepath: " << _configFilePath << endl;
 	cerr << "ka: " << _paramKa << endl;
@@ -191,6 +192,7 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 	cerr << "min_temperature: " << _paramMinTemperature << endl;
 	cerr << "alpha_temperature: " << _paramAlphaTemperature << endl;
 	cerr << "mode: " << _paramMode << endl;
+#endif // DEBUG
 }
 
 //

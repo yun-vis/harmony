@@ -245,8 +245,10 @@ void Stress::_initCoefs( void ) {
 	unsigned int nRows = 0;
 	_coef.resize( _nConstrs, _nVars );
 	_coef << Eigen::MatrixXd::Zero( _nConstrs, _nVars );
-	
+
+#ifdef DEBUG
 	printGraph( g );
+#endif // DEBUG
 	
 	// Regular edge length
 	BGL_FORALL_EDGES( edge, g, BoundaryGraph ) {

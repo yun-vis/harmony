@@ -51,6 +51,7 @@ ThreadOctilinearBoundary::~ThreadOctilinearBoundary() {
 }
 
 void ThreadOctilinearBoundary::run( int id ) {
+	
 	switch( _optType ) {
 	
 	case LEAST_SQUARE: {
@@ -60,7 +61,6 @@ void ThreadOctilinearBoundary::run( int id ) {
 		break;
 	case CONJUGATE_GRADIENT: {
 		cerr << "CONJUGATE_GRADIENT _iter = " << _iter << endl;
-		cerr << "test = " << _test << endl;
 		_octilinearPtr->ConjugateGradient( _iter );
 	}
 		break;

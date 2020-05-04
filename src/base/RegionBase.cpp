@@ -77,10 +77,13 @@ void RegionBase::createPolygonComplex( unsigned int nCluster ) {
 	// find the sets of the polygons of the same group
 	_polygonMat.resize( nCluster );
 	
+#ifdef DEBUG
 	cerr << "nCluster = " << nCluster << endl;
 	cerr << "seedVec.size() = " << seedVec.size()
 	     << " num_vertices( _forceGraph ) = " << num_vertices( _forceGraph ) << endl;
 	assert( seedVec.size() == num_vertices( _forceGraph ) );
+#endif // DEBUG
+	
 	for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 		
 		int gid = _forceGraph[ vertex( i, _forceGraph ) ].initID;

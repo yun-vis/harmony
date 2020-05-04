@@ -6,16 +6,16 @@
 //----------------------------------------------------------
 ThreadLevelDetail::ThreadLevelDetail( void ) {
 	//ThreadBase::ThreadBase();
-	cerr << "construct ThreadLevelDetail..." << endl;
+	//cerr << "construct ThreadLevelDetail..." << endl;
 }
 
 ThreadLevelDetail::~ThreadLevelDetail() {
 	//ThreadBase::~ThreadBase();
-	cerr << "destroy ThreadLevelDetail..." << endl;
+	//cerr << "destroy ThreadLevelDetail..." << endl;
 }
 
 void ThreadLevelDetail::force( void ) {
-	cerr << "force-based approach..." << endl;
+	//cerr << "force-based approach..." << endl;
 	//cerr << "epsilon = " << _LevelDetailedPtr->force().finalEpsilon() << endl;
 	
 	double err = INFINITY;
@@ -36,9 +36,7 @@ void ThreadLevelDetail::force( void ) {
 			//cerr << "WorkerLevelDetailed:: err (pathway force) = " << err << endl;
 			_pathwayPtr->pathwayMutex().unlock();
 			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
-				//stop();
-				//cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
-				//cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
+				return;
 			}
 			break;
 		}
@@ -49,9 +47,7 @@ void ThreadLevelDetail::force( void ) {
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
 			_pathwayPtr->pathwayMutex().unlock();
 			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
-				//stop();
-				//cerr << "[Force-Directed] Finished Execution Time [" << id << "] = " << checkOutETime() << endl;
-				//cerr << "[Force-Directed] Finished CPU Time [" << id << "] = " << checkOutCPUTime() << endl;
+				return;
 			}
 			break;
 		}
@@ -64,11 +60,8 @@ void ThreadLevelDetail::force( void ) {
 			err = itC->second.componentRegion.force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
-			//cerr << "_idI = " << _idI << ", idJ = " << _idJ << ": err (pathway force) = " << err << endl;
 			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
-				//stop();
-				//cerr << "[Force-Directed] Finished Execution Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutETime() << endl;
-				//cerr << "[Force-Directed] Finished CPU Time [" << "_idI = " << _idI << ", idJ = " << _idJ << "] = " << checkOutCPUTime() << endl;
+				return;
 			}
 			_count++;
 			break;
@@ -76,24 +69,27 @@ void ThreadLevelDetail::force( void ) {
 		default:
 			break;
 		}
-		
+
+#ifdef DEBUG
 		cerr << "count = " << _count << endl;
 		if( _count % 50 == 0 ) {
 			// QCoreApplication::processEvents();
 			cerr << "#";
 			//stop();
 		}
+#endif // DEBUG
 		_count++;
 	}
 }
 
 void ThreadLevelDetail::stress( void ) {
-	cerr << "stress-based approach..." << endl;
+	//cerr << "stress-based approach..." << endl;
 }
 
 void ThreadLevelDetail::run( int id ) {
-	cerr << "run ThreadLevelDetail..." << endl;
-	cerr << "tid = " << id << endl;
+	
+	//cerr << "run ThreadLevelDetail..." << endl;
+	//cerr << "tid = " << id << endl;
 	
 	if( _energyType == ENERGY_FORCE ) {
 		force();

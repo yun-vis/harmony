@@ -781,8 +781,6 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 			}
 		}
 		
-		// cerr << "here" << endl;
-		
 		// add edges
 		for( itC = cellComponent.begin(); itC != cellComponent.end(); itC++ ) {
 			
@@ -910,9 +908,9 @@ void Road::_initSteinerNet( vector< multimap< int, CellComponent > > &cellCompon
 			}
 		}
 	}
-	cerr << "ending" << endl;
 
 #ifdef DEBUG
+	cerr << "ending" << endl;
 	for( unsigned int i = 0; i < polygonVD.size(); i++ ){
 		cerr << "i = " << i << endl;
 		for( unsigned int j = 0; j < polygonVD[i].size(); j++ ){

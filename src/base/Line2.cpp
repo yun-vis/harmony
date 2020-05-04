@@ -112,7 +112,7 @@ void Line2::_initChaikinCurve( double unit = 100 ) {
 	// store initial the path
 	vector< Coord2 > &samples = _samples;
 	
-	cerr << "sample.size() = " << samples.size() << endl;
+	// cerr << "sample.size() = " << samples.size() << endl;
 	if( samples.size() > 0 )
 		_fineSamples.push_back( samples[ 0 ] );
 	for( unsigned int j = 1; j < samples.size(); j++ ) {

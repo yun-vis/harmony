@@ -5,7 +5,7 @@
 // ThreadBase
 //----------------------------------------------------------
 ThreadBase::ThreadBase( void ) {
-	cerr << "construct ThreadBase..." << endl;
+	//cerr << "construct ThreadBase..." << endl;
 	
 	// initialization
 	_energyType = ENERGY_FORCE;
@@ -15,5 +15,5 @@ ThreadBase::ThreadBase( void ) {
 }
 
 ThreadBase::~ThreadBase() {
-	cerr << "destroy ThreadBase..." << endl;
+	//cerr << "destroy ThreadBase..." << endl;
 }

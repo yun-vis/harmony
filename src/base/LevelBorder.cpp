@@ -637,7 +637,7 @@ void LevelBorder::buildBoundaryGraph( void ) {
 
 void LevelBorder::updatePolygonComplex( void ) {
 	
-	cerr << "updating high polygonComplex after optimization ..." << endl;
+	// cerr << "updating high polygonComplex after optimization ..." << endl;
 	
 	BoundaryGraph &bg = _octilinearBoundaryVec[ 0 ]->boundary();
 	map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;

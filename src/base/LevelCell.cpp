@@ -107,11 +107,13 @@ void LevelCell::_init( double *widthPtr, double *heightPtr,
 	
 	_buildCenterGraphs();
 	_buildCellGraphs();
-	
+
+#ifdef DEBUG
 	cerr << "filepath: " << configFilePath << endl;
 	cerr << "addKa: " << _paramAddKa << endl;
 	cerr << "addKr: " << _paramAddKr << endl;
 	cerr << "unit: " << _paramUnit << endl;
+#endif // DEBUG
 }
 
 
@@ -443,10 +445,12 @@ void LevelCell::_buildCellGraphs( void ) {
 		
 		multimap< int, CellComponent >::iterator itC = _cellComponentVec[ i ].begin();
 		Polygon2 &contour = *_cellVec[ i ].force().contourPtr();
-		
+
+#ifdef DEBUG
 		cerr << "init nV = " << num_vertices( _cellVec[ i ].forceGraph() ) << " nE = "
 		     << num_edges( _cellVec[ i ].forceGraph() ) << endl;
-		// cerr << "simpleContour = " << simpleContour.centroid() << endl;
+		cerr << "simpleContour = " << simpleContour.centroid() << endl;
+#endif // DEBUG
 		unsigned int idV = 0, idE = 0;
 		for( ; itC != _cellComponentVec[ i ].end(); itC++ ) {
 
@@ -544,10 +548,11 @@ void LevelCell::_buildCellGraphs( void ) {
 							}
 						}
 					}
-				
+#ifdef DEBUG
 				cerr << "subID = " << i << " vdVec.size() = " << vdVec.size() << endl;
 				cerr << "nV = " << num_vertices( _cellVec[ i ].forceGraph() ) << " nE = "
 				     << num_edges( _cellVec[ i ].forceGraph() ) << endl;
+#endif // DEBUG
 			}
 		}
 	}
@@ -630,11 +635,15 @@ int LevelCell::_computeMCLClusters( ForceGraph &fg ) {
 			
 			ofs << fg[ vdS ].id << "\t" << fg[ vdT ].id << "\t" << fg[ ed ].weight << endl;
 		}
-
+	
+	cm = ( qApp->applicationDirPath() + QString( "/third_party/micans/bin/./mcl " ) ).toStdString() + inputfilename +
+	     string( " --abc -V all -o " ) + outputfilename;
+#ifdef DEBUG
 	cm = ( qApp->applicationDirPath() + QString( "/third_party/micans/bin/./mcl " ) ).toStdString() + inputfilename +
 	     string( " --abc -o " ) + outputfilename;
 	cerr << "cm = " << cm << endl;
-
+#endif // DEBUG
+	
 	system( cm.c_str() );
 	
 	// read the clustering info
@@ -802,7 +811,7 @@ void LevelCell::updatePathwayCoords( void ) {
 						coordVec.push_back( coord );
 					}
 			}
-			cerr << "avg = " << avg;
+			// cerr << "avg = " << avg;
 
 #ifdef SKIP
 			Coord2 avg( 0.0, 0.0 );
@@ -1365,7 +1374,7 @@ void LevelCell::buildBoundaryGraph( void ) {
 				}
 			}
 		
-		cerr << "MiddleBuildBoundary::nV = " << num_vertices( _octilinearBoundaryVec[ i ]->boundary() ) << endl;
+		// cerr << "MiddleBuildBoundary::nV = " << num_vertices( _octilinearBoundaryVec[ i ]->boundary() ) << endl;
 		_octilinearBoundaryVec[ i ]->prepare( *_content_widthPtr / 2.0, *_content_heightPtr / 2.0 );
 
 #ifdef DEBUG
@@ -1375,12 +1384,12 @@ void LevelCell::buildBoundaryGraph( void ) {
 	
 	}
 	
-	cerr << "finishing building the middle graph..." << endl;
+	//cerr << "finishing building the middle graph..." << endl;
 }
 
 void LevelCell::updatePolygonComplex( void ) {
 	
-	cerr << "updating middle polygonComplex after optimization ..." << endl;
+	//cerr << "updating middle polygonComplex after optimization ..." << endl;
 	
 	for( unsigned int i = 0; i < _octilinearBoundaryVec.size(); i++ ) {
 		

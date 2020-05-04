@@ -37,9 +37,11 @@ public:
 		_iter = iter;
 		_optType = optType;
 		_test = test;
+#ifdef DEBUG
 		cerr << " init iter = " << _iter
 		     << " test = " << _test
 		     << " optType = " << _optType << endl;
+#endif // DEBUG
 	}
 	
 	void run( int id );

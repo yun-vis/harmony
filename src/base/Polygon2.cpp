@@ -263,9 +263,10 @@ void Polygon2::updateOrientation( void ) {
 		
 		p.push_back( K::Point_2( x, y ) );
 	}
-	
+
+#ifdef DEBUG
 	cerr << "polygon:" << endl << p << endl;
-	
+#endif // DEBUG
 	if( p.is_simple() == false ) {
 		cerr << "polygon is not simple..." << endl
 		     << p << endl;
@@ -389,11 +390,15 @@ double Polygon2::maxRadiusInPolygon( const Coord2 &coord ) {
 //  none
 //
 void Polygon2::cleanPolygon( void ) {
+	
 	bool isSimple = false;
 	Polygon2 ori = _elements;
 	bool isUpdated = false;
 	int test = 0;
+	
+#ifdef DEBUG
 	cerr << "(before)::_polygon = " << endl << *this << endl;
+#endif // DEBUG
 	
 	while( isSimple == false && ( _elements.size() > 0 ) && test < 5 ) {
 		
@@ -423,6 +428,7 @@ void Polygon2::cleanPolygon( void ) {
 				poly.push_back( K::Point_2( tmp.elements()[ i ].x(), tmp.elements()[ i ].y() ) );
 			}
 			else {
+#ifdef DEBUG
 				cerr << "acosValue = " << acosValue << endl;
 				cerr << "idP = " << idP << " i = " << i << " idN = " << idN << endl;
 				cerr << "P = " << coordP;
@@ -431,6 +437,7 @@ void Polygon2::cleanPolygon( void ) {
 				cerr << "PI = " << PI;
 				cerr << "NI = " << NI;
 				cerr << "PN =" << PN;
+#endif // DEBUG
 				isUpdated = true;
 				
 				// put the rest of the vector back and break
@@ -448,9 +455,11 @@ void Polygon2::cleanPolygon( void ) {
 			if( ( _elements[ j ] - _elements[ ( j + 1 ) % ( int ) _elements.size() ] ).norm() > MIN_VERTEX_DISTANCE )
 				poly.push_back( K::Point_2( _elements[ j ].x(), _elements[ j ].y() ) );
 			else {
+#ifdef DEBUG
 				cerr << "curr = " << _elements[ j ]
 				     << "next = " << _elements[ ( j + 1 ) % ( int ) _elements.size() ] << endl;
 				cerr << "idC = " << j << " idN = " << ( j + 1 ) % ( int ) _elements.size() << endl;
+#endif // DEBUG
 				isUpdated = true;
 			}
 		}

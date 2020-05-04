@@ -89,11 +89,11 @@ void Octilinear::_init( double __half_width, double __half_height ) {
 		}
 	}
 
-//#ifdef DEBUG
+#ifdef DEBUG
 	//cerr << "nAlpha = " << nAlpha << " nBeta = " << nBeta << " nVertices = " << nEdges << endl;
 	//cerr << "_d_Alpha = " << _d_Alpha << endl;
 	cerr << " _d_Beta = " << _d_Beta << endl;
-//#endif  // DEBUG
+#endif  // DEBUG
 
 //------------------------------------------------------------------------------
 //      Total number of linear variables
@@ -825,6 +825,7 @@ void Octilinear::_updateOutputs( void ) {
 //      err:
 //
 double Octilinear::LeastSquare( unsigned int iter ) {
+	
 	double mse = 0.0;
 	for( int i = 0; i < iter; i++ ) {
 		
@@ -908,7 +909,7 @@ double Octilinear::ConjugateGradient( unsigned int iter ) {
 	cerr << "iter = " << iter << endl;
 	for( int i = 0; i < iter; i++ ) {
 		
-		cerr << "i = " << i << endl;
+		// cerr << "i = " << i << endl;
 		// prepare the square matrix
 		A = _coef.transpose() * _coef;
 		b = _coef.transpose() * _output;

@@ -60,7 +60,20 @@ void Window::_init( void ) {
 	
 	_gv->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
 	_gv->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
-			_levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
+	                    _levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
+	
+	Base::Timer< chrono::milliseconds > timer ( "ms" );
+	timer.begin();
+
+	_simulateKey( Qt::Key_V );
+	_simulateKey( Qt::Key_1 );
+	_simulateKey( Qt::Key_Q );
+	_simulateKey( Qt::Key_A );
+	_simulateKey( Qt::Key_Z );
+	_simulateKey( Qt::Key_R );
+
+	timer.end();
+	timer.elapsed();
 }
 
 
@@ -148,16 +161,16 @@ void Window::_threadBoundaryForce( void ) {
 	// rendering
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
-		
+
+#ifdef DEBUG
 		cerr << "pool.n_idle() = " << pool.n_idle() << " _gv->maxThread() = " << _gv->maxThread() << endl;
-		this_thread::sleep_for( chrono::milliseconds( 200 ) );
-		cerr << "updating scene items..." << endl;
+#endif // DEBUG
+		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
 	
 	// wait for all computing threads to finish and stop all threads
 	pool.stop();
-	_simulateKey( Qt::Key_2 );
 }
 
 void Window::_threadCellCenterForce( void ) {
@@ -175,11 +188,12 @@ void Window::_threadCellCenterForce( void ) {
 		tlc[ i ] = new ThreadLevelCellCenter;
 		
 		tlc[ i ]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
-		tlc[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
+		tlc[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr, _roadPtr,
+		                         _lanePtr );
 		tlc[ i ]->init( THREAD_CENTER, _gv->energyType(), i, 0,
 		                _levelCellPtr->centerVec()[ i ].force().paramForceLoop() );
 		//tlc[ i ]->run( 0 );
-		pool.push([]( int id, ThreadLevelCellCenter* t ){ t->run( id ); }, tlc[i] );
+		pool.push( []( int id, ThreadLevelCellCenter *t ) { t->run( id ); }, tlc[ i ] );
 	}
 	
 	// rendering
@@ -187,7 +201,7 @@ void Window::_threadCellCenterForce( void ) {
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
 		//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
-		this_thread::sleep_for( chrono::milliseconds( 200 ) );
+		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
 	// cerr << "pool.n_idle() = " << pool.n_idle() << endl;
@@ -216,10 +230,11 @@ void Window::_threadCellComponentForce( void ) {
 		// create a new thread
 		tlm[ i ] = new ThreadLevelCellComponent;
 		tlm[ i ]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
-		tlm[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr,  _levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
+		tlm[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr, _roadPtr,
+		                         _lanePtr );
 		tlm[ i ]->init( THREAD_CELL, _gv->energyType(), i, 0, _levelCellPtr->cellVec()[ i ].force().paramForceLoop() );
 		//tlm[ i ]->run( 0 );
-		pool.push([]( int id, ThreadLevelCellComponent* t ){ t->run( id ); }, tlm[i] );
+		pool.push( []( int id, ThreadLevelCellComponent *t ) { t->run( id ); }, tlm[ i ] );
 	}
 	
 	// rendering
@@ -227,10 +242,13 @@ void Window::_threadCellComponentForce( void ) {
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
 		//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
-		this_thread::sleep_for( chrono::milliseconds( 500 ) );
+		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
 	// cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+	
+	// wait for all computing threads to finish and stop all threads
+	pool.stop();
 	
 	// clear the memory
 	for( unsigned int i = 0; i < _levelCellPtr->cellVec().size(); i++ ) {
@@ -266,9 +284,9 @@ void Window::_threadPathwayForce( void ) {
 			idD++;
 			threadNo++;
 		}
-		cerr << "no. of component = " << idMat[ i ].size() << endl;
+		//cerr << "no. of component = " << idMat[ i ].size() << endl;
 	}
-	cerr << "no. of threads = " << threadNo << endl;
+	//cerr << "no. of threads = " << threadNo << endl;
 	
 	unsigned int idC = 0;
 	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
@@ -288,10 +306,11 @@ void Window::_threadPathwayForce( void ) {
 			
 			tld[ i ][ j ] = new ThreadLevelDetail;
 			tld[ i ][ j ]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
-			tld[ i ][ j ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
+			tld[ i ][ j ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr,
+			                              _roadPtr, _lanePtr );
 			tld[ i ][ j ]->init( THREAD_PATHWAY, _gv->energyType(), i, j, c.componentRegion.force().paramForceLoop() );
 			//tld[ i ][ j ]->run( 0 );
-			pool.push([]( int id, ThreadLevelDetail* t ){ t->run( id ); }, tld[i][j] );
+			pool.push( []( int id, ThreadLevelDetail *t ) { t->run( id ); }, tld[ i ][ j ] );
 			
 			idC++;
 		}
@@ -301,9 +320,22 @@ void Window::_threadPathwayForce( void ) {
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
-		cerr << "pool.n_idle() = " << pool.n_idle() << endl;
-		this_thread::sleep_for( chrono::milliseconds( 500 ) );
+		// cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
+	}
+	
+	// wait for all computing threads to finish and stop all threads
+	pool.stop();
+	
+	// clear the memory
+	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
+		
+		multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ i ];
+		
+		for( unsigned int j = 0; j < cellComponentMap.size(); j++ ) {
+			delete tld[ i ][ j ];
+		}
 	}
 }
 
@@ -395,14 +427,15 @@ void Window::_threadOctilinearBoundary( void ) {
 	vector< ThreadOctilinearBoundary * > tob;
 	tob.resize( size );
 	
-	cerr << "octilinearBoundary: iter = " << iter << endl;
+	//cerr << "octilinearBoundary: iter = " << iter << endl;
 	for( unsigned int i = 0; i < size; i++ ) {
 		
-		cerr << " boundaryVec[i].nVertices() = " << num_vertices( boundaryVec[ i ]->boundary() ) << endl;
+		//cerr << " boundaryVec[i].nVertices() = " << num_vertices( boundaryVec[ i ]->boundary() ) << endl;
 		
 		// create a new thread
 		tob[ i ] = new ThreadOctilinearBoundary;
-		tob[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
+		tob[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr, _levelBorderPtr, _levelCellPtr, _roadPtr,
+		                         _lanePtr );
 		tob[ i ]->init( boundaryVec[ i ], iter, boundaryVec[ i ]->opttype(), 10 );
 		
 		tob[ i ]->run( 0 );
@@ -413,17 +446,18 @@ void Window::_threadOctilinearBoundary( void ) {
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
 		//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
-		this_thread::sleep_for( chrono::milliseconds( 500 ) );
+		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		redrawAllScene();
 	}
 	//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+	
+	// wait for all computing threads to finish and stop all threads
+	pool.stop();
 	
 	// clear the memory
 	for( unsigned int i = 0; i < size; i++ ) {
 		delete tob[ i ];
 	}
-	
-	//_simulateKey( Qt::Key_O );
 }
 
 //
@@ -619,12 +653,14 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 				itC->second.componentRegion.polygonComplexVD().insert(
 						pair< unsigned int, vector< BoundaryGraph::vertex_descriptor > >
 								( i, vdVec ) );
+#ifdef DEBUG
 				cerr << i << ", " << boundaryVec.size() << endl;
 				cerr << " vdVec.size() = " << vdVec.size() << " ?= " << size << endl;
 				for( unsigned int q = 0; q < vdVec.size(); q++ ) {
 					cerr << "id = " << bg[ vdVec[ q ] ].id << endl;
 				}
 				//id++;
+#endif // DEBUG
 			}
 			
 			// update the fixed flag
@@ -644,12 +680,12 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 			boundaryVec[ index ]->prepare( _content_width / 2.0, _content_height / 2.0 );
 			index++;
 			
-			printGraph( bg );
-			cerr << "DetailBuildBoundary::nV = " << num_vertices( bg ) << endl;
+			//printGraph( bg );
+			//cerr << "DetailBuildBoundary::nV = " << num_vertices( bg ) << endl;
 		}
 	}
 	
-	cerr << "finishing building the detailed graph..." << endl;
+	//cerr << "finishing building the detailed graph..." << endl;
 }
 
 //
@@ -663,7 +699,7 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 //
 void Window::updateLevelDetailPolygonComplex( void ) {
 	
-	cerr << "updating componentRegion polygonComplex after optimization ..." << endl;
+	//cerr << "updating componentRegion polygonComplex after optimization ..." << endl;
 	vector< multimap< int, CellComponent > > &cellCVec = _levelCellPtr->cellComponentVec();
 	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	// cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
@@ -723,8 +759,6 @@ void Window::updateLevelDetailPolygonComplex( void ) {
 			CellComponent &component = itC->second;
 			unsigned int subsysID = component.groupID;
 			Polygon2 &c = component.componentRegion.fineOutputContour().contour();
-			
-			if( subsysID == 2 ) cerr << "testc0 = " << c << endl;
 		}
 	}
 	
@@ -874,7 +908,7 @@ void Window::spaceCoverage( void ) {
 	contour.elements().push_back( Coord2( +0.5 * _content_width, -0.5 * _content_height ) );
 	contour.elements().push_back( Coord2( +0.5 * _content_width, +0.5 * _content_height ) );
 	contour.elements().push_back( Coord2( -0.5 * _content_width, +0.5 * _content_height ) );
-	cerr << "content_width = " << _content_width << " content_height = " << _content_height << endl;
+	// cerr << "content_width = " << _content_width << " content_height = " << _content_height << endl;
 	
 	// voronoi
 	Voronoi v;
@@ -930,8 +964,10 @@ void Window::spaceCoverage( void ) {
 		neighbor.push_back( sum );
 	}
 	
+#ifdef DEBUG
 	cerr << "neighbor CV = " << computeCV( neighbor ) << endl;
 	cerr << "area CV = " << computeCV( area ) << endl;
+#endif // DEBUG
 }
 
 
@@ -965,7 +1001,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// optimization
 		//****************************************
 		_threadBoundaryForce();
-		
+		_simulateKey( Qt::Key_2 );
 		break;
 	}
 	case Qt::Key_2: {
@@ -1012,6 +1048,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// optimization
 		//----------------------------------------
 		_threadCellCenterForce();
+		_simulateKey( Qt::Key_W );
 		
 		//----------------------------------------
 		// rendering
@@ -1066,6 +1103,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// optimization
 		//----------------------------------------
 		_threadCellComponentForce();
+		_simulateKey( Qt::Key_S );
 		
 		//----------------------------------------
 		// rendering
@@ -1116,13 +1154,14 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		_gv->isPathwayPolygonFlag() = true;
 		//_gv->isMCLPolygonFlag() = false;
 		_gv->isSubPathwayFlag() = true;
-
+		
 		
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
 		_levelCellPtr->updatePathwayCoords();
 		_threadPathwayForce();
+		_simulateKey( Qt::Key_X );
 		
 		//----------------------------------------
 		// rendering
@@ -1215,8 +1254,8 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 	}
 	case Qt::Key_L: {
 		
-		cerr << "_levelBorderPtr->regionBase().polygonComplex() = "
-		     << _levelBorderPtr->regionBase().polygonComplex().size() << endl;
+		//cerr << "_levelBorderPtr->regionBase().polygonComplex() = "
+		//     << _levelBorderPtr->regionBase().polygonComplex().size() << endl;
 		// initialize cell
 		_levelCellPtr->init( &_content_width, &_content_height,
 		                     &_gv->veCoverage(), &_gv->veRatio(),

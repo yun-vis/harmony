@@ -24,7 +24,6 @@ public:
 	void stress( void );
 	
 	void run( int id );
-	//void run( int id, string &name );
 };
 
 #endif // ThreadLevelHigh_H

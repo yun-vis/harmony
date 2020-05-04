@@ -12,19 +12,6 @@
 
 using namespace std;
 
-#ifndef Q_MOC_RUN
-
-#include "ui/GraphicsView.h"
-#include "base/ThreadOctilinearBoundary.h"
-#include "base/ThreadLevelBorder.h"
-#include "base/ThreadLevelCellCenter.h"
-#include "base/ThreadLevelCellComponent.h"
-#include "base/ThreadLevelDetail.h"
-#include "base/RegionData.h"
-#include "../third_party/CTPL/ctpl.h"
-
-#endif // Q_MOC_RUN
-
 #include <QtWidgets/QOpenGLWidget>      // qt should be included after boost to avoid conflict
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
@@ -34,6 +21,17 @@ using namespace std;
 #include <QtCore/QTimer>
 #include <QtCore/QThread>
 
+#ifndef Q_MOC_RUN
+#include "base/Timer.h"
+#include "base/ThreadOctilinearBoundary.h"
+#include "base/ThreadLevelBorder.h"
+#include "base/ThreadLevelCellCenter.h"
+#include "base/ThreadLevelCellComponent.h"
+#include "base/ThreadLevelDetail.h"
+#include "base/RegionData.h"
+#include "../third_party/CTPL/ctpl.h"
+#include "ui/GraphicsView.h"
+#endif // Q_MOC_RUN
 
 #define REMOVEBACKNUM   (15)
 //#define RECORD_VIDEO

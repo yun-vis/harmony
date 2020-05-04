@@ -1084,7 +1084,7 @@ void Pathway::genGraph( void ) {
 	cerr << "num of 1_METABOLITE = " << numMeta << endl;
 
 #ifdef DEBUG
-	//printGraph( _graph );
+	printGraph( _graph );
 #endif // DEBUG
 	
 	genLayoutGraph();
@@ -1146,7 +1146,7 @@ void Pathway::genLayoutGraph( void ) {
 
 #ifdef DEBUG
 	cerr << "printing the layout graph..." << endl;
-	//printGraph( _layoutGraph );
+	printGraph( _layoutGraph );
 #endif // DEBUG
 }
 

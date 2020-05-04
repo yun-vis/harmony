@@ -193,7 +193,7 @@ void GraphVizAPI::initGraph( T *bgl_ptr, vector< T > *subg_ptr, double domain_wi
 		agedge( _g, s, t, 0, 1 );
 	}
 	
-	cerr << "subGSize = " << subGSize << endl;
+	// cerr << "subGSize = " << subGSize << endl;
 	for( unsigned int i = 0; i < subGSize; i++ ) {
 		
 		// search for subgraph by name
@@ -260,8 +260,10 @@ void GraphVizAPI::initGraph( T *bgl_ptr, vector< T > *subg_ptr, double domain_wi
 			}
 		}
 	}
-	
-	cerr << "finishing init graph" << endl;
+
+#ifdef DEBUG
+	cerr << "GraphViz: finishing init graph" << endl;
+#endif // DEBUG
 }
 
 //
@@ -280,7 +282,6 @@ void GraphVizAPI::layoutGraph( T *bgl_ptr, vector< T > *subg_ptr ) {
 	typedef typename T::edge_iterator EdgeIterator;
 	typedef typename T::edge_descriptor EdgeDescriptor;
 	
-	cerr << "layout started" << endl;
 	//cerr << "starting layout..." << endl;
 	//gvLayout( _gvc, _g, "fdp" ); 	 // graphviz function: prism
 	gvLayout( _gvc, _g, "sfdp" );     // graphviz function: prism

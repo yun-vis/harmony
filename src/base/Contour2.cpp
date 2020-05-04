@@ -183,8 +183,6 @@ void Contour2::createContour( void ) {
 		Polygon2 &p = _polygons[ j ];
 		vector< UndirectedBaseGraph::vertex_descriptor > vdVec;
 		
-		if( j == 7 ) cerr << "jp = " << p << endl;
-		
 		// add vertices
 		for( unsigned int k = 0; k < p.elements().size(); k++ ) {
 			UndirectedBaseGraph::vertex_descriptor vd = NULL;
@@ -192,7 +190,7 @@ void Contour2::createContour( void ) {
 			bool isFound = findVertexInComplex( p.elements()[ k ], complex, vd );
 			if( isFound == true ) {
 				vdVec.push_back( vd );
-				cerr << k << " found = " << *complex[ vd ].coordPtr;
+				//cerr << k << " found = " << *complex[ vd ].coordPtr;
 			}
 			else {
 				vd = add_vertex( complex );
@@ -200,9 +198,9 @@ void Contour2::createContour( void ) {
 				complex[ vd ].coordPtr = new Coord2( p.elements()[ k ].x(), p.elements()[ k ].y() );
 				vdVec.push_back( vd );
 				vid++;
-				cerr << k << " new = " << *complex[ vd ].coordPtr;
+				//cerr << k << " new = " << *complex[ vd ].coordPtr;
 			}
-			cerr << "( " << complex[ vd ].id << " ) = " << *complex[ vd ].coordPtr << endl;
+			//cerr << "( " << complex[ vd ].id << " ) = " << *complex[ vd ].coordPtr << endl;
 		}
 		
 		// add edges
@@ -230,8 +228,10 @@ void Contour2::createContour( void ) {
 		}
 		// cerr << endl;
 	}
-	
+
+#ifdef DEBUG
 	printGraph( complex );
+#endif // DEBUG
 	
 	// remove inner edges
 	vector< UndirectedBaseGraph::edge_descriptor > edVec;
@@ -257,8 +257,10 @@ void Contour2::createContour( void ) {
 			complex[ ed ].visit = false;
 			eid++;
 		}
-	
+		
+#ifdef DEBUG
 	printGraph( complex );
+#endif // DEBUG
 	
 	// find the vertex with degree > 0
 #ifdef DEBUG
@@ -339,11 +341,11 @@ void Contour2::createContour( void ) {
 		}
 	}
 	
-	cerr << "(ori)::_contour = " << _contour << endl;
+	//cerr << "(ori)::_contour = " << _contour << endl;
 	_contour.cleanPolygon();
 	_contour.updateCentroid();
 	_contour.updateOrientation();
-	cerr << "simpleContour = " << _contour << endl;
+	//cerr << "simpleContour = " << _contour << endl;
 
 
 #ifdef DEBUG
