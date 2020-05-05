@@ -10,8 +10,12 @@
 //	Protected functions
 //------------------------------------------------------------------------------
 void GraphicsView::_init( void ) {
-	
-	_vertex_edge_coverage = _pathwayPtr->nVertices() + _vertex_edge_ratio * _pathwayPtr->nEdges();
+
+	_vertex_edge_coverage = _pathwayPtr->nVertices() + _vertex_edge_ratio * sqrt( _pathwayPtr->nEdges() );
+	cerr << "_vertex_edge_ratio = " << _vertex_edge_ratio
+        << "_pathwayPtr->nVertices() = " << _pathwayPtr->nVertices()
+        << " _pathwayPtr->nEdges() = " << _pathwayPtr->nEdges()
+	    << " _vertex_edge_coverage = " << _vertex_edge_coverage << endl;
 }
 
 void GraphicsView::_item_force_graph( ForceGraph &g ) {
@@ -242,7 +246,7 @@ void GraphicsView::_update_item_composite_polygons( void ) {
 }
 
 void GraphicsView::_item_boundary( void ) {
-	
+
 	vector< Octilinear * > *boundaryVecPtr = NULL;
 	if( *_levelTypePtr == LEVEL_BORDER ) {
 		boundaryVecPtr = &_levelBorderPtr->octilinearBoundaryVec();
@@ -262,7 +266,7 @@ void GraphicsView::_item_boundary( void ) {
 	else {
 		cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
 	}
-	
+
 	if( boundaryVecPtr == NULL ) return;
 	
 	vector< Octilinear * > &boundaryVec = *boundaryVecPtr;
@@ -313,7 +317,7 @@ void GraphicsView::_item_boundary( void ) {
 }
 
 void GraphicsView::_update_item_boundary( void ) {
-	
+
 	vector< Octilinear * > *boundaryVecPtr = NULL;
 	if( *_levelTypePtr == LEVEL_BORDER ) {
 		boundaryVecPtr = &_levelBorderPtr->octilinearBoundaryVec();
@@ -333,6 +337,7 @@ void GraphicsView::_update_item_boundary( void ) {
 	else {
 		cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
 	}
+
 	if( boundaryVecPtr == NULL ) return;
 	
 	vector< Octilinear * > &boundaryVec = *boundaryVecPtr;
@@ -453,11 +458,11 @@ void GraphicsView::_update_item_subpathways( void ) {
 					itemptr->fontSize() = _font_size;
 					
 					if( g[ initVD ].type == "reaction" ) {
-						itemptr->vtype() = TYPE_ONE;
+						itemptr->vtype() = TYPE_REACTION;
 						itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
 					}
 					else if( g[ initVD ].type == "metabolite" ) {
-						itemptr->vtype() = TYPE_TWO;
+						itemptr->vtype() = TYPE_METABOLITE;
 						itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
 					}
 					
@@ -1531,7 +1536,7 @@ void GraphicsView::initSceneItems( void ) {
 		_item_centerPolygons();
 		_item_interCellComponents();
 		_item_centers();
-		_item_boundary();
+        _item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_CELLCOMPONENT ) {
 		if( _is_cellPolygonComplexFlag == true ) {
@@ -1545,7 +1550,7 @@ void GraphicsView::initSceneItems( void ) {
 			}
 		}
 		_item_cells();
-		_item_boundary();
+        _item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_DETAIL ) {
 		if( _is_cellPolygonComplexFlag == true ) {
@@ -1556,7 +1561,8 @@ void GraphicsView::initSceneItems( void ) {
 		}
 		else {
 			_item_pathwayPolygons();
-		}
+            _item_boundary();
+        }
 		if( _is_roadFlag == true ) _item_road();        // cluster boundary
 		if( _is_laneFlag == true ) _item_lane();        // route connecting duplicated nodes
 		_item_subpathways();
@@ -1666,13 +1672,13 @@ void GraphicsView::updateSceneItems( void ) {
 		if( _is_polygonComplexFlag == true ) _update_item_polygonComplex();
 		if( _is_compositeFlag == true ) _update_item_composite();
 		if( _is_centerFlag == true ) _update_item_centers();
-		_update_item_boundary();
+        _update_item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_CELLCENTER ) {
 		_update_item_centerPolygons();
 		_item_interCellComponents();
 		_update_item_centers();
-		_update_item_boundary();
+        _update_item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_CELLCOMPONENT ) {
 		if( _is_cellPolygonComplexFlag == true ) {
@@ -1686,7 +1692,7 @@ void GraphicsView::updateSceneItems( void ) {
 			}
 		}
 		_update_item_cells();
-		_update_item_boundary();
+        _update_item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_DETAIL ) {
 		if( _is_cellPolygonComplexFlag == true ) {
@@ -1697,6 +1703,7 @@ void GraphicsView::updateSceneItems( void ) {
 		}
 		else {
 			_update_item_pathwayPolygons();
+            _update_item_boundary();
 		}
 		_update_item_subpathways();
 	}

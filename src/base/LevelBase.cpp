@@ -49,6 +49,7 @@ void LevelBase::_init( void ) {
 //  none
 //
 void LevelBase::_clear( void ) {
+    _octilinearBoundaryVec.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -69,6 +70,8 @@ void LevelBase::_clear( void ) {
 //  none
 //
 LevelBase::LevelBase( void ) {
+
+    _octilinearBoundaryVec.clear();
 }
 
 //

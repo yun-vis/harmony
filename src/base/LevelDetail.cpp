@@ -70,6 +70,8 @@ void LevelDetail::_clear( void ) {
 //  none
 //
 LevelDetail::LevelDetail( void ) {
+
+
 }
 
 //

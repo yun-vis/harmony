@@ -87,6 +87,16 @@ void Pathway::init( string pathIn, string pathOut,
 	_outputpath = pathOut;
 	_fileFreq = fileFreq;
 	_fileType = fileType;
+
+    int default_width = 0, default_height = 0;
+    string configFilePath = "config/common.conf";
+    Base::Config conf( configFilePath );
+
+    if( conf.has( "font_size" ) ) {
+        string paramFont = conf.gets( "font_size" );
+        _font_size = Common::stringToDouble( paramFont );
+    }
+
 	if( clonedThreshold == 0 ) {
 		_isCloneByThreshold = false;
 		_threshold = 0;
@@ -658,7 +668,7 @@ void Pathway::loadXml( string inputname ) {
 		newMeta.freq = retrieveFreq( newMeta.name );
 		newMeta.metaType = retrieveMetaType( newMeta.name );
 		
-		QFont font = QFont( "Arial", DEFAULT_FONT_SIZE, QFont::Bold, false );
+		QFont font = QFont( "Arial", _font_size, QFont::Bold, false );
 		QFontMetrics fm( font );
 		newMeta.namePixelWidth = fm.width( QString::fromStdString( newMeta.name ) );
 		newMeta.namePixelHeight = fm.height();
@@ -733,7 +743,7 @@ void Pathway::loadXml( string inputname ) {
 		}
 		
 		// add name pixel length
-		QFont font = QFont( "Arial", DEFAULT_FONT_SIZE, QFont::Bold, false );
+		QFont font = QFont( "Arial", _font_size, QFont::Bold, false );
 		QFontMetrics fm( font );
 		newReact.namePixelWidth = fm.width( QString::fromStdString( newReact.abbr ) );
 		newReact.namePixelHeight = fm.height();

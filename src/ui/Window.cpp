@@ -62,18 +62,7 @@ void Window::_init( void ) {
 	_gv->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
 	                    _levelBorderPtr, _levelCellPtr, _roadPtr, _lanePtr );
 	
-	Base::Timer< chrono::milliseconds > timer ( "ms" );
-	timer.begin();
 
-	_simulateKey( Qt::Key_V );
-	_simulateKey( Qt::Key_1 );
-	_simulateKey( Qt::Key_Q );
-	_simulateKey( Qt::Key_A );
-	_simulateKey( Qt::Key_Z );
-	_simulateKey( Qt::Key_R );
-
-	timer.end();
-	timer.elapsed();
 }
 
 
@@ -1001,7 +990,11 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// optimization
 		//****************************************
 		_threadBoundaryForce();
-		_simulateKey( Qt::Key_2 );
+		//_simulateKey( Qt::Key_2 );
+
+        redrawAllScene();
+        _simulateKey( Qt::Key_E );
+
 		break;
 	}
 	case Qt::Key_2: {
@@ -1043,12 +1036,15 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		_gv->isPolygonComplexFlag() = false;
 		_gv->isCenterPolygonFlag() = true;
 		_gv->isCenterFlag() = true;
-		
-		//----------------------------------------
+
+        redrawAllScene();
+        _simulateKey( Qt::Key_E );
+
+        //----------------------------------------
 		// optimization
 		//----------------------------------------
 		_threadCellCenterForce();
-		_simulateKey( Qt::Key_W );
+		//_simulateKey( Qt::Key_W );
 		
 		//----------------------------------------
 		// rendering
@@ -1096,14 +1092,15 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		_gv->isPolygonComplexFlag() = false;
 		_gv->isCellPolygonFlag() = true;
 		_gv->isCellFlag() = true;
-		
-		// _simulateKey( Qt::Key_E );
+
+        redrawAllScene();
+        _simulateKey( Qt::Key_E );
 		
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
 		_threadCellComponentForce();
-		_simulateKey( Qt::Key_S );
+		//_simulateKey( Qt::Key_S );
 		
 		//----------------------------------------
 		// rendering
@@ -1154,20 +1151,20 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		_gv->isPathwayPolygonFlag() = true;
 		//_gv->isMCLPolygonFlag() = false;
 		_gv->isSubPathwayFlag() = true;
-		
-		
+
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
 		_levelCellPtr->updatePathwayCoords();
 		_threadPathwayForce();
-		_simulateKey( Qt::Key_X );
+		//_simulateKey( Qt::Key_X );
 		
 		//----------------------------------------
 		// rendering
 		//----------------------------------------
-		redrawAllScene();
-		
+        redrawAllScene();
+        _simulateKey( Qt::Key_E );
+
 		break;
 	}
 	case Qt::Key_X: {
@@ -1292,17 +1289,14 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		
 		// default canvas size
 		double ratio = ( double ) width() / ( double ) height();
-		double x = sqrt( labelArea * _gv->veCoverage() / ( double ) _pathwayPtr->nVertices() / ratio );
+        double x = sqrt( pow( labelArea, 1.7 ) / ( double ) _pathwayPtr->nVertices() / ratio );
+		//double x = sqrt( labelArea * _gv->veCoverage() / ( double ) _pathwayPtr->nVertices() / ratio );
 		_content_width = ratio * x;
 		_content_height = x;
 
 #ifdef DEBUG
 		cerr << "veCoverage = " << _gv->veCoverage()
 			 << " _content_width = " << _content_width << " _content_height = " << _content_height << endl;
-		if( 2.0 * _content_width < width() ){
-			_content_width = width()/2.0;
-			_content_height = height()/2.0;
-		}
 #endif // DEBUG
 		
 		// initialize canvas
@@ -1331,6 +1325,25 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		redrawAllScene();
 		break;
 	}
+    case Qt::Key_F: {
+
+        Base::Timer< chrono::milliseconds > timer ( "ms" );
+        timer.begin();
+        _simulateKey( Qt::Key_V );
+        _simulateKey( Qt::Key_1 );
+        _simulateKey( Qt::Key_2 );
+        _simulateKey( Qt::Key_Q );
+        _simulateKey( Qt::Key_W );
+        _simulateKey( Qt::Key_A );
+        _simulateKey( Qt::Key_S );
+        _simulateKey( Qt::Key_Z );
+        _simulateKey( Qt::Key_X );
+        _simulateKey( Qt::Key_R );
+
+        timer.end();
+        timer.elapsed();
+        break;
+    }
 	case Qt::Key_C: {
 		spaceCoverage();
 		break;

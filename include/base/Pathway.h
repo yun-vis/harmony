@@ -36,8 +36,9 @@ using namespace std;
 #include <boost/graph/make_maximal_planar.hpp>
 #include <boost/graph/planar_face_traversal.hpp>
 #include <boost/graph/graphviz.hpp>
-
 #include "boost/create_dual_graph.hpp"
+
+#include "base/Config.h"
 #include "base/Polygon2.h"
 #include "graph/MetaboliteGraph.h"
 #include "graph/UndirectedPropertyGraph.h"
@@ -71,8 +72,9 @@ private:
 	vector< vector< double > > _edgeW;            // edheWeight vector for dependGraph
 	
 	// ui
+	unsigned int _font_size;        // font size
 	bool _isCloneByThreshold;
-	double _threshold;        // threshold value
+	double _threshold;              // threshold value
 	unsigned int _nZoneDiff;        // total different zone value
 
 protected:

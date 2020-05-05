@@ -35,21 +35,21 @@ void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsIte
 	painter->setRenderHints( QPainter::Antialiasing );
 	painter->setPen( pen() );
 	painter->setBrush( brush() );
-	
-	if( _vtype == TYPE_ONE ) {
+
+	if( _vtype == TYPE_REACTION ) {
 		painter->drawRect( fineRect );
 	}
-	else if( _vtype == TYPE_TWO ) {
+	else if( _vtype == TYPE_METABOLITE ) {
 		painter->drawRoundedRect( fineRect, 5, 5, Qt::AbsoluteSize );
 	}
 	else if( _vtype == TYPE_DEFAULT ) {
-		painter->drawRoundedRect( fineRect, 5, 5, Qt::AbsoluteSize );
+        painter->drawEllipse( QRectF( rect().x()-5, rect().y()-5, 10, 10 ) );
 	}
 	else {
 		cerr << "sth is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
 		assert( false );
 	}
-	
+
 	painter->setFont( _font );
 	//cerr << "id = " << _id << endl;
 	//painter->drawText( rect().x()+10, rect().y()-10, QString::fromStdString( to_string( _id ) ) );
@@ -77,7 +77,7 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent ) {
 	//setAcceptDrops( true );
 	
 	//_radius = 10;
-	_vtype = TYPE_ONE;
+	_vtype = TYPE_DEFAULT;
 }
 
 GraphicsVertexItem::GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent ) {
