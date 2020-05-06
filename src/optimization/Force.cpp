@@ -105,7 +105,7 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 	
 	if( conf.has( "degreeOneMagnitude" ) ) {
 		string paramDegreeOneMagnitude = conf.gets( "degreeOneMagnitude" );
-		_paramDegreeOneMagnitude = ( unsigned int ) Common::stringToDouble( paramDegreeOneMagnitude );
+		_paramDegreeOneMagnitude = Common::stringToDouble( paramDegreeOneMagnitude );
 	}
 	
 	if( conf.has( "force_loop" ) ) {
@@ -371,14 +371,22 @@ void Force::_displacement( void ) {
 							// Drawing force by the spring
 							// double l = L * g[ed].weight;
 							double l = L;
-							ForceGraph::degree_size_type degrees = out_degree( vdi, g );
-							if( degrees == 1 ) l = 0.2*L;
+							ForceGraph::degree_size_type degreeI = out_degree( vdi, g );
+							ForceGraph::degree_size_type degreeJ = out_degree( vdj, g );
 							
-							if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degrees == 1 ) )
-								*g[ vdi ].forcePtr += _paramDegreeOneMagnitude * _paramKa * ( dist - l ) * unit;
-							else
+							if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( degreeI == 1 ) && ( degreeJ == 1 ) ) {
+								*g[ vdi ].forcePtr += _paramKa * ( dist - 0.5*l*_paramDegreeOneMagnitude ) * unit;
+								*g[ vdj ].forcePtr -= _paramKa * ( dist - 0.5*l*_paramDegreeOneMagnitude ) * unit;
+							}
+							else if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( ( degreeI == 1 ) || ( degreeJ == 1 ) ) ) {
+								*g[ vdi ].forcePtr += _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
+								*g[ vdj ].forcePtr -= _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
+							}
+							else {
 								*g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
-							// cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
+								*g[ vdj ].forcePtr -= _paramKa * ( dist - l ) * unit;
+							}
+							// cerr << "_paramDegreeOneMagnitude = " << _paramDegreeOneMagnitude << endl;
 						}
 						// Replusive force by Couloum's power
 						if( dist > 0 ) {
@@ -696,13 +704,13 @@ void Force::_BarnesHut( void ) {
 			ForceGraph::degree_size_type degreeS = out_degree( vdS, g );
 			ForceGraph::degree_size_type degreeT = out_degree( vdT, g );
 			
-			if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degreeS == 1 ) )
-				*g[ vdS ].forcePtr += _paramDegreeOneMagnitude * _paramKa * strength * ( dist - l ) * unit;
+			if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( degreeS == 1 ) )
+				*g[ vdS ].forcePtr += _paramKa * strength * ( dist - l*_paramDegreeOneMagnitude ) * unit;
 			else
 				*g[ vdS ].forcePtr += _paramKa * strength * ( dist - l ) * unit;
 			
-			if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degreeT == 1 ) )
-				*g[ vdT ].forcePtr -= _paramDegreeOneMagnitude * _paramKa * strength * ( dist - l ) * unit;
+			if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( degreeT == 1 ) )
+				*g[ vdT ].forcePtr -= _paramKa * strength * ( dist - l*_paramDegreeOneMagnitude ) * unit;
 			else
 				*g[ vdT ].forcePtr -= _paramKa * strength * ( dist - l ) * unit;
 		}

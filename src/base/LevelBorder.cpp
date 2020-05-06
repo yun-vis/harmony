@@ -307,7 +307,7 @@ void LevelBorder::_decomposeSkeleton( void ) {
 						forceGraph[ foreED ].weight = 2.0 * ( *forceGraph[ vd ].areaPtr );
 						
 						// add last edge to form a circle
-						if( i == mag - 1 ) {
+						if( ( i == mag - 1 ) && ( mag != 2 ) ) {
 							pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew,
 							                                                                    forceGraph );
 							BoundaryGraph::edge_descriptor foreED = foreE.first;
@@ -322,7 +322,7 @@ void LevelBorder::_decomposeSkeleton( void ) {
 					}
 				}
 				
-				// add edges
+				// add composite edges
 				// cerr << "size = " << vdAdjacent.size() << " ext = " << extendVD.size() << endl;
 				map< unsigned int, ForceGraph::vertex_descriptor >::iterator itA;
 				for( itA = vdAdjacent.begin(); itA != vdAdjacent.end(); itA++ ) {
@@ -340,7 +340,6 @@ void LevelBorder::_decomposeSkeleton( void ) {
 							minDist = dist;
 						}
 					}
-					
 					pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, forceGraph );
 					ForceGraph::edge_descriptor foreED = foreE.first;
 					forceGraph[ foreED ].id = itA->first;

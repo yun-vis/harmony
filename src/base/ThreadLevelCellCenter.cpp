@@ -53,8 +53,9 @@ void ThreadLevelCellCenter::force( void ) {
 			_levelCellPtr->centerVec()[ _cellIndex ].force().displacement();
 			_levelCellPtr->additionalForcesCenter();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
-			if( _count % freq == 0 )
+			if( _count % freq == 0 && _count > 50 ) {
 				_levelCellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
+			}
 			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << " WorkerLevelCenter::err (hybrid) = " << err << endl;

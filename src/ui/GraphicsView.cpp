@@ -42,7 +42,8 @@ void GraphicsView::_item_force_graph( ForceGraph &g ) {
 		}
 	
 	BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
-			
+		
+			ForceGraph::degree_size_type degrees = out_degree( vd, g );
 			GraphicsVertexItem *itemptr = new GraphicsVertexItem;
 			g[ vd ].itemPtr = itemptr;
 			itemptr->id() = g[ vd ].id;
@@ -50,8 +51,8 @@ void GraphicsView::_item_force_graph( ForceGraph &g ) {
 			itemptr->setPen( QPen( QColor( 0, 0, 0, 100 ), 2 ) );
 			itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
 			itemptr->setRect( QRectF( g[ vd ].coordPtr->x(), -g[ vd ].coordPtr->y(), 10, 10 ) );
-			itemptr->text() = QString::fromStdString( to_string( g[ vd ].id ) );
-			//itemptr->textOn() = true;
+			itemptr->text() = QString::fromStdString( to_string( g[ vd ].id ) + ": " + to_string( degrees ) );
+			itemptr->textOn() = true;
 			
 			_scene->addItem( itemptr );
 		}
