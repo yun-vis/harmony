@@ -43,7 +43,7 @@ void LevelBorder::_init( double *widthPtr, double *heightPtr,
 	_levelType = LEVEL_BORDER;
 	_content_widthPtr = widthPtr;
 	_content_heightPtr = heightPtr;
-	_veCoveragePtr = veCoveragePtr;
+	//_veCoveragePtr = veCoveragePtr;
 	
 	clearGraph( _skeletonForceGraph );
 	

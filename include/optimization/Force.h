@@ -75,6 +75,8 @@ protected:
 	
 	void _random( void );
 	
+	void _preDisplacement( void );
+
 	void _displacement( void );
 	
 	void _BarnesHut( void );
@@ -149,6 +151,8 @@ public:
 //------------------------------------------------------------------------------
 //	Force functions
 //------------------------------------------------------------------------------
+	void preDisplacement( void ) { _preDisplacement(); }
+
 	void displacement( void ) { _displacement(); }
 	
 	void centroidGeometry( void ) { _centroidGeometry(); }

@@ -325,7 +325,8 @@ void Force::_displacement( void ) {
 	ForceGraph &g = *_forceGraphPtr;
 	
 	// cerr << "force: _width = " << _width << " _height = " << _height << endl;
-	double side = 0.2 * _width * _height;
+	double side = 0.5 * _width * _height;
+	//double side = 0.2 * _width * _height;
 	double L = sqrt( side / ( double ) max( 1.0, ( double ) num_vertices( g ) ) );
 	//double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 	//cerr << "L = " << L << endl;
@@ -340,6 +341,7 @@ void Force::_displacement( void ) {
 		return;
 	}
 	
+	// repulsive force
 	BGL_FORALL_VERTICES( vdi, g, ForceGraph ) {
 			
 			// initialization
@@ -364,10 +366,13 @@ void Force::_displacement( void ) {
 						bool isExisted;
 						tie( ed, isExisted ) = edge( vdi, vdj, g );
 						
+						// attractive force
 						if( isExisted ) {
 							// Drawing force by the spring
 							// double l = L * g[ed].weight;
 							double l = L;
+							ForceGraph::degree_size_type degrees = out_degree( vdi, g );
+							if( degrees == 1 ) l = 0.2*L;
 							
 							if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degrees == 1 ) )
 								*g[ vdi ].forcePtr += _paramDegreeOneMagnitude * _paramKa * ( dist - l ) * unit;
@@ -522,6 +527,18 @@ void Force::_displacement( void ) {
 }
 
 //
+//  Force::run --	compute the displacements exerted by the force-directed model
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Force::_preDisplacement( void ) {
+}
+
+//
 //  Force::_initSeed --	initialize seeds
 //
 //  Inputs
@@ -635,7 +652,8 @@ void Force::_BarnesHut( void ) {
 	ForceGraph &g = *_forceGraphPtr;
 	TreeGraph &tree = _quardTree.tree();
 	
-	double side = 0.5 * _width * _height;
+	double side = _width * _height;
+	// double side = 0.5 * _width * _height;
 	double L = sqrt( side / ( double ) max( 1.0, ( double ) num_vertices( g ) ) );
 	//double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 	
@@ -873,6 +891,7 @@ double Force::_gap( void ) {
 //	error value
 //
 double Force::_verletIntegreation( void ) {
+	
 	ForceGraph &g = *_forceGraphPtr;
 	vector< Coord2 > displace;
 	double err = 0.0;

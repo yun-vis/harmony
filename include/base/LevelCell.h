@@ -84,15 +84,17 @@ private:
 	
 	void _buildInterCellComponents( void );
 	
-	void _buildCenterGraphs( void );
+	void _buildCellCenterGraphs( void );
 	
-	void _buildCellGraphs( void );
+	void _buildCellComponentGraphs( void );
 	
 	int _computeMCLClusters( ForceGraph &dg );
 	
 	void _computeClusters( void );
 	
-	void _init( double *widthPtr, double *heightPtr, double *veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > *polygonComplexPtr );
+	void _init( double *widthPtr, double *heightPtr,
+			//double *veCoveragePtr, double *__veRatioPtr,
+			map< unsigned int, Polygon2 > *polygonComplexPtr );
 	
 	void _clear( void );
 
@@ -163,8 +165,12 @@ public:
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr, double *__veRatioPtr, map< unsigned int, Polygon2 > *__polygonComplexPtr ) {
-		_init( __widthPtr, __heightPtr, __veCoveragePtr, __veRatioPtr, __polygonComplexPtr );
+	void init( double *__widthPtr, double *__heightPtr,
+			// double *__veCoveragePtr, double *__veRatioPtr,
+			map< unsigned int, Polygon2 > *__polygonComplexPtr ) {
+		_init( __widthPtr, __heightPtr,
+				// __veCoveragePtr, __veRatioPtr,
+				__polygonComplexPtr );
 	}
 	
 //------------------------------------------------------------------------------

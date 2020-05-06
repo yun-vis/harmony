@@ -54,10 +54,20 @@ void ThreadLevelBorder::force( void ) {
 		case TYPE_HYBRID: {
 			
 			_pathwayPtr->pathwayMutex().lock();
+			Base::Timer< chrono::milliseconds > timer( "ms" );
+			timer.begin();
+
 			_levelBorderPtr->regionBase().force().displacement();
+			//timer.end();
+			//timer.elapsed();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
 			if( _count % freq == 0 && _count > 50 ) {
+				//Base::Timer< chrono::milliseconds > t( "ms" );
+				//t.begin();
 				_levelBorderPtr->regionBase().force().centroidGeometry();
+				//t.end();
+				//cerr << "Voronoi: ";
+				//t.elapsed();
 			}
 			err = _levelBorderPtr->regionBase().force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();

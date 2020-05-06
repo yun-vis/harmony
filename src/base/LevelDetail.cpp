@@ -36,7 +36,7 @@ void LevelDetail::_init( double *widthPtr, double *heightPtr, double *veCoverage
 	// initialize variables
 	_content_widthPtr = widthPtr;
 	_content_heightPtr = heightPtr;
-	_veCoveragePtr = veCoveragePtr;
+	//_veCoveragePtr = veCoveragePtr;
 }
 
 

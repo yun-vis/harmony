@@ -49,8 +49,8 @@ protected:
 	
 	double *_content_widthPtr;
 	double *_content_heightPtr;
-	double *_veCoveragePtr;
-	double *_veRatioPtr;
+	//double *_veCoveragePtr;
+	//double *_veRatioPtr;
 	LEVELTYPE _levelType;
 	
 	// boundary of the composite graph

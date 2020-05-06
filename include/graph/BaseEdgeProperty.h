@@ -46,6 +46,12 @@ public:
 	BaseEdgeProperty( const BaseEdgeProperty &e ) {
 		id = e.id;
 		weight = e.weight;
+		visit = e.visit;
+		visitedTimes = e.visitedTimes;
+		label = e.label;
+		
+		isFore = e.isFore;
+		isBack = e.isBack;
 	}                    // copy constructor
 	virtual ~BaseEdgeProperty() {}        // destructor
 
@@ -62,6 +68,7 @@ public:
 	double weight;
 	bool visit;
 	int visitedTimes;
+	int label;
 	
 	bool isFore;
 	bool isBack;

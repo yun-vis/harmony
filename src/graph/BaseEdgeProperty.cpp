@@ -42,11 +42,14 @@ using namespace std;
 //  none
 //
 void BaseEdgeProperty::_init( void ) {
+
 	id = 0;
 	angle = 0;
 	weight = 1.0;
 	visit = 0;
 	visitedTimes = 0;
+	label = 0;
+	
 	isFore = false;
 	isBack = false;
 }

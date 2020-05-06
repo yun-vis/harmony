@@ -8,11 +8,10 @@
 using namespace std;
 
 #ifndef Q_MOC_RUN
-
 #include "base/PathwayData.h"
 #include "base/RegionData.h"
 #include "base/Common.h"
-
+#include "base/Timer.h"
 #endif // Q_MOC_RUN
 
 class ThreadBase : public PathwayData, public RegionData {

@@ -37,8 +37,10 @@ using namespace std;
 //	Class definition
 //------------------------------------------------------------------------------
 class GraphicsEdgeItem : public QGraphicsPathItem, public GraphicsBase {
-private:
 
+private:
+	EDGETYPE _etype;
+	
 protected:
 
 
@@ -70,6 +72,10 @@ public:
 //------------------------------------------------------------------------------
 //      Reference to members
 //------------------------------------------------------------------------------
+	
+	EDGETYPE &etype( void ) { return _etype; }
+	
+	const EDGETYPE &etype( void ) const { return _etype; }
 
 //------------------------------------------------------------------------------
 //      Specific methods

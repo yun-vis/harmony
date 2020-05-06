@@ -40,16 +40,16 @@ typedef std::vector< std::string > Tokens;
 //  none
 //
 void LevelCell::_init( double *widthPtr, double *heightPtr,
-                       double *veCoveragePtr, double *veRatioPtr,
-                       map< unsigned int, Polygon2 > *polygonComplexPtr ) {
+		// double *veCoveragePtr, double *veRatioPtr,
+		               map< unsigned int, Polygon2 > *polygonComplexPtr ) {
 	
 	// _clear();
 	
 	_levelType = LEVEL_CELLCENTER;
 	_content_widthPtr = widthPtr;
 	_content_heightPtr = heightPtr;
-	_veCoveragePtr = veCoveragePtr;
-	_veRatioPtr = veRatioPtr;
+	// _veCoveragePtr = veCoveragePtr;
+	// _veRatioPtr = veRatioPtr;
 	
 	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
 	
@@ -105,8 +105,8 @@ void LevelCell::_init( double *widthPtr, double *heightPtr,
 		                            &itP->second, &_levelType, "config/cell.conf" );
 	}
 	
-	_buildCenterGraphs();
-	_buildCellGraphs();
+	_buildCellCenterGraphs();
+	_buildCellComponentGraphs();
 
 #ifdef DEBUG
 	cerr << "filepath: " << configFilePath << endl;
@@ -302,7 +302,7 @@ void LevelCell::_buildConnectedComponent( void ) {
 }
 
 //
-//  LevelCell::_buildCenterGraphs -- build cell graphs
+//  LevelCell::_buildCellCenterGraphs -- build cell graphs
 //
 //  Inputs
 //  none
@@ -310,7 +310,7 @@ void LevelCell::_buildConnectedComponent( void ) {
 //  Outputs
 //  none
 //
-void LevelCell::_buildCenterGraphs( void ) {
+void LevelCell::_buildCellCenterGraphs( void ) {
 	
 	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
 	
@@ -428,7 +428,7 @@ void LevelCell::_buildCenterGraphs( void ) {
 }
 
 //
-//  LevelCell::_buildCellGraphs -- build cell graphs
+//  LevelCell::_buildCellComponentGraphs -- build cell graphs
 //
 //  Inputs
 //  none
@@ -436,7 +436,7 @@ void LevelCell::_buildCenterGraphs( void ) {
 //  Outputs
 //  none
 //
-void LevelCell::_buildCellGraphs( void ) {
+void LevelCell::_buildCellComponentGraphs( void ) {
 	
 	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
 	
@@ -448,7 +448,7 @@ void LevelCell::_buildCellGraphs( void ) {
 
 #ifdef DEBUG
 		cerr << "init nV = " << num_vertices( _cellVec[ i ].forceGraph() ) << " nE = "
-		     << num_edges( _cellVec[ i ].forceGraph() ) << endl;
+			 << num_edges( _cellVec[ i ].forceGraph() ) << endl;
 		cerr << "simpleContour = " << simpleContour.centroid() << endl;
 #endif // DEBUG
 		unsigned int idV = 0, idE = 0;
@@ -545,14 +545,43 @@ void LevelCell::_buildCellGraphs( void ) {
 								_cellVec[ i ].forceGraph()[ foreED ].id = idE;
 								
 								idE++;
+								
 							}
 						}
 					}
 #ifdef DEBUG
 				cerr << "subID = " << i << " vdVec.size() = " << vdVec.size() << endl;
 				cerr << "nV = " << num_vertices( _cellVec[ i ].forceGraph() ) << " nE = "
-				     << num_edges( _cellVec[ i ].forceGraph() ) << endl;
+					 << num_edges( _cellVec[ i ].forceGraph() ) << endl;
 #endif // DEBUG
+			}
+		}
+	}
+	
+	// add complte graphs to single vertices
+	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
+		
+		ForceGraph &fg = _cellVec[ i ].forceGraph();
+		vector< ForceGraph::vertex_descriptor > singleVDVec;
+		BGL_FORALL_VERTICES( vd, fg, ForceGraph ) {
+				
+				ForceGraph::degree_size_type degrees = out_degree( vd, fg );
+				if( degrees == 0 ) singleVDVec.push_back( vd );
+			}
+		
+		if( singleVDVec.size() > 1 ) {
+			for( unsigned int m = 0; m < singleVDVec.size(); m++ ) {
+				for( unsigned int n = m + 1; n < singleVDVec.size(); n++ ) {
+					
+					// cerr << "m = " << m << " n = " << n << endl;
+					ForceGraph::vertex_descriptor vdS = singleVDVec[ m ];
+					ForceGraph::vertex_descriptor vdT = singleVDVec[ n ];
+					
+					pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT,
+					                                                                    fg );
+					ForceGraph::edge_descriptor foreED = foreE.first;
+					fg[ foreED ].id = num_edges( fg );
+				}
 			}
 		}
 	}
@@ -640,7 +669,7 @@ int LevelCell::_computeMCLClusters( ForceGraph &fg ) {
 	     string( " --abc -V all -o " ) + outputfilename;
 #ifdef DEBUG
 	cm = ( qApp->applicationDirPath() + QString( "/third_party/micans/bin/./mcl " ) ).toStdString() + inputfilename +
-	     string( " --abc -o " ) + outputfilename;
+		 string( " --abc -o " ) + outputfilename;
 	cerr << "cm = " << cm << endl;
 #endif // DEBUG
 	
@@ -1435,7 +1464,7 @@ void LevelCell::updatePolygonComplex( void ) {
 //
 LevelCell::LevelCell( void ) {
 	
-	_veRatioPtr = NULL;
+	//_veRatioPtr = NULL;
 	
 	_cellVec.clear();
 	_cellComponentVec.clear();

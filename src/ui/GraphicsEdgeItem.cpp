@@ -53,6 +53,8 @@ GraphicsEdgeItem::GraphicsEdgeItem( QGraphicsItem *parent ) {
 	//setFlag( QGraphicsItem::ItemSendsGeometryChanges );
 	//setAcceptDrops( true );
 	
+	_etype = EDGE_DEFAULT;
+	
 	//pen().setJoinStyle( Qt::MiterJoin );
 	pen().setJoinStyle( Qt::RoundJoin );
 }

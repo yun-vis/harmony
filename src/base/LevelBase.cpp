@@ -35,7 +35,7 @@ void LevelBase::_init( void ) {
 	
 	_content_widthPtr   = NULL;
 	_content_heightPtr  = NULL;
-	_veCoveragePtr      = NULL;
+	//_veCoveragePtr      = NULL;
 }
 
 

@@ -10,12 +10,13 @@
 //	Protected functions
 //------------------------------------------------------------------------------
 void GraphicsView::_init( void ) {
-
+/*
 	_vertex_edge_coverage = _pathwayPtr->nVertices() + _vertex_edge_ratio * sqrt( _pathwayPtr->nEdges() );
 	cerr << "_vertex_edge_ratio = " << _vertex_edge_ratio
         << "_pathwayPtr->nVertices() = " << _pathwayPtr->nVertices()
         << " _pathwayPtr->nEdges() = " << _pathwayPtr->nEdges()
 	    << " _vertex_edge_coverage = " << _vertex_edge_coverage << endl;
+*/
 }
 
 void GraphicsView::_item_force_graph( ForceGraph &g ) {
@@ -458,11 +459,11 @@ void GraphicsView::_update_item_subpathways( void ) {
 					itemptr->fontSize() = _font_size;
 					
 					if( g[ initVD ].type == "reaction" ) {
-						itemptr->vtype() = TYPE_REACTION;
+						itemptr->vtype() = VERTEX_REACTION;
 						itemptr->setPen( QPen( QColor( 0, 0, 0, 255 ), 2 ) );
 					}
 					else if( g[ initVD ].type == "metabolite" ) {
-						itemptr->vtype() = TYPE_METABOLITE;
+						itemptr->vtype() = VERTEX_METABOLITE;
 						itemptr->setPen( QPen( QColor( 100, 100, 100, 255 ), 2 ) );
 					}
 					
@@ -810,6 +811,7 @@ void GraphicsView::_item_interCellComponents( void ) {
 		             -centerVec[ idT ].forceGraph()[ vdT ].coordPtr->y() );
 		
 		GraphicsEdgeItem *itemptr = new GraphicsEdgeItem;
+		itemptr->etype() = EDGE_BETWEEN_DOMAINS;
 		itemptr->setPen( QPen( QColor( 255, 0, 0, 100 ), 3 ) );
 		itemptr->setBrush( QBrush( QColor( 255, 255, 255, 255 ), Qt::SolidPattern ) );
 		itemptr->setPath( path );
@@ -1528,11 +1530,15 @@ void GraphicsView::initSceneItems( void ) {
 	if( *_levelTypePtr == LEVEL_BORDER ) {
 		if( _is_polygonFlag == true ) _item_composite_polygons();
 		if( _is_polygonComplexFlag == true ) _item_polygonComplex();
-		if( _is_compositeFlag == true ) _item_composite();
+		if( _is_compositeFlag == true ) {
+			//_item_skeleton();
+			_item_composite();
+		}
 		if( _is_centerFlag == true ) _item_centers();
 		_item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_CELLCENTER ) {
+		//_item_polygonComplex();
 		_item_centerPolygons();
 		_item_interCellComponents();
 		_item_centers();
@@ -1670,11 +1676,15 @@ void GraphicsView::updateSceneItems( void ) {
 	if( *_levelTypePtr == LEVEL_BORDER ) {
 		if( _is_polygonFlag == true ) _update_item_composite_polygons();
 		if( _is_polygonComplexFlag == true ) _update_item_polygonComplex();
-		if( _is_compositeFlag == true ) _update_item_composite();
+		if( _is_compositeFlag == true ) {
+			//_update_item_skeleton();
+			_update_item_composite();
+		}
 		if( _is_centerFlag == true ) _update_item_centers();
         _update_item_boundary();
 	}
 	else if( *_levelTypePtr == LEVEL_CELLCENTER ) {
+		//_update_item_polygonComplex();
 		_update_item_centerPolygons();
 		_item_interCellComponents();
 		_update_item_centers();
@@ -1802,10 +1812,12 @@ GraphicsView::GraphicsView( QWidget *parent )
 		string paramFont = conf.gets( "font_size" );
 		_font_size = Common::stringToDouble( paramFont );
 	}
+/*
 	if( conf.has( "vertex_edge_ratio" ) ) {
 		string paramVERatio = conf.gets( "vertex_edge_ratio" );
 		_vertex_edge_ratio = Common::stringToDouble( paramVERatio );
 	}
+*/
 	if( conf.has( "default_width" ) ) {
 		string paramWidth = conf.gets( "default_width" );
 		default_width = stoi( paramWidth );
@@ -1849,7 +1861,7 @@ GraphicsView::GraphicsView( QWidget *parent )
 	
 	cerr << "filepath: " << configFilePath << endl;
 	cerr << "font_size: " << _font_size << endl;
-	cerr << "vertex_edge_ratio: " << _vertex_edge_ratio << endl;
+	//cerr << "vertex_edge_ratio: " << _vertex_edge_ratio << endl;
 	cerr << "default_width: " << default_width << endl;
 	cerr << "default_height: " << default_height << endl;
 	cerr << "clone_threshold: " << _clonedThreshold << endl;

@@ -24,7 +24,7 @@ elseif( UNIX )
   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -DEIGEN_USE_ACML -ltinyxml -lcgraph -lgvc -lboost_thread -lboost_system -lboost_graph -lCGAL -lgmp -lmpfr -ldl -lpthread" )
 endif()
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD -O3 -DNDEBUG" )
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -DIL_STD -O3 -DNDEBUG" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -DIL_STD -O3 -DNDEBUG -frounding-math" )
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD -O3 -DNDEBUG -openmp -omp" )
 #set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -g -Wall -Wno-deprecated -DIL_STD" )
 

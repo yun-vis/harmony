@@ -36,13 +36,13 @@ void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsIte
 	painter->setPen( pen() );
 	painter->setBrush( brush() );
 
-	if( _vtype == TYPE_REACTION ) {
+	if( _vtype == VERTEX_REACTION ) {
 		painter->drawRect( fineRect );
 	}
-	else if( _vtype == TYPE_METABOLITE ) {
+	else if( _vtype == VERTEX_METABOLITE ) {
 		painter->drawRoundedRect( fineRect, 5, 5, Qt::AbsoluteSize );
 	}
-	else if( _vtype == TYPE_DEFAULT ) {
+	else if( _vtype == VERTEX_DEFAULT ) {
         painter->drawEllipse( QRectF( rect().x()-5, rect().y()-5, 10, 10 ) );
 	}
 	else {
@@ -77,7 +77,7 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent ) {
 	//setAcceptDrops( true );
 	
 	//_radius = 10;
-	_vtype = TYPE_DEFAULT;
+	_vtype = VERTEX_DEFAULT;
 }
 
 GraphicsVertexItem::GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent ) {
