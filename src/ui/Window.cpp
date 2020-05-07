@@ -355,11 +355,11 @@ void Window::steinertree( void ) {
 	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
 			
 			if( g[ vd ].type == "metabolite" ) {
-				//if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
+				if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
 				//if( *g[ vd ].namePtr == "coke[r]" ) {            // tiny
 					//if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
 					//if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
-					if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+					//if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
 					//if( *g[ vd ].namePtr == "Beans" ){        // food
 					//if( *g[ vd ].namePtr == "Prawns" ){        // food
 					//if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
