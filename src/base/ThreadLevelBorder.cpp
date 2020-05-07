@@ -61,8 +61,11 @@ void ThreadLevelBorder::force( void ) {
 			//timer.end();
 			//timer.elapsed();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
-			cerr << "freq = " << freq << endl;
-			if( _count % freq == 0 && _count > 50 ) {
+			// cerr << "freq = " << freq << endl;
+			if( _count == 0 ) {
+				_levelBorderPtr->regionBase().force().initCentroidGeometry();
+			}
+			else if( _count % freq == 0 && _count > 50 ) {
 				//Base::Timer< chrono::milliseconds > t( "ms" );
 				//t.begin();
 				_levelBorderPtr->regionBase().force().centroidGeometry();

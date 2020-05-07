@@ -155,7 +155,7 @@ void Voronoi::createVoronoiDiagram( bool isWeighted ) {
 			                                                    ( *_seedVecPtr )[ i ].coordPtr->y()  ),
 			                                        0 ) );
 		}
-		//cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << (*_seedVecPtr)[i].coord;
+		// cerr << "sid = " << (*_seedVecPtr)[i].id << " coord = " << *(*_seedVecPtr)[i].coordPtr;
 	}
 	
 	//Find the bounding box of the points. This will be used to crop the Voronoi
@@ -268,8 +268,13 @@ void Voronoi::createVoronoiDiagram( bool isWeighted ) {
 		CGAL::Polygon_2< K > bpoly;
 		const vector< Coord2 > &eleVec = _contourPtr->elements();
 		
+		//double shift = 0.01;
+		double shift = 0.0;
 		for( unsigned int i = 0; i < eleVec.size(); i++ ) {
-			bpoly.push_back( K::Point_2( eleVec[ i ].x(), eleVec[ i ].y() ) );
+			float r1 = shift*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			float r2 = shift*static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			// cerr << "r1 = " << r1 << endl;
+			bpoly.push_back( K::Point_2( eleVec[ i ].x() + r1 - shift/2.0, eleVec[ i ].y() + r2 - shift/2.0 ) );
 			//cerr << i << ": eleVec[i] = " << eleVec[i] << endl;
 		}
 		

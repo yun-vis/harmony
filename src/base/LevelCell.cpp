@@ -83,10 +83,12 @@ void LevelCell::_init( double *widthPtr, double *heightPtr,
 	_centerVec.resize( lsubg.size() );
 	_cellVec.resize( lsubg.size() );
 	
+	// cerr << "_centerVec.size() = " << _centerVec.size() << endl;
 	// initialize parameters of centers
 	for( unsigned int i = 0; i < _centerVec.size(); i++ ) {
 		
 		// cerr << "nV = " << num_vertices( lsubg[i] ) << " nE = " << num_edges( lsubg[i] ) << endl;
+		// cerr << "CID = " << i << endl;
 		map< unsigned int, Polygon2 >::iterator itP = polygonComplexPtr->begin();
 		advance( itP, i );
 		_centerVec[ i ].force().id() = i;
@@ -314,14 +316,14 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 	
 	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
 	
-	// _centerVec.resize( lsubg.size() );    // subsystem size
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 		
 		multimap< int, CellComponent >::iterator itC = _cellComponentVec[ i ].begin();
 		Polygon2 &contour = *_cellVec[ i ].force().contourPtr();
 		
 		//cerr << "contour = " << contour << endl;
-		// cerr << "init nV = " << num_vertices( _centerVec[i].forceGraph() ) << endl;
+		//cerr << "i = " << i << endl;
+		//cerr << "init nCV = " << _cellComponentVec[ i ].size() << endl;
 		
 		unsigned int idV = 0;
 		for( ; itC != _cellComponentVec[ i ].end(); itC++ ) {
@@ -363,6 +365,7 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 		}
 		//cerr << "after nV = " << num_vertices( _cellVec[i].forceGraph() ) << endl;
 	}
+	
 	
 	// add similarity edges
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {

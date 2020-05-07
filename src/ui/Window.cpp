@@ -145,9 +145,9 @@ void Window::_threadBoundaryForce( void ) {
 	tlh.init( THREAD_BOUNDARY, _gv->energyType(), 0, 0, _levelBorderPtr->regionBase().force().paramForceLoop() );
 	
 	// signle thread
-	tlh.run( 0 );
+	//tlh.run( 0 );
 	// multi-thread
-	//pool.push( []( int id, ThreadLevelBorder *tlh ) { tlh->run( id ); }, &tlh );
+	pool.push( []( int id, ThreadLevelBorder *tlh ) { tlh->run( id ); }, &tlh );
 	
 	// rendering
 #ifdef DEBUG
@@ -174,7 +174,7 @@ void Window::_threadCellCenterForce( void ) {
 	
 	vector< ThreadLevelCellCenter * > tlc;
 	tlc.resize( _levelCellPtr->centerVec().size() );
-	
+	//cerr << "_levelCellPtr->centerVec().size() = " << _levelCellPtr->centerVec().size() << endl;
 	//for( unsigned int i = 0; i < 2; i++ ){
 	for( unsigned int i = 0; i < tlc.size(); i++ ) {
 		
@@ -202,7 +202,7 @@ void Window::_threadCellCenterForce( void ) {
 		updateAllScene();
 	}
 #endif // DEBUG
-	
+
 	// wait for all computing threads to finish and stop all threads
 	pool.stop( true );
 	
@@ -210,6 +210,7 @@ void Window::_threadCellCenterForce( void ) {
 	for( unsigned int i = 0; i < _levelCellPtr->centerVec().size(); i++ ) {
 		delete tlc[ i ];
 	}
+
 	cerr << "End of CellCenterForce..." << endl;
 }
 
@@ -241,7 +242,7 @@ void Window::_threadCellComponentForce( void ) {
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
-		//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+		cerr << "pool.n_idle() = " << pool.n_idle() << endl;
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
@@ -319,7 +320,7 @@ void Window::_threadPathwayForce( void ) {
 	}
 	
 	// rendering
-#ifdef DEBUG
+//#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
@@ -327,10 +328,10 @@ void Window::_threadPathwayForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-#endif // DEBUG
+//#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	pool.stop( true );
+	//pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {

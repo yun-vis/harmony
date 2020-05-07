@@ -76,12 +76,14 @@ protected:
 	void _random( void );
 	
 	void _preDisplacement( void );
-
+	
 	void _displacement( void );
 	
 	void _BarnesHut( void );
 	
 	void _centroidGeometry( void );
+	
+	void _initCentroidGeometry( void );
 	
 	double _gap( void );
 	
@@ -98,6 +100,7 @@ public:
 //------------------------------------------------------------------------------
 	// default constructor
 	Force();
+	
 	// copy constructor
 	Force( const Force &obj );
 
@@ -109,7 +112,7 @@ public:
 //------------------------------------------------------------------------------
 //	Referencing to members
 //------------------------------------------------------------------------------
-
+	
 	const FORCETYPE &mode( void ) const { return _paramMode; }
 	
 	FORCETYPE &mode( void ) { return _paramMode; }
@@ -152,11 +155,13 @@ public:
 //	Force functions
 //------------------------------------------------------------------------------
 	void preDisplacement( void ) { _preDisplacement(); }
-
+	
 	void displacement( void ) { _displacement(); }
 	
 	void centroidGeometry( void ) { _centroidGeometry(); }
 	
+	void initCentroidGeometry( void ) { _initCentroidGeometry(); }
+
 	void BarnesHut( void ) { _BarnesHut(); }
 
 //------------------------------------------------------------------------------

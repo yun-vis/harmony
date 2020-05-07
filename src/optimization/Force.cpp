@@ -577,6 +577,40 @@ void Force::_initSeed( void ) {
 	}
 }
 
+//
+//  Force::_centroidGeometry --	compute the displacements exerted by the force-directed model
+//
+//  Inputs
+//	none
+//
+//  Outputs
+//	none
+//
+void Force::_initCentroidGeometry( void ) {
+
+	ForceGraph &g = *_forceGraphPtr;
+	
+	_initSeed();
+	
+	if( num_vertices( g ) == 1 ) {
+		
+		cerr << "num_vertices( g ) = " << num_vertices( g ) << endl;
+		BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
+				
+				g[ vd ].coordPtr->x() = _contourPtr->centroid().x();
+				g[ vd ].coordPtr->y() = _contourPtr->centroid().y();
+				g[ vd ].placePtr->zero();
+				
+				Polygon2 &p = *g[ vd ].cellPtr;
+				p.elements() = _contourPtr->elements();
+				p.updateCentroid();
+				p.center() = p.centroid();
+				p.area() = p.area();
+				
+			}
+		return;
+	}
+}
 
 //
 //  Force::_centroidGeometry --	compute the displacements exerted by the force-directed model
@@ -592,31 +626,14 @@ void Force::_centroidGeometry( void ) {
 	ForceGraph &g = *_forceGraphPtr;
 	// const char theName[] = "Net::centroid : ";
 	
-	_initSeed();
-	
 	// when only 1 seed
-	if( num_vertices( g ) == 1 ) {
-		
-		BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
-			
-				g[ vd ].coordPtr->x() = _contourPtr->centroid().x();
-				g[ vd ].coordPtr->y() = _contourPtr->centroid().y();
-				g[ vd ].placePtr->zero();
-				
-				Polygon2 &p = *g[ vd ].cellPtr;
-				p.elements() = _contourPtr->elements();
-				p.updateCentroid();
-				p.center() = p.centroid();
-				p.area() = p.area();
-			}
-		
-		// ( *_voronoi.seedVec() )[ 0 ].voronoiCellPtr = _contourPtr;
-		return;
-	}
+	if( num_vertices( g ) == 1 ) return;
 	
 	//_voronoi.init( _seedVec, *_contourPtr );
 	//_voronoi.createWeightedVoronoiDiagram();
 	_voronoi.id() = _id;
+	//cerr << " num_vertices( g ) = " << num_vertices( g ) << endl;
+	//cerr << " contour = " << *_contourPtr << endl;
 	_voronoi.createVoronoiDiagram( false );  // true: weighted, false: uniformed
 	
 	// initialization

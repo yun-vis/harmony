@@ -20,6 +20,7 @@ QRectF GraphicsVertexItem::boundingRect( void ) const {
 
 void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
                                 QWidget *widget ) {
+	// _font = QFont( "Arial", 5*_font_size, QFont::Bold, false );
 	_font = QFont( "Arial", _font_size, QFont::Bold, false );
 	
 	QFontMetrics metrics( _font );

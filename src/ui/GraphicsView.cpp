@@ -309,7 +309,8 @@ void GraphicsView::_item_boundary( void ) {
 				itemptr->setBrush( QBrush( QColor( 100, 100, 100, 255 ), Qt::SolidPattern ) );
 				itemptr->setRect( QRectF( g[ vd ].coordPtr->x(), -g[ vd ].coordPtr->y(), 10, 10 ) );
 				itemptr->id() = g[ vd ].id;
-				itemptr->text() = QString::fromStdString( to_string( g[ vd ].isFixed ) );
+				itemptr->text() = QString::fromStdString( to_string( g[ vd ].id ) );
+				//itemptr->text() = QString::fromStdString( to_string( g[ vd ].isFixed ) );
 				//itemptr->textOn() = true;
 				
 				//cerr << vertexCoord[vd];
@@ -501,6 +502,11 @@ void GraphicsView::_item_centers( void ) {
 		
 		ForceGraph &fg = centerVec[ i ].forceGraph();
 		_item_force_graph( fg );
+		BGL_FORALL_VERTICES( vd, fg, ForceGraph ) {
+				
+				GraphicsVertexItem *itemptr = fg[ vd ].itemPtr;
+				itemptr->text() = QString( "C" ) + QString::fromStdString( to_string(  i ) );
+		}
 	}
 }
 

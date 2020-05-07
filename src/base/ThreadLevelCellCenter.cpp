@@ -15,10 +15,10 @@ ThreadLevelCellCenter::~ThreadLevelCellCenter() {
 }
 
 void ThreadLevelCellCenter::force( void ) {
-
+	
 	double err = INFINITY;
 	
-	// cerr << "force-based approach..." << " cellIndex = " << _cellIndex << endl;
+	cerr << "force-based approach..." << " cellCenterIndex = " << _cellIndex << endl;
 	while( ( err > _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 		
 		// cerr << "err = " << err << " _count = " << _count << endl;
@@ -53,22 +53,33 @@ void ThreadLevelCellCenter::force( void ) {
 			_levelCellPtr->centerVec()[ _cellIndex ].force().displacement();
 			_levelCellPtr->additionalForcesCenter();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
-			if( _count % freq == 0 && _count > 50 ) {
+			if( _count == 0 ) {
+				_levelCellPtr->centerVec()[ _cellIndex ].force().initCentroidGeometry();
+			}
+			if( _count % freq == 0 ) {
+			// else if( _count % freq == 0 && _count > 50 ) {
 				_levelCellPtr->centerVec()[ _cellIndex ].force().centroidGeometry();
 			}
 			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << " WorkerLevelCenter::err (hybrid) = " << err << endl;
+			cerr << "_cellIndex = " << _cellIndex << endl;
+			cerr << " _count = " << _count << endl;
+			cerr << " size = " << num_vertices( _levelCellPtr->centerVec()[ _cellIndex ].forceGraph() ) << endl;
+			cerr << " _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() = " << _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() << endl;
+			cerr << " err = " << err << endl;
 			if( err < _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) {
-				return;
+				//if( _count % freq == 0 && _count > 50 )
+					return;
 			}
 			break;
 		}
-		default:
-			break;
-		}
-		_count++;
+	default:
+		break;
 	}
+	_count++;
+}
+
 }
 
 void ThreadLevelCellCenter::stress( void ) {
@@ -76,10 +87,10 @@ void ThreadLevelCellCenter::stress( void ) {
 }
 
 void ThreadLevelCellCenter::run( int id ) {
-
+	
 	//std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
 	//cerr << "run ThreadLevelCellCenter..." << endl;
-	//cerr << "tid = " << id << endl;
+	// cerr << "tid = " << id << endl;
 	_id = id;
 	if( _energyType == ENERGY_FORCE ) {
 		force();

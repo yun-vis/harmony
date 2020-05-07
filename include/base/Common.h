@@ -155,7 +155,7 @@ using namespace std;
 #define MIN_NEIGHBOR_DISTANCE    (4)
 #define TIMER_INTERVAL  (200)
 #define VORONOI_FREQUENCE (1)
-#define SLEEP_TIME (300)
+#define SLEEP_TIME (500)
 
 enum OPTTYPE {
 	LEAST_SQUARE, CONJUGATE_GRADIENT

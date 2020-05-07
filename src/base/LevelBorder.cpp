@@ -433,8 +433,8 @@ void LevelBorder::_normalizeRegionBase( void ) {
 	double ratio = 1.0;
 	// double ratio = 0.8;
 	//cerr << "w = " << width << " h = " << height << endl;
-	double width = *_content_widthPtr;
-	double height = *_content_heightPtr;
+	double width = *_content_widthPtr * 0.95;
+	double height = *_content_heightPtr * 0.95;
 	
 	ForceGraph &forceGraph = _regionBase.forceGraph();
 	
@@ -641,16 +641,19 @@ void LevelBorder::updatePolygonComplex( void ) {
 	BoundaryGraph &bg = _octilinearBoundaryVec[ 0 ]->boundary();
 	map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
 	map< unsigned int, Polygon2 >::iterator itC = _regionBase.polygonComplex().begin();
+	unsigned int id = 0;
 	for( itP = _regionBase.polygonComplexVD().begin(); itP != _regionBase.polygonComplexVD().end(); itP++ ) {
 		
+		if( id == 4 ) cerr << "blue thing:" << endl;
 		vector< ForceGraph::vertex_descriptor > &p = itP->second;
 		for( unsigned int i = 0; i < p.size(); i++ ) {
 			itC->second.elements()[ i ].x() = bg[ p[ i ] ].coordPtr->x();
 			itC->second.elements()[ i ].y() = bg[ p[ i ] ].coordPtr->y();
 			
-			// cerr << "i = " << i << " " << itC->second.elements()[i];
+			if( id == 4 ) cerr << "i = " << bg[ p[ i ] ].id << " " << itC->second.elements()[i];
 		}
 		itC++;
+		id++;
 	}
 }
 
