@@ -1299,7 +1299,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		
 		// default canvas size
 		double ratio = ( double ) width() / ( double ) height();
-		double x = sqrt( pow( labelArea, 1.85 ) / ( double ) _pathwayPtr->nVertices() / ratio );
+		double x = sqrt( pow( labelArea, 2.0 ) / ( double ) _pathwayPtr->nVertices() / ratio );
 		//double x = sqrt( labelArea * _gv->veCoverage() / ( double ) _pathwayPtr->nVertices() / ratio );
 		_content_width = ratio * x;
 		_content_height = x;

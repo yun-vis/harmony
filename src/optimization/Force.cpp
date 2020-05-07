@@ -376,12 +376,12 @@ void Force::_displacement( void ) {
 							ForceGraph::degree_size_type degreeJ = out_degree( vdj, g );
 							
 							if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( degreeI == 1 ) && ( degreeJ == 1 ) ) {
-								*g[ vdi ].forcePtr += _paramKa * ( dist - 0.5*l*_paramDegreeOneMagnitude ) * unit;
-								*g[ vdj ].forcePtr -= _paramKa * ( dist - 0.5*l*_paramDegreeOneMagnitude ) * unit;
+								*g[ vdi ].forcePtr += _paramKa * ( dist - 0.35*l*_paramDegreeOneMagnitude ) * unit;
+								*g[ vdj ].forcePtr -= _paramKa * ( dist - 0.35*l*_paramDegreeOneMagnitude ) * unit;
 							}
 							else if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( ( degreeI == 1 ) || ( degreeJ == 1 ) ) ) {
-								*g[ vdi ].forcePtr += _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
-								*g[ vdj ].forcePtr -= _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
+								*g[ vdi ].forcePtr += _paramKa * ( dist - 0.35*l*_paramDegreeOneMagnitude ) * unit;
+								*g[ vdj ].forcePtr -= _paramKa * ( dist - 0.35*l*_paramDegreeOneMagnitude ) * unit;
 							}
 							else if( ( ( *_levelTypePtr == LEVEL_BORDER ) ) && ( ( degreeI == 1 ) || ( degreeJ == 1 ) ) ) {
 								//if ( ( degreeI == 1 || degreeI == 2 ) )

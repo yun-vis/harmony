@@ -407,7 +407,7 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 			vector< unsigned int > &idVec = itM->second;
 
 			for( unsigned int m = 0; m < idVec.size(); m++ ) {       // complete graph
-				for( unsigned int n = m; n < idVec.size(); n++ ) {
+				for( unsigned int n = m + 1; n < idVec.size(); n++ ) {
 					
 					ForceGraph::vertex_descriptor vdS = vertex( idVec[ m ], _centerVec[ i ].forceGraph() );
 					ForceGraph::vertex_descriptor vdT = vertex( idVec[ n ], _centerVec[ i ].forceGraph() );
@@ -785,7 +785,7 @@ void LevelCell::updateCenterCoords( void ) {
 	unsigned int nSystems = _cellVec.size();
 	//double radius = 30.0;
 	// double radius = 60.0;    // VHM
-	double radius = 100.0;       // KEGG
+	double radius = 10.0;       // KEGG
 	
 	double w = *_pathwayPtr->width();
 	double h = *_pathwayPtr->height();
