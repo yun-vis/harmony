@@ -334,10 +334,10 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 #endif // DEBUG
 			
 			// add vertex
-			int length = 50;
+			int length = 25;
 			// int length = 50;
 			// double radius = 50;
-			double radius = 200; // KEGG
+			double radius = 50; // KEGG
 			ForceGraph::vertex_descriptor vdNew = add_vertex( _centerVec[ i ].forceGraph() );
 			double x = radius / 2.0 - radius * ( double ) ( rand() % 2 ) + contour.centroid().x() +
 			           rand() % ( int ) length - 0.5 * length;

@@ -55,14 +55,14 @@ void ThreadLevelCellComponent::force( void ) {
 			if( _count == 0 ) {
 				_levelCellPtr->cellVec()[ _cellIndex ].force().initCentroidGeometry();
 			}
-			if( _count % freq == 0 ) {
+			if( _count % freq == 0 && _count > 50 ) {
 				//else if( _count % freq == 0 && _count > 50 ) {
 				_levelCellPtr->cellVec()[ _cellIndex ].force().centroidGeometry();
 			}
 			err = _levelCellPtr->cellVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "id = " << _id << " WorkerLevelMiddle::err (hybrid) = " << err << endl;
-			if( num_vertices( _levelCellPtr->cellVec()[ _cellIndex ].forceGraph() ) < 4 && _count > 10 )
+			if( num_vertices( _levelCellPtr->cellVec()[ _cellIndex ].forceGraph() ) < 4 && _count > 60 )
 				return;
 			if( _count % freq == 0 && err < _levelCellPtr->cellVec()[ _cellIndex ].force().finalEpsilon() ) {
 				// if( _count % freq == 0 && _count > 50 )
