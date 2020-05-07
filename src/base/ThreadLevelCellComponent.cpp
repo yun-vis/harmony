@@ -64,7 +64,7 @@ void ThreadLevelCellComponent::force( void ) {
 			//cerr << "id = " << _id << " WorkerLevelMiddle::err (hybrid) = " << err << endl;
 			if( num_vertices( _levelCellPtr->cellVec()[ _cellIndex ].forceGraph() ) < 4 && _count > 10 )
 				return;
-			if( err < _levelCellPtr->cellVec()[ _cellIndex ].force().finalEpsilon() ) {
+			if( _count % freq == 0 && err < _levelCellPtr->cellVec()[ _cellIndex ].force().finalEpsilon() ) {
 				// if( _count % freq == 0 && _count > 50 )
 				return;
 			}

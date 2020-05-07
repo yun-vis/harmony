@@ -472,6 +472,7 @@ void LevelCell::_buildCellComponentGraphs( void ) {
 			for( unsigned int k = 0; k < multiple; k++ ) {
 				
 				// add vertex
+				//int length = 150;
 				int length = 50;
 				ForceGraph::vertex_descriptor vdNew = add_vertex( _cellVec[ i ].forceGraph() );
 				double x = -100.0 + 200.0 * ( double ) k / ( double ) multiple + contour.centroid().x() +
@@ -757,9 +758,9 @@ void LevelCell::_computeClusters( void ) {
 void LevelCell::updateCenterCoords( void ) {
 	
 	unsigned int nSystems = _cellVec.size();
-	double radius = 30.0;
+	//double radius = 30.0;
 	// double radius = 60.0;    // VHM
-	// double radius = 100.0;       // KEGG
+	double radius = 100.0;       // KEGG
 	
 	double w = *_pathwayPtr->width();
 	double h = *_pathwayPtr->height();

@@ -240,7 +240,8 @@ void LevelBorder::_decomposeSkeleton( void ) {
 			
 			vector< ForceGraph::edge_descriptor > removeEVec;
 			// double radius = 25.0; // tiny
-			double radius = 100.0;
+			double radius = 150.0;
+			if( mag == 2 ) radius = 10;
 			
 			if( mag > 1 ) {
 				

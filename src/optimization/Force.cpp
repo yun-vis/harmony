@@ -177,6 +177,7 @@ void Force::_init( ForceGraph *__forceGraphPtr, Polygon2 *__contour,
 			assert( false );
 		}
 	}
+	cerr << "degreeOneMagnitude: " << _paramDegreeOneMagnitude << endl;
 	
 #ifdef DEBUG
 	cerr << "levelType: " << *_levelTypePtr << endl;
@@ -381,6 +382,12 @@ void Force::_displacement( void ) {
 							else if( ( ( *_levelTypePtr == LEVEL_DETAIL ) || ( *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) && ( ( degreeI == 1 ) || ( degreeJ == 1 ) ) ) {
 								*g[ vdi ].forcePtr += _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
 								*g[ vdj ].forcePtr -= _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
+							}
+							else if( ( ( *_levelTypePtr == LEVEL_BORDER ) ) && ( ( degreeI == 1 ) || ( degreeJ == 1 ) ) ) {
+								//if ( ( degreeI == 1 || degreeI == 2 ) )
+									*g[ vdi ].forcePtr += _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
+								//if ( ( degreeJ == 1 || degreeJ == 2 ) )
+									*g[ vdj ].forcePtr -= _paramKa * ( dist - l*_paramDegreeOneMagnitude ) * unit;
 							}
 							else {
 								*g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;

@@ -150,7 +150,7 @@ void Window::_threadBoundaryForce( void ) {
 	pool.push( []( int id, ThreadLevelBorder *tlh ) { tlh->run( id ); }, &tlh );
 	
 	// rendering
-#ifdef DEBUG
+//#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 
@@ -160,7 +160,7 @@ void Window::_threadBoundaryForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-#endif // DEBUG
+//#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
 	pool.stop( true );
@@ -358,8 +358,8 @@ void Window::steinertree( void ) {
 				//if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
 				//if( *g[ vd ].namePtr == "coke[r]" ) {            // tiny
 					//if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
-					if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
-					//if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+					//if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
+					if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
 					//if( *g[ vd ].namePtr == "Beans" ){        // food
 					//if( *g[ vd ].namePtr == "Prawns" ){        // food
 					//if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
@@ -1299,7 +1299,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		
 		// default canvas size
 		double ratio = ( double ) width() / ( double ) height();
-		double x = sqrt( pow( labelArea, 1.75 ) / ( double ) _pathwayPtr->nVertices() / ratio );
+		double x = sqrt( pow( labelArea, 1.85 ) / ( double ) _pathwayPtr->nVertices() / ratio );
 		//double x = sqrt( labelArea * _gv->veCoverage() / ( double ) _pathwayPtr->nVertices() / ratio );
 		_content_width = ratio * x;
 		_content_height = x;

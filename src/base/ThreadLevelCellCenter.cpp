@@ -63,12 +63,7 @@ void ThreadLevelCellCenter::force( void ) {
 			err = _levelCellPtr->centerVec()[ _cellIndex ].force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << " WorkerLevelCenter::err (hybrid) = " << err << endl;
-			cerr << "_cellIndex = " << _cellIndex << endl;
-			cerr << " _count = " << _count << endl;
-			cerr << " size = " << num_vertices( _levelCellPtr->centerVec()[ _cellIndex ].forceGraph() ) << endl;
-			cerr << " _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() = " << _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() << endl;
-			cerr << " err = " << err << endl;
-			if( err < _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) {
+			if( _count % freq == 0 && err < _levelCellPtr->centerVec()[ _cellIndex ].force().finalEpsilon() ) {
 				//if( _count % freq == 0 && _count > 50 )
 					return;
 			}

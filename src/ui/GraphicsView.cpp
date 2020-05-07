@@ -1864,6 +1864,20 @@ GraphicsView::GraphicsView( QWidget *parent )
 		else
 			cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
 	}
+	if( conf.has( "color_type" ) ) {
+		
+		string paramColorType = conf.gets( "color_type" );
+		if( paramColorType == "COLOR_BREWER" )
+			_colorType = COLOR_BREWER;
+		else if( paramColorType == "COLOR_PREDEFINED" )
+			_colorType = COLOR_PREDEFINED;
+		else if( paramColorType == "COLOR_MONOTONE" )
+			_colorType = COLOR_MONOTONE;
+		else if( paramColorType == "COLOR_PASTEL" )
+			_colorType = COLOR_PASTEL;
+		else
+			cerr << "something is wrong here... at " << __LINE__ << " in " << __FILE__ << endl;
+	}
 	_maxThread = std::thread::hardware_concurrency() - 1; // preserve one thread for main thread
 	
 	cerr << "filepath: " << configFilePath << endl;
@@ -1877,6 +1891,7 @@ GraphicsView::GraphicsView( QWidget *parent )
 	cerr << "file_type: " << _fileFreq << endl;
 	cerr << "file_freq: " << _fileType << endl;
 	cerr << "energy_type: " << _energyType << endl;
+	cerr << "color_type: " << _colorType << endl;
 	cerr << "max_thread: " << _maxThread << endl;
 	
 	
@@ -1887,8 +1902,7 @@ GraphicsView::GraphicsView( QWidget *parent )
 	_scene->setSceneRect( -default_width / 2.0, -default_height / 2.0,
 	                      default_width, default_height );  // x, y, w, h
 	
-	//_colorType = COLOR_PREDEFINED;
-	_colorType = COLOR_BREWER;
+
 	_is_simplifiedFlag = false;
 	_is_skeletonFlag = false;
 	_is_compositeFlag = false;

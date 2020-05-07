@@ -58,13 +58,13 @@ void ThreadLevelDetail::force( void ) {
 			if( _count == 0 ) {
 				itC->second.componentRegion.force().initCentroidGeometry();
 			}
-			if( _count % freq == 0 && _count > 50 ) {
+			if( _count % freq == 0 && _count >= 50 ) {
 				itC->second.componentRegion.force().centroidGeometry();
 			}
 			err = itC->second.componentRegion.force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
-			if( err < itC->second.componentRegion.force().finalEpsilon() ) {
+			if( _count % freq == 0 && err < itC->second.componentRegion.force().finalEpsilon() ) {
 				return;
 			}
 			_count++;

@@ -65,7 +65,7 @@ void ThreadLevelBorder::force( void ) {
 			if( _count == 0 ) {
 				_levelBorderPtr->regionBase().force().initCentroidGeometry();
 			}
-			else if( _count % freq == 0 && _count > 50 ) {
+			if( _count % freq == 0 && _count >= 50 ) {
 				//Base::Timer< chrono::milliseconds > t( "ms" );
 				//t.begin();
 				_levelBorderPtr->regionBase().force().centroidGeometry();
@@ -76,7 +76,7 @@ void ThreadLevelBorder::force( void ) {
 			err = _levelBorderPtr->regionBase().force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			// cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
-			if( err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
+			if( _count % freq == 0 && err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
 				return;
 			}
 			break;
