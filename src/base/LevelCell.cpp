@@ -324,7 +324,7 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 		//cerr << "contour = " << contour << endl;
 		//cerr << "i = " << i << endl;
 		//cerr << "init nCV = " << _cellComponentVec[ i ].size() << endl;
-		
+		cerr << "bounding box = " << contour.boundingBox();
 		unsigned int idV = 0;
 		for( ; itC != _cellComponentVec[ i ].end(); itC++ ) {
 
@@ -334,10 +334,10 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 #endif // DEBUG
 			
 			// add vertex
-			int length = 10;
+			int length = 50;
 			// int length = 50;
-			double radius = 50;
-			// double radius = 100;
+			// double radius = 50;
+			double radius = 200; // KEGG
 			ForceGraph::vertex_descriptor vdNew = add_vertex( _centerVec[ i ].forceGraph() );
 			double x = radius / 2.0 - radius * ( double ) ( rand() % 2 ) + contour.centroid().x() +
 			           rand() % ( int ) length - 0.5 * length;
@@ -405,7 +405,31 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 		for( itM = setMap.begin(); itM != setMap.end(); itM++ ) {
 			
 			vector< unsigned int > &idVec = itM->second;
-			// for( unsigned int m = 0; m < idVec.size()-1; m++ ){  // chain
+
+			for( unsigned int m = 0; m < idVec.size(); m++ ) {       // complete graph
+				for( unsigned int n = m; n < idVec.size(); n++ ) {
+					
+					ForceGraph::vertex_descriptor vdS = vertex( idVec[ m ], _centerVec[ i ].forceGraph() );
+					ForceGraph::vertex_descriptor vdT = vertex( idVec[ n ], _centerVec[ i ].forceGraph() );
+					
+					bool isFound = false;
+					ForceGraph::edge_descriptor oldED;
+					tie( oldED, isFound ) = edge( vdS, vdT, _centerVec[ i ].forceGraph() );
+					//cerr << "idVec[m] = " << idVec[ m ] << " idVec[(m+1)%(int)idVec.size() = "
+					//     << idVec[ ( m + 1 ) % ( int ) idVec.size() ] << endl;
+					if( isFound == false ) {
+						pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT,
+						                                                                    _centerVec[ i ].forceGraph() );
+						ForceGraph::edge_descriptor foreED = foreE.first;
+						_centerVec[ i ].forceGraph()[ foreED ].id = idE;
+						
+						idE++;
+					}
+				}
+			}
+
+#ifdef SKIP
+			// for( unsigned int m = 0; m < idVec.size()-1; m++ ){   // chain
 			for( unsigned int m = 0; m < idVec.size(); m++ ) {       // circle
 				
 				ForceGraph::vertex_descriptor vdS = vertex( idVec[ m ], _centerVec[ i ].forceGraph() );
@@ -426,6 +450,7 @@ void LevelCell::_buildCellCenterGraphs( void ) {
 					idE++;
 				}
 			}
+#endif // SKIP
 		}
 	}
 }

@@ -645,13 +645,11 @@ void LevelBorder::updatePolygonComplex( void ) {
 	unsigned int id = 0;
 	for( itP = _regionBase.polygonComplexVD().begin(); itP != _regionBase.polygonComplexVD().end(); itP++ ) {
 		
-		if( id == 4 ) cerr << "blue thing:" << endl;
 		vector< ForceGraph::vertex_descriptor > &p = itP->second;
 		for( unsigned int i = 0; i < p.size(); i++ ) {
 			itC->second.elements()[ i ].x() = bg[ p[ i ] ].coordPtr->x();
 			itC->second.elements()[ i ].y() = bg[ p[ i ] ].coordPtr->y();
 			
-			if( id == 4 ) cerr << "i = " << bg[ p[ i ] ].id << " " << itC->second.elements()[i];
 		}
 		itC++;
 		id++;
