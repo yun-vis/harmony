@@ -1190,7 +1190,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
-		_threadOctilinearBoundary();
+		//_threadOctilinearBoundary();
 		updateLevelDetailPolygonComplex();
 		
 		//----------------------------------------

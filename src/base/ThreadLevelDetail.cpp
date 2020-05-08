@@ -64,7 +64,7 @@ void ThreadLevelDetail::force( void ) {
 			err = itC->second.componentRegion.force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
-			if( _count % freq == 0 && err < itC->second.componentRegion.force().finalEpsilon() ) {
+			if( _count % freq == 0 && _count >= 50 && err < itC->second.componentRegion.force().finalEpsilon() ) {
 				return;
 			}
 			_count++;

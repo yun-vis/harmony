@@ -503,8 +503,13 @@ void LevelCell::_buildCellComponentGraphs( void ) {
 				double x = -100.0 + 200.0 * ( double ) k / ( double ) multiple + contour.centroid().x() +
 				           rand() % ( int ) length - 0.5 * length;
 				double y =
-						-50.0 + 100.0 * ( double ) ( rand() % 2 ) + contour.centroid().y() + rand() % ( int ) length -
+						-100.0 + 200.0 * ( double ) ( rand() % 2 ) + contour.centroid().y() + rand() % ( int ) length -
 						0.5 * length;
+				//double x = -100.0 + 200.0 * ( double ) k / ( double ) multiple + contour.centroid().x() +
+				//           rand() % ( int ) length - 0.5 * length;
+				//double y =
+				//		-50.0 + 100.0 * ( double ) ( rand() % 2 ) + contour.centroid().y() + rand() % ( int ) length -
+				//		0.5 * length;
 				
 				_cellVec[ i ].forceGraph()[ vdNew ].id = idV;
 				_cellVec[ i ].forceGraph()[ vdNew ].groupID = i;
@@ -587,7 +592,7 @@ void LevelCell::_buildCellComponentGraphs( void ) {
 		}
 	}
 	
-	// add complte graphs to single vertices
+	// add complete graphs to single vertices
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 		
 		ForceGraph &fg = _cellVec[ i ].forceGraph();
@@ -598,6 +603,7 @@ void LevelCell::_buildCellComponentGraphs( void ) {
 				if( degrees == 0 ) singleVDVec.push_back( vd );
 			}
 		
+		int random = rand()%10;
 		if( singleVDVec.size() > 1 ) {
 			for( unsigned int m = 0; m < singleVDVec.size(); m++ ) {
 				for( unsigned int n = m + 1; n < singleVDVec.size(); n++ ) {
@@ -606,10 +612,12 @@ void LevelCell::_buildCellComponentGraphs( void ) {
 					ForceGraph::vertex_descriptor vdS = singleVDVec[ m ];
 					ForceGraph::vertex_descriptor vdT = singleVDVec[ n ];
 					
-					pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT,
-					                                                                    fg );
-					ForceGraph::edge_descriptor foreED = foreE.first;
-					fg[ foreED ].id = num_edges( fg );
+					if( random == 0 ){
+						pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdS, vdT,
+						                                                                    fg );
+						ForceGraph::edge_descriptor foreED = foreE.first;
+						fg[ foreED ].id = num_edges( fg );
+					}
 				}
 			}
 		}
@@ -785,7 +793,7 @@ void LevelCell::updateCenterCoords( void ) {
 	unsigned int nSystems = _cellVec.size();
 	//double radius = 30.0;
 	// double radius = 60.0;    // VHM
-	double radius = 10.0;       // KEGG
+	double radius = 25;       // KEGG
 	
 	double w = *_pathwayPtr->width();
 	double h = *_pathwayPtr->height();
