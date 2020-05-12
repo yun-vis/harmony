@@ -48,8 +48,6 @@ private:
 
 protected:
 	
-	void _init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr );
-	
 	void _clear( void );
 	
 public:
@@ -72,15 +70,14 @@ public:
 
 	void updatePolygonComplex( void ) override;
 	
-	void prepare( void );
+	void prepareBoundary( void );
+	
+	void prepareForce( map< unsigned int, Polygon2 > *polygonComplexPtr = NULL ) override;
 	
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( double *__widthPtr, double *__heightPtr, double *__veCoveragePtr ) {
-		_init( __widthPtr, __heightPtr, __veCoveragePtr );
-	}
-	
+
 	void clear( void ) { _clear(); }
 
 //------------------------------------------------------------------------------

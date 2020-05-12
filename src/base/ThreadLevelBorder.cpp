@@ -24,7 +24,8 @@ void ThreadLevelBorder::force( void ) {
 #endif // DEBUG
 	
 	double err = INFINITY;
-	while( ( err > _levelBorderPtr->regionBase().force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
+	while( _count < _maxLoop ) {
+	// while( ( err > _levelBorderPtr->regionBase().force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 		
 		switch( _levelBorderPtr->regionBase().force().mode() ) {
 		
@@ -61,11 +62,7 @@ void ThreadLevelBorder::force( void ) {
 			//timer.end();
 			//timer.elapsed();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
-			// cerr << "freq = " << freq << endl;
-			if( _count == 0 ) {
-				_levelBorderPtr->regionBase().force().initCentroidGeometry();
-			}
-			if( _count % freq == 0 && _count >= 50 ) {
+			if( _count % freq == 0 && _count > 50 ) {
 				//Base::Timer< chrono::milliseconds > t( "ms" );
 				//t.begin();
 				_levelBorderPtr->regionBase().force().centroidGeometry();
@@ -75,8 +72,8 @@ void ThreadLevelBorder::force( void ) {
 			}
 			err = _levelBorderPtr->regionBase().force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
-			// cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
-			if( _count % freq == 0 && err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
+			//cerr << "WorkerLevelHigh::err (hybrid) = " << err << endl;
+			if( _count > 50 && err < _levelBorderPtr->regionBase().force().finalEpsilon() ) {
 				return;
 			}
 			break;

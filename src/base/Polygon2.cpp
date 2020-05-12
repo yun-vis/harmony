@@ -251,6 +251,7 @@ void Polygon2::updateCentroid( void ) {
 //  none
 //
 void Polygon2::updateOrientation( void ) {
+	
 	CGAL::Polygon_2< K > p;
 	
 	if( _elements.size() == 0 ) return;
@@ -381,6 +382,32 @@ double Polygon2::maxRadiusInPolygon( const Coord2 &coord ) {
 }
 
 //
+//  Polygon2::isSimple --    is simple polygon
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+bool Polygon2::isSimple( void ) {
+	
+	CGAL::Polygon_2< K > poly;
+	
+	for( unsigned int i = 0; i < _elements.size(); i++ ) {
+		
+		poly.push_back( K::Point_2( _elements[ i ].x(), _elements[ i ].y() ) );
+	}
+	
+	if( poly.is_simple() == false ) {
+		cerr << "isSimple = " << poly.is_simple() << endl;
+		cerr << "(overlap)::_polygon = " << *this << endl;
+	}
+	
+	return poly.is_simple();
+}
+
+//
 //  Polygon2::cleanPolygon --    clean up vertices if the polygon is not simple
 //
 //  Inputs
@@ -391,6 +418,8 @@ double Polygon2::maxRadiusInPolygon( const Coord2 &coord ) {
 //
 void Polygon2::cleanPolygon( void ) {
 	
+	if( isSimple() == true ) return;
+
 	bool isSimple = false;
 	Polygon2 ori = _elements;
 	bool isUpdated = false;

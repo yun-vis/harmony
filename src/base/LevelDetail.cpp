@@ -22,24 +22,6 @@ using namespace std;
 //------------------------------------------------------------------------------
 //	Private functions
 //------------------------------------------------------------------------------
-//  LevelDetail::_init -- initialization
-//
-//  Inputs
-//      string
-//
-//  Outputs
-//  double
-//
-//
-void LevelDetail::_init( double *widthPtr, double *heightPtr, double *veCoveragePtr ) {
-	
-	// initialize variables
-	_content_widthPtr = widthPtr;
-	_content_heightPtr = heightPtr;
-	//_veCoveragePtr = veCoveragePtr;
-}
-
-
 //
 //  LevelDetail::_clear --    clear the current LevelDetail information
 //
@@ -110,6 +92,9 @@ void LevelDetail::buildBoundaryGraph( void ) {
 void LevelDetail::updatePolygonComplex( void ) {
 
 
+}
+
+void LevelDetail::prepareForce( map< unsigned int, Polygon2 > *polygonComplexPtr ) {
 }
 
 // end of header file

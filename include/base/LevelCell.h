@@ -84,17 +84,15 @@ private:
 	
 	void _buildInterCellComponents( void );
 	
-	void _buildCellCenterGraphs( void );
+	void _buildCellCenterGraphs( map< unsigned int, Polygon2 > *polygonComplexPtr );
 	
-	void _buildCellComponentGraphs( void );
+	void _buildCellComponentGraphs( map< unsigned int, Polygon2 > *polygonComplexPtr );
 	
 	int _computeMCLClusters( ForceGraph &dg );
 	
 	void _computeClusters( void );
 	
-	void _init( double *widthPtr, double *heightPtr,
-			//double *veCoveragePtr, double *__veRatioPtr,
-			map< unsigned int, Polygon2 > *polygonComplexPtr );
+	void _init( void );
 	
 	void _clear( void );
 
@@ -109,10 +107,6 @@ public:
 //------------------------------------------------------------------------------
 //	Reference to members
 //------------------------------------------------------------------------------
-	
-	//unsigned int &nComponent( void ) { return _nComponent; }
-	
-	//const unsigned int &nComponent( void ) const { return _nComponent; }
 	
 	vector< RegionBase > &centerVec( void ) { return _centerVec; }
 	
@@ -162,15 +156,13 @@ public:
 	
 	void updatePolygonComplex( void ) override;
 	
+	void prepareForce( map< unsigned int, Polygon2 > *polygonComplexPtr ) override;
+
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void init( double *__widthPtr, double *__heightPtr,
-			// double *__veCoveragePtr, double *__veRatioPtr,
-			map< unsigned int, Polygon2 > *__polygonComplexPtr ) {
-		_init( __widthPtr, __heightPtr,
-				// __veCoveragePtr, __veRatioPtr,
-				__polygonComplexPtr );
+	void init( void ) {
+		_init();
 	}
 	
 //------------------------------------------------------------------------------

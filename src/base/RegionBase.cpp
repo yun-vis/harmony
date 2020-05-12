@@ -37,7 +37,7 @@ void RegionBase::_init( LEVELTYPE *__levelTypePtr, Polygon2 &__contour ) {
 	_simpleInputContour = __contour;
 	_levelTypePtr = __levelTypePtr;
 	_force.init( &_forceGraph, &_simpleInputContour,
-			_levelTypePtr, "config/boundary.conf" );
+			_levelTypePtr, "config/" + Common::getBatchStr() + "/boundary.conf" );
 }
 
 //

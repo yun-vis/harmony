@@ -2,8 +2,10 @@
 #include "ui/Window.h"
 
 int main( int argc, char **argv ) {
+	
 	QApplication app( argc, argv );
-
+	Common::Common();
+	
 //----------------------------------------------------------
 // data
 //----------------------------------------------------------
@@ -15,16 +17,12 @@ int main( int argc, char **argv ) {
 	
 	Window window;
 	window.setWindowTitle( "Harmony" );
-	double w = window.width();
-	double h = window.height();
-	
-	window.setPathwayData( &pathway, w, h );
+	window.setPathwayData( &pathway );
 	window.init();
 	window.show();
+	window.batch();
 	
 	cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x -> r" << endl;
-	
-	//cerr << "cos( 15.0/180.0*PI ) = " <<  cos( 15.0/180.0*M_PI ) << endl;
 	
 	return app.exec();
 }

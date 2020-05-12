@@ -15,33 +15,32 @@ void GraphicsVertexItem::init( void ) {
 }
 
 QRectF GraphicsVertexItem::boundingRect( void ) const {
-	return rect();
+	return _fineRect;
 }
 
 void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsItem *option,
                                 QWidget *widget ) {
-	// _font = QFont( "Arial", 5*_font_size, QFont::Bold, false );
 	_font = QFont( "Arial", _font_size, QFont::Bold, false );
 	
 	QFontMetrics metrics( _font );
 	double sx = metrics.width( _name );
 	double sy = 0.5 * metrics.height();
 	
-	QRectF fineRect( rect() );
-	fineRect.setX( rect().x() - 0.5 * sx - MIN_NEIGHBOR_DISTANCE );
-	fineRect.setY( rect().y() - sy - MIN_NEIGHBOR_DISTANCE );
-	fineRect.setWidth( sx + 2.0 * MIN_NEIGHBOR_DISTANCE );
-	fineRect.setHeight( 2.0 * sy + 2.0 * MIN_NEIGHBOR_DISTANCE );
+	_fineRect = rect();
+	_fineRect.setX( rect().x() - 0.5 * sx - MIN_NEIGHBOR_DISTANCE );
+	_fineRect.setY( rect().y() - sy - MIN_NEIGHBOR_DISTANCE );
+	_fineRect.setWidth( sx + 2.0 * MIN_NEIGHBOR_DISTANCE );
+	_fineRect.setHeight( 2.0 * sy + 2.0 * MIN_NEIGHBOR_DISTANCE );
 	
 	painter->setRenderHints( QPainter::Antialiasing );
 	painter->setPen( pen() );
 	painter->setBrush( brush() );
 
 	if( _vtype == VERTEX_REACTION ) {
-		painter->drawRect( fineRect );
+		painter->drawRect( _fineRect );
 	}
 	else if( _vtype == VERTEX_METABOLITE ) {
-		painter->drawRoundedRect( fineRect, 5, 5, Qt::AbsoluteSize );
+		painter->drawRoundedRect( _fineRect, 5, 5, Qt::AbsoluteSize );
 	}
 	else if( _vtype == VERTEX_DEFAULT ) {
         painter->drawEllipse( QRectF( rect().x()-5, rect().y()-5, 10, 10 ) );
@@ -54,10 +53,11 @@ void GraphicsVertexItem::paint( QPainter *painter, const QStyleOptionGraphicsIte
 	painter->setFont( _font );
 	//cerr << "id = " << _id << endl;
 	//painter->drawText( rect().x()+10, rect().y()-10, QString::fromStdString( to_string( _id ) ) );
-	painter->drawText( fineRect.x() + 0.5 * ( fineRect.width() - sx ),
-	                   fineRect.y() + 0.5 * ( fineRect.height() + 0.5 * sy ) + MIN_NEIGHBOR_DISTANCE,
-	                   //_text ); // (x ,y) must be left-upper corner
-	                   _name ); // (x ,y) must be left-upper corner
+	if( _textOn == true ) {
+		painter->drawText( _fineRect.x() + 0.5 * ( _fineRect.width() - sx ),
+		                   _fineRect.y() + 0.5 * ( _fineRect.height() + 0.5 * sy ) + MIN_NEIGHBOR_DISTANCE,
+		                   _name ); // (x ,y) must be left-upper corner
+	}
 	//painter->drawText( fineRect.x()+0.5*( fineRect.width()-sx ) - 0.5*MIN_NEIGHBOR_DISTANCE,
 	//                   fineRect.y()+0.5*( fineRect.height()+0.5*sy ) + MIN_NEIGHBOR_DISTANCE, _name );
 	
@@ -80,6 +80,7 @@ GraphicsVertexItem::GraphicsVertexItem( QGraphicsItem *parent ) {
 	
 	//_radius = 10;
 	_vtype = VERTEX_DEFAULT;
+	_textOn = true;
 }
 
 GraphicsVertexItem::GraphicsVertexItem( const QRectF &rect, QGraphicsItem *parent ) {

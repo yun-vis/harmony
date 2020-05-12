@@ -148,6 +148,9 @@ public:
 	friend double distanceBetween( const Coord2 &a, const Coord2 &b ) {
 		return ( ( a - b ).norm() );
 	}
+	
+	friend bool isChangedSide( const Coord2 &a1, const Coord2 &b1, const Coord2 &c1,
+	                           const Coord2 &a2, const Coord2 &b2, const Coord2 &c2 );
 
 //------------------------------------------------------------------------------
 //	Friend functions

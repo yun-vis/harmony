@@ -19,14 +19,15 @@ protected:
 
 public:
 	
-	PathwayData();                      // default constructor
-	PathwayData( const PathwayData &obj );     // Copy constructor
-	virtual ~PathwayData();             // Destructor
+	PathwayData();                              // default constructor
+	PathwayData( const PathwayData &obj );      // Copy constructor
+	virtual ~PathwayData();                     // Destructor
 
 //------------------------------------------------------------------------------
 //  Specific functions
 //------------------------------------------------------------------------------
-	void setPathwayData( Pathway *pathway, double &width, double &height );
+	void setPathwayData( Pathway *pathway );
+	//, double &width, double &height );
 
 //------------------------------------------------------------------------------
 //      I/O

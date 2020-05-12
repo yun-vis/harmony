@@ -49,10 +49,11 @@ private:
 	// rendering
 	GraphicsView *_gv;
 	LEVELTYPE _levelType;
+	// string _batch_str;
 	
 	// display
-	double _content_width;
-	double _content_height;
+	// double _content_width;
+	// double _content_height;
 	
 	void _simulateKey( Qt::Key key );
 	
@@ -74,6 +75,10 @@ private:
 	
 	void _threadOctilinearBoundary( void );
 	
+	void _generateConf( void );
+	
+	void _computeOverlaps( ofstream & ofs );
+
 	void steinertree( void );
 	
 	void spaceCoverage( void );
@@ -113,6 +118,8 @@ public:
 	void init( void ) {
 		_init();
 	}
+	void batch( void );
+	void exportTex( void );
 
 };
 

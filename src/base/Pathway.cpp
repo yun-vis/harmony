@@ -36,8 +36,6 @@ struct coord_t {
 //  none
 //
 Pathway::Pathway( void ) {
-	_widthPtr = new double( 0.0 );
-	_heightPtr = new double( 0.0 );
 }
 
 //
@@ -88,13 +86,12 @@ void Pathway::init( string pathIn, string pathOut,
 	_fileFreq = fileFreq;
 	_fileType = fileType;
 
-    int default_width = 0, default_height = 0;
-    string configFilePath = "config/common.conf";
+    string configFilePath = "config/" + Common::getBatchStr() + "/common.conf";
     Base::Config conf( configFilePath );
 
     if( conf.has( "font_size" ) ) {
         string paramFont = conf.gets( "font_size" );
-        _font_size = Common::stringToDouble( paramFont );
+        Common::setFontSize( Common::stringToDouble( paramFont ) );
     }
 
 	if( clonedThreshold == 0 ) {
@@ -668,7 +665,7 @@ void Pathway::loadXml( string inputname ) {
 		newMeta.freq = retrieveFreq( newMeta.name );
 		newMeta.metaType = retrieveMetaType( newMeta.name );
 		
-		QFont font = QFont( "Arial", _font_size, QFont::Bold, false );
+		QFont font = QFont( "Arial", Common::getFontSize(), QFont::Bold, false );
 		QFontMetrics fm( font );
 		newMeta.namePixelWidth = fm.width( QString::fromStdString( newMeta.name ) );
 		newMeta.namePixelHeight = fm.height();
@@ -743,7 +740,7 @@ void Pathway::loadXml( string inputname ) {
 		}
 		
 		// add name pixel length
-		QFont font = QFont( "Arial", _font_size, QFont::Bold, false );
+		QFont font = QFont( "Arial", Common::getFontSize(), QFont::Bold, false );
 		QFontMetrics fm( font );
 		newReact.namePixelWidth = fm.width( QString::fromStdString( newReact.abbr ) );
 		newReact.namePixelHeight = fm.height();
@@ -808,11 +805,9 @@ void Pathway::loadXml( string inputname ) {
 //  none
 //
 void Pathway::genGraph( void ) {
-	unsigned int nVertices = 0, nEdges = 0;
 	
+	unsigned int nVertices = 0, nEdges = 0;
 	_graph[ graph_bundle ].centerPtr = new Coord2( 0.0, 0.0 );
-	_graph[ graph_bundle ].widthPtr = new double( *_widthPtr );
-	_graph[ graph_bundle ].heightPtr = new double( *_heightPtr );
 	
 	for( unsigned int i = 0; i < _react.size(); i++ ) {
 		
@@ -831,8 +826,8 @@ void Pathway::genGraph( void ) {
 		_graph[ reactVD ].isAlias = false;
 		_graph[ reactVD ].type = "reaction";
 		_graph[ reactVD ].coordPtr = new Coord2;
-		_graph[ reactVD ].coordPtr->x() = rand() % ( int ) *_widthPtr - *_widthPtr / 2.0;
-		_graph[ reactVD ].coordPtr->y() = rand() % ( int ) *_heightPtr - *_heightPtr / 2.0;
+		_graph[ reactVD ].coordPtr->x() = rand() % ( int ) Common::getContentWidth() - Common::getContentWidth() / 2.0;
+		_graph[ reactVD ].coordPtr->y() = rand() % ( int ) Common::getContentHeight() - Common::getContentHeight() / 2.0;
 		_graph[ reactVD ].widthPtr = new double( 10.0 );
 		_graph[ reactVD ].heightPtr = new double( 10.0 );
 		_graph[ reactVD ].metaPtr = NULL;
@@ -901,8 +896,8 @@ void Pathway::genGraph( void ) {
 				_graph[ metaVD ].isAlias = false;
 				_graph[ metaVD ].type = "metabolite";
 				_graph[ metaVD ].coordPtr = new Coord2;
-				_graph[ metaVD ].coordPtr->x() = rand() % ( int ) *_widthPtr - *_widthPtr / 2.0;
-				_graph[ metaVD ].coordPtr->y() = rand() % ( int ) *_heightPtr - *_heightPtr / 2.0;
+				_graph[ metaVD ].coordPtr->x() = rand() % ( int ) Common::getContentWidth() - Common::getContentWidth() / 2.0;
+				_graph[ metaVD ].coordPtr->y() = rand() % ( int ) Common::getContentHeight() - Common::getContentHeight() / 2.0;
 				_graph[ metaVD ].widthPtr = new double( 10.0 );
 				_graph[ metaVD ].heightPtr = new double( 10.0 );
 				_graph[ metaVD ].metaPtr = &_meta[ index ];
@@ -1007,8 +1002,8 @@ void Pathway::genGraph( void ) {
 				_graph[ metaVD ].isAlias = false;
 				_graph[ metaVD ].type = "metabolite";
 				_graph[ metaVD ].coordPtr = new Coord2;
-				_graph[ metaVD ].coordPtr->x() = rand() % ( int ) *_widthPtr - *_widthPtr / 2.0;
-				_graph[ metaVD ].coordPtr->y() = rand() % ( int ) *_heightPtr - *_heightPtr / 2.0;
+				_graph[ metaVD ].coordPtr->x() = rand() % ( int ) Common::getContentWidth() - Common::getContentWidth() / 2.0;
+				_graph[ metaVD ].coordPtr->y() = rand() % ( int ) Common::getContentHeight() - Common::getContentHeight() / 2.0;
 				_graph[ metaVD ].widthPtr = new double( 10.0 );
 				_graph[ metaVD ].heightPtr = new double( 10.0 );
 				_graph[ metaVD ].metaPtr = &_meta[ index ];
@@ -1320,11 +1315,11 @@ void Pathway::loadPathway( void ) {
 //  none
 //
 void Pathway::initSubdomain( void ) {
-	double totalArea = *_widthPtr * *_heightPtr;
+	double totalArea = Common::getContentWidth() * Common::getContentHeight();
 	double totalNum = 0.0;
 	double mag = 0.3;
 	
-	cerr << "*_widthPtr = " << *_widthPtr << " *_heightPtr = " << *_heightPtr << endl;
+	cerr << "Common::getContentWidth() = " << Common::getContentWidth() << " Common::getContentHeight() = " << Common::getContentHeight() << endl;
 	// find the sum of total area
 	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ) {
 		totalNum += it->second->reactNum;
@@ -1415,8 +1410,8 @@ void Pathway::computeIdealAreaOfSubdomain( void ) {
 //  none
 //
 void Pathway::layoutPathway( void ) {
-	randomGraphLayout( ( DirectedBaseGraph & ) _graph, *_widthPtr, *_heightPtr );
-	fruchtermanGraphLayout( ( DirectedBaseGraph & ) _graph, *_widthPtr, *_heightPtr );
+	randomGraphLayout( ( DirectedBaseGraph & ) _graph, Common::getContentWidth(), Common::getContentHeight() );
+	fruchtermanGraphLayout( ( DirectedBaseGraph & ) _graph, Common::getContentWidth(), Common::getContentHeight() );
 }
 
 //
@@ -2321,8 +2316,8 @@ void Pathway::genDependencyGraph( void ) {
 	// add vertices
 	unsigned int idV = 0, idE = 0;
 	_skeletonGraph[ graph_bundle ].centerPtr = new Coord2( 0.0, 0.0 );
-	_skeletonGraph[ graph_bundle ].widthPtr = new double( *_widthPtr );
-	_skeletonGraph[ graph_bundle ].heightPtr = new double( *_heightPtr );
+	_skeletonGraph[ graph_bundle ].widthPtr = new double( Common::getContentWidth() );
+	_skeletonGraph[ graph_bundle ].heightPtr = new double( Common::getContentHeight() );
 	//map< pair< double, unsigned int >, SkeletonGraph::vertex_descriptor > vdMap;
 	for( map< string, Subdomain * >::iterator it = _sub.begin(); it != _sub.end(); ++it ) {
 		
@@ -2508,7 +2503,7 @@ void Pathway::genDependencyGraph( void ) {
 #endif // DEBUG
 	
 	//genSubsysWeight();
-	radialPlacement( _skeletonGraph, *_widthPtr, *_heightPtr );
+	radialPlacement( _skeletonGraph, Common::getContentWidth(), Common::getContentHeight() );
 	//printGraph( _skeletonGraph );
 }
 

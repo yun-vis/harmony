@@ -15,6 +15,7 @@ ThreadLevelDetail::~ThreadLevelDetail() {
 }
 
 void ThreadLevelDetail::force( void ) {
+	
 	//cerr << "force-based approach..." << endl;
 	//cerr << "epsilon = " << _LevelDetailedPtr->force().finalEpsilon() << endl;
 	
@@ -23,9 +24,21 @@ void ThreadLevelDetail::force( void ) {
 	vector< multimap< int, CellComponent > > &cellComponentVec = _levelCellPtr->cellComponentVec();
 	multimap< int, CellComponent > &cellComponentMap = cellComponentVec[ _cellIndex ];
 	multimap< int, CellComponent >::iterator itC = cellComponentMap.begin();
-	advance( itC, _groupIndex );
 	
-	while( ( err > itC->second.componentRegion.force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
+	advance( itC, _groupIndex );
+
+#ifdef DEBUG
+	if( _groupIndex == 1 ){
+		cerr << "_count = " << _count << endl;
+		cerr << "_gID = " << _groupIndex << " _cID = " << _cellIndex << endl;
+		cerr << "g size = " << num_vertices( itC->second.componentRegion.forceGraph() ) << endl;
+		cerr << "c size = " << itC->second.componentRegion.fineOutputContour().contour().elements().size() << endl;
+		cerr << "sc size = " << itC->second.componentRegion.simpleContour().elements().size() << endl;
+	}
+#endif // DEBUG
+
+	while( _count < _maxLoop ) {
+	// while( ( err > itC->second.componentRegion.force().finalEpsilon() ) && ( _count < _maxLoop ) ) {
 		
 		switch( itC->second.componentRegion.force().mode() ) {
 		case TYPE_FORCE:
@@ -55,16 +68,16 @@ void ThreadLevelDetail::force( void ) {
 			_pathwayPtr->pathwayMutex().lock();
 			itC->second.componentRegion.force().displacement();
 			int freq = VORONOI_FREQUENCE - MIN2( _count / 20, VORONOI_FREQUENCE - 1 );
-			if( _count == 0 ) {
-				itC->second.componentRegion.force().initCentroidGeometry();
-			}
-			if( _count % freq == 0 && _count >= 50 ) {
+			//if( _count % freq == 0 )
+			// if( _count % freq == 0 && _count > 30 )
 				itC->second.componentRegion.force().centroidGeometry();
-			}
 			err = itC->second.componentRegion.force().verletIntegreation();
 			_pathwayPtr->pathwayMutex().unlock();
+			// cerr << "count = " << _count << " limit = " << itC->second.componentRegion.force().finalEpsilon() << " err = " << err << endl;
 			//cerr << "WorkerLevelDetailed::err (pathway force) = " << err << endl;
-			if( _count % freq == 0 && _count >= 50 && err < itC->second.componentRegion.force().finalEpsilon() ) {
+			//cerr << "" << itC->second.componentRegion.force().contourPtr()->elements().size() << endl;
+			if( _count % freq == 0 && _count > 30 &&
+			    err < itC->second.componentRegion.force().finalEpsilon() ) {
 				return;
 			}
 			_count++;

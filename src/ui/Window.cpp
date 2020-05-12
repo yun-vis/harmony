@@ -11,8 +11,7 @@ Window::Window( QWidget *parent )
 	
 	setGeometry( 0, 0, _gv->width(), _gv->height() );
 	_levelType = LEVEL_BORDER;
-	
-	//_octilinearVecPtr = new vector< Octilinear * >;
+
 
 #ifdef SKIP
 	createActions();
@@ -37,34 +36,256 @@ Window::Window( const Window &obj ) {
 	_levelCellPtr = obj._levelCellPtr;
 	_roadPtr = obj._roadPtr;
 	_lanePtr = obj._lanePtr;
+}
+
+void Window::batch( void ) {
 	
-	// display
-	_content_width = obj._content_width;
-	_content_height = obj._content_height;
+	_simulateKey( Qt::Key_F );
+	
+	string rootFolder = ( qApp->applicationDirPath() ).toStdString() + "/svg/" + Common::getBatchStr();
+	ofstream ofs( rootFolder + "/overlap.txt" );
+	_computeOverlaps( ofs );
+	ofs.close();
+	
+	string cm = "mkdir " + rootFolder;
+	// cerr << "cm = " << cm << endl;
+	system( cm.c_str() );
+	
+	int imgNum = 13;
+	for( int i = 0; i < imgNum; i++ ) {
+		
+		QString i_str = QString::number( i );
+		// cerr << "QString::number( i ) = " << i_str.toStdString() << endl;
+		if( i < 10 ) {
+			cm = "cp " + ( qApp->applicationDirPath() + QString( "/svg/pathway-0000000" ) + i_str +
+			               QString( ".png " ) ).toStdString() +
+			     ( qApp->applicationDirPath() ).toStdString() + "/svg/" + Common::getBatchStr() + "/pathway-0000000" +
+			     to_string( i ) + ".png";
+		}
+		else {
+			cm = "cp " + ( qApp->applicationDirPath() + QString( "/svg/pathway-000000" ) + i_str +
+			               QString( ".png " ) ).toStdString() +
+			     ( qApp->applicationDirPath() ).toStdString() + "/svg/" + Common::getBatchStr() + "/pathway-000000" +
+			     to_string( i ) + ".png";
+		}
+		// cerr << "cm = " << cm << endl;
+		system( cm.c_str() );
+	}
+	
+	exportTex();
+	_simulateKey( Qt::Key_Escape );
+}
+
+void Window::exportTex( void ) {
+}
+
+void Window::_computeOverlaps( ofstream &ofs ) {
+	
+	vector <ForceGraph> &lsubg = _pathwayPtr->lsubG();
+	vector <MetaboliteGraph> &subg = _pathwayPtr->subG();
+	
+	_gv->computeNodeOverlaps( ofs );
+	int p = _gv->exportPNG();
+	
+	ofs << "overlapped pixel = " << p << endl;
+	ofs << "total pixel = " << Common::getContentWidth() * Common::getContentHeight() << endl;
+	ofs << "ratio = " << p / ( Common::getContentWidth() * Common::getContentHeight() ) << endl;
+	
+	// between subdomains
+	int c = 0;
+	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
+		ForceGraph &gS = lsubg[ i ];
+		for( unsigned int j = i + 1; j < lsubg.size(); j++ ) {
+			ForceGraph &gT = lsubg[ j ];
+			
+			BGL_FORALL_EDGES( edS, gS, ForceGraph )
+			{
+				ForceGraph::vertex_descriptor vdA = source( edS, gS );
+				ForceGraph::vertex_descriptor vdB = target( edS, gS );
+				Coord2 &coordA = *gS[ vdA ].coordPtr;
+				Coord2 &coordB = *gS[ vdB ].coordPtr;
+				
+				BGL_FORALL_EDGES( edT, gT, ForceGraph )
+				{
+					ForceGraph::vertex_descriptor vdC = source( edT, gT );
+					ForceGraph::vertex_descriptor vdD = target( edT, gT );
+					Coord2 &coordC = *gT[ vdC ].coordPtr;
+					Coord2 &coordD = *gT[ vdD ].coordPtr;
+					if( vdA == vdC || vdA == vdD || vdB == vdC || vdB == vdD ) { ;
+					}
+					else {
+						if( isIntersected( coordA, coordB, coordC, coordD ) )
+							c++;
+					}
+				}
+			}
+		}
+	}
+	
+	// within subdomains
+	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
+		
+		ForceGraph &gS = lsubg[ i ];
+		
+		BGL_FORALL_EDGES( edS, gS, ForceGraph )
+		{
+			ForceGraph::vertex_descriptor vdA = source( edS, gS );
+			ForceGraph::vertex_descriptor vdB = target( edS, gS );
+			Coord2 &coordA = *gS[ vdA ].coordPtr;
+			Coord2 &coordB = *gS[ vdB ].coordPtr;
+			
+			BGL_FORALL_EDGES( edT, gS, ForceGraph )
+			{
+				ForceGraph::vertex_descriptor vdC = source( edT, gS );
+				ForceGraph::vertex_descriptor vdD = target( edT, gS );
+				Coord2 &coordC = *gS[ vdC ].coordPtr;
+				Coord2 &coordD = *gS[ vdD ].coordPtr;
+				
+				if( vdA == vdC || vdA == vdD || vdB == vdC || vdB == vdD ) { ;
+				}
+				else {
+					if( isIntersected( coordA, coordB, coordC, coordD ) )
+						c++;
+				}
+			}
+		}
+	}
+	
+	ofs << "edge crossings = " << c << endl;
 }
 
 void Window::_init( void ) {
 	
-	_content_width = width() - LEFTRIGHT_MARGIN;
-	_content_height = height() - TOPBOTTOM_MARGIN;
+	// initialization
+	Common::setContentWidth( width() - LEFTRIGHT_MARGIN );
+	Common::setContentWidth( height() - TOPBOTTOM_MARGIN );
 	
 	// initialization
 	_levelBorderPtr = new LevelBorder;
 	_levelCellPtr = new LevelCell;
 	_levelDetailPtr = new LevelDetail;
-	
 	_roadPtr = new vector< Road >;
 	_lanePtr = new vector< Road >;
 	
-	_levelCellPtr->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+	_levelCellPtr->setPathwayData( _pathwayPtr );
 	
-	_gv->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+	_gv->setPathwayData( _pathwayPtr );
 	_gv->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
 	                    _levelBorderPtr, _levelCellPtr, _levelDetailPtr,
 	                    _roadPtr, _lanePtr );
-	
+	//batch();
+	//_generateConf();
 }
 
+void Window::_generateConf( void ) {
+	
+	vector <string> strVec;
+	strVec.push_back( "boundary" );
+	strVec.push_back( "center" );
+	strVec.push_back( "component" );
+	strVec.push_back( "detail" );
+	
+	string rootFolder = ( qApp->applicationDirPath() ).toStdString() + "/config/";
+	for( unsigned int i = 0; i < strVec.size(); i++ ) {
+		
+		for( unsigned int j = 1; j <= 21; j++ ) {
+			
+			string cm = "mkdir " + rootFolder + strVec[ i ] + "/" + to_string( j );
+			system( cm.c_str() );
+			cm = "cp " + rootFolder + "0/*.* " +
+			     rootFolder + "/" + strVec[ i ] + "/" + to_string( j );
+			system( cm.c_str() );
+		}
+		
+		for( unsigned int j = 1; j <= 21; j++ ) {
+			
+			ofstream ofs( rootFolder + "/" + strVec[ i ] + "/" + to_string( j ) + "/" + strVec[ i ] + ".conf" );
+			
+			if( i == 0 ) {
+				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 3.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":ka 3.0\n";
+				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kr 1000.0\n";
+				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( 5.0 * ( ( j - 1 ) % 3 + 2 ) ) + "\n";
+				else ofs << ":kv 5.0\n";
+				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kc 5.0\n";
+				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kd 100.0\n";
+				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":ke 40.0\n";
+				if( j >= 19 && j <= 21 ) ofs << ":ko 0.0\n";
+				else ofs << ":ko 0.0\n";
+				ofs << ":force_loop 300\n"
+				       ":ratio_force 0.3\n"
+				       ":ratio_voronoi 0.7\n";
+			}
+			else if( i == 1 ) {
+				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 2.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":ka 3.0\n";
+				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kr 1000.0\n";
+				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kv 5.0\n";
+				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kc 5.0\n";
+				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kd 100.0\n";
+				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":ke 40.0\n";
+				if( j >= 19 && j <= 21 ) ofs << ":ko 0.0\n";
+				ofs << ":force_loop 100\n"
+				       ":ratio_force 0.1\n"
+				       ":ratio_voronoi 0.9\n";
+			}
+			else if( i == 2 ) {
+				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 3.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":ka 3.0\n";
+				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kr 1000.0\n";
+				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kv 5.0\n";
+				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kc 5.0\n";
+				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kd 100.0\n";
+				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":ke 40.0\n";
+				if( j >= 19 && j <= 21 ) ofs << ":ko 0.0\n";
+				ofs << ":force_loop 200\n"
+				       ":ratio_force 0.1\n"
+				       ":ratio_voronoi 0.9\n";
+			}
+			else if( i == 3 ) {
+				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 1.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":ka 3.0\n";
+				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kr 1000.0\n";
+				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kv 5.0\n";
+				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
+				else ofs << ":kc 5.0\n";
+				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":kd 100.0\n";
+				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
+				else ofs << ":ke 40.0\n";
+				if( j >= 19 && j <= 21 ) ofs << ":ko " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
+				ofs << ":force_loop 300\n"
+				       ":ratio_force 0.1\n"
+				       ":ratio_voronoi 0.9\n";
+			}
+			ofs << ":degreeOneMagnitude 1.0\n"
+			       "# annealing process\n"
+			       ":theta_threshold 0.8\n"
+			       ":min_temperature 600.0\n"
+			       ":alpha_temperature 10.0\n"
+			       ":enable_temperature 1\n"
+			       ":mode TYPE_HYBRID";
+			
+			ofs.close();
+		}
+	}
+}
 
 void Window::_simulateKey( Qt::Key key ) {
 	
@@ -138,7 +359,8 @@ void Window::_threadBoundaryForce( void ) {
 	ThreadLevelBorder tlh;
 	//vector < unsigned int > indexVec;
 	
-	tlh.setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+	tlh.setPathwayData( _pathwayPtr );
+	//, *_pathwayPtr->width(), *_pathwayPtr->height() );
 	tlh.setRegionData( &_levelType, _octilinearBoundaryVecPtr,
 	                   _levelBorderPtr, _levelCellPtr, _levelDetailPtr,
 	                   _roadPtr, _lanePtr );
@@ -149,8 +371,8 @@ void Window::_threadBoundaryForce( void ) {
 	// multi-thread
 	pool.push( []( int id, ThreadLevelBorder *tlh ) { tlh->run( id ); }, &tlh );
 	
-	// rendering
-//#ifdef DEBUG
+	// rendering0
+#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 
@@ -160,7 +382,7 @@ void Window::_threadBoundaryForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-//#endif // DEBUG
+#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
 	pool.stop( true );
@@ -172,23 +394,23 @@ void Window::_threadCellCenterForce( void ) {
 	// initialization
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 	
-	vector< ThreadLevelCellCenter * > tlc;
+	vector < ThreadLevelCellCenter * > tlc;
 	tlc.resize( _levelCellPtr->centerVec().size() );
-	//cerr << "_levelCellPtr->centerVec().size() = " << _levelCellPtr->centerVec().size() << endl;
+	
 	//for( unsigned int i = 0; i < 2; i++ ){
 	for( unsigned int i = 0; i < tlc.size(); i++ ) {
 		
 		// create a new thread
 		tlc[ i ] = new ThreadLevelCellCenter;
 		
-		tlc[ i ]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+		tlc[ i ]->setPathwayData( _pathwayPtr );//, *_pathwayPtr->width(), *_pathwayPtr->height() );
 		tlc[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
-				_levelBorderPtr, _levelCellPtr, _levelDetailPtr,
-				_roadPtr, _lanePtr );
+		                         _levelBorderPtr, _levelCellPtr, _levelDetailPtr,
+		                         _roadPtr, _lanePtr );
 		
 		tlc[ i ]->init( THREAD_CENTER, _gv->energyType(), i, 0,
 		                _levelCellPtr->centerVec()[ i ].force().paramForceLoop() );
-		//tlc[ i ]->run( 0 );
+//		tlc[ i ]->run( 0 );
 		pool.push( []( int id, ThreadLevelCellCenter *t ) { t->run( id ); }, tlc[ i ] );
 	}
 
@@ -202,7 +424,7 @@ void Window::_threadCellCenterForce( void ) {
 		updateAllScene();
 	}
 #endif // DEBUG
-
+	
 	// wait for all computing threads to finish and stop all threads
 	pool.stop( true );
 	
@@ -210,7 +432,6 @@ void Window::_threadCellCenterForce( void ) {
 	for( unsigned int i = 0; i < _levelCellPtr->centerVec().size(); i++ ) {
 		delete tlc[ i ];
 	}
-
 	cerr << "End of CellCenterForce..." << endl;
 }
 
@@ -220,7 +441,7 @@ void Window::_threadCellComponentForce( void ) {
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 	
 	// cerr << "size = " << _levelCellPtr->cellVec().size() << endl;
-	vector< ThreadLevelCellComponent * > tlm;
+	vector < ThreadLevelCellComponent * > tlm;
 	tlm.resize( _levelCellPtr->cellVec().size() );
 	
 	//for( unsigned int i = 0; i < 2; i++ ){
@@ -228,10 +449,10 @@ void Window::_threadCellComponentForce( void ) {
 		
 		// create a new thread
 		tlm[ i ] = new ThreadLevelCellComponent;
-		tlm[ i ]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+		tlm[ i ]->setPathwayData( _pathwayPtr );//, *_pathwayPtr->width(), *_pathwayPtr->height() );
 		tlm[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
-				_levelBorderPtr, _levelCellPtr, _levelDetailPtr,
-				_roadPtr, _lanePtr );
+		                         _levelBorderPtr, _levelCellPtr, _levelDetailPtr,
+		                         _roadPtr, _lanePtr );
 		tlm[ i ]->init( THREAD_CELL, _gv->energyType(), i, 0, _levelCellPtr->cellVec()[ i ].force().paramForceLoop() );
 		//tlm[ i ]->run( 0 );
 		pool.push( []( int id, ThreadLevelCellComponent *t ) { t->run( id ); }, tlm[ i ] );
@@ -242,7 +463,7 @@ void Window::_threadCellComponentForce( void ) {
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
-		cerr << "pool.n_idle() = " << pool.n_idle() << endl;
+		//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
@@ -266,11 +487,11 @@ void Window::_threadPathwayForce( void ) {
 	_gv->isPathwayPolygonFlag() = true;
 	
 	// initialization
-	vector< multimap< int, CellComponent > > &cellComponentVec = _levelCellPtr->cellComponentVec();
+	vector <multimap< int, CellComponent >> &cellComponentVec = _levelCellPtr->cellComponentVec();
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
-	vector< vector< ThreadLevelDetail * > > tld;
+	vector <vector< ThreadLevelDetail * >> tld;
 	
-	vector< vector< unsigned int > > idMat;
+	vector <vector< unsigned int >> idMat;
 	idMat.resize( cellComponentVec.size() );
 	tld.resize( idMat.size() );
 	unsigned int idD = 0;
@@ -304,13 +525,13 @@ void Window::_threadPathwayForce( void ) {
 			c.componentRegion.force().id() = idC;
 			c.componentRegion.force().init( &c.componentRegion.forceGraph(),
 			                                &c.componentRegion.fineOutputContour().contour(), &_levelType,
-			                                "config/pathway.conf" );
+			                                "config/" + Common::getBatchStr() + "/detail.conf" );
 			
 			tld[ i ][ j ] = new ThreadLevelDetail;
-			tld[ i ][ j ]->setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+			tld[ i ][ j ]->setPathwayData( _pathwayPtr );
 			tld[ i ][ j ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
-					_levelBorderPtr, _levelCellPtr, _levelDetailPtr,
-					_roadPtr, _lanePtr );
+			                              _levelBorderPtr, _levelCellPtr, _levelDetailPtr,
+			                              _roadPtr, _lanePtr );
 			tld[ i ][ j ]->init( THREAD_PATHWAY, _gv->energyType(), i, j, c.componentRegion.force().paramForceLoop() );
 			//tld[ i ][ j ]->run( 0 );
 			pool.push( []( int id, ThreadLevelDetail *t ) { t->run( id ); }, tld[ i ][ j ] );
@@ -320,7 +541,7 @@ void Window::_threadPathwayForce( void ) {
 	}
 	
 	// rendering
-//#ifdef DEBUG
+#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
@@ -328,10 +549,10 @@ void Window::_threadPathwayForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-//#endif // DEBUG
+#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	//pool.stop( true );
+	pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
@@ -352,37 +573,38 @@ void Window::steinertree( void ) {
 	unsigned int treeSize = 1;
 	
 	// highlight
-	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
-			
-			if( g[ vd ].type == "metabolite" ) {
-				if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
-				//if( *g[ vd ].namePtr == "coke[r]" ) {            // tiny
-					//if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
-					//if( *g[ vd ].namePtr == "glu_L[c]" ){         // VHM
-					//if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
-					//if( *g[ vd ].namePtr == "Beans" ){        // food
-					//if( *g[ vd ].namePtr == "Prawns" ){        // food
-					//if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
-					//if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
-					*g[ vd ].isSelectedPtr = true;
-					*g[ vd ].selectedIDPtr = 0;
-				}
-#ifdef SKIP
-				if( *g[ vd ].namePtr == "Worcestershire_Sauce" ){
-					*g[ vd ].isSelectedPtr = true;
-					*g[ vd ].selectedIDPtr = 1;
-				}
-				if(	*g[ vd ].namePtr == "Puff_Pastry" ){
-					*g[ vd ].isSelectedPtr = true;
-					*g[ vd ].selectedIDPtr = 2;
-				}
-				if(	*g[ vd ].namePtr == "Egg_White" ) {            // tiny
-					*g[ vd ].isSelectedPtr = true;
-					*g[ vd ].selectedIDPtr = 3;
-				}
-#endif // SKIP
+	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph )
+	{
+		
+		if( g[ vd ].type == "metabolite" ) {
+			//if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
+			//if( *g[ vd ].namePtr == "coke[r]" ) {            // tiny
+			//if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
+			if( *g[ vd ].namePtr == "glu_L[c]" ) {         // VHM
+				//if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+				//if( *g[ vd ].namePtr == "Beans" ){        // food
+				//if( *g[ vd ].namePtr == "Prawns" ){        // food
+				//if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
+				//if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
+				*g[ vd ].isSelectedPtr = true;
+				*g[ vd ].selectedIDPtr = 0;
 			}
+#ifdef SKIP
+			if( *g[ vd ].namePtr == "Worcestershire_Sauce" ){
+				*g[ vd ].isSelectedPtr = true;
+				*g[ vd ].selectedIDPtr = 1;
+			}
+			if(	*g[ vd ].namePtr == "Puff_Pastry" ){
+				*g[ vd ].isSelectedPtr = true;
+				*g[ vd ].selectedIDPtr = 2;
+			}
+			if(	*g[ vd ].namePtr == "Egg_White" ) {            // tiny
+				*g[ vd ].isSelectedPtr = true;
+				*g[ vd ].selectedIDPtr = 3;
+			}
+#endif // SKIP
 		}
+	}
 	
 	// initialization
 	_roadPtr->clear();
@@ -393,12 +615,12 @@ void Window::steinertree( void ) {
 	for( int i = 0; i < treeSize; i++ ) {
 		
 		// compute steiner tree
-		( *_roadPtr )[ i ].setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+		( *_roadPtr )[ i ].setPathwayData( _pathwayPtr );//, *_pathwayPtr->width(), *_pathwayPtr->height() );
 		( *_roadPtr )[ i ].initRoad( _levelCellPtr, i );
 		( *_roadPtr )[ i ].buildRoad();
 		// cerr << "road built..." << endl;
 		
-		( *_lanePtr )[ i ].setPathwayData( _pathwayPtr, *_pathwayPtr->width(), *_pathwayPtr->height() );
+		( *_lanePtr )[ i ].setPathwayData( _pathwayPtr ); //, *_pathwayPtr->width(), *_pathwayPtr->height() );
 		( *_lanePtr )[ i ].initSteinerNet( _levelCellPtr->cellComponentVec(), i );
 		( *_lanePtr )[ i ].steinerTree();
 	}
@@ -428,9 +650,9 @@ void Window::_threadOctilinearBoundary( void ) {
 	const int iter = 50;
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 	
-	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
+	vector < Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	unsigned int size = boundaryVec.size();
-	vector< ThreadOctilinearBoundary * > tob;
+	vector < ThreadOctilinearBoundary * > tob;
 	tob.resize( size );
 	
 	//cerr << "octilinearBoundary: iter = " << iter << endl;
@@ -441,12 +663,12 @@ void Window::_threadOctilinearBoundary( void ) {
 		// create a new thread
 		tob[ i ] = new ThreadOctilinearBoundary;
 		tob[ i ]->setRegionData( &_levelType, _octilinearBoundaryVecPtr,
-				_levelBorderPtr, _levelCellPtr, _levelDetailPtr,
-				_roadPtr, _lanePtr );
+		                         _levelBorderPtr, _levelCellPtr, _levelDetailPtr,
+		                         _roadPtr, _lanePtr );
 		tob[ i ]->init( boundaryVec[ i ], iter, boundaryVec[ i ]->opttype(), 10 );
 		
 		//tob[ i ]->run( 0 );
-		pool.push([]( int id, ThreadOctilinearBoundary *t ){ t->run( id ); }, tob[i] );
+		pool.push( []( int id, ThreadOctilinearBoundary *t ) { t->run( id ); }, tob[ i ] );
 	}
 	
 	// rendering
@@ -498,10 +720,10 @@ void Window::selectLevelDetailBuildBoundary( void ) {
 //
 void Window::buildLevelDetailBoundaryGraph( void ) {
 	
-	vector< multimap< int, CellComponent > > &cellCVec = _levelCellPtr->cellComponentVec();
+	vector <multimap< int, CellComponent >> &cellCVec = _levelCellPtr->cellComponentVec();
 	
 	// initialization
-	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
+	vector < Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	_levelBorderPtr->regionBase().polygonComplexVD().clear();
 	boundaryVec.clear();
 	
@@ -537,11 +759,11 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 			Force &f = itC->second.componentRegion.force();
 			
 			// draw polygons
-			vector< Seed > &seedVec = *f.voronoi().seedVec();
+			vector <Seed> &seedVec = *f.voronoi().seedVec();
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
 				Polygon2 &polygon = *seedVec[ i ].voronoiCellPtr;
-				vector< ForceGraph::vertex_descriptor > vdVec;
+				vector <ForceGraph::vertex_descriptor> vdVec;
 				
 				unsigned int size = polygon.elements().size();
 				for( unsigned int j = 1; j < size + 1; j++ ) {
@@ -556,18 +778,19 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 						BoundaryGraph::vertex_descriptor curVD = NULL;
 						
 						// Check if the station exists or not
-						BGL_FORALL_VERTICES( vd, bg, BoundaryGraph ) {
-								Coord2 &c = *bg[ vd ].coordPtr;
-								if( fabs( ( polygon.elements()[ ( j - 1 + k ) % ( int ) size ] - c ).norm() ) < 1e-2 ) {
+						BGL_FORALL_VERTICES( vd, bg, BoundaryGraph )
+						{
+							Coord2 &c = *bg[ vd ].coordPtr;
+							if( fabs( ( polygon.elements()[ ( j - 1 + k ) % ( int ) size ] - c ).norm() ) < 1e-2 ) {
 
 #ifdef DEBUG
-									cerr << "The node has been in the database." << endl;
+								cerr << "The node has been in the database." << endl;
 #endif  // DEBUG
-									if( k == 0 ) curVD = curVDS = vd;
-									if( k == 1 ) curVD = curVDT = vd;
-									break;
-								}
+								if( k == 0 ) curVD = curVDS = vd;
+								if( k == 1 ) curVD = curVDT = vd;
+								break;
 							}
+						}
 						
 						if( curVD == NULL ) {
 							
@@ -660,8 +883,8 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 				}
 				//map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itP;
 				itC->second.componentRegion.polygonComplexVD().insert(
-						pair< unsigned int, vector< BoundaryGraph::vertex_descriptor > >
-								( i, vdVec ) );
+						pair < unsigned int, vector < BoundaryGraph::vertex_descriptor > >
+						                     ( i, vdVec ) );
 #ifdef DEBUG
 				cerr << i << ", " << boundaryVec.size() << endl;
 				cerr << " vdVec.size() = " << vdVec.size() << " ?= " << size << endl;
@@ -673,20 +896,21 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 			}
 			
 			// update the fixed flag
-			BGL_FORALL_EDGES( ed, bg, BoundaryGraph ) {
-					if( bg[ ed ].visitedTimes == 0 ) {
-						
-						BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
-						BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
-						
-						bg[ vdS ].isFixed = true;
-						bg[ vdT ].isFixed = true;
-						
-						// cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
-					}
+			BGL_FORALL_EDGES( ed, bg, BoundaryGraph )
+			{
+				if( bg[ ed ].visitedTimes == 0 ) {
+					
+					BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
+					BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
+					
+					bg[ vdS ].isFixed = true;
+					bg[ vdT ].isFixed = true;
+					
+					// cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
 				}
+			}
 			
-			boundaryVec[ index ]->prepare( _content_width / 2.0, _content_height / 2.0 );
+			boundaryVec[ index ]->prepare();
 			index++;
 			
 			//printGraph( bg );
@@ -709,8 +933,8 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 void Window::updateLevelDetailPolygonComplex( void ) {
 	
 	//cerr << "updating componentRegion polygonComplex after optimization ..." << endl;
-	vector< multimap< int, CellComponent > > &cellCVec = _levelCellPtr->cellComponentVec();
-	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
+	vector <multimap< int, CellComponent >> &cellCVec = _levelCellPtr->cellComponentVec();
+	vector < Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	// cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
 	
 	unsigned int index = 0;
@@ -731,10 +955,11 @@ void Window::updateLevelDetailPolygonComplex( void ) {
 			
 			RegionBase &detail = itC->second.componentRegion;
 			Force &force = detail.force();
-			vector< Seed > &seedVec = *force.voronoi().seedVec();
+			vector <Seed> &seedVec = *force.voronoi().seedVec();
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
-				map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itP = detail.polygonComplexVD().begin();
+				map < unsigned int, vector < BoundaryGraph::vertex_descriptor > > ::iterator
+				itP = detail.polygonComplexVD().begin();
 				advance( itP, i );
 				
 				Polygon2 &polygon = *seedVec[ i ].voronoiCellPtr;
@@ -910,30 +1135,31 @@ void Window::spaceCoverage( void ) {
 	int neighborNo = 5;
 	vector< double > neighbor;
 	vector< double > area;
-	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
+	vector <ForceGraph> &lsubg = _pathwayPtr->lsubG();
 	Polygon2 contour;
 	
-	contour.elements().push_back( Coord2( -0.5 * _content_width, -0.5 * _content_height ) );
-	contour.elements().push_back( Coord2( +0.5 * _content_width, -0.5 * _content_height ) );
-	contour.elements().push_back( Coord2( +0.5 * _content_width, +0.5 * _content_height ) );
-	contour.elements().push_back( Coord2( -0.5 * _content_width, +0.5 * _content_height ) );
-	// cerr << "content_width = " << _content_width << " content_height = " << _content_height << endl;
+	contour.elements().push_back( Coord2( -0.5 * Common::getContentWidth(), -0.5 * Common::getContentHeight() ) );
+	contour.elements().push_back( Coord2( +0.5 * Common::getContentWidth(), -0.5 * Common::getContentHeight() ) );
+	contour.elements().push_back( Coord2( +0.5 * Common::getContentWidth(), +0.5 * Common::getContentHeight() ) );
+	contour.elements().push_back( Coord2( -0.5 * Common::getContentWidth(), +0.5 * Common::getContentHeight() ) );
+	// cerr << "content_width = " << Common::getContentWidth() << " content_height = " << Common::getContentHeight() << endl;
 	
 	// voronoi
 	Voronoi v;
-	vector< Seed > seedVec;
+	vector <Seed> seedVec;
 	unsigned int index = 0;
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 		
-		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph ) {
-				
-				Seed seed;
-				seed.id = lsubg[ i ][ vd ].id + index;
-				seed.weight = 1.0;
-				seed.coordPtr = lsubg[ i ][ vd ].coordPtr;
-				seed.voronoiCellPtr = new Polygon2;
-				seedVec.push_back( seed );
-			}
+		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph )
+		{
+			
+			Seed seed;
+			seed.id = lsubg[ i ][ vd ].id + index;
+			seed.weight = 1.0;
+			seed.coordPtr = lsubg[ i ][ vd ].coordPtr;
+			seed.voronoiCellPtr = new Polygon2;
+			seedVec.push_back( seed );
+		}
 		index += num_vertices( lsubg[ i ] );
 	}
 	v.init( seedVec, contour );
@@ -948,13 +1174,14 @@ void Window::spaceCoverage( void ) {
 	}
 	
 	// neighbor
-	vector< Coord2 > coordVec;
+	vector <Coord2> coordVec;
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 		
-		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph ) {
-				
-				coordVec.push_back( *lsubg[ i ][ vd ].coordPtr );
-			}
+		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph )
+		{
+			
+			coordVec.push_back( *lsubg[ i ][ vd ].coordPtr );
+		}
 	}
 	for( unsigned int i = 0; i < coordVec.size(); i++ ) {
 		
@@ -1009,6 +1236,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//****************************************
 		// optimization
 		//****************************************
+		_levelBorderPtr->prepareForce();
 		_threadBoundaryForce();
 		//_simulateKey( Qt::Key_2 );
 		
@@ -1022,7 +1250,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// initialization
 		//****************************************
 		_octilinearBoundaryVecPtr = &_levelBorderPtr->octilinearBoundaryVec();
-		_levelBorderPtr->prepare();
+		_levelBorderPtr->prepareBoundary();
 		_gv->isSimplifiedFlag() = false;
 		_gv->isBoundaryFlag() = true;
 		_gv->isPolygonFlag() = false;
@@ -1034,9 +1262,9 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// optimization
 		//****************************************
 		_threadOctilinearBoundary();
-		_levelBorderPtr->updatePolygonComplex();
 		
-		_simulateKey( Qt::Key_L );
+		_levelBorderPtr->updatePolygonComplex();
+		_pathwayPtr->initLayout( _levelBorderPtr->regionBase().polygonComplex() );
 		
 		//****************************************
 		// rendering
@@ -1060,6 +1288,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
+		_levelCellPtr->prepareForce( &_levelBorderPtr->regionBase().polygonComplex() );
 		_threadCellCenterForce();
 		//_simulateKey( Qt::Key_W );
 		
@@ -1138,14 +1367,14 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//----------------------------------------
 		// initialization and build the boundary
 		_levelCellPtr->createPolygonComplex();
-		_levelCellPtr->prepare();
+		_levelCellPtr->prepareBoundary();
 		
 		_threadOctilinearBoundary();
 		_levelCellPtr->updatePolygonComplex();
-		
+
 		_gv->isBoundaryFlag() = true;
 		_gv->isPolygonComplexFlag() = false;
-		
+
 		//----------------------------------------
 		// rendering
 		//----------------------------------------
@@ -1168,14 +1397,14 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// optimization
 		//----------------------------------------
 		_levelCellPtr->updatePathwayCoords();
+		_levelDetailPtr->prepareForce();
 		_threadPathwayForce();
-		//_simulateKey( Qt::Key_X );
-		
+
 		//----------------------------------------
 		// rendering
 		//----------------------------------------
 		_simulateKey( Qt::Key_E );
-		
+
 		break;
 	}
 	case Qt::Key_X: {
@@ -1190,7 +1419,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
-		//_threadOctilinearBoundary();
+		_threadOctilinearBoundary();
 		updateLevelDetailPolygonComplex();
 		
 		//----------------------------------------
@@ -1259,20 +1488,6 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		redrawAllScene();
 		break;
 	}
-	case Qt::Key_L: {
-		
-		//cerr << "_levelBorderPtr->regionBase().polygonComplex() = "
-		//     << _levelBorderPtr->regionBase().polygonComplex().size() << endl;
-		// initialize cell
-		_levelCellPtr->init( &_content_width, &_content_height,
-//		                     &_gv->veCoverage(), &_gv->veRatio(),
-		                     &_levelBorderPtr->regionBase().polygonComplex() );
-		
-		// initialize subgraph layout
-		_pathwayPtr->initLayout( _levelBorderPtr->regionBase().polygonComplex() );
-		
-		break;
-	}
 	case Qt::Key_V: {
 		
 		// read and initialize the data
@@ -1284,7 +1499,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// canvasArea: content width and height
 		// labelArea: total area of text labels
 		double labelArea = 0.0;
-		map< string, Subdomain * > &sub = _pathwayPtr->subsys();
+		map < string, Subdomain * > &sub = _pathwayPtr->subsys();
 		for( map< string, Subdomain * >::iterator it = sub.begin();
 		     it != sub.end(); it++ ) {
 			labelArea += it->second->idealArea;
@@ -1299,33 +1514,34 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		
 		// default canvas size
 		double ratio = ( double ) width() / ( double ) height();
-		double x = sqrt( pow( labelArea, 2.0 ) / ( double ) _pathwayPtr->nVertices() / ratio );
+		double x = sqrt( pow( labelArea, 1.75 ) / ( double ) _pathwayPtr->nVertices() / ratio );
 		//double x = sqrt( labelArea * _gv->veCoverage() / ( double ) _pathwayPtr->nVertices() / ratio );
-		_content_width = ratio * x;
-		_content_height = x;
+		Common::setContentWidth( ratio * x );
+		Common::setContentHeight( x );
 
 #ifdef DEBUG
 		cerr << "veCoverage = " << _gv->veCoverage()
-			 << " _content_width = " << _content_width << " _content_height = " << _content_height << endl;
+			 << " Common::getContentWidth() = " << Common::getContentWidth() << " Common::getContentHeight() = " << Common::getContentHeight() << endl;
 #endif // DEBUG
 		
 		// initialize canvas
-		_gv->setSceneRect( -( _content_width + LEFTRIGHT_MARGIN ) / 2.0, -( _content_height + TOPBOTTOM_MARGIN ) / 2.0,
-		                   _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
+		_gv->setSceneRect( -( Common::getContentWidth() + LEFTRIGHT_MARGIN ) / 2.0,
+		                   -( Common::getContentHeight() + TOPBOTTOM_MARGIN ) / 2.0,
+		                   Common::getContentWidth() + LEFTRIGHT_MARGIN,
+		                   Common::getContentHeight() + TOPBOTTOM_MARGIN );
 		// initialize border
-		_levelBorderPtr->init( &_content_width, &_content_height,
-		                       &_gv->veCoverage(), _pathwayPtr->skeletonG() );
-		
+		_levelBorderPtr->init( _pathwayPtr->skeletonG() );
+		// initialize cell
+		_levelCellPtr->init();
 		// initialize componentRegion
-		_levelDetailPtr->init( &_content_width, &_content_height,
-		                       &_gv->veCoverage() );
+		_levelDetailPtr->init();
 
 #ifdef DEBUG
 		//cerr << "width x height = " << width() * height() << endl;
 		//cerr << "label sum = " << sum << endl;
 		//cerr << "ratio = " << width() * height() / sum << endl;
-		cerr << "new_content_width = " << _content_width
-			 << " new_content_height = " << _content_height << endl;
+		cerr << "newCommon::getContentWidth() = " << Common::getContentWidth()
+			 << " newCommon::getContentHeight() = " << Common::getContentHeight() << endl;
 #endif // DEBUG
 		
 		// ui
@@ -1337,7 +1553,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 	}
 	case Qt::Key_F: {
 		
-		Base::Timer< chrono::milliseconds > timer( "ms" );
+		Base::Timer <chrono::milliseconds> timer( "ms" );
 		timer.begin();
 		_simulateKey( Qt::Key_V );
 		_simulateKey( Qt::Key_1 );
@@ -1349,7 +1565,6 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		_simulateKey( Qt::Key_Z );
 		_simulateKey( Qt::Key_X );
 		_simulateKey( Qt::Key_R );
-		
 		timer.end();
 		timer.elapsed();
 		break;
@@ -1359,12 +1574,10 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		break;
 	}
 	case Qt::Key_E: {
+		
 		redrawAllScene();
-		// _gv->exportPNG( -width()/2.0, -height()/2.0, width(), height() );
-		_gv->exportPNG( -( _content_width + LEFTRIGHT_MARGIN ) / 2.0, -( _content_height + TOPBOTTOM_MARGIN ) / 2.0,
-		                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
-		//_gv->exportSVG( -( _content_width + LEFTRIGHT_MARGIN ) / 2.0, -( _content_height + TOPBOTTOM_MARGIN ) / 2.0,
-		//                _content_width + LEFTRIGHT_MARGIN, _content_height + TOPBOTTOM_MARGIN );
+		_gv->exportPNG();
+		// _gv->exportSVG();
 		break;
 	}
 	case Qt::Key_Minus: {

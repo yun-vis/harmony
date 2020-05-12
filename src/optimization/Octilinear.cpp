@@ -34,7 +34,7 @@ using namespace std;
 //  Outputs
 //      none
 //
-void Octilinear::_init( double __half_width, double __half_height ) {
+void Octilinear::_init( void ) {
 	
 	BoundaryGraph &g = _boundary;
 	unsigned int nVertices = num_vertices( g );
@@ -42,14 +42,14 @@ void Octilinear::_init( double __half_width, double __half_height ) {
 	
 	// initialization
 	_nVars = _nConstrs = 0;
-	_half_width = __half_width;
-	_half_height = __half_height;
+	_half_width = Common::getContentWidth() / 2.0;
+	_half_height = Common::getContentHeight() / 2.0;
 
 	//_d_Alpha = _octilinearBoundaryVec->dAlpha();
 	_d_Beta = 1.0;
 	
 	// read config file
-	string configFilePath = "config/octilinear.conf";
+	string configFilePath = "config/" + Common::getBatchStr() + "/octilinear.conf";
 	
 	Base::Config conf( configFilePath );
 	
@@ -894,7 +894,7 @@ double Octilinear::LeastSquare( unsigned int iter ) {
 //
 double Octilinear::ConjugateGradient( unsigned int iter ) {
 	
-	// initialization, prepare the square matrix
+	// initialization, prepareBoundary the square matrix
 	Eigen::MatrixXd A;
 	Eigen::VectorXd b, Ap;
 	A = _coef.transpose() * _coef;
@@ -910,7 +910,7 @@ double Octilinear::ConjugateGradient( unsigned int iter ) {
 	for( int i = 0; i < iter; i++ ) {
 		
 		// cerr << "i = " << i << endl;
-		// prepare the square matrix
+		// prepareBoundary the square matrix
 		A = _coef.transpose() * _coef;
 		b = _coef.transpose() * _output;
 		Ap = A * p;

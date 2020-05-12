@@ -41,8 +41,8 @@ private:
 	Eigen::VectorXd _var;           // x
 	Eigen::VectorXd _output;        // b
 	Eigen::MatrixXd _coef;          // A
-	double _half_width;    // window_width
-	double _half_height;   // window_height
+	double _half_width;             // half_window_width
+	double _half_height;            // half_window_height
 	
 	unsigned int _nVars;
 	unsigned int _nConstrs;
@@ -68,7 +68,7 @@ protected:
 	
 	void _updateOutputs( void );
 	
-	virtual void _init( double __width, double __height );
+	virtual void _init( void );
 	
 	void _setTargetAngle( void );
 	
@@ -88,7 +88,7 @@ public:
 	const BoundaryGraph &boundary( void ) const { return _boundary; }
 	
 	BoundaryGraph &boundary( void ) { return _boundary; }
-
+	
 	const OPTTYPE &opttype( void ) const { return _opttype; }
 	
 	OPTTYPE &opttype( void ) { return _opttype; }
@@ -103,16 +103,13 @@ public:
 //------------------------------------------------------------------------------
 //      Initialization functions
 //------------------------------------------------------------------------------
-	void prepare( double __half_width, double __half_height ) {
-		
-		_init( __half_width, __half_height );
+	void prepare( void ) {
+		_init();
 	}
 
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------
-	void prepare( void );
-	
 	void clear( void );
 	
 	void retrieve( void );

@@ -529,6 +529,24 @@ bool doConflict( const Coord2 &a, const Coord2 &b, const Coord2 &c, const Coord2
 	         ( doubleArea( cc, dd, a ) * doubleArea( cc, dd, b ) < 0.0 ) );
 }
 
+bool isChangedSide( const Coord2 &a1, const Coord2 &b1, const Coord2 &c1,
+                    const Coord2 &a2, const Coord2 &b2, const Coord2 &c2 ) {
+	
+	// check point c with edge(a, b)
+	double v1 = ( b1.x() - a1.x() ) * ( c1.x() - a1.y() ) - ( b1.y() - a1.y() ) * ( c1.x() - a1.x() );
+	double v2 = ( b2.x() - a2.x() ) * ( c2.x() - a2.y() ) - ( b2.y() - a2.y() ) * ( c2.x() - a2.x() );
+	
+	// cerr << "v1 = " << v1 << " v2 = " << v2 << endl;
+	bool isValid = ( c1.x() > MIN2( a1.x(), b1.x() ) &&
+	                 c1.x() < MAX2( a1.x(), b1.x() ) &&
+	                 c1.y() > MIN2( a1.y(), b1.y() ) &&
+	                 c1.y() < MAX2( a1.y(), b1.y() ) );
+	//	if( isValid != true ) cerr << "novalid" << endl;
+	if( ( v1 * v2 > 0 ) && ( isValid == true ) ) return true;
+	else return false;
+
+	return false;
+}
 
 //------------------------------------------------------------------------------
 //	Friend functions

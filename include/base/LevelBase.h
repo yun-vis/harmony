@@ -47,10 +47,6 @@ private:
 
 protected:
 	
-	double *_content_widthPtr;
-	double *_content_heightPtr;
-	//double *_veCoveragePtr;
-	//double *_veRatioPtr;
 	LEVELTYPE _levelType;
 	
 	// boundary of the composite graph
@@ -63,7 +59,7 @@ protected:
 public:
 	
 	LevelBase();                              // default constructor
-	LevelBase( const LevelBase &obj );      // Copy constructor
+	LevelBase( const LevelBase &obj );        // Copy constructor
 	virtual ~LevelBase();                     // Destructor
 
 //------------------------------------------------------------------------------
@@ -80,10 +76,12 @@ public:
 	
 	virtual void updatePolygonComplex( void ) = 0;
 	
-	void prepare( void ){
+	virtual void prepareForce( map< unsigned int, Polygon2 > *polygonComplexPtr = NULL ) = 0;
+
+	void prepareBoundary( void ){
 		buildBoundaryGraph();
 	}
-
+	
 //------------------------------------------------------------------------------
 //  File I/O
 //------------------------------------------------------------------------------

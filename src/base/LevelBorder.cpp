@@ -36,13 +36,15 @@ using namespace std;
 //  double
 //
 //
-void LevelBorder::_init( double *widthPtr, double *heightPtr,
-                         double *veCoveragePtr, SkeletonGraph &skeletonGraph ) {
+void LevelBorder::_init(
+		//double *widthPtr, double *heightPtr,
+                         //double *veCoveragePtr,
+                         SkeletonGraph &skeletonGraph ) {
 	
 	// initialize variables
 	_levelType = LEVEL_BORDER;
-	_content_widthPtr = widthPtr;
-	_content_heightPtr = heightPtr;
+	//_content_widthPtr = widthPtr;
+	//_content_heightPtr = heightPtr;
 	//_veCoveragePtr = veCoveragePtr;
 	
 	clearGraph( _skeletonForceGraph );
@@ -87,21 +89,6 @@ void LevelBorder::_init( double *widthPtr, double *heightPtr,
 	_normalizeSkeleton();
 	_decomposeSkeleton();
 	_normalizeRegionBase();
-	
-	// initialize regionBase
-	Polygon2 contour;
-	double &content_width = *_content_widthPtr;
-	double &content_height = *_content_heightPtr;
-	contour.elements().push_back( Coord2( -0.5 * content_width, -0.5 * content_height ) );
-	contour.elements().push_back( Coord2( +0.5 * content_width, -0.5 * content_height ) );
-	contour.elements().push_back( Coord2( +0.5 * content_width, +0.5 * content_height ) );
-	contour.elements().push_back( Coord2( -0.5 * content_width, +0.5 * content_height ) );
-	contour.boundingBox() = Coord2( content_width, content_height );
-	contour.boxCenter().x() = 0.0;
-	contour.boxCenter().y() = 0.0;
-	contour.area() = content_width * content_height;
-	
-	_regionBase.init( &_levelType, contour );
 }
 
 
@@ -240,8 +227,7 @@ void LevelBorder::_decomposeSkeleton( void ) {
 			
 			vector< ForceGraph::edge_descriptor > removeEVec;
 			// double radius = 25.0; // tiny
-			double radius = 70.0;
-			if( mag == 2 ) radius = 10;
+			double radius = 100.0;
 			
 			if( mag > 1 ) {
 				
@@ -308,7 +294,7 @@ void LevelBorder::_decomposeSkeleton( void ) {
 						forceGraph[ foreED ].weight = 2.0 * ( *forceGraph[ vd ].areaPtr );
 						
 						// add last edge to form a circle
-						if( ( i == mag - 1 ) && ( mag != 2 ) ) {
+						if( i == mag - 1 ) {
 							pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vd, vdNew,
 							                                                                    forceGraph );
 							BoundaryGraph::edge_descriptor foreED = foreE.first;
@@ -323,7 +309,7 @@ void LevelBorder::_decomposeSkeleton( void ) {
 					}
 				}
 				
-				// add composite edges
+				// add edges
 				// cerr << "size = " << vdAdjacent.size() << " ext = " << extendVD.size() << endl;
 				map< unsigned int, ForceGraph::vertex_descriptor >::iterator itA;
 				for( itA = vdAdjacent.begin(); itA != vdAdjacent.end(); itA++ ) {
@@ -341,6 +327,7 @@ void LevelBorder::_decomposeSkeleton( void ) {
 							minDist = dist;
 						}
 					}
+					
 					pair< ForceGraph::edge_descriptor, unsigned int > foreE = add_edge( vdT, cloestVD, forceGraph );
 					ForceGraph::edge_descriptor foreED = foreE.first;
 					forceGraph[ foreED ].id = itA->first;
@@ -392,8 +379,8 @@ void LevelBorder::_normalizeSkeleton( void ) {
 	double yMin = INFINITY;
 	double yMax = -INFINITY;
 	
-	double width = *_content_widthPtr;
-	double height = *_content_heightPtr;
+	double width = Common::getContentWidth();
+	double height = Common::getContentHeight();
 	
 	// Scan all the vertex coordinates first
 	BGL_FORALL_VERTICES( vd, _skeletonForceGraph, ForceGraph ) {
@@ -431,11 +418,11 @@ void LevelBorder::_normalizeRegionBase( void ) {
 	double xMax = -INFINITY;
 	double yMin = INFINITY;
 	double yMax = -INFINITY;
-	double ratio = 1.0;
+	double ratio = 0.8;
 	// double ratio = 0.8;
 	//cerr << "w = " << width << " h = " << height << endl;
-	double width = *_content_widthPtr * 0.95;
-	double height = *_content_heightPtr * 0.95;
+	double width = ratio * Common::getContentWidth();
+	double height = ratio * Common::getContentHeight();
 	
 	ForceGraph &forceGraph = _regionBase.forceGraph();
 	
@@ -632,7 +619,7 @@ void LevelBorder::buildBoundaryGraph( void ) {
 			}
 		}
 	
-	_octilinearBoundaryVec[ 0 ]->prepare( *_content_widthPtr / 2.0, *_content_heightPtr / 2.0 );
+	_octilinearBoundaryVec[ 0 ]->prepare();
 }
 
 void LevelBorder::updatePolygonComplex( void ) {
@@ -642,7 +629,6 @@ void LevelBorder::updatePolygonComplex( void ) {
 	BoundaryGraph &bg = _octilinearBoundaryVec[ 0 ]->boundary();
 	map< unsigned int, vector< ForceGraph::vertex_descriptor > >::iterator itP;
 	map< unsigned int, Polygon2 >::iterator itC = _regionBase.polygonComplex().begin();
-	unsigned int id = 0;
 	for( itP = _regionBase.polygonComplexVD().begin(); itP != _regionBase.polygonComplexVD().end(); itP++ ) {
 		
 		vector< ForceGraph::vertex_descriptor > &p = itP->second;
@@ -650,10 +636,28 @@ void LevelBorder::updatePolygonComplex( void ) {
 			itC->second.elements()[ i ].x() = bg[ p[ i ] ].coordPtr->x();
 			itC->second.elements()[ i ].y() = bg[ p[ i ] ].coordPtr->y();
 			
+			// cerr << "i = " << i << " " << itC->second.elements()[i];
 		}
 		itC++;
-		id++;
 	}
+}
+
+void LevelBorder::prepareForce( map< unsigned int, Polygon2 > *polygonComplexPtr ) {
+	
+	// initialize regionBase
+	Polygon2 contour;
+	double content_width = Common::getContentWidth();
+	double content_height = Common::getContentHeight();
+	contour.elements().push_back( Coord2( -0.5 * content_width, -0.5 * content_height ) );
+	contour.elements().push_back( Coord2( +0.5 * content_width, -0.5 * content_height ) );
+	contour.elements().push_back( Coord2( +0.5 * content_width, +0.5 * content_height ) );
+	contour.elements().push_back( Coord2( -0.5 * content_width, +0.5 * content_height ) );
+	contour.boundingBox() = Coord2( content_width, content_height );
+	contour.boxCenter().x() = 0.0;
+	contour.boxCenter().y() = 0.0;
+	contour.area() = content_width * content_height;
+	
+	_regionBase.init( &_levelType, contour );
 }
 
 

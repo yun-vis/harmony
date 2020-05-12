@@ -63,12 +63,10 @@ private:
 	ENERGYTYPE _energyType;
 	COLORTYPE _colorType;
 	unsigned int _maxThread;            // maximum thread number
+	bool _overlapFlag;
 	
 	// ui
-	int _font_size;
-	double _canvas_size;
-	//double _vertex_edge_ratio;
-	double _vertex_edge_coverage;
+//	double _canvas_size;
 	bool _is_skeletonFlag, _is_compositeFlag,
 			_is_polygonFlag, _is_polygonComplexFlag,
 			_is_boundaryFlag, _is_subPathwayFlag,
@@ -175,18 +173,6 @@ public:
 	
 	const ENERGYTYPE &energyType( void ) const { return _energyType; }
 	
-	int &fontSize( void ) { return _font_size; }
-	
-	const int &fontSize( void ) const { return _font_size; }
-	
-	//double &veRatio( void ) { return _vertex_edge_ratio; }
-	
-	//const double &veRatio( void ) const { return _vertex_edge_ratio; }
-	
-	double &veCoverage( void ) { return _vertex_edge_coverage; }
-	
-	const double &veCoverage( void ) const { return _vertex_edge_coverage; }
-	
 	bool &isSimplifiedFlag( void ) { return _is_simplifiedFlag; }
 	
 	const bool &isSimplifiedFlag( void ) const { return _is_simplifiedFlag; }
@@ -266,9 +252,11 @@ public:
 	
 	void updateSceneItems( void );
 	
-	void exportPNG( double x, double y, double w, double h );
+	void computeNodeOverlaps( ofstream &ofs );
 	
-	void exportSVG( double x, double y, double w, double h );
+	int exportPNG( void );
+	
+	void exportSVG( void );
 
 Q_SIGNALS:
 

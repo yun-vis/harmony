@@ -69,10 +69,12 @@ PathwayData::~PathwayData( void ) {
 //  Outputs
 //  node
 //
-void PathwayData::setPathwayData( Pathway *pathway, double &width, double &height ) {
+void PathwayData::setPathwayData( Pathway *pathway
+		//,double &width, double &height
+		) {
 	_pathwayPtr = pathway;
-	*_pathwayPtr->width() = width;
-	*_pathwayPtr->height() = height;
+//	*_pathwayPtr->width() = width;
+//	*_pathwayPtr->height() = height;
 }
 
 //------------------------------------------------------------------------------

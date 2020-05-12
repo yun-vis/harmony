@@ -40,8 +40,6 @@ void Stress::_initStress( ForceGraph *forceGraphPtr,
 	BoundaryGraph &g = _boundaryGraph;
 	unsigned int nVertices = num_vertices( g );
 	unsigned int nEdges = num_edges( g );
-	//_half_width                 = __half_width;
-	//_half_height                = __half_height;
 	
 	// initialization
 	_contourPtr = contourPtr;
@@ -102,7 +100,6 @@ void Stress::_initStress( ForceGraph *forceGraphPtr,
 			g[ addED ].smoothAngle = angle;
 			g[ addED ].targetAngle = 0;
 			g[ addED ].angle = angle;
-			//g[ addED ].lineID.push_back( nLines );
 			g[ addED ].visitedTimes = 0;
 		}
 	
@@ -115,7 +112,7 @@ void Stress::_initStress( ForceGraph *forceGraphPtr,
 	// initialization
 	_nVars = _nConstrs = 0;
 	
-	string configFilePath = "config/stress.conf";
+	string configFilePath = "config/" + Common::getBatchStr() + "/stress.conf";
 	
 	//read config file
 	Base::Config conf( configFilePath );
@@ -977,7 +974,7 @@ double Stress::LeastSquare( unsigned int iter ) {
 //
 void Stress::initConjugateGradient( void ) {
 	
-	// initialization, prepare the square matrix
+	// initialization, prepareBoundary the square matrix
 	_A = _coef.transpose() * _coef;
 	_b = _coef.transpose() * _output;
 	
@@ -998,7 +995,7 @@ void Stress::initConjugateGradient( void ) {
 double Stress::ConjugateGradient( unsigned int &iter ) {
 	
 	// main algorithm
-	// prepare the square matrix
+	// prepareBoundary the square matrix
 	_A = _coef.transpose() * _coef;
 	_b = _coef.transpose() * _output;
 	_Ap = _A * _p;

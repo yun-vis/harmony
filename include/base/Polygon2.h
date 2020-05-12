@@ -147,6 +147,8 @@ public:
 	
 	double maxRadiusInPolygon( const Coord2 &coord );
 	
+	bool isSimple( void );
+
 	void cleanPolygon( void );
 
 //------------------------------------------------------------------------------

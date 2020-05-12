@@ -14,7 +14,7 @@
 using namespace std;
 
 #include <QtCore/QMutex>
-
+#include "base/Config.h"
 
 //------------------------------------------------------------------------------
 //	Macro Switches
@@ -85,17 +85,6 @@ using namespace std;
 #define ENDPOINT_REGION_WEIGHT    (0.6)
 #define SHRINKAGE_RATIO        (0.01)
 
-//#define DEFAULT_HEIGHT        (768)
-//#define DEFAULT_WIDTH (1024)
-//#define DEFAULT_HEIGHT        (1024)
-//#define DEFAULT_WIDTH (1280)
-//#define DEFAULT_HEIGHT        (960)
-//#define DEFAULT_WIDTH (1296)
-//#define DEFAULT_HEIGHT        (800)
-//#define DEFAULT_WIDTH (1440)
-//#define DEFAULT_HEIGHT        (1152) // <-
-//#define DEFAULT_WIDTH (1536) // <-
-
 #define DEFAULT_ASPECT        (1.0)
 #define DEFAULT_SIDE        (1.2)
 #define DEFAULT_GRIDSIZE    (32)
@@ -155,7 +144,7 @@ using namespace std;
 #define MIN_NEIGHBOR_DISTANCE    (4)
 #define TIMER_INTERVAL  (200)
 #define VORONOI_FREQUENCE (1)
-#define SLEEP_TIME (500)
+#define SLEEP_TIME (300)
 
 enum OPTTYPE {
 	LEAST_SQUARE, CONJUGATE_GRADIENT
@@ -185,7 +174,14 @@ enum LEVELTYPE {
 class Common {
 
 private:
-
+	
+	static string _batch_str;
+	
+	static double _content_width;
+	static double _content_height;
+	static int _font_size;
+	static ENERGYTYPE _energy_type;
+	
 protected:
 
 public:
@@ -197,7 +193,8 @@ public:
 	//	Constructors & Destructors
 	//------------------------------------------------------------------------------
 	// default constructor
-	Common( void ) {}
+	//Common( void ) {}
+	Common();
 	
 	// copy constructor
 	Common( const Common &c ) {}
@@ -218,6 +215,26 @@ public:
 	//------------------------------------------------------------------------------
 	
 	static double stringToDouble( string str );
+	
+	static double getContentWidth();
+	
+	static void setContentWidth( double contentWidth );
+	
+	static double getContentHeight();
+	
+	static void setContentHeight( double contentHeight );
+	
+	static const string &getBatchStr();
+	
+	static void setBatchStr( const string &batchStr );
+	
+	static int getFontSize();
+	
+	static void setFontSize( int fontSize );
+	
+	static ENERGYTYPE getEnergyType();
+	
+	static void setEnergyType( ENERGYTYPE energyType );
 	
 	//------------------------------------------------------------------------------
 	//	I/O functions

@@ -49,7 +49,7 @@ using namespace std;
 class Pathway {
 private:
 	
-	double *_widthPtr, *_heightPtr;        // window width and height
+	//double *_widthPtr, *_heightPtr;        // window width and height
 	unsigned int _nHyperEtoE;    // numbers of hyper edges to single egdes
 	map< string, string > _nV;            // distinct metabolites, duplicated nodes are not counted
 	
@@ -72,7 +72,6 @@ private:
 	vector< vector< double > > _edgeW;            // edheWeight vector for dependGraph
 	
 	// ui
-	unsigned int _font_size;        // font size
 	bool _isCloneByThreshold;
 	double _threshold;              // threshold value
 	unsigned int _nZoneDiff;        // total different zone value
@@ -176,13 +175,13 @@ public:
 	
 	string &outpath( void ) { return _outputpath; }
 	
-	const double *width( void ) const { return _widthPtr; }
+//	const double *width( void ) const { return _widthPtr; }
+//
+//	double *width( void ) { return _widthPtr; }
 	
-	double *width( void ) { return _widthPtr; }
-	
-	const double *height( void ) const { return _heightPtr; }
-	
-	double *height( void ) { return _heightPtr; }
+//	const double *height( void ) const { return _heightPtr; }
+//
+//	double *height( void ) { return _heightPtr; }
 	
 	const mutex &pathwayMutex( void ) const { return _pathway_mutex; }
 	

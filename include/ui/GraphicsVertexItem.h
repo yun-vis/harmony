@@ -41,6 +41,7 @@ class GraphicsVertexItem : public QGraphicsRectItem, public GraphicsBase {
 private:
 	
 	VERTEXTYPE _vtype;
+	QRectF _fineRect;
 
 protected:
 
