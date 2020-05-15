@@ -238,8 +238,27 @@ void Polygon2::updateCentroid( void ) {
 	_centroid.y() = y;
 	
 	_area = CGAL::to_double( polygon.area() );
+	
+	// randomCentroid();
 }
 
+void Polygon2::randomCentroid( void ) {
+	
+	int num = 20;
+	Coord2 c = _centroid;
+	double min = minDistToPolygon( c );
+	for( int i = 0; i < num; i++ ) {
+		
+		Coord2 coord( 0.0, 0.0 );
+		coord.x() = c.x() + 20.0 * ( 2.0 * rand() / ( double ) RAND_MAX - 1.0 );
+		coord.y() = c.y() + 20.0 * ( 2.0 * rand() / ( double ) RAND_MAX - 1.0 );
+		if( min < minDistToPolygon( coord ) && inPolygon( coord ) ){
+			c = coord;
+			// cerr << "HERE min = " << min << " dist = " << minDistToPolygon( coord ) << endl;
+		}
+	}
+	_centroid = c;
+}
 
 //
 //  Polygon2::updateOrientation --    update polygon elements if they are not counterclockwise
@@ -294,6 +313,7 @@ void Polygon2::updateOrientation( void ) {
 //  none
 //
 bool Polygon2::inPolygon( const Coord2 &coord ) {
+	
 	K::Point_2 *points = new K::Point_2[_elements.size()];
 	CGAL::Point_2< K > pt( coord.x(), coord.y() );
 	
@@ -419,12 +439,12 @@ bool Polygon2::isSimple( void ) {
 void Polygon2::cleanPolygon( void ) {
 	
 	if( isSimple() == true ) return;
-
+	
 	bool isSimple = false;
 	Polygon2 ori = _elements;
 	bool isUpdated = false;
 	int test = 0;
-	
+
 #ifdef DEBUG
 	cerr << "(before)::_polygon = " << endl << *this << endl;
 #endif // DEBUG
@@ -486,7 +506,7 @@ void Polygon2::cleanPolygon( void ) {
 			else {
 #ifdef DEBUG
 				cerr << "curr = " << _elements[ j ]
-				     << "next = " << _elements[ ( j + 1 ) % ( int ) _elements.size() ] << endl;
+					 << "next = " << _elements[ ( j + 1 ) % ( int ) _elements.size() ] << endl;
 				cerr << "idC = " << j << " idN = " << ( j + 1 ) % ( int ) _elements.size() << endl;
 #endif // DEBUG
 				isUpdated = true;

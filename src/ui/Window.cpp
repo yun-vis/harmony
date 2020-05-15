@@ -42,14 +42,14 @@ void Window::batch( void ) {
 	
 	_simulateKey( Qt::Key_F );
 	
+	// create root folder
 	string rootFolder = ( qApp->applicationDirPath() ).toStdString() + "/svg/" + Common::getBatchStr();
+	string cm = "mkdir " + rootFolder;
+	system( cm.c_str() );
+	
 	ofstream ofs( rootFolder + "/overlap.txt" );
 	_computeOverlaps( ofs );
 	ofs.close();
-	
-	string cm = "mkdir " + rootFolder;
-	// cerr << "cm = " << cm << endl;
-	system( cm.c_str() );
 	
 	int imgNum = 13;
 	for( int i = 0; i < imgNum; i++ ) {
@@ -72,24 +72,225 @@ void Window::batch( void ) {
 		system( cm.c_str() );
 	}
 	
-	exportTex();
 	_simulateKey( Qt::Key_Escape );
 }
 
-void Window::exportTex( void ) {
+void Window::exportTex( vector< vector< double > > &p, vector< vector< vector< double > > > &t ) {
+	
+	int paraNum = 7;
+	int shift = 3;
+	int group = 4;
+	int total = paraNum * shift;
+	int imgID = 12;
+	string caption;
+	if( imgID == 11 ) caption = "The effect of parameters in ";
+	else if( imgID == 12 ) caption = "Overlaps influenced by the parameters in ";
+	int pageNum = ceil( ( double ) paraNum * ( double ) shift / 6.0 );
+	string label[6] = {"(a)", "(b)", "(c)", "(d)", "(e)", "(f)"};
+	string name[4] = {"boundary", "center", "component", "detail"};
+	string level[4] = {"category", "component", "topology", "detail"};
+	typedef pair< unsigned int, unsigned int > MyPair;
+	vector< MyPair > list;
+	
+	string filename = ( qApp->applicationDirPath() ).toStdString() + "/config/tex.txt";
+	ofstream ofs( filename );
+
+#ifdef DEBUG
+	for( unsigned int j = 0; j < paraNum; j++ ) {
+		for( unsigned int k = 0; k < shift; k++ ) {
+			
+			cerr << "j = " << j << " k = " << k << " t = " << t[0][j][k] << endl;
+			
+		}
+		cerr << endl;
+	}
+	cerr << endl << endl;
+#endif // DEBUG
+	
+	// export tex file
+	for( unsigned int i = 0; i < group; i++ ) {
+		for( unsigned int j = 0; j < pageNum; j++ ) {
+			for( unsigned int k = 0; k < shift; k++ ) {
+				
+				unsigned int first = j * 6 + k + 1;
+				unsigned int second = j * 6 + shift + k + 1;
+				
+				list.push_back( pair< unsigned int, unsigned int >( first, second ) );
+				
+			}
+		}
+	}
+	
+	ofs << "% Please do not edit this page directly, since it is automatically generated! \n\n\n";
+	
+	//cerr << "list.size() = " << list.size() << endl;
+	for( unsigned int i = 0; i < list.size(); i++ ) {
+		
+		unsigned int first = list[ i ].first;
+		unsigned int second = list[ i ].second;
+		
+		if( i % 3 == 0 ) {
+			ofs << "\\begin{figure*}[h!]\n"
+			    << "\\centering{\n"
+			    << "  \\setlength{\\tabcolsep}{0pt}\n"
+			    << "  \\begin{tabular}{cc}\n";
+		}
+		
+		//cerr << "i = " << i << " i/( group*3 ) = " << i / ( group*3 ) << endl;
+
+//		cerr << " first = " << first << ", second = " << second << endl;
+//		cerr << "pageNum = " << pageNum << " pageNum*group = " << pageNum * group << " pageNum*group/2 = "
+//		     << 6 * group / 2 << endl;
+//		cerr << " name[ i/ (pageNum*group) ] = " << ( 6 * group / 2 ) << ", i/ (pageNum*group) = "
+//		     << i / ( 6 * group / 2 ) << endl;
+		
+		ofs << "    \\includegraphics[width=0.5\\linewidth]{images/parameters/" << name[ i / ( 6 * group / 2 ) ] << "/"
+		    << first
+		    << "/pathway-000000" << imgID << ".png} & \n"
+		    << "    \\includegraphics[width=0.5\\linewidth]{images/parameters/" << name[ i / ( 6 * group / 2 ) ] << "/"
+		    << second
+		    << "/pathway-000000" << imgID << ".png} \\\\ \n"
+		    << "    " << label[ ( first - 1 ) % 6 ] << " & " << label[ ( second - 1 ) % 6 ] << " \\\\\n";
+		
+		double k_a = 0.0, k_r = 0.0, k_v = 0.0, k_c = 0.0, k_d = 0.0, k_e = 0.0, k_o = 0.0;
+		k_a = p[ i / ( group * 3 ) ][ 0 ];
+		k_r = p[ i / ( group * 3 ) ][ 1 ];
+		k_c = p[ i / ( group * 3 ) ][ 2 ];
+		k_e = p[ i / ( group * 3 ) ][ 3 ];
+		k_v = p[ i / ( group * 3 ) ][ 4 ];
+		k_o = p[ i / ( group * 3 ) ][ 5 ];
+		k_d = p[ i / ( group * 3 ) ][ 6 ];
+		
+		//cerr << " first = " << first << ", second = " << second << endl;
+		// 4 x 7 x 3
+		if( ( first - 1 ) / 3 == 0 ) k_a = t[ i / ( group * 3 ) ][ 0 ][ ( first - 1 ) % 3 ];
+		if( ( first - 1 ) / 3 == 1 ) k_r = t[ i / ( group * 3 ) ][ 1 ][ ( first - 1 ) % 3 ];
+		if( ( first - 1 ) / 3 == 2 ) k_c = t[ i / ( group * 3 ) ][ 2 ][ ( first - 1 ) % 3 ];
+		if( ( first - 1 ) / 3 == 3 ) k_e = t[ i / ( group * 3 ) ][ 3 ][ ( first - 1 ) % 3 ];
+		if( ( first - 1 ) / 3 == 4 ) k_v = t[ i / ( group * 3 ) ][ 4 ][ ( first - 1 ) % 3 ];
+		if( ( first - 1 ) / 3 == 5 ) k_o = t[ i / ( group * 3 ) ][ 5 ][ ( first - 1 ) % 3 ];
+		if( ( first - 1 ) / 3 == 6 ) k_d = t[ i / ( group * 3 ) ][ 6 ][ ( first - 1 ) % 3 ];
+		
+		ofs << setprecision( 1 ) << fixed
+		    << "    \\tiny $k_a=" << k_a << "$, "
+		    << "$k_r=" << k_r << "$, "
+		    << "$k_c=" << k_c << "$, "
+//		    << "$k_d=" << k_d << "$, "
+		    << "$k_e=" << k_e << "$, "
+			<< "$k_v=" << k_v << "$, "
+		    << "$k_o=" << k_o << "$"
+		                         "& \n";
+
+		k_a = p[ i / ( group * 3 ) ][ 0 ];
+		k_r = p[ i / ( group * 3 ) ][ 1 ];
+		k_c = p[ i / ( group * 3 ) ][ 2 ];
+		k_e = p[ i / ( group * 3 ) ][ 3 ];
+		k_v = p[ i / ( group * 3 ) ][ 4 ];
+		k_o = p[ i / ( group * 3 ) ][ 5 ];
+		k_d = p[ i / ( group * 3 ) ][ 6 ];
+
+		if( ( second - 1 ) / 3 == 0 ) k_a = t[ i / ( group * 3 ) ][ 0 ][ ( second - 1 ) % 3 ];
+		if( ( second - 1 ) / 3 == 1 ) k_r = t[ i / ( group * 3 ) ][ 1 ][ ( second - 1 ) % 3 ];
+		if( ( second - 1 ) / 3 == 2 ) k_c = t[ i / ( group * 3 ) ][ 2 ][ ( second - 1 ) % 3 ];
+		if( ( second - 1 ) / 3 == 3 ) k_e = t[ i / ( group * 3 ) ][ 3 ][ ( second - 1 ) % 3 ];
+		if( ( second - 1 ) / 3 == 4 ) k_v = t[ i / ( group * 3 ) ][ 4 ][ ( second - 1 ) % 3 ];
+		if( ( second - 1 ) / 3 == 5 ) k_o = t[ i / ( group * 3 ) ][ 5 ][ ( second - 1 ) % 3 ];
+		if( ( second - 1 ) / 3 == 6 ) k_d = t[ i / ( group * 3 ) ][ 6 ][ ( second - 1 ) % 3 ];
+		
+		ofs << setprecision( 1 ) << fixed
+		    << "    \\tiny $k_a=" << k_a << "$, "
+		    << "$k_r=" << k_r << "$, "
+		    << "$k_c=" << k_c << "$, "
+//		    << "$k_d=" << k_d << "$, "
+		    << "$k_e=" << k_e << "$, "
+			<< "$k_v=" << k_v << "$, "
+		    << "$k_o=" << k_o << "$"
+		                         "\\\\ \n";
+		if( imgID == 12 ) {
+			
+			int overlapped_pixel = 0, total_pixel = 0, crossing = 0;
+			
+			string file1 =
+					( qApp->applicationDirPath() ).toStdString() + "/svg/" + name[ i / ( 6 * group / 2 ) ] + "/" +
+					to_string( first ) + "/overlap.txt";
+			Base::Config conf1( file1 );
+			// cerr << " file1 = " << file1 << endl;
+			
+			if( conf1.has( "overlapped_pixels" ) ) {
+				string param = conf1.gets( "overlapped_pixels" );
+				overlapped_pixel = stoi( param );
+				cerr << "overlapped_pixels = " << overlapped_pixel << endl;
+			}
+			
+			if( conf1.has( "total_pixels" ) ) {
+				string param = conf1.gets( "total_pixels" );
+				total_pixel = stoi( param );
+			}
+			
+			if( conf1.has( "edge_crossings" ) ) {
+				string param = conf1.gets( "edge_crossings" );
+				crossing = stoi( param );
+			}
+			
+			ofs << setprecision( 1 ) << fixed
+			    << "    \\tiny overlapped pixels = " << overlapped_pixel
+			    << ", total pixels = " << total_pixel
+			    << ", edge crossings = " << crossing << ".& \n";
+			
+			string file2 =
+					( qApp->applicationDirPath() ).toStdString() + "/svg/" + name[ i / ( 6 * group / 2 ) ] + "/" +
+					to_string( second ) + "/overlap.txt";
+			Base::Config conf2( file2 );
+			// cerr << " file2 = " << file2 << endl;
+			
+			if( conf2.has( "overlapped_pixels" ) ) {
+				string param = conf2.gets( "overlapped_pixels" );
+				overlapped_pixel = stoi( param );
+			}
+			
+			if( conf2.has( "total_pixels" ) ) {
+				string param = conf2.gets( "total_pixels" );
+				total_pixel = stoi( param );
+			}
+			
+			if( conf2.has( "edge_crossings" ) ) {
+				string param = conf2.gets( "edge_crossings" );
+				crossing = stoi( param );
+			}
+			
+			ofs << setprecision( 1 ) << fixed
+			    << "    \\tiny overlapped pixels = " << overlapped_pixel
+			    << ", total pixels = " << total_pixel
+			    << ", edge crossings = " << crossing << ".\\\\ \n";
+			
+		}
+		
+		if( i % 3 == 2 ) {
+			
+			ofs << "  \\end{tabular}\n"
+			    << "}\n"
+			    << "\\caption{" << caption << level[ i / ( 6 * group / 2 ) ] << "-level step.} \n"
+			    << "\\label{fig:" << level[ i / ( 6 * group / 2 ) ] << "_" << ( i / 3 ) % pageNum << "_" << imgID << "} \n"
+			    << "\\end{figure*}\n";
+			ofs << "\\clearpage\n\n\n";
+		}
+	}
+	
+	ofs.close();
+	
 }
 
 void Window::_computeOverlaps( ofstream &ofs ) {
 	
-	vector <ForceGraph> &lsubg = _pathwayPtr->lsubG();
-	vector <MetaboliteGraph> &subg = _pathwayPtr->subG();
+	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
+	vector< MetaboliteGraph > &subg = _pathwayPtr->subG();
 	
 	_gv->computeNodeOverlaps( ofs );
 	int p = _gv->exportPNG();
 	
-	ofs << "overlapped pixel = " << p << endl;
-	ofs << "total pixel = " << Common::getContentWidth() * Common::getContentHeight() << endl;
-	ofs << "ratio = " << p / ( Common::getContentWidth() * Common::getContentHeight() ) << endl;
+	ofs << ":overlapped_pixels " << p << endl;
+	ofs << ":total_pixels " << Common::getContentWidth() * Common::getContentHeight() << endl;
+	ofs << fixed << ":ratio " << p / ( Common::getContentWidth() * Common::getContentHeight() ) << endl;
 	
 	// between subdomains
 	int c = 0;
@@ -98,27 +299,25 @@ void Window::_computeOverlaps( ofstream &ofs ) {
 		for( unsigned int j = i + 1; j < lsubg.size(); j++ ) {
 			ForceGraph &gT = lsubg[ j ];
 			
-			BGL_FORALL_EDGES( edS, gS, ForceGraph )
-			{
-				ForceGraph::vertex_descriptor vdA = source( edS, gS );
-				ForceGraph::vertex_descriptor vdB = target( edS, gS );
-				Coord2 &coordA = *gS[ vdA ].coordPtr;
-				Coord2 &coordB = *gS[ vdB ].coordPtr;
-				
-				BGL_FORALL_EDGES( edT, gT, ForceGraph )
-				{
-					ForceGraph::vertex_descriptor vdC = source( edT, gT );
-					ForceGraph::vertex_descriptor vdD = target( edT, gT );
-					Coord2 &coordC = *gT[ vdC ].coordPtr;
-					Coord2 &coordD = *gT[ vdD ].coordPtr;
-					if( vdA == vdC || vdA == vdD || vdB == vdC || vdB == vdD ) { ;
-					}
-					else {
-						if( isIntersected( coordA, coordB, coordC, coordD ) )
-							c++;
-					}
+			BGL_FORALL_EDGES( edS, gS, ForceGraph ) {
+					ForceGraph::vertex_descriptor vdA = source( edS, gS );
+					ForceGraph::vertex_descriptor vdB = target( edS, gS );
+					Coord2 &coordA = *gS[ vdA ].coordPtr;
+					Coord2 &coordB = *gS[ vdB ].coordPtr;
+					
+					BGL_FORALL_EDGES( edT, gT, ForceGraph ) {
+							ForceGraph::vertex_descriptor vdC = source( edT, gT );
+							ForceGraph::vertex_descriptor vdD = target( edT, gT );
+							Coord2 &coordC = *gT[ vdC ].coordPtr;
+							Coord2 &coordD = *gT[ vdD ].coordPtr;
+							if( vdA == vdC || vdA == vdD || vdB == vdC || vdB == vdD ) { ;
+							}
+							else {
+								if( isIntersected( coordA, coordB, coordC, coordD ) )
+									c++;
+							}
+						}
 				}
-			}
 		}
 	}
 	
@@ -127,31 +326,29 @@ void Window::_computeOverlaps( ofstream &ofs ) {
 		
 		ForceGraph &gS = lsubg[ i ];
 		
-		BGL_FORALL_EDGES( edS, gS, ForceGraph )
-		{
-			ForceGraph::vertex_descriptor vdA = source( edS, gS );
-			ForceGraph::vertex_descriptor vdB = target( edS, gS );
-			Coord2 &coordA = *gS[ vdA ].coordPtr;
-			Coord2 &coordB = *gS[ vdB ].coordPtr;
-			
-			BGL_FORALL_EDGES( edT, gS, ForceGraph )
-			{
-				ForceGraph::vertex_descriptor vdC = source( edT, gS );
-				ForceGraph::vertex_descriptor vdD = target( edT, gS );
-				Coord2 &coordC = *gS[ vdC ].coordPtr;
-				Coord2 &coordD = *gS[ vdD ].coordPtr;
+		BGL_FORALL_EDGES( edS, gS, ForceGraph ) {
+				ForceGraph::vertex_descriptor vdA = source( edS, gS );
+				ForceGraph::vertex_descriptor vdB = target( edS, gS );
+				Coord2 &coordA = *gS[ vdA ].coordPtr;
+				Coord2 &coordB = *gS[ vdB ].coordPtr;
 				
-				if( vdA == vdC || vdA == vdD || vdB == vdC || vdB == vdD ) { ;
-				}
-				else {
-					if( isIntersected( coordA, coordB, coordC, coordD ) )
-						c++;
-				}
+				BGL_FORALL_EDGES( edT, gS, ForceGraph ) {
+						ForceGraph::vertex_descriptor vdC = source( edT, gS );
+						ForceGraph::vertex_descriptor vdD = target( edT, gS );
+						Coord2 &coordC = *gS[ vdC ].coordPtr;
+						Coord2 &coordD = *gS[ vdD ].coordPtr;
+						
+						if( vdA == vdC || vdA == vdD || vdB == vdC || vdB == vdD ) { ;
+						}
+						else {
+							if( isIntersected( coordA, coordB, coordC, coordD ) )
+								c++;
+						}
+					}
 			}
-		}
 	}
 	
-	ofs << "edge crossings = " << c << endl;
+	ofs << ":edge_crossings " << c << endl;
 }
 
 void Window::_init( void ) {
@@ -179,16 +376,118 @@ void Window::_init( void ) {
 
 void Window::_generateConf( void ) {
 	
-	vector <string> strVec;
+	vector< string > strVec;
 	strVec.push_back( "boundary" );
 	strVec.push_back( "center" );
 	strVec.push_back( "component" );
 	strVec.push_back( "detail" );
 	
+	vector< vector< double > > p;
+	vector< vector< vector< double > > > t;
+	int paraNum = 7;
+	int shift = 3;
+	int group = 4;
+	int total = paraNum * shift;
+	
+	p.resize( strVec.size() );
+	for( unsigned int i = 0; i < paraNum; i++ ) {
+		p[ i ].resize( paraNum );
+	}
+	t.resize( strVec.size() );
+	for( unsigned int i = 0; i < t.size(); i++ ) {
+		t[ i ].resize( paraNum );
+		for( unsigned int j = 0; j < t[ i ].size(); j++ ) {
+			t[ i ][ j ].resize( shift );
+		}
+	}
+	
+	// initialization p
+	p[ 0 ][ 0 ] = 0.1;
+	p[ 0 ][ 1 ] = 1000;
+	p[ 0 ][ 2 ] = 0.5;
+	p[ 0 ][ 3 ] = 0.5;
+	p[ 0 ][ 4 ] = 1.0;
+	p[ 0 ][ 5 ] = 0;
+	p[ 0 ][ 6 ] = 10;
+	
+	p[ 1 ][ 0 ] = 1;
+	p[ 1 ][ 1 ] = 1000;
+	p[ 1 ][ 2 ] = 0.5;
+	p[ 1 ][ 3 ] = 0.5;
+	p[ 1 ][ 4 ] = 1.0;
+	p[ 1 ][ 5 ] = 0;
+	p[ 1 ][ 6 ] = 10;
+	
+	p[ 2 ][ 0 ] = 1;
+	p[ 2 ][ 1 ] = 1000;
+	p[ 2 ][ 2 ] = 0.5;
+	p[ 2 ][ 3 ] = 0.5;
+	p[ 2 ][ 4 ] = 1.0;
+	p[ 2 ][ 5 ] = 0;
+	p[ 2 ][ 6 ] = 10;
+	
+	p[ 3 ][ 0 ] = 0.1;
+	p[ 3 ][ 1 ] = 1000;
+	p[ 3 ][ 2 ] = 1.0;
+	p[ 3 ][ 3 ] = 4.0;
+	p[ 3 ][ 4 ] = 1.0;
+	p[ 3 ][ 5 ] = 10;
+	p[ 3 ][ 6 ] = 10;
+	
 	string rootFolder = ( qApp->applicationDirPath() ).toStdString() + "/config/";
+	
+	// 4 x 7 x 3
 	for( unsigned int i = 0; i < strVec.size(); i++ ) {
 		
-		for( unsigned int j = 1; j <= 21; j++ ) {
+		for( unsigned int j = 0; j < t[ i ].size(); j++ ) {
+
+			// ka
+			if( j == 0 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = p[ i ][ j ] * ( k + 1 );
+				}
+			}
+			// kr
+			else if( j == 1 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = 2000 * k ;
+				}
+			}
+			// kc
+			else if( j == 2 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = ( k + 1 ) * p[ i ][ j ];
+				}
+			}
+			// ke
+			else if( j == 3 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = ( k + 1 ) * p[ i ][ j ];
+				}
+			}
+			// kv
+			else if( j == 4 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = p[ i ][ j ] * k;
+				}
+			}
+			// ko
+			else if( j == 5 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = ( k + 1 ) * p[ i ][ j ];
+				}
+			}
+			// kd
+			else if( j == 6 ) {
+				for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+					t[ i ][ j ][ k ] = p[ i ][ j ];
+				}
+			}
+		}
+		
+		
+		// copy standard format to each folder
+		for( unsigned int j = 1; j <= total; j++ ) {
 			
 			string cm = "mkdir " + rootFolder + strVec[ i ] + "/" + to_string( j );
 			system( cm.c_str() );
@@ -197,94 +496,62 @@ void Window::_generateConf( void ) {
 			system( cm.c_str() );
 		}
 		
-		for( unsigned int j = 1; j <= 21; j++ ) {
-			
-			ofstream ofs( rootFolder + "/" + strVec[ i ] + "/" + to_string( j ) + "/" + strVec[ i ] + ".conf" );
-			
-			if( i == 0 ) {
-				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 3.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":ka 3.0\n";
-				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kr 1000.0\n";
-				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( 5.0 * ( ( j - 1 ) % 3 + 2 ) ) + "\n";
-				else ofs << ":kv 5.0\n";
-				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kc 5.0\n";
-				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kd 100.0\n";
-				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":ke 40.0\n";
-				if( j >= 19 && j <= 21 ) ofs << ":ko 0.0\n";
-				else ofs << ":ko 0.0\n";
-				ofs << ":force_loop 300\n"
-				       ":ratio_force 0.3\n"
-				       ":ratio_voronoi 0.7\n";
+		// update each config file
+		for( unsigned int j = 0; j < t[ i ].size(); j++ ) {
+			for( unsigned int k = 0; k < t[ i ][ j ].size(); k++ ) {
+				
+				ofstream ofs(
+						rootFolder + "/" + strVec[ i ] + "/" + to_string( j * shift + k + 1 ) + "/" + strVec[ i ] +
+						".conf" );
+				cerr << "i = " << i << " j = " << j << " k = " << k << " fid = " << j * shift + k + 1 << endl;
+				if( j == 0 ) ofs << ":ka " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":ka " << to_string( p[ i ][ 0 ] ) << "\n";
+				if( j == 1 ) ofs << ":kr " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":kr " << to_string( p[ i ][ 1 ] ) << "\n";
+				if( j == 2 ) ofs << ":kc " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":kc " << to_string( p[ i ][ 2 ] ) << "\n";
+				if( j == 3 ) ofs << ":ke " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":ke " << to_string( p[ i ][ 3 ] ) << "\n";
+				if( j == 4 ) ofs << ":kv " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":kv " << to_string( p[ i ][ 4 ] ) << "\n";
+				if( j == 5 ) ofs << ":ko " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":ko " << to_string( p[ i ][ 5 ] ) << "\n";
+				if( j == 6 ) ofs << ":kd " + to_string( t[ i ][ j ][ k ] ) + "\n";
+				else ofs << ":kd " << to_string( p[ i ][ 6 ] ) << "\n";
+				
+				if( i == 0 ) {
+					ofs << ":force_loop 200\n"
+					       ":ratio_force 0.3\n"
+					       ":ratio_voronoi 0.7\n";
+				}
+				else if( i == 1 ) {
+					ofs << ":force_loop 100\n"
+					       ":ratio_force 0.1\n"
+					       ":ratio_voronoi 0.9\n";
+				}
+				else if( i == 2 ) {
+					ofs << ":force_loop 200\n"
+					       ":ratio_force 0.1\n"
+					       ":ratio_voronoi 0.9\n";
+				}
+				else if( i == 3 ) {
+					ofs << ":force_loop 300\n"
+					       ":ratio_force 0.1\n"
+					       ":ratio_voronoi 0.9\n";
+				}
+				ofs << ":degreeOneMagnitude 1.0\n"
+				       "# annealing process\n"
+				       ":theta_threshold 0.8\n"
+				       ":min_temperature 600.0\n"
+				       ":alpha_temperature 10.0\n"
+				       ":enable_temperature 1\n"
+				       ":mode TYPE_HYBRID";
+				ofs.close();
 			}
-			else if( i == 1 ) {
-				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 2.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":ka 3.0\n";
-				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kr 1000.0\n";
-				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kv 5.0\n";
-				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kc 5.0\n";
-				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kd 100.0\n";
-				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":ke 40.0\n";
-				if( j >= 19 && j <= 21 ) ofs << ":ko 0.0\n";
-				ofs << ":force_loop 100\n"
-				       ":ratio_force 0.1\n"
-				       ":ratio_voronoi 0.9\n";
-			}
-			else if( i == 2 ) {
-				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 3.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":ka 3.0\n";
-				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kr 1000.0\n";
-				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kv 5.0\n";
-				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kc 5.0\n";
-				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kd 100.0\n";
-				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":ke 40.0\n";
-				if( j >= 19 && j <= 21 ) ofs << ":ko 0.0\n";
-				ofs << ":force_loop 200\n"
-				       ":ratio_force 0.1\n"
-				       ":ratio_voronoi 0.9\n";
-			}
-			else if( i == 3 ) {
-				if( j >= 1 && j <= 3 ) ofs << ":ka " + to_string( 1.0 * pow( 10, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":ka 3.0\n";
-				if( j >= 4 && j <= 6 ) ofs << ":kr " + to_string( pow( 10, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kr 1000.0\n";
-				if( j >= 7 && j <= 9 ) ofs << ":kv " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kv 5.0\n";
-				if( j >= 10 && j <= 12 ) ofs << ":kc " + to_string( pow( 5.0, ( j - 1 ) % 3 ) ) + "\n";
-				else ofs << ":kc 5.0\n";
-				if( j >= 13 && j <= 15 ) ofs << ":kd " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":kd 100.0\n";
-				if( j >= 16 && j <= 18 ) ofs << ":ke " + to_string( 20 * ( ( j - 1 ) % 3 + 1 ) ) + "\n";
-				else ofs << ":ke 40.0\n";
-				if( j >= 19 && j <= 21 ) ofs << ":ko " + to_string( pow( 10.0, ( j - 1 ) % 3 + 1 ) ) + "\n";
-				ofs << ":force_loop 300\n"
-				       ":ratio_force 0.1\n"
-				       ":ratio_voronoi 0.9\n";
-			}
-			ofs << ":degreeOneMagnitude 1.0\n"
-			       "# annealing process\n"
-			       ":theta_threshold 0.8\n"
-			       ":min_temperature 600.0\n"
-			       ":alpha_temperature 10.0\n"
-			       ":enable_temperature 1\n"
-			       ":mode TYPE_HYBRID";
-			
-			ofs.close();
 		}
 	}
+	
+	exportTex( p, t );
 }
 
 void Window::_simulateKey( Qt::Key key ) {
@@ -371,8 +638,8 @@ void Window::_threadBoundaryForce( void ) {
 	// multi-thread
 	pool.push( []( int id, ThreadLevelBorder *tlh ) { tlh->run( id ); }, &tlh );
 	
-	// rendering0
-#ifdef DEBUG
+	// rendering
+//#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 
@@ -382,10 +649,10 @@ void Window::_threadBoundaryForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-#endif // DEBUG
+//#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	pool.stop( true );
+	//pool.stop( true );
 	cerr << "End of BorderForce..." << endl;
 }
 
@@ -394,7 +661,7 @@ void Window::_threadCellCenterForce( void ) {
 	// initialization
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 	
-	vector < ThreadLevelCellCenter * > tlc;
+	vector< ThreadLevelCellCenter * > tlc;
 	tlc.resize( _levelCellPtr->centerVec().size() );
 	
 	//for( unsigned int i = 0; i < 2; i++ ){
@@ -414,19 +681,19 @@ void Window::_threadCellCenterForce( void ) {
 		pool.push( []( int id, ThreadLevelCellCenter *t ) { t->run( id ); }, tlc[ i ] );
 	}
 
-#ifdef DEBUG
+//#ifdef DEBUG
 	// rendering
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
 		//cerr << "pool.n_idle() = " << pool.n_idle() << endl;
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
-		updateAllScene();
+		redrawAllScene();
 	}
-#endif // DEBUG
+//#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	pool.stop( true );
+	//pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < _levelCellPtr->centerVec().size(); i++ ) {
@@ -441,7 +708,7 @@ void Window::_threadCellComponentForce( void ) {
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 	
 	// cerr << "size = " << _levelCellPtr->cellVec().size() << endl;
-	vector < ThreadLevelCellComponent * > tlm;
+	vector< ThreadLevelCellComponent * > tlm;
 	tlm.resize( _levelCellPtr->cellVec().size() );
 	
 	//for( unsigned int i = 0; i < 2; i++ ){
@@ -459,7 +726,7 @@ void Window::_threadCellComponentForce( void ) {
 	}
 	
 	// rendering
-#ifdef DEBUG
+//#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
@@ -467,10 +734,10 @@ void Window::_threadCellComponentForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-#endif // DEBUG
+//#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	pool.stop( true );
+	//pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < _levelCellPtr->cellVec().size(); i++ ) {
@@ -487,11 +754,11 @@ void Window::_threadPathwayForce( void ) {
 	_gv->isPathwayPolygonFlag() = true;
 	
 	// initialization
-	vector <multimap< int, CellComponent >> &cellComponentVec = _levelCellPtr->cellComponentVec();
+	vector< multimap< int, CellComponent >> &cellComponentVec = _levelCellPtr->cellComponentVec();
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
-	vector <vector< ThreadLevelDetail * >> tld;
+	vector< vector< ThreadLevelDetail * >> tld;
 	
-	vector <vector< unsigned int >> idMat;
+	vector< vector< unsigned int >> idMat;
 	idMat.resize( cellComponentVec.size() );
 	tld.resize( idMat.size() );
 	unsigned int idD = 0;
@@ -541,7 +808,7 @@ void Window::_threadPathwayForce( void ) {
 	}
 	
 	// rendering
-#ifdef DEBUG
+//#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
@@ -549,10 +816,10 @@ void Window::_threadPathwayForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-#endif // DEBUG
+//#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	pool.stop( true );
+	// pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
@@ -573,38 +840,37 @@ void Window::steinertree( void ) {
 	unsigned int treeSize = 1;
 	
 	// highlight
-	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph )
-	{
-		
-		if( g[ vd ].type == "metabolite" ) {
-			//if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
-			//if( *g[ vd ].namePtr == "coke[r]" ) {            // tiny
-			//if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
-			if( *g[ vd ].namePtr == "glu_L[c]" ) {         // VHM
-				//if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
-				//if( *g[ vd ].namePtr == "Beans" ){        // food
-				//if( *g[ vd ].namePtr == "Prawns" ){        // food
-				//if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
-				//if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
-				*g[ vd ].isSelectedPtr = true;
-				*g[ vd ].selectedIDPtr = 0;
-			}
+	BGL_FORALL_VERTICES( vd, g, MetaboliteGraph ) {
+			
+			if( g[ vd ].type == "metabolite" ) {
+				//if( *g[ vd ].namePtr == "Glucose" ){          // KEGG
+				//if( *g[ vd ].namePtr == "coke[r]" ) {            // tiny
+				//if( (*g[ vd ].namePtr == "glx[m]") || (*g[ vd ].namePtr == "coke[r]") ){            // tiny
+				if( *g[ vd ].namePtr == "glu_L[c]" ) {         // VHM
+					//if( *g[ vd ].namePtr == "Soy_Sauce" ){        // food
+					//if( *g[ vd ].namePtr == "Beans" ){        // food
+					//if( *g[ vd ].namePtr == "Prawns" ){        // food
+					//if( *g[ vd ].namePtr == "Bay_Leaf" ){        // food
+					//if( *g[ vd ].namePtr == "Sunflower_Oil" ){    // food
+					*g[ vd ].isSelectedPtr = true;
+					*g[ vd ].selectedIDPtr = 0;
+				}
 #ifdef SKIP
-			if( *g[ vd ].namePtr == "Worcestershire_Sauce" ){
-				*g[ vd ].isSelectedPtr = true;
-				*g[ vd ].selectedIDPtr = 1;
-			}
-			if(	*g[ vd ].namePtr == "Puff_Pastry" ){
-				*g[ vd ].isSelectedPtr = true;
-				*g[ vd ].selectedIDPtr = 2;
-			}
-			if(	*g[ vd ].namePtr == "Egg_White" ) {            // tiny
-				*g[ vd ].isSelectedPtr = true;
-				*g[ vd ].selectedIDPtr = 3;
-			}
+				if( *g[ vd ].namePtr == "Worcestershire_Sauce" ){
+					*g[ vd ].isSelectedPtr = true;
+					*g[ vd ].selectedIDPtr = 1;
+				}
+				if(	*g[ vd ].namePtr == "Puff_Pastry" ){
+					*g[ vd ].isSelectedPtr = true;
+					*g[ vd ].selectedIDPtr = 2;
+				}
+				if(	*g[ vd ].namePtr == "Egg_White" ) {            // tiny
+					*g[ vd ].isSelectedPtr = true;
+					*g[ vd ].selectedIDPtr = 3;
+				}
 #endif // SKIP
+			}
 		}
-	}
 	
 	// initialization
 	_roadPtr->clear();
@@ -650,9 +916,9 @@ void Window::_threadOctilinearBoundary( void ) {
 	const int iter = 50;
 	ctpl::thread_pool pool( _gv->maxThread() ); // limited thread number in the pool
 	
-	vector < Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
+	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	unsigned int size = boundaryVec.size();
-	vector < ThreadOctilinearBoundary * > tob;
+	vector< ThreadOctilinearBoundary * > tob;
 	tob.resize( size );
 	
 	//cerr << "octilinearBoundary: iter = " << iter << endl;
@@ -720,10 +986,10 @@ void Window::selectLevelDetailBuildBoundary( void ) {
 //
 void Window::buildLevelDetailBoundaryGraph( void ) {
 	
-	vector <multimap< int, CellComponent >> &cellCVec = _levelCellPtr->cellComponentVec();
+	vector< multimap< int, CellComponent >> &cellCVec = _levelCellPtr->cellComponentVec();
 	
 	// initialization
-	vector < Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
+	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	_levelBorderPtr->regionBase().polygonComplexVD().clear();
 	boundaryVec.clear();
 	
@@ -759,11 +1025,11 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 			Force &f = itC->second.componentRegion.force();
 			
 			// draw polygons
-			vector <Seed> &seedVec = *f.voronoi().seedVec();
+			vector< Seed > &seedVec = *f.voronoi().seedVec();
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
 				Polygon2 &polygon = *seedVec[ i ].voronoiCellPtr;
-				vector <ForceGraph::vertex_descriptor> vdVec;
+				vector< ForceGraph::vertex_descriptor > vdVec;
 				
 				unsigned int size = polygon.elements().size();
 				for( unsigned int j = 1; j < size + 1; j++ ) {
@@ -778,19 +1044,18 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 						BoundaryGraph::vertex_descriptor curVD = NULL;
 						
 						// Check if the station exists or not
-						BGL_FORALL_VERTICES( vd, bg, BoundaryGraph )
-						{
-							Coord2 &c = *bg[ vd ].coordPtr;
-							if( fabs( ( polygon.elements()[ ( j - 1 + k ) % ( int ) size ] - c ).norm() ) < 1e-2 ) {
+						BGL_FORALL_VERTICES( vd, bg, BoundaryGraph ) {
+								Coord2 &c = *bg[ vd ].coordPtr;
+								if( fabs( ( polygon.elements()[ ( j - 1 + k ) % ( int ) size ] - c ).norm() ) < 1e-2 ) {
 
 #ifdef DEBUG
-								cerr << "The node has been in the database." << endl;
+									cerr << "The node has been in the database." << endl;
 #endif  // DEBUG
-								if( k == 0 ) curVD = curVDS = vd;
-								if( k == 1 ) curVD = curVDT = vd;
-								break;
+									if( k == 0 ) curVD = curVDS = vd;
+									if( k == 1 ) curVD = curVDT = vd;
+									break;
+								}
 							}
-						}
 						
 						if( curVD == NULL ) {
 							
@@ -883,8 +1148,8 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 				}
 				//map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator itP;
 				itC->second.componentRegion.polygonComplexVD().insert(
-						pair < unsigned int, vector < BoundaryGraph::vertex_descriptor > >
-						                     ( i, vdVec ) );
+						pair< unsigned int, vector< BoundaryGraph::vertex_descriptor > >
+								( i, vdVec ) );
 #ifdef DEBUG
 				cerr << i << ", " << boundaryVec.size() << endl;
 				cerr << " vdVec.size() = " << vdVec.size() << " ?= " << size << endl;
@@ -896,19 +1161,18 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 			}
 			
 			// update the fixed flag
-			BGL_FORALL_EDGES( ed, bg, BoundaryGraph )
-			{
-				if( bg[ ed ].visitedTimes == 0 ) {
-					
-					BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
-					BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
-					
-					bg[ vdS ].isFixed = true;
-					bg[ vdT ].isFixed = true;
-					
-					// cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
+			BGL_FORALL_EDGES( ed, bg, BoundaryGraph ) {
+					if( bg[ ed ].visitedTimes == 0 ) {
+						
+						BoundaryGraph::vertex_descriptor vdS = source( ed, bg );
+						BoundaryGraph::vertex_descriptor vdT = target( ed, bg );
+						
+						bg[ vdS ].isFixed = true;
+						bg[ vdT ].isFixed = true;
+						
+						// cerr << "eid = " << bg[ ed ].id << " node = " << bg[ vdS ]. id << " ," << bg[ vdT ].id << endl;
+					}
 				}
-			}
 			
 			boundaryVec[ index ]->prepare();
 			index++;
@@ -933,8 +1197,8 @@ void Window::buildLevelDetailBoundaryGraph( void ) {
 void Window::updateLevelDetailPolygonComplex( void ) {
 	
 	//cerr << "updating componentRegion polygonComplex after optimization ..." << endl;
-	vector <multimap< int, CellComponent >> &cellCVec = _levelCellPtr->cellComponentVec();
-	vector < Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
+	vector< multimap< int, CellComponent >> &cellCVec = _levelCellPtr->cellComponentVec();
+	vector< Octilinear * > &boundaryVec = *_octilinearBoundaryVecPtr;
 	// cerr << "boundaryVec.size() = " << boundaryVec.size() << endl;
 	
 	unsigned int index = 0;
@@ -955,11 +1219,11 @@ void Window::updateLevelDetailPolygonComplex( void ) {
 			
 			RegionBase &detail = itC->second.componentRegion;
 			Force &force = detail.force();
-			vector <Seed> &seedVec = *force.voronoi().seedVec();
+			vector< Seed > &seedVec = *force.voronoi().seedVec();
 			for( unsigned int i = 0; i < seedVec.size(); i++ ) {
 				
-				map < unsigned int, vector < BoundaryGraph::vertex_descriptor > > ::iterator
-				itP = detail.polygonComplexVD().begin();
+				map< unsigned int, vector< BoundaryGraph::vertex_descriptor > >::iterator
+						itP = detail.polygonComplexVD().begin();
 				advance( itP, i );
 				
 				Polygon2 &polygon = *seedVec[ i ].voronoiCellPtr;
@@ -1135,7 +1399,7 @@ void Window::spaceCoverage( void ) {
 	int neighborNo = 5;
 	vector< double > neighbor;
 	vector< double > area;
-	vector <ForceGraph> &lsubg = _pathwayPtr->lsubG();
+	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
 	Polygon2 contour;
 	
 	contour.elements().push_back( Coord2( -0.5 * Common::getContentWidth(), -0.5 * Common::getContentHeight() ) );
@@ -1146,20 +1410,19 @@ void Window::spaceCoverage( void ) {
 	
 	// voronoi
 	Voronoi v;
-	vector <Seed> seedVec;
+	vector< Seed > seedVec;
 	unsigned int index = 0;
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 		
-		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph )
-		{
-			
-			Seed seed;
-			seed.id = lsubg[ i ][ vd ].id + index;
-			seed.weight = 1.0;
-			seed.coordPtr = lsubg[ i ][ vd ].coordPtr;
-			seed.voronoiCellPtr = new Polygon2;
-			seedVec.push_back( seed );
-		}
+		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph ) {
+				
+				Seed seed;
+				seed.id = lsubg[ i ][ vd ].id + index;
+				seed.weight = 1.0;
+				seed.coordPtr = lsubg[ i ][ vd ].coordPtr;
+				seed.voronoiCellPtr = new Polygon2;
+				seedVec.push_back( seed );
+			}
 		index += num_vertices( lsubg[ i ] );
 	}
 	v.init( seedVec, contour );
@@ -1174,14 +1437,13 @@ void Window::spaceCoverage( void ) {
 	}
 	
 	// neighbor
-	vector <Coord2> coordVec;
+	vector< Coord2 > coordVec;
 	for( unsigned int i = 0; i < lsubg.size(); i++ ) {
 		
-		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph )
-		{
-			
-			coordVec.push_back( *lsubg[ i ][ vd ].coordPtr );
-		}
+		BGL_FORALL_VERTICES( vd, lsubg[ i ], ForceGraph ) {
+				
+				coordVec.push_back( *lsubg[ i ][ vd ].coordPtr );
+			}
 	}
 	for( unsigned int i = 0; i < coordVec.size(); i++ ) {
 		
@@ -1225,6 +1487,10 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 	
 	switch( event->key() ) {
 	
+	case Qt::Key_B: {
+		batch();
+		break;
+	}
 	case Qt::Key_1: {
 		
 		//****************************************
@@ -1371,10 +1637,10 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		
 		_threadOctilinearBoundary();
 		_levelCellPtr->updatePolygonComplex();
-
+		
 		_gv->isBoundaryFlag() = true;
 		_gv->isPolygonComplexFlag() = false;
-
+		
 		//----------------------------------------
 		// rendering
 		//----------------------------------------
@@ -1399,12 +1665,12 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		_levelCellPtr->updatePathwayCoords();
 		_levelDetailPtr->prepareForce();
 		_threadPathwayForce();
-
+		
 		//----------------------------------------
 		// rendering
 		//----------------------------------------
 		_simulateKey( Qt::Key_E );
-
+		
 		break;
 	}
 	case Qt::Key_X: {
@@ -1419,7 +1685,9 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
-		_threadOctilinearBoundary();
+		//_threadOctilinearBoundary();
+		//_simulateKey( Qt::Key_E );
+		
 		updateLevelDetailPolygonComplex();
 		
 		//----------------------------------------
@@ -1499,7 +1767,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		// canvasArea: content width and height
 		// labelArea: total area of text labels
 		double labelArea = 0.0;
-		map < string, Subdomain * > &sub = _pathwayPtr->subsys();
+		map< string, Subdomain * > &sub = _pathwayPtr->subsys();
 		for( map< string, Subdomain * >::iterator it = sub.begin();
 		     it != sub.end(); it++ ) {
 			labelArea += it->second->idealArea;
@@ -1553,7 +1821,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 	}
 	case Qt::Key_F: {
 		
-		Base::Timer <chrono::milliseconds> timer( "ms" );
+		Base::Timer< chrono::milliseconds > timer( "ms" );
 		timer.begin();
 		_simulateKey( Qt::Key_V );
 		_simulateKey( Qt::Key_1 );

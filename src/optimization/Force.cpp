@@ -333,11 +333,67 @@ bool Force::_inContour( Coord2 &coord ) {
 void Force::_displacement( void ) {
 	
 	ForceGraph &g = *_forceGraphPtr;
+	double side = 0.5 * _width * _height;
+	
+	multimap< double, double > lengthMap;
+	BGL_FORALL_EDGES( ed, g, ForceGraph ) {
+			ForceGraph::vertex_descriptor vdS = source( ed, g );
+			ForceGraph::vertex_descriptor vdT = target( ed, g );
+			Coord2 &coordS = *g[ vdS ].coordPtr;
+			Coord2 &coordT = *g[ vdT ].coordPtr;
+			lengthMap.insert( pair< double, double >( ( coordS - coordT ).norm(), ( coordS - coordT ).norm() ) );
+		}
+	
+	// shorten unexpected long edge
+	multimap< double, double >::iterator it = lengthMap.begin();
+	advance( it, lengthMap.size() / 3 );
+	double L = MIN2( it->second, sqrt( side / ( double ) max( 1.0, ( double ) num_vertices( g ) ) ) );
+	//bool isReshaped = false;
+	if( _iteration % 30 == 0 && ( *_levelTypePtr == LEVEL_CELLCENTER || *_levelTypePtr == LEVEL_CELLCOMPONENT ) ) {
+		BGL_FORALL_EDGES( ed, g, ForceGraph ) {
+				
+				ForceGraph::vertex_descriptor vdS = source( ed, g );
+				ForceGraph::vertex_descriptor vdT = target( ed, g );
+				ForceGraph::degree_size_type degreeS = out_degree( vdS, g );
+				ForceGraph::degree_size_type degreeT = out_degree( vdT, g );
+				Coord2 &coordS = *g[ vdS ].coordPtr;
+				Coord2 &coordT = *g[ vdT ].coordPtr;
+				
+				if( degreeS == 1 ) {
+					double norm = ( coordS - coordT ).norm();
+					if( norm > L ) {
+						// coordT = coordS + ( coordT - coordS ).unit();
+						// cerr << "L = " << L << endl;
+						coordS = coordT + 0.5 * L * ( coordS - coordT ).unit();
+						double l = 0.5 * L;
+						while( !_inContour( coordS ) ) {
+							l = 0.5 * l;
+							coordS = coordT + l * ( coordS - coordT ).unit();
+						}
+						//isReshaped = true;
+					}
+				}
+				else if( degreeT == 1 ) {
+					double norm = ( coordS - coordT ).norm();
+					if( norm > L ) {
+						// coordT = coordS + ( coordT - coordS ).unit();
+						// cerr << "L = " << L << endl;
+						coordT = coordS + L * ( coordT - coordS ).unit();
+						//isReshaped = true;
+					}
+					double l = L;
+					while( !_inContour( coordS ) ) {
+						l = 0.5 * l;
+						coordT = coordS + l * ( coordT - coordS ).unit();
+					}
+				}
+			}
+	}
 	
 	// cerr << "force: _width = " << _width << " _height = " << _height << endl;
-	double side = 0.5 * _width * _height;
 	//double side = 0.2 * _width * _height;
-	double L = sqrt( side / ( double ) max( 1.0, ( double ) num_vertices( g ) ) );
+	// double
+	L = sqrt( side / ( double ) max( 1.0, ( double ) num_vertices( g ) ) );
 	//double L = sqrt( SQUARE( 1.0 ) / ( double )max( 1.0, ( double )num_vertices( s ) ) );
 	//cerr << "L = " << L << endl;
 	
@@ -382,18 +438,18 @@ void Force::_displacement( void ) {
 							// double l = L * g[ed].weight;
 							double l = L;
 							ForceGraph::degree_size_type degrees = out_degree( vdi, g );
-							if( degrees == 1 ) l = 0.2 * L;
+							//if( degrees == 1 ) l = 0.2 * L;
 							
 							if( ( *_levelTypePtr == LEVEL_DETAIL ) && ( degrees == 1 ) )
 								*g[ vdi ].forcePtr += _paramDegreeOneMagnitude * _paramKa * ( dist - l ) * unit;
 							else
 								*g[ vdi ].forcePtr += _paramKa * ( dist - l ) * unit;
-							// cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
+							//cerr << "attr = " << _paramKa * ( dist - l ) * unit << endl;
 						}
 						// Repulsive force by Couloum's power
 						if( dist > 0 ) {
 							*g[ vdi ].forcePtr -= ( _paramKr / SQUARE( dist ) ) * unit;
-							//cerr << "repul = " << ( _paramKr/SQUARE( dist ) ) * unit << endl;
+							//cerr << "repul = " << ( _paramKr / SQUARE( dist ) ) * unit << endl;
 						}
 #ifdef DEBUG
 						cerr << "idi = " << g[vdi].id << " idj = " <<  g[vdj].id
@@ -973,8 +1029,8 @@ double Force::_verletIntegreation( void ) {
 				*g[ vd ].shiftPtr *= ( limit / norm );
 			}
 		}
-
-	if( _iteration > 50 ) {
+	
+	if( _iteration > 40 & _iteration % 50 == 0 ) {
 		
 		map< unsigned int, ForceGraph::vertex_descriptor > vdMap;
 		BGL_FORALL_EDGES( ed, g, ForceGraph ) {
@@ -1017,13 +1073,13 @@ double Force::_verletIntegreation( void ) {
 			if( norm != 0 ) {
 				double random = ( double ) rand() / ( double ) RAND_MAX - 1.0;
 				//g[ it->second ].shiftPtr->zero();
-				*g[ it->second ].shiftPtr = -0.1 * random * g[ it->second ].shiftPtr->unit();
+				*g[ it->second ].shiftPtr = -0.2 * random * *g[ it->second ].shiftPtr;
 				//*g[ vdVec[ i ] ].shiftPtr = Coord2( scale * ( double ) rand() / ( double ) RAND_MAX - 0.5*scale,
 				//                                    scale * ( double ) rand() / ( double ) RAND_MAX - 0.5*scale );
 			}
 		}
 	}
-
+	
 	
 	// Force the vertices stay within the screen
 	BGL_FORALL_VERTICES( vd, g, ForceGraph ) {
@@ -1033,11 +1089,11 @@ double Force::_verletIntegreation( void ) {
 			double _half_window_height = 0.5 * Common::getContentHeight();
 #ifdef DEBUG
 			cerr << "half_width = " << _half_window_width
-			     << " half_height = " << _half_window_height << endl;
+				 << " half_height = " << _half_window_height << endl;
 			cerr << "contour_width = " << 0.5 * _contourPtr->boundingBox().x()
-			     << " contour_height = " << 0.5 * _contourPtr->boundingBox().y() << endl;
+				 << " contour_height = " << 0.5 * _contourPtr->boundingBox().y() << endl;
 			cerr << " test = " << ( coordNew.x() > _half_window_width || coordNew.x() < -_half_window_width ||
-			         coordNew.y() > _half_window_height || coordNew.y() < -_half_window_height ) << endl;
+					 coordNew.y() > _half_window_height || coordNew.y() < -_half_window_height ) << endl;
 #endif // DEBUG
 			if( isnan( g[ vd ].shiftPtr->x() ) || isnan( g[ vd ].shiftPtr->y() ) ) {
 				g[ vd ].shiftPtr->zero();
@@ -1049,8 +1105,9 @@ double Force::_verletIntegreation( void ) {
 			}
 			else if( !_inContour( coordNew ) ) {
 				double random = rand() % 3 - 1;
-				*g[ vd ].shiftPtr = 0.01 * random * *g[ vd ].shiftPtr;
-				// g[ vd ].shiftPtr->zero();
+				*g[ vd ].shiftPtr = -0.1 * *g[ vd ].shiftPtr;
+				//*g[ vd ].shiftPtr = 0.1 * random * *g[ vd ].shiftPtr;
+				//g[ vd ].shiftPtr->zero();
 			}
 //		else {
 //			cerr << "in contour" << endl;
@@ -1079,48 +1136,9 @@ double Force::_verletIntegreation( void ) {
 			
 			err += g[ vd ].shiftPtr->squaredNorm();
 		}
-
-	multimap< int, double > lengthMap;
- 	BGL_FORALL_EDGES( ed, g, ForceGraph ) {
-		    ForceGraph::vertex_descriptor vdS = source( ed, g );
-		    ForceGraph::vertex_descriptor vdT = target( ed, g );
-		    Coord2 &coordS = *g[ vdS ].coordPtr;
-		    Coord2 &coordT = *g[ vdT ].coordPtr;
-		    lengthMap.insert( pair< int, double >( g[ed].id, (coordS-coordT).norm() ) );
-	}
-
-	// shorten unexpected long edge
-	multimap< int, double >::iterator it = lengthMap.begin();
- 	advance( it, lengthMap.size()/3 );
-	double L = it->second;
-	if( _iteration % 50 == 0 &&( *_levelTypePtr == LEVEL_CELLCENTER || *_levelTypePtr == LEVEL_CELLCOMPONENT ) )
-	BGL_FORALL_EDGES( ed, g, ForceGraph ) {
-
-			ForceGraph::vertex_descriptor vdS = source( ed, g );
-			ForceGraph::vertex_descriptor vdT = target( ed, g );
-			ForceGraph::degree_size_type degreeS = out_degree( vdS, g );
-			ForceGraph::degree_size_type degreeT = out_degree( vdT, g );
-			Coord2 &coordS = *g[ vdS ].coordPtr;
-			Coord2 &coordT = *g[ vdT ].coordPtr;
-
-			if( degreeS == 1 ) {
-				double norm = ( coordS - coordT ).norm();
-				if( norm > L ) {
-					// coordT = coordS + ( coordT - coordS ).unit();
-					// cerr << "L = " << L << endl;
-					coordS = coordT + L * ( coordS - coordT ).unit();
-				}
-			}
-			else if( degreeT == 1 ) {
-				double norm = ( coordS - coordT ).norm();
-				if( norm > L ) {
-					// coordT = coordS + ( coordT - coordS ).unit();
-					// cerr << "L = " << L << endl;
-					coordT = coordS + L * ( coordT - coordS ).unit();
-				}
-			}
-		}
-
+	
+	
+	// if( !isReshaped )
 	_iteration++;
 	
 	// cerr << "err = " << err / ( double ) num_vertices( g ) << endl;

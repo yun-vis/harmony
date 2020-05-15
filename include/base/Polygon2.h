@@ -139,6 +139,8 @@ public:
 	
 	void updateCentroid( void );
 	
+	void randomCentroid( void );
+
 	void updateOrientation( void );
 	
 	bool inPolygon( const Coord2 &cood );

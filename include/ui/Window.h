@@ -119,8 +119,7 @@ public:
 		_init();
 	}
 	void batch( void );
-	void exportTex( void );
-
+	void exportTex( vector< vector< double > > &p, vector< vector< vector< double > > > &t );
 };
 
 

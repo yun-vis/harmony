@@ -787,7 +787,7 @@ void LevelCell::_computeClusters( void ) {
 void LevelCell::updateCenterCoords( void ) {
 	
 	unsigned int nSystems = _cellVec.size();
-	double radius = 20.0;
+	double radius = 10.0;
 	// double radius = 60.0;    // VHM
 	// double radius = 100.0;       // KEGG
 	
@@ -815,6 +815,13 @@ void LevelCell::updateCenterCoords( void ) {
 				unsigned int id = cellG[ vd ].componentID;
 				// cerr << "label = " << id << endl;
 				ForceGraph::vertex_descriptor vdC = vertex( id, centerG );
+				
+//				Contour2 c;
+//				c.contour() = *centerG[ vdC ].cellPtr;
+//				c.randomCentroid();
+//				centerG[ vdC ].cellPtr->randomCentroid();
+//				cellG[ vd ].coordPtr->x() += centerG[ vdC ].cellPtr->centroid().x();
+//				cellG[ vd ].coordPtr->y() += centerG[ vdC ].cellPtr->centroid().y();
 				cellG[ vd ].coordPtr->x() += centerG[ vdC ].coordPtr->x();// + (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius;
 				cellG[ vd ].coordPtr->y() += centerG[ vdC ].coordPtr->y();// + (double)(rand()%(int)PERTUBE_RANGE)/(PERTUBE_RANGE/radius)-0.5*radius;
 			}
@@ -825,7 +832,7 @@ void LevelCell::updatePathwayCoords( void ) {
 	
 	vector< ForceGraph > &lsubg = _pathwayPtr->lsubG();
 	//double radius = 30.0;
-	double radius = 50.0;
+	double radius = 10.0;
 	for( unsigned int i = 0; i < _cellComponentVec.size(); i++ ) {
 		
 		multimap< int, CellComponent >::iterator itC = _cellComponentVec[ i ].begin();

@@ -20,7 +20,7 @@ int main( int argc, char **argv ) {
 	window.setPathwayData( &pathway );
 	window.init();
 	window.show();
-	window.batch();
+	//window.batch();
 	
 	cerr << "Use: v -> 1 -> 2 -> o -> q -> w -> a -> s -> p -> z -> x -> r" << endl;
 	

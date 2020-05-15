@@ -172,6 +172,57 @@ bool Contour2::findVertexInComplex( const Coord2 &coord, UndirectedBaseGraph &co
 	return isFound;
 }
 
+void Contour2::randomCentroid( void ) {
+	
+	int num = 30;
+	
+	Coord2 c = _contour.centroid();
+	double min = minDistToPolygon( c );
+	for( int i = 0; i < num; i++ ) {
+		
+		Coord2 coord( 0.0, 0.0 );
+		coord.x() = c.x() + 20.0 * ( 2.0 * rand() / ( double ) RAND_MAX - 1.0 );
+		coord.y() = c.y() + 20.0 * ( 2.0 * rand() / ( double ) RAND_MAX - 1.0 );
+		if( min < minDistToPolygon( coord ) && inContour( coord ) ){
+			c = coord;
+		}
+	}
+	
+	_contour.centroid() = c;
+}
+
+//
+//  Contour2::minDistToPolygon --    find the minimum distance of a vertex to the polygon boundary
+//
+//  Inputs
+//  none
+//
+//  Outputs
+//  none
+//
+double Contour2::minDistToPolygon( const Coord2 &coord ) {
+	
+	double minDist = INFINITY;
+	
+	for( unsigned int i = 0; i < _contour.elements().size(); i++ ) {
+		
+		Coord2 &coordM = _contour.elements()[ i ];
+		Coord2 &coordN = _contour.elements()[ ( i + 1 ) % ( int ) _contour.elements().size() ];
+		Coord2 mnVec = coordN - coordM;
+		Coord2 cmVec = coord - coordM;
+		double D = ( mnVec * cmVec ) / mnVec.squaredNorm();
+		Coord2 coordD = coordM + D * mnVec;
+		
+		if( Line2::isOnLine( coordD, coordM, coordN ) ) {
+			
+			double dist = ( coord - coordD ).norm();
+			if( dist < minDist ) minDist = dist;
+		}
+	}
+	
+	return minDist;
+}
+
 void Contour2::createContour( void ) {
 	
 	// copy cells to a graph
@@ -359,7 +410,7 @@ bool Contour2::inContour( Coord2 &coord ) {
 	return _contour.inPolygon( coord );
 }
 
-void Contour2::_initChaikinCurve( double unit = 100 ) {
+void Contour2::_initChaikinCurve( double unit = 50 ) {
 	// initialization
 	_fineContour.elements().clear();
 	

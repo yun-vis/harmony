@@ -38,9 +38,9 @@ class Contour2 {
 protected:
 	
 	unsigned int _id;
-	Polygon2 _contour;       // centroid of the elements
-	vector< Polygon2 > _polygons;      // coordinates of end points
-	Polygon2 _fineContour;   // curvy simpleContour
+	Polygon2 _contour;                  // contour elements
+	vector< Polygon2 > _polygons;       // subcell of the contour
+	Polygon2 _fineContour;              // curvy simpleContour
 	
 	virtual void _init( unsigned int __id, vector< Polygon2 > __polygons );
 	
@@ -102,6 +102,10 @@ public:
 	void createContour( void );
 	
 	bool inContour( Coord2 &coord );
+	
+	double minDistToPolygon( const Coord2 &coord );
+	
+	void randomCentroid( void );
 	
 	void computeChaikinCurve( int num, double unit );
 
