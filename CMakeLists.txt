@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-PROJECT (QTBORDER)
-set(Target_Name qtborder)
+PROJECT (HARMONY)
+set(Target_Name harmony)
 
 #----------------------------------------------------------------------
 # cmake setting
@@ -32,7 +32,9 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -DIL_STD -O3 -DNDEBUG -frou
 # sources
 #----------------------------------------------------------------------
 file( GLOB_RECURSE SOURCES
-        include/*.h
+        ../third_party/steinertree/*.h
+        ../third_party/steinertree/*.cpp
+        src/*.h
         src/*.cpp
         resources/*.qrc
         )
@@ -50,7 +52,7 @@ if( APPLE )
   target_include_directories(${Target_Name}
           PUBLIC
           /opt/local/include/
-          ${CMAKE_SOURCE_DIR}/include/
+          ${CMAKE_SOURCE_DIR}/src/
           #${CMAKE_SOURCE_DIR}/third_party/libSBGN2/src/
           #${CMAKE_SOURCE_DIR}/third_party/libSBGN2/build/src/
           ${THIRD_PARTY_INCLUDE}
@@ -76,7 +78,7 @@ elseif( UNIX )
           /opt/local/include/
           /usr/include/
           /usr/include/x86_64-linux-gnu/
-          ${CMAKE_SOURCE_DIR}/include/
+          ${CMAKE_SOURCE_DIR}/src/
           #${QT5_PATH_DIR}/include/
           ${GRAPHVIZ_PATH_DIR}/include/
           ${THIRD_PARTY_INCLUDE}
@@ -186,13 +188,11 @@ add_custom_command(TARGET ${Target_Name}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/config/"
         COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/data/"
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/xml/"
         COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "$<TARGET_FILE_DIR:${Target_Name}>/svg/"
         COMMAND ${CMAKE_COMMAND} -E make_directory ${directory} "${CMAKE_BINARY_DIR}/bin/third_party/micans"
         )
 
-execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/data/"  ${CMAKE_BINARY_DIR}/bin/data )
 execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/config/"  ${CMAKE_BINARY_DIR}/bin/config )
-execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/xml/"  ${CMAKE_BINARY_DIR}/bin/xml )
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/data/"  ${CMAKE_BINARY_DIR}/bin/data )
 execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/svg/"  ${CMAKE_BINARY_DIR}/bin/svg )
-execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/third_party/micans"  ${CMAKE_BINARY_DIR}/bin/third_party/micans )
+execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink "${PROJECT_SOURCE_DIR}/../third_party/micans"  ${CMAKE_BINARY_DIR}/bin/third_party/micans )

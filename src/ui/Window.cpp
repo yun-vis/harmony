@@ -639,7 +639,7 @@ void Window::_threadBoundaryForce( void ) {
 	pool.push( []( int id, ThreadLevelBorder *tlh ) { tlh->run( id ); }, &tlh );
 	
 	// rendering
-//#ifdef DEBUG
+#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 
@@ -649,10 +649,10 @@ void Window::_threadBoundaryForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-//#endif // DEBUG
+#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	//pool.stop( true );
+	pool.stop( true );
 	cerr << "End of BorderForce..." << endl;
 }
 
@@ -681,7 +681,7 @@ void Window::_threadCellCenterForce( void ) {
 		pool.push( []( int id, ThreadLevelCellCenter *t ) { t->run( id ); }, tlc[ i ] );
 	}
 
-//#ifdef DEBUG
+#ifdef DEBUG
 	// rendering
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
@@ -690,10 +690,10 @@ void Window::_threadCellCenterForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		redrawAllScene();
 	}
-//#endif // DEBUG
+#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	//pool.stop( true );
+	pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < _levelCellPtr->centerVec().size(); i++ ) {
@@ -726,7 +726,7 @@ void Window::_threadCellComponentForce( void ) {
 	}
 	
 	// rendering
-//#ifdef DEBUG
+#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
@@ -734,10 +734,10 @@ void Window::_threadCellComponentForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-//#endif // DEBUG
+#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	//pool.stop( true );
+	pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < _levelCellPtr->cellVec().size(); i++ ) {
@@ -808,7 +808,7 @@ void Window::_threadPathwayForce( void ) {
 	}
 	
 	// rendering
-//#ifdef DEBUG
+#ifdef DEBUG
 	redrawAllScene();
 	while( pool.n_idle() != _gv->maxThread() ) {
 		
@@ -816,10 +816,10 @@ void Window::_threadPathwayForce( void ) {
 		this_thread::sleep_for( chrono::milliseconds( SLEEP_TIME ) );
 		updateAllScene();
 	}
-//#endif // DEBUG
+#endif // DEBUG
 	
 	// wait for all computing threads to finish and stop all threads
-	// pool.stop( true );
+	pool.stop( true );
 	
 	// clear the memory
 	for( unsigned int i = 0; i < cellComponentVec.size(); i++ ) {
@@ -1685,7 +1685,7 @@ void Window::keyPressEvent( QKeyEvent *event ) {
 		//----------------------------------------
 		// optimization
 		//----------------------------------------
-		//_threadOctilinearBoundary();
+		_threadOctilinearBoundary();
 		//_simulateKey( Qt::Key_E );
 		
 		updateLevelDetailPolygonComplex();
